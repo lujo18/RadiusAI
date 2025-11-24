@@ -1,0 +1,44 @@
+# SlideForge Backend Dependencies
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+python-multipart==0.0.6  # Required for file uploads
+
+# Firebase
+firebase-admin==6.2.0
+
+# Google AI
+google-generativeai==0.3.1
+
+# Data Models
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+# Firestore is included in firebase-admin
+
+# HTTP Client (for external APIs)
+httpx==0.25.1
+aiohttp==3.9.0
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Date/Time
+python-dateutil==2.8.2
+
+# Social Media APIs
+# Ayrshare (when ready)
+# requests==2.31.0
+
+# Image Generation (optional)
+# pillow==10.1.0
+# requests==2.31.0
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
