@@ -14,7 +14,14 @@ export type HookStyle = 'question' | 'statement' | 'number';
 
 export type BackgroundType = 'gradient' | 'solid' | 'image';
 
-export type AspectRatio = '9:16' | '1:1' | '4:5';
+export type AspectRatio = keyof typeof ASPECT_RATIOS;
+
+export const ASPECT_RATIOS = {
+  '1:1': { width: 1080, height: 1080, label: 'Square (1:1)' },
+  '4:5': { width: 1080, height: 1350, label: 'Portrait (4:5)' },
+  '3:4': { width: 1080, height: 1440, label: 'Tall Portrait (3:4)' },
+  '9:16': { width: 1080, height: 1920, label: 'Stories (9:16)' },
+} as const;
 
 export type SlideStructureType = 
   | 'hook' 
@@ -55,7 +62,7 @@ export interface VisualConfig {
 export interface LayoutConfig {
   slideCount: number;
   aspectRatio: AspectRatio;
-  structure: SlideStructureType[];
+  structure?: SlideStructureType[];
 }
 
 export interface ContentRules {

@@ -186,15 +186,18 @@ async def get_template(template_id: str) -> Optional[Dict[str, Any]]:
 
 async def get_user_templates(user_id: str) -> List[Dict[str, Any]]:
     """Get all templates for a user"""
-    templates_ref = get_db().collection('templates').where('userId', '==', user_id).where('status', '!=', 'archived')
+    # Query all templates for user (filter archived in memory to avoid index requirement)
+    templates_ref = get_db().collection('templates').where('userId', '==', user_id)
     docs = templates_ref.stream()
     
     templates = []
     for doc in docs:
         template = doc.to_dict()
-        # Get post count for this template
-        post_count = get_db().collection('posts').where('templateId', '==', doc.id).count().get()[0][0].value
-        template['postCount'] = post_count
+        # Skip archived templates
+        if template.get('status') == 'archived':
+            continue
+        # Use the performance.totalPosts from the template instead of querying
+        template['postCount'] = template.get('performance', {}).get('totalPosts', 0)
         templates.append(template)
     
     return templates
