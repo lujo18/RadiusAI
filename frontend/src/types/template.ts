@@ -1,5 +1,7 @@
 // Template System Types
 
+import type { SlideDesign } from './slide';
+
 export type TemplateCategory = 
   | 'listicle' 
   | 'quote' 
@@ -40,24 +42,6 @@ export type SlideStructureType =
   | 'after' 
   | 'cta';
 
-export interface BackgroundConfig {
-  type: BackgroundType;
-  colors: string[];
-  opacity: number;
-}
-
-export interface FontConfig {
-  family: string;
-  size: number;
-  color: string;
-  effects: string[];
-}
-
-export interface VisualConfig {
-  background: BackgroundConfig;
-  font: FontConfig;
-  accentColor: string;
-}
 
 export interface LayoutConfig {
   slideCount: number;
@@ -66,17 +50,38 @@ export interface LayoutConfig {
 }
 
 export interface ContentRules {
-  tone: string;
-  hookStyle: HookStyle;
-  useEmojis: boolean;
-  ctaTemplate: string;
-  forbiddenWords: string[];
+  // Structure
+    format: string;                   // "5 tips" or "3-part story" or "comparison list"
+    slideCount: number;               // 7-10
+    
+    // Voice & Perspective
+    perspective: string;              // "21-year-old sharing experience"
+    depthLevel: 'surface' | 'detailed' | 'comprehensive';
+    
+    // Topic & Focus
+    topicFocus: string;               // "confidence tips for introverts"
+    subtopics?: string[];             // ["body language", "mindset", "habits"]
+    
+    // Slide-Specific Instructions
+    hookStyle: string;                // "question-based" or "bold statement" or "relatable scenario"
+    bodyStyle: string;                // "actionable steps" or "storytelling" or "data-driven"
+    ctaStyle: string;                 // "soft encouragement" or "direct ask" or "teaser"
+    
+    // Content Requirements
+    includeExamples: boolean;         // Should tips have real examples?
+    includeStatistics: boolean;       // Add data/numbers?
+    personalStory: boolean;           // Weave in personal anecdotes?
+    
+    // Advanced
+    avoidTopics?: string[];           // ["politics", "religion"]
+    mustInclude?: string[];           // ["actionable", "specific"]
 }
 
 export interface StyleConfig {
   layout: LayoutConfig;
-  visual: VisualConfig;
-  content: ContentRules;
+  contentRules: ContentRules;
+  slideDesigns: SlideDesign[];
+  slideSequence: { slideNumber: number; designId: string }[];
 }
 
 export interface TemplatePerformance {

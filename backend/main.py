@@ -12,7 +12,7 @@ import firebase_admin
 from firebase_admin import credentials, auth
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from ai.client import client
-from ai.prompts import build_prompt, slide_prompt
+
 
 # Import routers
 from routers import templates, posts
@@ -67,14 +67,3 @@ def verify_token(creds: HTTPAuthorizationCredentials = Depends(security)):
 @app.get("/protected")
 def protected_route(user=Depends(verify_token)):
     return {"uid": user["uid"], "message": "Access granted"}
-
-
-
-@app.post("/genSlides")
-def run_ai(body: dict):
-  prompt = slide_prompt("", 4)
-  result = client.models.generate_content(
-    model="gemini-2.0-flash",
-    contents=prompt
-  )
-  return {"response": result.text}

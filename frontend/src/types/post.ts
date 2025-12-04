@@ -1,5 +1,8 @@
 // Post and Storage Types
 
+import type { SlideDesign } from './slide';
+import type { LayoutConfig } from './template';
+
 export interface StorageUrls {
   slides: string[];
   thumbnail: string | null;
@@ -19,14 +22,21 @@ export interface PostMetadata {
   generationParams: Record<string, any>;
 }
 
-export interface Slide {
+/**
+ * Slide in a post - derived from template's SlideDesign
+ * with dynamic content filled in by AI
+ */
+export interface PostSlide extends Omit<SlideDesign, 'name'> {
+  id: string;
   slideNumber: number;
-  text: string;
-  imagePrompt: string;
+  designId: string; // Reference to original SlideDesign.id from template
+  imagePrompt?: string; // Optional AI-generated background prompt
 }
 
-export interface PostContent {
-  slides: Slide[];
+export interface PostContent{
+  slides: PostSlide[];
+  layout: LayoutConfig;
+
   caption: string;
   hashtags: string[];
 }

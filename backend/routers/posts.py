@@ -256,3 +256,6 @@ async def get_analytics_history(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+

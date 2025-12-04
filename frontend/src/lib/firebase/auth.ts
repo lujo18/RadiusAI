@@ -111,3 +111,10 @@ export const getIdToken = async (): Promise<string | null> => {
 export const onAuthStateChanged = (callback: (user: User | null) => void) => {
   return auth.onAuthStateChanged(callback);
 };
+
+
+export function requireUid() {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error("Not authenticated");
+  return uid;
+}

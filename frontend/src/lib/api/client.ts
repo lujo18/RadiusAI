@@ -1,10 +1,57 @@
 import axios, { AxiosError } from 'axios';
-import { getIdToken } from '@/lib/firebase/auth';
+import { getIdToken, requireUid } from '@/lib/firebase/auth';
 
-// API Base URL - will use serverless endpoint in production
+// Import all Firestore CRUD operations
+import {
+  // Templates
+  createTemplate as createTemplateFirestore,
+  getTemplate as getTemplateFirestore,
+  getUserTemplates,
+  updateTemplate as updateTemplateFirestore,
+  deleteTemplate as deleteTemplateFirestore,
+  setTemplateAsDefault,
+  cloneTemplate,
+  // Posts
+  createPost as createPostFirestore,
+  getPost as getPostFirestore,
+  getUserPosts,
+  getPostsByStatus,
+  getScheduledPosts as getScheduledPostsFirestore,
+  getRecentPosts,
+  updatePost as updatePostFirestore,
+  deletePost as deletePostFirestore,
+  publishPost as publishPostFirestore,
+  markPostFailed,
+  getPostsByTemplate,
+  // Storage
+  uploadSlideImage,
+  uploadSlideImages,
+  deleteSlideImage,
+  deleteTemplateSlideImages,
+  uploadProfileImage,
+  uploadBrandLogo,
+  deleteImage,
+  getTemplateSlideImages,
+  // Analytics
+  getPostAnalytics,
+  updatePostAnalytics,
+  createPostAnalytics,
+  getUserAnalytics,
+  getTopPerformingPosts,
+  createABTest,
+  getABTest,
+  getUserABTests,
+  updateABTestMetrics,
+  endABTest,
+  getTemplateAnalytics,
+} from '../firebase/firestore/index';
+import { BrandSettings } from '@/types/user';
+import { Template } from '@/types/template';
+
+// API Base URL - used only for backend-specific operations (scheduling, external integrations)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Create axios instance
+// Create axios instance for backend operations only
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -45,11 +92,21 @@ apiClient.interceptors.response.use(
 export const contentApi = {
   // GET: Fetch all scheduled posts
   getScheduledPosts: async () => {
-    const { data } = await apiClient.get('/api/content/scheduled');
+    const userId = requireUid();
+    return await getScheduledPostsFirestore(userId);
+  },
+
+
+  generatePosts: async (template: Template, brandSettings: BrandSettings, count: number = 1) => {
+    const { data } = await apiClient.post('/api/generate/post', {
+      template,
+      brandSettings,
+      count
+    });
     return data;
   },
 
-  // POST: Generate week's content
+  // POST: Generate week's content (uses backend AI)
   generateWeek: async (styleGuide: string) => {
     const { data } = await apiClient.post('/api/content/generate', {
       styleGuide,
@@ -59,14 +116,12 @@ export const contentApi = {
 
   // DELETE: Remove a post
   deletePost: async (postId: string) => {
-    const { data } = await apiClient.delete(`/api/content/${postId}`);
-    return data;
+    return await deletePostFirestore(postId);
   },
 
   // PUT: Update a post
   updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    const { data } = await apiClient.put(`/api/content/${postId}`, updates);
-    return data;
+    return await updatePostFirestore(postId, updates);
   },
 };
 
@@ -75,17 +130,17 @@ export const contentApi = {
 export const analyticsApi = {
   // GET: Fetch analytics data
   getAnalytics: async (timeframe: 'day' | 'week' | 'month' = 'week') => {
-    const { data } = await apiClient.get(`/api/analytics?timeframe=${timeframe}`);
-    return data;
+    const userId = requireUid();
+    return await getUserAnalytics(userId);
   },
 
-  // GET: Fetch variant performance
+  // GET: Fetch variant performance (A/B tests)
   getVariantPerformance: async () => {
-    const { data } = await apiClient.get('/api/analytics/variants');
-    return data;
+    const userId = requireUid();
+    return await getUserABTests(userId);
   },
 
-  // POST: Trigger AI analysis
+  // POST: Trigger AI analysis (uses backend AI)
   analyzeAndEvolve: async () => {
     const { data } = await apiClient.post('/api/analytics/analyze');
     return data;
@@ -97,45 +152,43 @@ export const analyticsApi = {
 export const templateApi = {
   // GET: Fetch all templates
   getTemplates: async () => {
-    const { data } = await apiClient.get('/api/templates');
-    return data;
+    const userId = requireUid();
+    return await getUserTemplates(userId);
   },
 
   // GET: Fetch single template with details
   getTemplate: async (templateId: string) => {
-    const { data } = await apiClient.get(`/api/templates/${templateId}`);
-    return data;
+    return await getTemplateFirestore(templateId);
   },
 
   // POST: Create new template
   createTemplate: async (templateData: any) => {
     console.log('API: Creating template with data:', templateData);
+    
     try {
-      const { data } = await apiClient.post('/api/templates', templateData);
-      console.log('API: Template created:', data);
-      return data;
+      const templateId = await createTemplateFirestore(templateData);
+      console.log('API: Template created:', templateId);
+      return templateId;
     } catch (error: any) {
-      console.error('API: Failed to create template:', error.response?.data || error.message);
+      console.error('API: Failed to create template:', error.message);
       throw error;
     }
   },
 
   // PUT: Update template
   updateTemplate: async ({ templateId, updates }: { templateId: string; updates: any }) => {
-    const { data } = await apiClient.put(`/api/templates/${templateId}`, updates);
-    return data;
+    return await updateTemplateFirestore(templateId, updates);
   },
 
   // DELETE: Archive template
   deleteTemplate: async (templateId: string) => {
-    const { data } = await apiClient.delete(`/api/templates/${templateId}`);
-    return data;
+    return await deleteTemplateFirestore(templateId);
   },
 
   // POST: Set as default
   setDefaultTemplate: async (templateId: string) => {
-    const { data } = await apiClient.post(`/api/templates/${templateId}/set-default`);
-    return data;
+    const userId = requireUid();
+    return await setTemplateAsDefault(userId, templateId);
   },
 };
 
@@ -144,64 +197,62 @@ export const templateApi = {
 export const postApi = {
   // GET: Fetch all posts
   getPosts: async (status?: string, limit?: number) => {
-    const params = new URLSearchParams();
-    if (status) params.append('status', status);
-    if (limit) params.append('limit', limit.toString());
-    const { data } = await apiClient.get(`/api/posts?${params.toString()}`);
-    return data;
+    const userId = requireUid();
+    if (status) {
+      return await getPostsByStatus(userId, status as any);
+    }
+    if (limit) {
+      return await getRecentPosts(userId, limit);
+    }
+    return await getUserPosts(userId);
   },
 
   // GET: Fetch single post with details
   getPost: async (postId: string) => {
-    const { data } = await apiClient.get(`/api/posts/${postId}`);
-    return data;
+    return await getPostFirestore(postId);
   },
 
   // POST: Create new post
   createPost: async (postData: any) => {
-    const { data } = await apiClient.post('/api/posts', postData);
-    return data;
+    return await createPostFirestore(postData);
   },
 
   // PUT: Update post
   updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    const { data } = await apiClient.put(`/api/posts/${postId}`, updates);
-    return data;
+    return await updatePostFirestore(postId, updates);
   },
 
-  // POST: Publish post
+  // POST: Publish post (uses backend for Ayrshare integration)
   publishPost: async (postId: string) => {
+    // First update status in Firestore
+    await publishPostFirestore(postId);
+    // Then trigger backend publishing to social platforms
     const { data } = await apiClient.post(`/api/posts/${postId}/publish`);
     return data;
   },
 
   // POST: Upload slide image
   uploadSlide: async ({ postId, slideNumber, file }: { postId: string; slideNumber: number; file: File }) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const { data } = await apiClient.post(`/api/posts/${postId}/upload-slide?slide_number=${slideNumber}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
+    return await uploadSlideImage(file, postId, slideNumber);
   },
 
   // POST: Track analytics
   trackAnalytics: async ({ postId, analyticsData }: { postId: string; analyticsData: any }) => {
-    const { data } = await apiClient.post(`/api/posts/${postId}/analytics`, analyticsData);
-    return data;
+    return await updatePostAnalytics(postId, analyticsData);
   },
 };
 
 // ----- STYLE GUIDE -----
+// TODO: Migrate to Firestore users/{userId}/styleGuide document
 
 export const styleGuideApi = {
-  // GET: Fetch style guide
+  // GET: Fetch style guide (still using backend temporarily)
   getStyleGuide: async () => {
     const { data } = await apiClient.get('/api/style-guide');
     return data;
   },
 
-  // PUT: Update style guide
+  // PUT: Update style guide (still using backend temporarily)
   updateStyleGuide: async (content: string) => {
     const { data } = await apiClient.put('/api/style-guide', { content });
     return data;
@@ -209,21 +260,22 @@ export const styleGuideApi = {
 };
 
 // ----- USER / PROFILE -----
+// TODO: Migrate to Firestore users/{userId} document
 
 export const userApi = {
-  // GET: Fetch user profile
+  // GET: Fetch user profile (still using backend temporarily)
   getProfile: async () => {
     const { data } = await apiClient.get('/api/user/profile');
     return data;
   },
 
-  // PUT: Update user profile
+  // PUT: Update user profile (still using backend temporarily)
   updateProfile: async (updates: any) => {
     const { data } = await apiClient.put('/api/user/profile', updates);
     return data;
   },
 
-  // GET: Fetch connected accounts
+  // GET: Fetch connected accounts (still using backend temporarily)
   getConnectedAccounts: async () => {
     const { data } = await apiClient.get('/api/user/accounts');
     return data;
@@ -231,6 +283,7 @@ export const userApi = {
 };
 
 // ----- SUBSCRIPTION / BILLING -----
+// Backend-only: Stripe integration
 
 export const billingApi = {
   // GET: Fetch subscription info

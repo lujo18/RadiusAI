@@ -4,6 +4,13 @@ import json
 from typing import List, Dict, Any
 from google import genai
 from google.genai import types
+
+from backend.ai.prompts import build_generation_prompt
+from backend.ai.structure_input import build_gemini_slide_structure
+from models import (
+    Template, 
+    BrandSettings
+)
 from .client import client
 import sys
 from pathlib import Path
@@ -11,240 +18,122 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
-from models import (
-    Template, 
-    GeminiCarouselResponse, 
-    Slide,
-    GenerateContentRequest,
-    StyleConfig
-)
-
-def generate_prompt_from_template(template: Template, topic: str) -> str:
-    """
-    Convert template StyleConfig into a structured Gemini prompt.
-    This is the key to ensuring Gemini follows your brand rules.
-    """
-    style = template.styleConfig
-    
-    prompt = f"""You are a viral social media content creator. Generate a carousel post with EXACTLY {style.layout.slideCount} slides.
-
-TEMPLATE: {template.name}
-CATEGORY: {template.category.value}
-
-VISUAL REQUIREMENTS:
-- Background: {style.visual.background.type.value} using colors {', '.join(style.visual.background.colors)}
-- Font: {style.visual.font.family} at {style.visual.font.size}pt in {style.visual.font.color}
-- Font effects: {', '.join(style.visual.font.effects)}
-- Accent color: {style.visual.accentColor}
-- Aspect ratio: {style.layout.aspectRatio.value}
-
-SLIDE STRUCTURE: {' → '.join(style.layout.structure)}
-Each slide should follow this exact structure in order.
-
-CONTENT RULES:
-- Tone: {style.content.tone} (maintain this tone throughout)
-- Hook style: {style.content.hookStyle.value}
-  * question: Start with an engaging question (e.g., "Want to know the secret?")
-  * statement: Bold declarative hook (e.g., "This changed everything")
-  * number: Numbered hook (e.g., "7 ways to improve...")
-- Emojis: {'Include relevant emojis strategically' if style.content.useEmojis else 'NO emojis allowed'}
-- CTA (final slide): "{style.content.ctaTemplate}"
-{f'- FORBIDDEN WORDS (NEVER use): {", ".join(style.content.forbiddenWords)}' if style.content.forbiddenWords else ''}
-
-SLIDE CONTENT REQUIREMENTS:
-- Each slide should have 10-30 words max (punchy, scannable)
-- First slide MUST be a hook following the {style.content.hookStyle.value} style
-- Middle slides provide value/insights
-- Last slide includes the CTA template
-- Text should be optimized for {style.layout.aspectRatio.value} aspect ratio
-
-IMAGE PROMPTS:
-For each slide, provide a detailed image prompt for Unsplash/Leonardo AI that:
-- Matches the {style.visual.background.type.value} background style
-- Uses color palette: {', '.join(style.visual.background.colors)}
-- Fits the slide's message
-- Is visually cohesive with the overall template
-
-OUTPUT FORMAT (strict JSON):
-{{
-  "slides": [
-    {{"slideNumber": 1, "text": "Your hook here", "imagePrompt": "Detailed prompt for image generation"}},
-    {{"slideNumber": 2, "text": "Value point 1", "imagePrompt": "..."}},
-    ...
-    {{"slideNumber": {style.layout.slideCount}, "text": "{style.content.ctaTemplate}", "imagePrompt": "..."}}
-  ],
-  "caption": "Instagram caption (150-200 chars, engaging, includes topic keywords)",
-  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5"]
-}}
-
-TOPIC: {topic}
-
-Generate the carousel following ALL rules above. Output ONLY valid JSON with no additional text."""
-    
-    return prompt
-
-
 def generate_content_with_gemini(
     template: Template, 
-    topic: str,
+    brandSettings: BrandSettings,
     count: int = 1
-) -> List[GeminiCarouselResponse]:
+) -> Dict[str, Any]:
     """
     Generate carousel content using Gemini 2.0 Flash.
     Returns structured JSON parsed into GeminiCarouselResponse objects.
     """
-    prompt = generate_prompt_from_template(template, topic)
     
-    results = []
+    request_data = build_gemini_slide_structure(template, brandSettings)
     
-    for i in range(count):
-        response_text = ""
-        try:
-            # Generate content using client with JSON mode
-            response = client.models.generate_content(
-                model='gemini-2.0-flash-exp',
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.9,
-                    top_p=0.95,
-                    top_k=40,
-                    max_output_tokens=2048,
-                    response_mime_type="application/json"
-                )
-            )
-            
-            # Extract JSON from response
-            response_text = response.text.strip() if response.text else ""
-            
-            # Remove markdown code blocks if present
-            if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.startswith("```"):
-                response_text = response_text[3:]
-            if response_text.endswith("```"):
-                response_text = response_text[:-3]
-            
-            response_text = response_text.strip()
-            
-            # Parse JSON
-            carousel_data = json.loads(response_text)
-            
-            # Validate slide count
-            if len(carousel_data["slides"]) != template.styleConfig.layout.slideCount:
-                print(f"Warning: Expected {template.styleConfig.layout.slideCount} slides, got {len(carousel_data['slides'])}")
-            
-            # Convert to Pydantic model
-            carousel = GeminiCarouselResponse(**carousel_data)
-            results.append(carousel)
-            
-        except json.JSONDecodeError as e:
-            print(f"JSON parsing error: {e}")
-            print(f"Response text: {response_text}")
-            raise ValueError(f"Gemini returned invalid JSON: {e}")
-        except Exception as e:
-            print(f"Error generating content: {e}")
-            raise
+    prompt = build_generation_prompt(request_data)
     
-    return results
+    print("Prompt generated: ")
+    print(prompt)
+    
 
+    # Generate content using client with JSON mode
+    response = client.models.generate_content(
+        model='gemini-2.0-flash-exp',
+        contents=prompt,
+        config=types.GenerateContentConfig(
+            temperature=0.85,
+            # top_p=0.95,
+            # top_k=40,
+            max_output_tokens=2048,
+            response_mime_type="application/json"
+        )
+    )
+    
+    # Parse response
+    response_text = response.text.strip()
+    generated_data = json.loads(response_text)
+    
+    _validate_gemini_response(generated_data, request_data)
+    
+    post_content = _convert_to_post_content(
+        generated_data, 
+        template,
+        request_data
+    )
+    
+    return post_content
 
-def generate_week_content(
+def _validate_gemini_response(generated: Dict, request: Dict) -> None:
+    """Ensure Gemini filled all required text elements"""
+    for req_slide in request["slides"]:
+        slide_num = req_slide["slideNumber"]
+        
+        # Find corresponding generated slide
+        gen_slide = next(
+            (s for s in generated["slides"] if s["slideNumber"] == slide_num),
+            None
+        )
+        
+        if not gen_slide:
+            raise ValueError(f"Gemini didn't generate slide {slide_num}")
+        
+        # Check all elements were filled
+        for elem_id in req_slide["textElements"].keys():
+            if elem_id not in gen_slide["textElements"]:
+                raise ValueError(f"Gemini didn't fill element {elem_id} in slide {slide_num}")
+            
+            content = gen_slide["textElements"][elem_id]
+            max_len = req_slide["textElements"][elem_id]["maxLength"]
+            
+            if len(content) > max_len:
+                print(f"Warning: Element {elem_id} exceeds max length ({len(content)} > {max_len})")
+
+def _convert_to_post_content(
+    generated: Dict,
     template: Template,
-    topics: List[str],
-    platforms: List[str] = ["instagram", "tiktok"]
+    request: Dict
 ) -> Dict[str, Any]:
     """
-    Generate a week's worth of content (7 days × 2 platforms = 14 posts).
+    Convert Gemini's response into PostContent structure.
+    Maps generated text back to slide elements.
     """
-    if len(topics) < 7:
-        raise ValueError("Need at least 7 topics for a week of content")
+    post_slides = []
     
-    posts_by_platform = {}
-    
-    for platform in platforms:
-        platform_posts = []
+    for gen_slide in generated["slides"]:
+        slide_num = gen_slide["slideNumber"]
         
-        for topic in topics[:7]:  # One per day
-            carousels = generate_content_with_gemini(template, topic, count=1)
-            platform_posts.extend(carousels)
+        # Find original slide design
+        seq = next(s for s in template.styleConfig.slideSequence if s.slideNumber == slide_num)
+        design = next(d for d in template.styleConfig.slideDesigns if d.id == seq.designId)
         
-        posts_by_platform[platform] = platform_posts
-    
-    return posts_by_platform
-
-
-def generate_variant_set_content(
-    templates: List[Template],
-    topics: List[str],
-    posts_per_template: int
-) -> Dict[str, List[GeminiCarouselResponse]]:
-    """
-    Generate content for A/B testing across multiple templates.
-    Returns posts organized by template ID.
-    """
-    if len(topics) < posts_per_template:
-        raise ValueError(f"Need at least {posts_per_template} topics for variant set")
-    
-    posts_by_template = {}
-    
-    for template in templates:
-        template_posts = []
+        # Clone design elements and fill with generated content
+        filled_elements = []
+        for element in design.elements:
+            if element.type == "text" and element.id in gen_slide["textElements"]:
+                # Fill element with Gemini's content
+                filled_elements.append({
+                    **element.dict(),
+                    "content": gen_slide["textElements"][element.id]
+                })
+            else:
+                # Keep non-text elements as-is
+                filled_elements.append(element.dict())
         
-        # Use same topics for all templates to ensure fair comparison
-        for topic in topics[:posts_per_template]:
-            carousels = generate_content_with_gemini(template, topic, count=1)
-            template_posts.extend(carousels)
-        
-        posts_by_template[template.id] = template_posts
+        post_slides.append({
+            "slideNumber": slide_num,
+            "designId": design.id,
+            "background": design.background.dict(),
+            "dynamic": design.dynamic,
+            "elements": filled_elements,
+            "imagePrompt": None  # Could add AI background prompts later
+        })
     
-    return posts_by_template
-
-
-def validate_gemini_response(
-    response: GeminiCarouselResponse, 
-    template: Template
-) -> tuple[bool, List[str]]:
-    """
-    Validate that Gemini's response follows all template rules.
-    Returns (is_valid, list_of_violations)
-    """
-    violations = []
-    style = template.styleConfig
-    
-    # Check slide count
-    if len(response.slides) != style.layout.slideCount:
-        violations.append(f"Expected {style.layout.slideCount} slides, got {len(response.slides)}")
-    
-    # Check forbidden words
-    if style.content.forbiddenWords:
-        for slide in response.slides:
-            text_lower = slide.text.lower()
-            for word in style.content.forbiddenWords:
-                if word.lower() in text_lower:
-                    violations.append(f"Forbidden word '{word}' found in slide {slide.slideNumber}")
-        
-        caption_lower = response.caption.lower()
-        for word in style.content.forbiddenWords:
-            if word.lower() in caption_lower:
-                violations.append(f"Forbidden word '{word}' found in caption")
-    
-    # Check emoji usage
-    has_emojis = any(char for slide in response.slides for char in slide.text if ord(char) > 127)
-    if style.content.useEmojis and not has_emojis:
-        violations.append("Template requires emojis but none found")
-    elif not style.content.useEmojis and has_emojis:
-        violations.append("Template forbids emojis but emojis found")
-    
-    # Check CTA template in last slide
-    if style.content.ctaTemplate.lower() not in response.slides[-1].text.lower():
-        violations.append(f"Last slide doesn't include CTA template: '{style.content.ctaTemplate}'")
-    
-    # Check hashtag count
-    if len(response.hashtags) < 3:
-        violations.append("Need at least 3 hashtags")
-    
-    return len(violations) == 0, violations
-
+    return {
+        "slides": post_slides,
+        "layout": template.styleConfig.layout.dict(),
+        "caption": generated["caption"],
+        "hashtags": generated["hashtags"]
+    }
 
 # ==================== USAGE EXAMPLES ====================
 

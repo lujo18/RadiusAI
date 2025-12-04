@@ -1,46 +1,86 @@
-def build_prompt(user_input: str):
-    return f"""
-You are an assistant for my app. Keep responses sharp and concise.
+# backend/ai/prompts.py
+import json
+from typing import Any, Dict
 
-User request:
-{user_input}
+SYSTEM_PROMPT = """
+You are a viral social media content creator. You will receive a carousel post structure 
+with SPECIFIC text element IDs that you must fill with appropriate content.
+
+CRITICAL RULES:
+1. You MUST fill every text element ID provided - no skipping
+2. Respect max length for each element (character count)
+3. Follow the role/context for each element
+4. Maintain brand voice and tone throughout
+5. Never use forbidden words
+6. Output ONLY valid JSON matching the exact structure provided
+
+Your output will be directly inserted into a visual design, so accuracy is critical.
 """
 
-def slide_prompt(user_input: str, slide_count: int): 
-  return f"""
-You are an expert Instagram/TikTok carousel strategist.
+def build_generation_prompt(request_data: Dict[str, Any]) -> str:
+    """
+    Build the complete prompt for Gemini including structure and instructions.
+    """
+    slides = request_data["slides"]
+    brand = request_data["brandContext"]
+    rules = request_data["templateRules"]
+    goal = request_data["contentGoal"]
+    
+    # Build detailed element instructions
+    element_instructions = []
+    for slide in slides:
+        slide_num = slide["slideNumber"]
+        element_instructions.append(f"\nSlide {slide_num} ({slide['designName']}):")
+        
+        for elem_id, elem_info in slide["textElements"].items():
+            element_instructions.append(
+                f"  • {elem_id} ({elem_info['role']}): {elem_info['context']}\n"
+                f"    Max {elem_info['maxLength']} characters"
+            )
+    
+    prompt = f"""{SYSTEM_PROMPT}
 
-Output ONLY a valid CSV (no extra text, no markdown, no code blocks, no explanations). First row must be the exact header row below.
+BRAND CONTEXT:
+- Niche: {brand['niche']}
+- Aesthetic: {brand['aesthetic']}
+- Tone: {brand['tone']}
+- Emoji Usage: {brand['emojiUsage']}
+- NEVER use: {', '.join(brand['forbidden'])}
+- Prefer using: {', '.join(brand['preferred'])}
 
-Header row (use exactly these column names):
-post_id,day_of_week,publish_date,carousel_type,variant_id,slide_number,slide_text,image_search_term,caption,hashtags
+TEMPLATE RULES:
+- Format: {rules['format']}
+- Perspective: {rules['perspective']}
+- Depth: {rules['depthLevel']}
+- Hook Style: {rules['hookStyle']}
+- Body Style: {rules['bodyStyle']}
+- CTA Style: {rules['ctaStyle']}
 
-Rules:
-- Generate exactly ${slide_count} rows (each used for Instagram + TikTok).
-- post_id format: 001, 002, 003...
-- day_of_week: Monday, Tuesday, … Sunday (repeat)
-- publish_date: next 7 days starting tomorrow in YYYY-MM-DD format (today is 2025-11-24, so first date is 2025-11-25)
-- carousel_type: exactly one of these four → "Listicle", "Quote Thread", "Before/After Story", "Myth vs Fact"
-- variant_id: A, B, C, or D (rotate fairly so we can A/B test)
-  - Variant A = 7-8 slides, numbered list
-  - Variant B = 5–7 bold quote slides, minimal text
-  - Variant C = storytelling format with "Part 1/X" on each slide
-  - Variant D = Myth → Truth format with red X and green check
-- slide_number: 1 to max 10 (never exceed 10)
-- slide_text: the exact text that will be overlaid. Keep under 120 characters per slide. Use line breaks with \n where needed.
-- image_search_term: single Unsplash-style keyword/phrase (e.g. "dark gym motivation", "luxury watch closeup", "minimalist desk setup")
-- caption: full Instagram/TikTok caption (different from slide text). Include hook + CTA + 2–3 line breaks
-- hashtags: 8–12 relevant hashtags separated by spaces (no # symbol)
+CONTENT GOAL: {goal}
 
-Niche: Fitness & mindset for men 18–35
-Tone: direct, high-energy, bro-science, slightly aggressive, never corny
+TEXT ELEMENTS TO FILL:
+{''.join(element_instructions)}
 
-Example row (do NOT include in output):
-025,Wednesday,2025-11-26,Listicle,A,3,"3. Wake up at 5 AM\nYour competition is still sleeping",early morning gym dark,#Fitness #GymMotivation...,"If you want to be in the top 1%...\n\nSave this and follow @yourhandle for daily alpha",Fitness GymMotivation MensPhysique etc.
+REQUIRED OUTPUT FORMAT (strict JSON):
+{{
+  "slides": [
+    {{
+      "slideNumber": 1,
+      "textElements": {{
+        "element-id-1": "your generated text here",
+        "element-id-2": "another text here"
+      }}
+    }},
+    ...
+  ],
+  "caption": "Instagram caption (engaging, {brand['tone']}, includes topic keywords)",
+  "hashtags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+}}
 
-You use active voice unless it's grammatically impossible. 
+INPUT STRUCTURE (you must fill the textElements for each slide):
+{json.dumps(request_data['slides'], indent=2)}
 
-Now generate the full ${slide_count}-row CSV starting with the header row.
-
-"""
-
+Now generate content that fills ALL text elements while following ALL brand and template rules.
+Output ONLY the JSON response with filled content."""
+    
+    return prompt
