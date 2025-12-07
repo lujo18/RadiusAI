@@ -1,7 +1,7 @@
 # Modals for slides (types)
 
 from pydantic import BaseModel, Field
-from typing import List, Literal, Optional, Dict, Any
+from typing import List, Literal, Optional, Dict, Any, Tuple
 from enum import Enum
 
 
@@ -20,32 +20,28 @@ class BackgroundType(str, Enum):
     GRADIENT = "gradient"
     IMAGE = "image"
 
-class ColorStop(BaseModel):
-    color: str
-    offset: float = Field(ge=0, le=1)
-
 class BackgroundConfig(BaseModel):
     type: BackgroundType
     color: Optional[str] = None
     imageUrl: Optional[str] = None
-    colorStops: Optional[List[ColorStop]] = None
+    gradientColors: Optional[Tuple[str, str]] = None
+    gradientAngle: Optional[float] = None
 
 class TextElement(BaseModel):
     id: str
     type: Literal["text"] = "text"
     content: str
-    x: float
-    y: float
-    width: Optional[float] = None
-    height: Optional[float] = None
+    role: Optional[str] = None  # e.g., "header", "body", "cta"
     fontSize: int
     fontFamily: str
     fontStyle: FontStyle = FontStyle.NORMAL
-    fill: str
+    color: str
+    x: float
+    y: float
+    width: Optional[float] = None
     align: TextAlign = TextAlign.LEFT
-    rotation: float = 0
-    draggable: bool = True
-
+    #rotation: float # TODO: Text rotation could be a potential quality of life feature but isn't worth implementing yet
+   
 class SlideDesign(BaseModel):
     id: str
     name: str

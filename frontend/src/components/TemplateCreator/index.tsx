@@ -53,7 +53,6 @@ export default function TemplateCreator({ onClose, onSave, existingTemplate }: T
   const handleSave = () => {
     // Convert slide designs to styleConfig format for backend compatibility
     const styleConfig = {
-      ...DEFAULT_STYLE_CONFIGS[category],
       layout: {
         aspectRatio: aspectRatio,
         slideCount: totalSlides,

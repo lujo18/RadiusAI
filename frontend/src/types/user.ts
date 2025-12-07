@@ -28,7 +28,7 @@ export interface PlatformIntegration {
 }
 
 export interface UserProfile {
-  profileId: string;
+  id: string;
   userId: string;
   
   // Brand Settings (applies to ALL templates for given profile)

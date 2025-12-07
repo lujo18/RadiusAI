@@ -98,6 +98,7 @@ export const contentApi = {
 
 
   generatePosts: async (template: Template, brandSettings: BrandSettings, count: number = 1) => {
+
     const { data } = await apiClient.post('/api/generate/post', {
       template,
       brandSettings,

@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from models import Template, BrandSettings
+from backend.models import Template, BrandSettings
 
 def build_gemini_slide_structure(
   template: Template,
@@ -52,15 +52,15 @@ def build_gemini_slide_structure(
         "forbidden": brand_settings.forbiddenWords,
         "preferred": brand_settings.preferredWords
       },
-      "templateRules": {
-        "format": style_config.contentRules.format,
-        "perspective": style_config.contentRules.perspective,
-        "depthLevel": style_config.contentRules.depthLevel,
-        "topicFocus": style_config.contentRules.topicFocus,
-        "hookStyle": style_config.contentRules.hookStyle,
-        "bodyStyle": style_config.contentRules.bodyStyle,
-        "ctaStyle": style_config.contentRules.ctaStyle
-      },
-      "contentGoal": style_config.contentRules.topicFocus
+      # "templateRules": {
+      #   "format": style_config.contentRules.format,
+      #   "perspective": style_config.contentRules.perspective,
+      #   "depthLevel": style_config.contentRules.depthLevel,
+      #   "topicFocus": style_config.contentRules.topicFocus,
+      #   "hookStyle": style_config.contentRules.hookStyle,
+      #   "bodyStyle": style_config.contentRules.bodyStyle,
+      #   "ctaStyle": style_config.contentRules.ctaStyle
+      # },
+      # "contentGoal": style_config.contentRules.topicFocus
   }
   

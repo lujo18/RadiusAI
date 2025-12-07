@@ -2,6 +2,8 @@
 import sys
 from pathlib import Path
 
+from backend.routers import generate
+
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
@@ -53,6 +55,7 @@ except ValueError:
 # Include routers
 app.include_router(templates.router)
 app.include_router(posts.router)
+app.include_router(generate.router)
 
 security = HTTPBearer()
 

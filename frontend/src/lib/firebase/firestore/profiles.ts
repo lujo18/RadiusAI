@@ -24,7 +24,6 @@ export async function createProfile(brandSettings: BrandSettings): Promise<UserP
   if (!userId) throw new Error('User not authenticated');
 
   const profileData = {
-    profileId: `profile_${Date.now()}`,
     userId,
     brandSettings,
     integrations: [],
@@ -37,6 +36,7 @@ export async function createProfile(brandSettings: BrandSettings): Promise<UserP
   const docRef = await addDoc(profilesRef, profileData);
 
   return {
+    id: docRef.id,
     ...profileData,
     createdAt: new Date(),
   } as UserProfile;
@@ -52,92 +52,80 @@ export async function getUserProfiles(): Promise<UserProfile[]> {
   const snapshot = await getDocs(profilesRef);
 
   return snapshot.docs.map(doc => ({
+    id: doc.id,
     ...doc.data(),
     createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
   })) as UserProfile[];
 }
 
-export async function getProfile(profileId: string): Promise<UserProfile | null> {
+export async function getProfile(id: string): Promise<UserProfile | null> {
   const userId = requireUid();
   if (!userId) throw new Error('User not authenticated');
 
-  const profilesRef = collection(db, `users/${userId}/profiles`);
-  const q = query(profilesRef, where('profileId', '==', profileId));
-  const snapshot = await getDocs(q);
+  const profileRef = doc(db, 'users', userId, 'profiles', id);
+  const snapshot = await getDoc(profileRef);
 
-  if (snapshot.empty) return null;
+  if (!snapshot.exists()) return null;
 
-  const doc = snapshot.docs[0];
   return {
-    ...doc.data(),
-    createdAt: (doc.data().createdAt as Timestamp)?.toDate() || new Date(),
+    id: snapshot.id,
+    ...snapshot.data(),
+    createdAt: (snapshot.data().createdAt as Timestamp)?.toDate() || new Date(),
   } as UserProfile;
 }
 
 // ==================== UPDATE ====================
 
 export async function updateProfile(
-  profileId: string,
-  updates: Partial<Omit<UserProfile, 'userId' | 'profileId' | 'createdAt'>>
+  id: string,
+  updates: Partial<Omit<UserProfile, 'userId' | 'id' | 'createdAt'>>
 ): Promise<void> {
   const userId = requireUid();
   if (!userId) throw new Error('User not authenticated');
 
-  const profilesRef = collection(db, `users/${userId}/profiles`);
-  const q = query(profilesRef, where('profileId', '==', profileId));
-  const snapshot = await getDocs(q);
-
-  if (snapshot.empty) throw new Error('Profile not found');
-
-  const docRef = snapshot.docs[0].ref;
-  await updateDoc(docRef, updates);
+  const profilesRef = doc(db, 'users', userId, 'profiles', id);
+  await updateDoc(profilesRef, updates);
 }
 
 export async function updateBrandSettings(
-  profileId: string,
+  id: string,
   brandSettings: BrandSettings
 ): Promise<void> {
-  await updateProfile(profileId, { brandSettings });
+  await updateProfile(id, { brandSettings });
 }
 
 // ==================== DELETE ====================
 
-export async function deleteProfile(profileId: string): Promise<void> {
+export async function deleteProfile(id: string): Promise<void> {
   const userId = requireUid();
   if (!userId) throw new Error('User not authenticated');
-
-  const profilesRef = collection(db, `users/${userId}/profiles`);
-  const q = query(profilesRef, where('profileId', '==', profileId));
-  const snapshot = await getDocs(q);
-
-  if (snapshot.empty) throw new Error('Profile not found');
-
-  const docRef = snapshot.docs[0].ref;
-  await deleteDoc(docRef);
+ 
+  const profilesRef = doc(db, 'users', userId, 'profiles', id);
+  await deleteDoc(profilesRef);
 }
 
 // ==================== INTEGRATIONS ====================
 
 export async function addIntegration(
-  profileId: string,
+  id: string,
   integration: PlatformIntegration
 ): Promise<void> {
-  const profile = await getProfile(profileId);
+  const profile = await getProfile(id);
   if (!profile) throw new Error('Profile not found');
 
   const updatedIntegrations = [...profile.integrations, integration];
-  await updateProfile(profileId, { integrations: updatedIntegrations });
+  await updateProfile(id, { integrations: updatedIntegrations });
 }
 
 export async function removeIntegration(
-  profileId: string,
+  id: string,
   integrationId: string
 ): Promise<void> {
-  const profile = await getProfile(profileId);
+  const profile = await getProfile(id);
   if (!profile) throw new Error('Profile not found');
 
   const updatedIntegrations = profile.integrations.filter(
     i => i.id !== integrationId
   );
-  await updateProfile(profileId, { integrations: updatedIntegrations });
+  await updateProfile(id, { integrations: updatedIntegrations });
 }

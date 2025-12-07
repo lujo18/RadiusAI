@@ -23,8 +23,8 @@ def build_generation_prompt(request_data: Dict[str, Any]) -> str:
     """
     slides = request_data["slides"]
     brand = request_data["brandContext"]
-    rules = request_data["templateRules"]
-    goal = request_data["contentGoal"]
+    # rules = request_data["templateRules"] TODO: TemplateRules, Determine implementation
+    # goal = request_data["contentGoal"]
     
     # Build detailed element instructions
     element_instructions = []
@@ -34,8 +34,8 @@ def build_generation_prompt(request_data: Dict[str, Any]) -> str:
         
         for elem_id, elem_info in slide["textElements"].items():
             element_instructions.append(
-                f"  • {elem_id} ({elem_info['role']}): {elem_info['context']}\n"
-                f"    Max {elem_info['maxLength']} characters"
+                f"  • {elem_id} ({elem_info['role']}): {elem_info['content']}\n"
+                # f"    Max {elem_info['maxLength']} characters" TODO: Add maxLength, as last resort if gemini occasionally generates way too much text (not sure if this is a problem)
             )
     
     prompt = f"""{SYSTEM_PROMPT}
@@ -47,16 +47,6 @@ BRAND CONTEXT:
 - Emoji Usage: {brand['emojiUsage']}
 - NEVER use: {', '.join(brand['forbidden'])}
 - Prefer using: {', '.join(brand['preferred'])}
-
-TEMPLATE RULES:
-- Format: {rules['format']}
-- Perspective: {rules['perspective']}
-- Depth: {rules['depthLevel']}
-- Hook Style: {rules['hookStyle']}
-- Body Style: {rules['bodyStyle']}
-- CTA Style: {rules['ctaStyle']}
-
-CONTENT GOAL: {goal}
 
 TEXT ELEMENTS TO FILL:
 {''.join(element_instructions)}
@@ -84,3 +74,15 @@ Now generate content that fills ALL text elements while following ALL brand and 
 Output ONLY the JSON response with filled content."""
     
     return prompt
+  
+  
+  
+#   TEMPLATE RULES:
+# - Format: {rules['format']}
+# - Perspective: {rules['perspective']}
+# - Depth: {rules['depthLevel']}
+# - Hook Style: {rules['hookStyle']}
+# - Body Style: {rules['bodyStyle']}
+# - CTA Style: {rules['ctaStyle']}
+
+# CONTENT GOAL: {goal}

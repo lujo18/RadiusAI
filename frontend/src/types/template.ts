@@ -79,7 +79,7 @@ export interface ContentRules {
 
 export interface StyleConfig {
   layout: LayoutConfig;
-  contentRules: ContentRules;
+  contentRules?: ContentRules; // TODO: Add functionality for slide based generation rules (make sure they are simple) EX. specific tone, perspective to speak from, specifically who to speak to, specific topic to cover, etcs
   slideDesigns: SlideDesign[];
   slideSequence: { slideNumber: number; designId: string }[];
 }
@@ -95,7 +95,7 @@ export interface TemplatePerformance {
 
 export interface Template {
   id: string;
-  userId: string;
+  
   name: string;
   isDefault: boolean;
   category: TemplateCategory;

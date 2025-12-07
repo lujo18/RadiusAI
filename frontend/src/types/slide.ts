@@ -12,6 +12,7 @@ export type TextElement = {
   id: string;
   type: 'text';
   content: string;
+  role?: string; // e.g., "header", "body", "cta"
   fontSize: number;
   fontFamily: string;
   fontStyle: 'normal' | 'bold' | 'italic';

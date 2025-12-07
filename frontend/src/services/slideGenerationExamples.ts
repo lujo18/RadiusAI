@@ -9,18 +9,29 @@ import { generateAndUploadSlides } from '@/services/slideGenerator';
 import { createPost } from '@/lib/firebase/firestore/';
 import type { PostContent, PostSlide } from '@/types/post';
 import type { Template } from '@/types/template';
+import { contentApi } from '@/lib/api/client';
+import { profile } from 'console';
+import { BrandSettings } from '@/types/user';
+import { UserProfile } from 'firebase/auth';
 
 /**
  * Example 1: Generate a post from a template with AI content
  */
 export async function createPostFromTemplate(
   template: Template,
-  aiGeneratedText: string[]
+  profile: UserProfile,
 ): Promise<string> {
   // 1. Extract template structure
   const { styleConfig } = template;
   const slideDesigns = styleConfig.slideDesigns || [];
   const slideSequence = styleConfig.slideSequence || [];
+
+
+  const brandSettings = profile.brandSettings as BrandSettings;
+
+  // T
+  const posts = await contentApi.generatePosts(template, brandSettings, 1)
+  
 
   // 2. Create PostSlides by filling template designs with AI content
   const postSlides: PostSlide[] = slideSequence.map((seq, index) => {

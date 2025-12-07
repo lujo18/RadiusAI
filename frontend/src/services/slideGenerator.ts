@@ -14,8 +14,9 @@
 import { Template } from "@/types/template";
 import { uploadSlideImage } from "../lib/firebase/firestore/index";
 import type { PostContent, PostSlide } from '@/types/post';
-import { BrandSettings } from "@/types/user";
+import { BrandSettings, UserProfile } from "@/types/user";
 import { Post } from "@/types";
+import { contentApi } from "@/lib/api/client";
 
 interface GenerationProgress {
   slideIndex: number;
@@ -32,6 +33,107 @@ interface GenerationError {
   slideIndex: number;
   error: string;
 }
+
+
+export async function createPostsFromTemplate(
+  template: Template,
+  profile: UserProfile,
+  count: number = 1,
+): Promise<Blob[]> {
+  const brandSettings = profile.brandSettings as BrandSettings;
+
+  const posts = await contentApi.generatePosts(template, brandSettings, count);
+
+  const allBlobs: Blob[] = [];
+
+  for (const postContent of posts) {
+    const postBlobs = await generateSlidesInWorker(postContent);
+    allBlobs.push(...postBlobs);
+  }
+
+  return allBlobs;
+}
+
+/**
+ * Generates slide images from PostContent using a Web Worker
+ * 
+ * @param postContent - The post content with slides and layout
+ * @param onProgress - Optional callback for progress updates
+ * @returns Promise resolving to array of {slideIndex, blob} in order
+ */
+export async function generateSlidesInWorker(
+  postContent: PostContent,
+  onProgress?: (progress: GenerationProgress) => void
+): Promise<Blob[]> {
+  return new Promise((resolve, reject) => {
+    // Create worker
+    const worker = new Worker(
+      new URL('./slideGenWorker.ts', import.meta.url),
+      { type: 'module' }
+    );
+
+    const results: GenerationResult[] = [];
+    const errors: GenerationError[] = [];
+    const totalSlides = postContent.length;
+
+    worker.onmessage = (e: MessageEvent) => {
+      const { slideIndex, blob, error, progress } = e.data;
+
+      if (error) {
+        // Collect errors
+        errors.push({ slideIndex, error });
+        
+        // Check if all slides processed (success or failure)
+        if (results.length + errors.length === totalSlides) {
+          worker.terminate();
+          if (errors.length === totalSlides) {
+            // All failed
+            reject(new Error(`All slides failed: ${errors[0].error}`));
+          } else {
+            // Some succeeded - return what we have
+            resolve(results.sort((a, b) => a.slideIndex - b.slideIndex));
+          }
+        }
+        return;
+      }
+
+      if (blob) {
+        // Collect successful result
+        results.push({ slideIndex, blob });
+
+        // Notify progress
+        if (onProgress && progress !== undefined) {
+          onProgress({
+            slideIndex,
+            progress,
+            total: totalSlides,
+          });
+        }
+
+        // Check if all slides completed
+        if (results.length === totalSlides) {
+          worker.terminate();
+          // Sort by slide index to maintain order
+          resolve(results.sort((a, b) => a.slideIndex - b.slideIndex));
+        }
+      }
+    };
+
+    worker.onerror = (error) => {
+      worker.terminate();
+      reject(new Error(`Worker error: ${error.message}`));
+    };
+
+    // Send PostContent to worker
+    worker.postMessage({
+      postContent,
+      pixelRatio: 2, // High DPI
+    });
+  });
+
+}
+
+
 
 /**
  * Generates slide images from PostContent using a Web Worker
@@ -119,20 +221,13 @@ export async function generateSlideImages(
  * @returns Promise resolving to Blob
  */
 export async function generateSingleSlide(
-  slide: PostSlide,
-  aspectRatio: string
+  template: Template,
+  profile: UserProfile,
 ): Promise<Blob> {
-  const postContent: PostContent = {
-    slides: [slide],
-    layout: {
-      slideCount: 1,
-      aspectRatio: aspectRatio as any,
-    },
-    caption: '',
-    hashtags: [],
-  };
 
-  const results = await generateSlideImages(postContent);
+  const slideSet = await contentApi.generatePosts(template, profile.brandSettings as BrandSettings, 1);
+
+  //const results = await generateSlideImages(slideSet[0]);
   return results[0].blob;
 }
 
@@ -160,27 +255,3 @@ export async function generateAndUploadSlides(
   return Promise.all(uploadPromises);
 }
   
-  
-
-export async function generatePosts() {
-  // Placeholder for future batch post generation logic
-}
-
-/**
- * Call backend and generate a set of filler data based on the template
- * and brand settings
- * @param template the template to use for generation
- * @param brandSettings the brand settings to apply
- * @returns array of Posts created using given template and brandSettings
- */
-export async function generatePluginContent(template: Template, brandSettings: BrandSettings): Promise<Post[]> {
-  // Placeholder for future plugin-based content generation logic
-
-  const templateStyleConfig = template.styleConfig;
-
-  
- 
-
-  return [];
-
-}

@@ -7,7 +7,7 @@ from google.genai import types
 
 from backend.ai.prompts import build_generation_prompt
 from backend.ai.structure_input import build_gemini_slide_structure
-from models import (
+from backend.models import (
     Template, 
     BrandSettings
 )
@@ -38,7 +38,7 @@ def generate_content_with_gemini(
 
     # Generate content using client with JSON mode
     response = client.models.generate_content(
-        model='gemini-2.0-flash-exp',
+        model='gemini-2.0-flash-lite',
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.85,
@@ -49,9 +49,13 @@ def generate_content_with_gemini(
         )
     )
     
+    print("Response received from Gemini.")
+    
     # Parse response
     response_text = response.text.strip()
+   
     generated_data = json.loads(response_text)
+    
     
     _validate_gemini_response(generated_data, request_data)
     
@@ -83,10 +87,10 @@ def _validate_gemini_response(generated: Dict, request: Dict) -> None:
                 raise ValueError(f"Gemini didn't fill element {elem_id} in slide {slide_num}")
             
             content = gen_slide["textElements"][elem_id]
-            max_len = req_slide["textElements"][elem_id]["maxLength"]
+            # max_len = req_slide["textElements"][elem_id]["maxLength"] Todo add max length constraints
             
-            if len(content) > max_len:
-                print(f"Warning: Element {elem_id} exceeds max length ({len(content)} > {max_len})")
+            # if len(content) > max_len:
+            #     print(f"Warning: Element {elem_id} exceeds max length ({len(content)} > {max_len})")
 
 def _convert_to_post_content(
     generated: Dict,

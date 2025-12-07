@@ -16,14 +16,13 @@ from .enums import (
 # ==================== CONFIGURATION MODELS ====================
 
 class LayoutConfig(BaseModel):
-    slideCount: int = Field(ge=5, le=10)
+    slideCount: int = Field(ge=3, le=10)
     aspectRatio: AspectRatio
-    structure: List[str]
 
 
 class ContentRules(BaseModel):
   format: str
-  slideCount: int = Field(ge=7, le=10)
+  slideCount: int = Field(ge=3, le=10)
   perspective: str
   depthLevel: Literal['surface', 'detailed', 'comprehensive']
   topicFocus: str
@@ -41,7 +40,7 @@ class ContentRules(BaseModel):
 
 class StyleConfig(BaseModel):
     layout: LayoutConfig
-    contentRules: ContentRules
+    contentRules: Optional[ContentRules] = None # TODO: update the typescript/frontend functionality (see comment there), then fix this
     slideDesigns: List[SlideDesign] 
     slideSequence: List[SlideSequence] 
 
@@ -58,7 +57,6 @@ class TemplatePerformance(BaseModel):
 
 class Template(BaseModel):
     id: str
-    userId: str
     name: str
     isDefault: bool = False
     category: TemplateCategory

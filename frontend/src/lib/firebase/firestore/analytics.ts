@@ -73,7 +73,8 @@ export async function updatePostAnalytics(
 export async function createPostAnalytics(postId: string): Promise<void> {
   try {
     const userId = requireUid();
-    await addDoc(collection(db, 'users', userId, 'analytics'), {
+    const docRef = doc(db, 'users', userId, 'analytics', postId);
+    await updateDoc(docRef, {
       postId,
       platform: {},
       totalEngagement: 0,
