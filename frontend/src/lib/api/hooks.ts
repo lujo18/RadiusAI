@@ -19,8 +19,8 @@ export * from './hooks/useProfiles';
 // Analytics
 export * from './hooks/useAnalytics';
 
-// User Profile
-export * from './hooks/useUser';
+// User Profile - renamed to avoid conflict with useProfile from useProfiles
+export { useUser } from './hooks/useUser';
 
 // Style Guide
 export * from './hooks/useStyleGuide';

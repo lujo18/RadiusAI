@@ -9,7 +9,7 @@ import {
   deleteProfile,
   addIntegration,
   removeIntegration,
-} from '@/lib/firebase/firestore/profiles';
+} from '@/lib/supabase/db/profiles';
 import type { BrandSettings, PlatformIntegration } from '@/types/user';
 
 // Query Keys
@@ -95,13 +95,11 @@ export function useRemoveIntegration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ profileId, integrationId }: {
-      profileId: string;
+    mutationFn: ({ integrationId }: {
       integrationId: string;
-    }) => removeIntegration(profileId, integrationId),
-    onSuccess: (_, variables) => {
+    }) => removeIntegration(integrationId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
-      queryClient.invalidateQueries({ queryKey: profileKeys.detail(variables.profileId) });
     },
   });
 }

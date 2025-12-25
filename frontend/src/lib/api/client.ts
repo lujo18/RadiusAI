@@ -1,50 +1,37 @@
 import axios, { AxiosError } from 'axios';
-import { getIdToken, requireUid } from '@/lib/firebase/auth';
+import { getAccessToken, requireUserId } from '@/lib/supabase/auth';
 
-// Import all Firestore CRUD operations
+// Import all Supabase CRUD operations
 import {
   // Templates
-  createTemplate as createTemplateFirestore,
-  getTemplate as getTemplateFirestore,
+  createTemplate as createTemplateSupabase,
+  getTemplate as getTemplateSupabase,
   getUserTemplates,
-  updateTemplate as updateTemplateFirestore,
-  deleteTemplate as deleteTemplateFirestore,
-  setTemplateAsDefault,
-  cloneTemplate,
+  updateTemplate as updateTemplateSupabase,
+  deleteTemplate as deleteTemplateSupabase,
   // Posts
-  createPost as createPostFirestore,
-  getPost as getPostFirestore,
+  createPost as createPostSupabase,
+  getPost as getPostSupabase,
   getUserPosts,
   getPostsByStatus,
-  getScheduledPosts as getScheduledPostsFirestore,
-  getRecentPosts,
-  updatePost as updatePostFirestore,
-  deletePost as deletePostFirestore,
-  publishPost as publishPostFirestore,
-  markPostFailed,
+  getScheduledPosts as getScheduledPostsSupabase,
+  updatePost as updatePostSupabase,
+  deletePost as deletePostSupabase,
+  updatePostStatus,
   getPostsByTemplate,
   // Storage
   uploadSlideImage,
   uploadSlideImages,
-  deleteSlideImage,
-  deleteTemplateSlideImages,
-  uploadProfileImage,
-  uploadBrandLogo,
-  deleteImage,
-  getTemplateSlideImages,
+  deleteSlideImages,
+  uploadThumbnail,
+  getSlideImageUrl,
   // Analytics
   getPostAnalytics,
   updatePostAnalytics,
   createPostAnalytics,
-  getUserAnalytics,
-  getTopPerformingPosts,
-  createABTest,
-  getABTest,
-  getUserABTests,
-  updateABTestMetrics,
-  endABTest,
-  getTemplateAnalytics,
-} from '../firebase/firestore/index';
+  getAllUserAnalytics,
+  getTemplateAggregateAnalytics,
+} from '../supabase/db/index';
 import { BrandSettings } from '@/types/user';
 import { Template } from '@/types/template';
 
@@ -59,10 +46,10 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor - add Firebase auth token
+// Request interceptor - add Supabase auth token
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await getIdToken();
+    const token = await getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -92,8 +79,7 @@ apiClient.interceptors.response.use(
 export const contentApi = {
   // GET: Fetch all scheduled posts
   getScheduledPosts: async () => {
-    const userId = requireUid();
-    return await getScheduledPostsFirestore(userId);
+    return await getScheduledPostsSupabase();
   },
 
 
@@ -117,12 +103,12 @@ export const contentApi = {
 
   // DELETE: Remove a post
   deletePost: async (postId: string) => {
-    return await deletePostFirestore(postId);
+    return await deletePostSupabase(postId);
   },
 
   // PUT: Update a post
   updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    return await updatePostFirestore(postId, updates);
+    return await updatePostSupabase(postId, updates);
   },
 };
 
@@ -131,14 +117,13 @@ export const contentApi = {
 export const analyticsApi = {
   // GET: Fetch analytics data
   getAnalytics: async (timeframe: 'day' | 'week' | 'month' = 'week') => {
-    const userId = requireUid();
-    return await getUserAnalytics(userId);
+    return await getAllUserAnalytics();
   },
 
   // GET: Fetch variant performance (A/B tests)
   getVariantPerformance: async () => {
-    const userId = requireUid();
-    return await getUserABTests(userId);
+    // TODO: Implement A/B testing in Supabase
+    return [];
   },
 
   // POST: Trigger AI analysis (uses backend AI)
@@ -153,13 +138,12 @@ export const analyticsApi = {
 export const templateApi = {
   // GET: Fetch all templates
   getTemplates: async () => {
-    const userId = requireUid();
-    return await getUserTemplates(userId);
+    return await getUserTemplates();
   },
 
   // GET: Fetch single template with details
   getTemplate: async (templateId: string) => {
-    return await getTemplateFirestore(templateId);
+    return await getTemplateSupabase(templateId);
   },
 
   // POST: Create new template
@@ -167,7 +151,7 @@ export const templateApi = {
     console.log('API: Creating template with data:', templateData);
     
     try {
-      const templateId = await createTemplateFirestore(templateData);
+      const templateId = await createTemplateSupabase(templateData);
       console.log('API: Template created:', templateId);
       return templateId;
     } catch (error: any) {
@@ -178,18 +162,12 @@ export const templateApi = {
 
   // PUT: Update template
   updateTemplate: async ({ templateId, updates }: { templateId: string; updates: any }) => {
-    return await updateTemplateFirestore(templateId, updates);
+    return await updateTemplateSupabase(templateId, updates);
   },
 
   // DELETE: Archive template
   deleteTemplate: async (templateId: string) => {
-    return await deleteTemplateFirestore(templateId);
-  },
-
-  // POST: Set as default
-  setDefaultTemplate: async (templateId: string) => {
-    const userId = requireUid();
-    return await setTemplateAsDefault(userId, templateId);
+    return await deleteTemplateSupabase(templateId);
   },
 };
 
@@ -198,35 +176,31 @@ export const templateApi = {
 export const postApi = {
   // GET: Fetch all posts
   getPosts: async (status?: string, limit?: number) => {
-    const userId = requireUid();
     if (status) {
-      return await getPostsByStatus(userId, status as any);
+      return await getPostsByStatus(status as any);
     }
-    if (limit) {
-      return await getRecentPosts(userId, limit);
-    }
-    return await getUserPosts(userId);
+    return await getUserPosts();
   },
 
   // GET: Fetch single post with details
   getPost: async (postId: string) => {
-    return await getPostFirestore(postId);
+    return await getPostSupabase(postId);
   },
 
   // POST: Create new post
   createPost: async (postData: any) => {
-    return await createPostFirestore(postData);
+    return await createPostSupabase(postData);
   },
 
   // PUT: Update post
   updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    return await updatePostFirestore(postId, updates);
+    return await updatePostSupabase(postId, updates);
   },
 
   // POST: Publish post (uses backend for Ayrshare integration)
   publishPost: async (postId: string) => {
-    // First update status in Firestore
-    await publishPostFirestore(postId);
+    // First update status in Supabase
+    await updatePostStatus(postId, 'published');
     // Then trigger backend publishing to social platforms
     const { data } = await apiClient.post(`/api/posts/${postId}/publish`);
     return data;
@@ -234,7 +208,7 @@ export const postApi = {
 
   // POST: Upload slide image
   uploadSlide: async ({ postId, slideNumber, file }: { postId: string; slideNumber: number; file: File }) => {
-    return await uploadSlideImage(file, postId, slideNumber);
+    return await uploadSlideImage(postId, slideNumber, file);
   },
 
   // POST: Track analytics
@@ -244,7 +218,7 @@ export const postApi = {
 };
 
 // ----- STYLE GUIDE -----
-// TODO: Migrate to Firestore users/{userId}/styleGuide document
+// TODO: Move to Supabase profiles table or separate style_guides table
 
 export const styleGuideApi = {
   // GET: Fetch style guide (still using backend temporarily)
@@ -261,7 +235,7 @@ export const styleGuideApi = {
 };
 
 // ----- USER / PROFILE -----
-// TODO: Migrate to Firestore users/{userId} document
+// TODO: Already migrated to Supabase - consider removing backend API
 
 export const userApi = {
   // GET: Fetch user profile (still using backend temporarily)

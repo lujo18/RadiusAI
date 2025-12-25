@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { FiZap, FiMail, FiLock } from 'react-icons/fi';
+import { FiZap } from 'react-icons/fi';
+import { FcGoogle } from 'react-icons/fc';
 import { useAuthStore } from '@/store';
-import { signInWithEmail, signInWithGoogle, signInWithGitHub } from '@/lib/firebase/auth';
+import { signInWithEmail, signInWithGoogle } from '@/lib/supabase/auth';
 
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -23,23 +25,26 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const userCredential = await signInWithEmail(formData.email, formData.password);
-      const firebaseUser = userCredential.user;
-      const token = await firebaseUser.getIdToken();
+      const { user: supabaseUser, session } = await signInWithEmail(formData.email, formData.password);
+      
+      if (!supabaseUser || !session) {
+        throw new Error('Login failed');
+      }
       
       // Create user object for store
       const user = {
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-        email: firebaseUser.email || '',
-        plan: 'starter' as const,
+        id: supabaseUser.id,
+        name: supabaseUser.email?.split('@')[0] || 'User',
+        email: supabaseUser.email || '',
+        plan: 'starter' as const, // Will be redirected to paywall if no subscription
       };
       
-      login(user, token, firebaseUser);
-      router.push('/dashboard');
+      login(user, supabaseUser, session);
+      
+      // Use window.location for full page reload to ensure middleware picks up session
+      window.location.href = '/dashboard';
     } catch (err: any) {
       setError(err.message || 'Invalid credentials');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -49,165 +54,212 @@ export default function LoginPage() {
     setError('');
     
     try {
-      const userCredential = await signInWithGoogle();
-      const firebaseUser = userCredential.user;
-      const token = await firebaseUser.getIdToken();
-      
-      const user = {
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName || 'User',
-        email: firebaseUser.email || '',
-        plan: 'starter' as const,
-      };
-      
-      login(user, token, firebaseUser);
-      router.push('/dashboard');
+      await signInWithGoogle();
+      // OAuth will redirect, so no need to handle response here
     } catch (err: any) {
       setError(err.message || 'Google sign-in failed');
-    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGitHubSignIn = async () => {
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      const userCredential = await signInWithGitHub();
-      const firebaseUser = userCredential.user;
-      const token = await firebaseUser.getIdToken();
-      
-      const user = {
-        id: firebaseUser.uid,
-        name: firebaseUser.displayName || 'User',
-        email: firebaseUser.email || '',
-        plan: 'starter' as const,
-      };
-      
-      login(user, token, firebaseUser);
-      router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.message || 'GitHub sign-in failed');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleContinueWithEmail = () => {
+    setShowEmailForm(true);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-black text-white flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        {/* Logo */}
-        <Link href="/" className="flex items-center justify-center mb-8">
-          <FiZap className="text-primary-500 text-4xl mr-2" />
-          <span className="text-3xl font-bold bg-gradient-to-r from-primary-400 to-pink-600 bg-clip-text text-transparent">
-            SlideForge
-          </span>
-        </Link>
+    <div className="min-h-screen flex bg-dark-600">
+      {/* Left Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center px-8 py-12">
+        <div className="max-w-md w-full">
+          {/* Logo */}
+          <Link href="/" className="flex items-center mb-12">
+            <FiZap className="text-primary-500 text-3xl mr-2" />
+            <span className="text-2xl font-bold text-white">
+              ViralStack
+            </span>
+          </Link>
 
-        {/* Login Card */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-8 backdrop-blur-lg">
-          <h1 className="text-3xl font-bold mb-2 text-center">Welcome Back</h1>
-          <p className="text-gray-400 text-center mb-8">
-            Log in to continue automating your content
-          </p>
+          {/* Welcome Text */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">
+              Welcome Back
+            </h1>
+            <p className="text-gray-400">
+              Log in to continue automating your content
+            </p>
+          </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-primary-500 transition"
-                  placeholder="you@example.com"
-                />
+          {!showEmailForm ? (
+            <>
+              {/* Google Sign In Button */}
+              <button
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-3 bg-dark-400 border border-gray-700 hover:border-gray-600 hover:bg-dark-300 disabled:border-gray-800 disabled:cursor-not-allowed disabled:bg-dark-500 py-3 px-4 rounded-lg font-medium text-white transition-all shadow-lg"
+              >
+                <FcGoogle className="text-2xl" />
+                Continue with Google
+              </button>
+
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-700"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-dark-600 text-gray-400">Or</span>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-primary-500 transition"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+              {/* Email Button */}
+              <button
+                onClick={handleContinueWithEmail}
+                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary-500/50"
+              >
+                Continue with Email
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Email Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full bg-dark-400 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition text-white placeholder-gray-500"
+                    placeholder="name@company.com"
+                  />
+                </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-gray-400">Remember me</span>
-              </label>
-              <a href="#" className="text-primary-400 hover:text-primary-300">
-                Forgot password?
-              </a>
-            </div>
+                <div>
+                  <input
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full bg-dark-400 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition text-white placeholder-gray-500"
+                    placeholder="Password"
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-700 disabled:cursor-not-allowed py-3 rounded-lg font-semibold transition transform hover:scale-105 active:scale-95"
-            >
-              {isLoading ? 'Logging in...' : 'Log In'}
-            </button>
-          </form>
+                <div className="flex items-center justify-between text-sm">
+                  <label className="flex items-center text-gray-400">
+                    <input type="checkbox" className="mr-2 rounded border-gray-600 bg-dark-400" />
+                    <span>Remember me</span>
+                  </label>
+                  <a href="#" className="text-primary-400 hover:text-primary-300 transition">
+                    Forgot password?
+                  </a>
+                </div>
 
-          <div className="mt-6 text-center text-gray-400">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary-500/50"
+                >
+                  {isLoading ? 'Logging in...' : 'Log In'}
+                </button>
+              </form>
+
+              {/* Back to Options */}
+              <button
+                onClick={() => setShowEmailForm(false)}
+                className="w-full mt-4 text-primary-400 hover:text-primary-300 text-sm font-medium transition"
+              >
+                ← Back to sign-in options
+              </button>
+            </>
+          )}
+
+          {/* Don't have account */}
+          <div className="mt-8 text-center text-gray-400">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-primary-400 hover:text-primary-300 font-semibold">
-              Sign up for free
+            <Link href="/signup" className="text-primary-400 hover:text-primary-300 font-semibold transition">
+              Sign up
             </Link>
           </div>
         </div>
+      </div>
 
-        {/* Social Login (Optional) */}
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-black text-gray-400">Or continue with</span>
-            </div>
-          </div>
+      {/* Right Side - Illustration */}
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary-500 via-accent-purple to-accent-pink relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {/* Animated Background Circles */}
+          <div className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute bottom-32 right-32 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/5 rounded-full blur-xl"></div>
+          
+          {/* Main Illustration Area */}
+          <div className="relative z-10 max-w-lg mx-auto px-12">
+            {/* Card Stack Illustration */}
+            <div className="relative">
+              {/* Mock Browser/App Window */}
+              <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 transform rotate-2">
+                <div className="flex gap-2 mb-6">
+                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                </div>
+                
+                {/* Content Lines */}
+                <div className="space-y-4">
+                  <div className="h-8 bg-gradient-to-r from-primary-200 to-primary-100 rounded"></div>
+                  <div className="h-8 bg-gradient-to-r from-accent-purple/30 to-accent-purple/10 rounded"></div>
+                  <div className="h-8 bg-gradient-to-r from-accent-pink/30 to-accent-pink/10 rounded"></div>
+                  <div className="h-12 bg-gradient-to-r from-primary-300 to-primary-200 rounded-lg"></div>
+                </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <button 
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 border border-gray-700 py-3 rounded-lg font-semibold transition"
-            >
-              Google
-            </button>
-            <button 
-              onClick={handleGitHubSignIn}
-              disabled={isLoading}
-              className="bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 border border-gray-700 py-3 rounded-lg font-semibold transition"
-            >
-              GitHub
-            </button>
+                {/* Colorful Cards */}
+                <div className="mt-6 grid grid-cols-3 gap-3">
+                  <div className="h-20 bg-gradient-to-br from-green-400 to-green-500 rounded-lg shadow-lg"></div>
+                  <div className="h-20 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg shadow-lg"></div>
+                  <div className="h-20 bg-gradient-to-br from-purple-400 to-purple-500 rounded-lg shadow-lg"></div>
+                </div>
+              </div>
+
+              {/* Floating Elements */}
+              <div className="absolute -top-8 -right-8 text-6xl animate-bounce">
+                ✨
+              </div>
+              <div className="absolute -bottom-6 -left-6 text-5xl animate-pulse">
+                🚀
+              </div>
+              <div className="absolute top-1/2 -right-12 text-4xl animate-spin-slow">
+                ⚡
+              </div>
+            </div>
+
+            {/* Feature Highlights */}
+            <div className="mt-12 space-y-4 text-white/90">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur">
+                  ✓
+                </div>
+                <span className="font-medium">AI-powered content generation</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur">
+                  ✓
+                </div>
+                <span className="font-medium">Viral templates & analytics</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur">
+                  ✓
+                </div>
+                <span className="font-medium">Schedule & automate posts</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

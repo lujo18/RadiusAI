@@ -19,6 +19,9 @@ export function useProfile() {
   });
 }
 
+// Alias for backward compatibility
+export const useUser = useProfile;
+
 export function useConnectedAccounts() {
   return useQuery({
     queryKey: userKeys.accounts,

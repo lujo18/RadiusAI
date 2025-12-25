@@ -3,7 +3,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  plan: 'starter' | 'pro' | 'agency';
+  plan: 'starter' | 'growth' | 'unlimited' | null;
 
   profiles: UserProfile[];
 

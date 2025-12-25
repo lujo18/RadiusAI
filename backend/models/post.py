@@ -8,7 +8,7 @@ from .gemini import GeminiCarouselResponse
 # ==================== POST SUB-MODELS ====================
 
 class StorageUrls(BaseModel):
-    slides: List[str] = []  # URLs to slide images in Firebase Storage
+    slides: List[str] = []  # URLs to slide images in Supabase Storage
     thumbnail: Optional[str] = None  # URL to thumbnail image
 
 class PostAnalytics(BaseModel):

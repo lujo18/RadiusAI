@@ -1,6 +1,6 @@
-# SlideForge Frontend
+# ViralStack Frontend
 
-Modern Next.js/React frontend for SlideForge - AI-powered carousel automation platform.
+Modern Next.js/React frontend for ViralStack - AI-powered carousel automation platform.
 
 ## Features
 
@@ -142,7 +142,7 @@ API client configured in `src/lib/api.ts` with:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_APP_NAME=SlideForge
+NEXT_PUBLIC_APP_NAME=ViralStack
 ```
 
 ## Customization

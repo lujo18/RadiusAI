@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTemplates, useProfiles, useCreatePost } from "@/lib/api/hooks";
-import { Template, BrandSettings } from "@/lib/types";
+import { Template } from "@/types/template";
+import { BrandSettings } from "@/types/user";
 import { contentApi } from "@/lib/api/client";
 import { createPostsFromTemplate } from "@/services/slideGenerator";
 
@@ -39,17 +40,10 @@ export default function GeneratePage() {
     const template = templates?.find((t) => t.id === selectedTemplate);
     const profile = profiles?.find((p) => p.id === selectedProfile);
 
-    console.log("Point 2", template, profile);
-    console.log("Template", template);
-    console.log("Profile", profile);
-    console.log("Brand Settings", profile?.brandSettings);
-
     if (!template || !profile) {
       setGenerating(false);
       return;
     }
-
-    console.log("Point 3");
 
     try {
       //const posts = await contentApi.generatePosts(template, profile.brandSettings, 1)
@@ -107,7 +101,7 @@ export default function GeneratePage() {
             </select>
             {selectedTemplate && templates && (
               <div className="mt-2 text-sm text-gray-400">
-                {templates.find((t) => t.id === selectedTemplate)?.description}
+                Template: {templates.find((t) => t.id === selectedTemplate)?.name}
               </div>
             )}
           </div>

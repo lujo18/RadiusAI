@@ -1,26 +1,26 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User as FirebaseUser } from 'firebase/auth';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface User {
   id: string;
   name: string;
   email: string;
-  plan: 'starter' | 'pro' | 'agency';
+  plan: 'starter' | 'growth' | 'unlimited' | null;
 }
 
 interface AuthState {
   user: User | null;
-  firebaseUser: FirebaseUser | null;
-  token: string | null;
+  supabaseUser: SupabaseUser | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   
   // Actions
   setUser: (user: User) => void;
-  setFirebaseUser: (firebaseUser: FirebaseUser | null) => void;
-  setToken: (token: string) => void;
-  login: (user: User, token: string, firebaseUser?: FirebaseUser) => void;
+  setSupabaseUser: (supabaseUser: SupabaseUser | null) => void;
+  setSession: (session: Session | null) => void;
+  login: (user: User, supabaseUser: SupabaseUser, session: Session) => void;
   logout: () => void;
   setLoading: (loading: boolean) => void;
 }
@@ -29,28 +29,28 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      firebaseUser: null,
-      token: null,
+      supabaseUser: null,
+      session: null,
       isAuthenticated: false,
       isLoading: false,
 
       setUser: (user) => set({ user, isAuthenticated: true }),
       
-      setFirebaseUser: (firebaseUser) => set({ firebaseUser }),
+      setSupabaseUser: (supabaseUser) => set({ supabaseUser }),
       
-      setToken: (token) => set({ token }),
+      setSession: (session) => set({ session }),
       
-      login: (user, token, firebaseUser) => set({ 
+      login: (user, supabaseUser, session) => set({ 
         user, 
-        token,
-        firebaseUser: firebaseUser || null,
+        supabaseUser,
+        session,
         isAuthenticated: true 
       }),
       
       logout: () => set({ 
         user: null, 
-        token: null,
-        firebaseUser: null,
+        supabaseUser: null,
+        session: null,
         isAuthenticated: false 
       }),
       
@@ -59,8 +59,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({ 
-        user: state.user, 
-        token: state.token,
+        user: state.user,
         isAuthenticated: state.isAuthenticated 
       }),
     }

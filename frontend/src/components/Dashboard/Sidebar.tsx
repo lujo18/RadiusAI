@@ -12,7 +12,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout }: SidebarPr
       <div className="flex items-center mb-8">
         <FiZap className="text-primary-500 text-3xl mr-2" />
         <span className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-pink-600 bg-clip-text text-transparent">
-          SlideForge
+          ViralStack
         </span>
       </div>
 

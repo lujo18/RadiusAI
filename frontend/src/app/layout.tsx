@@ -7,7 +7,7 @@ import { QueryProvider } from "@/components/QueryProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SlideForge - AI-Powered Carousel Automation",
+  title: "ViralStack - AI-Powered Carousel Automation",
   description: "Generate, schedule, and optimize Instagram & TikTok carousels on autopilot",
 };
 

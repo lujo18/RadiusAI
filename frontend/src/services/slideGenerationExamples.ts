@@ -6,13 +6,13 @@
  */
 
 import { generateAndUploadSlides } from '@/services/slideGenerator';
-import { createPost } from '@/lib/firebase/firestore/';
+import { createPost } from '@/lib/supabase/db/index';
 import type { PostContent, PostSlide } from '@/types/post';
 import type { Template } from '@/types/template';
 import { contentApi } from '@/lib/api/client';
 import { profile } from 'console';
 import { BrandSettings } from '@/types/user';
-import { UserProfile } from 'firebase/auth';
+import { UserProfile } from '@/types/user';
 
 /**
  * Example 1: Generate a post from a template with AI content

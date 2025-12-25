@@ -10,16 +10,19 @@ sys.path.insert(0, str(backend_dir))
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import firebase_admin
-from firebase_admin import credentials, auth
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer
 from ai.client import client
+from config.supabase import get_supabase
+from auth import get_current_user
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 # Import routers
 from routers import templates, posts
 
-app = FastAPI(title="SlideForge API", version="1.0.0")
+app = FastAPI(title="ViralStack API", version="1.0.0")
 
 # CORS middleware
 app.add_middleware(
@@ -30,27 +33,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Firebase (check if already initialized to avoid errors)
+# Initialize Supabase
 try:
-    firebase_admin.get_app()
-    print("✅ Firebase already initialized")
-except ValueError:
-    # App not initialized yet - initialize now
-    service_account_path = backend_dir / "serviceAccountKey.json"
-    
-    if not service_account_path.exists():
-        print("⚠️  WARNING: serviceAccountKey.json not found")
-        print("   Download from: https://console.firebase.google.com/ → Project Settings → Service Accounts")
-        print("   Firebase features will not work until credentials are added.")
-        # Initialize with minimal config to avoid errors (won't work but app will start)
-        firebase_admin.initialize_app()
-    else:
-        cred = credentials.Certificate(str(service_account_path))
-        # Initialize with storage bucket
-        firebase_admin.initialize_app(cred, {
-            'storageBucket': 'slideforge-2488d.firebasestorage.app'  # Update with your bucket name
-        })
-        print("✅ Firebase initialized successfully with Storage bucket")
+    supabase = get_supabase()
+    print("✅ Supabase initialized successfully")
+    print(f"   URL: {os.getenv('SUPABASE_URL')}")
+except Exception as e:
+    print(f"⚠️  WARNING: Supabase initialization failed: {e}")
+    print("   Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env")
 
 # Include routers
 app.include_router(templates.router)
@@ -59,14 +49,14 @@ app.include_router(generate.router)
 
 security = HTTPBearer()
 
-def verify_token(creds: HTTPAuthorizationCredentials = Depends(security)):
-    token = creds.credentials
-    try:
-        decoded = auth.verify_id_token(token)
-        return decoded
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+@app.get("/")
+def root():
+    return {"message": "ViralStack API", "version": "1.0.0", "status": "running"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "database": "supabase"}
 
 @app.get("/protected")
-def protected_route(user=Depends(verify_token)):
-    return {"uid": user["uid"], "message": "Access granted"}
+async def protected_route(user_id: str = Depends(get_current_user)):
+    return {"userId": user_id, "message": "Access granted"}

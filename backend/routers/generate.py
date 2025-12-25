@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from backend.ai.gemini_service import generate_content_with_gemini
+from backend.services.genai.gemini_service import generate_content_with_gemini
 from backend.models import Template
 from backend.models.user import BrandSettings
 
