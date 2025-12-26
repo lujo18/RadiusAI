@@ -11,16 +11,14 @@ sys.path.insert(0, str(backend_dir))
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
-from ai.client import client
-from config.supabase import get_supabase
+from services.genai.client import client
+from services.integrations.supabase.client import get_supabase
 from auth import get_current_user
 from dotenv import load_dotenv
-import os
-
-load_dotenv()
+from backend.config import Config
 
 # Import routers
-from routers import templates, posts
+from routers import generate, profile
 
 app = FastAPI(title="ViralStack API", version="1.0.0")
 
@@ -37,14 +35,13 @@ app.add_middleware(
 try:
     supabase = get_supabase()
     print("✅ Supabase initialized successfully")
-    print(f"   URL: {os.getenv('SUPABASE_URL')}")
+    print(f"   URL: {Config.SUPABASE_URL}")
 except Exception as e:
     print(f"⚠️  WARNING: Supabase initialization failed: {e}")
     print("   Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env")
 
 # Include routers
-app.include_router(templates.router)
-app.include_router(posts.router)
+app.include_router(profile.router)
 app.include_router(generate.router)
 
 security = HTTPBearer()

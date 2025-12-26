@@ -12,7 +12,7 @@ CREATE TABLE public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  plan TEXT NOT NULL DEFAULT 'starter' CHECK (plan IN ('starter', 'pro', 'agency')),
+  plan TEXT CHECK (plan IN ('starter', 'growth', 'unlimited')),
   template_count INTEGER NOT NULL DEFAULT 0,
   post_count INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -28,6 +28,13 @@ CREATE TABLE public.profiles (
   
   -- Brand Settings (stored as JSONB for flexibility)
   brand_settings JSONB NOT NULL,
+  
+  -- Stripe subscription data
+  stripe_customer_id TEXT,
+  stripe_subscription_id TEXT,
+  subscription_status TEXT CHECK (subscription_status IN ('active', 'canceled', 'past_due', 'unpaid', 'paused', 'incomplete', 'incomplete_expired', 'trialing')),
+  subscription_plan TEXT CHECK (subscription_plan IN ('starter', 'growth', 'unlimited')),
+  current_period_end TIMESTAMPTZ,
   
   -- Counters
   template_count INTEGER NOT NULL DEFAULT 0,
@@ -296,13 +303,22 @@ CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON public.posts
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  -- Create user record
   INSERT INTO public.users (id, name, email, plan)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
     NEW.email,
-    'starter'
+    NULL
   );
+  
+  -- Create default profile with empty brand settings
+  INSERT INTO public.profiles (user_id, brand_settings)
+  VALUES (
+    NEW.id,
+    '{}'::jsonb
+  );
+  
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

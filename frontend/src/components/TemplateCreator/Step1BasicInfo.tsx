@@ -1,7 +1,7 @@
 import { 
   TEMPLATE_CATEGORIES, 
   type TemplateCategory
-} from '@/types/template';
+} from '@/types';
 import CategoryCard from './CategoryCard';
 
 interface Step1BasicInfoProps {

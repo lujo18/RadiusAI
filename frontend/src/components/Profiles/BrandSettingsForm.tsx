@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FiPlus, FiX } from 'react-icons/fi';
-import type { BrandSettings } from '@/types/user';
+import type { BrandSettings } from '@/types';
 
 interface BrandSettingsFormProps {
   initialValues?: BrandSettings;
@@ -14,15 +14,15 @@ const defaultSettings: BrandSettings = {
   name: '',
   niche: '',
   aesthetic: '',
-  targetAudience: '',
-  brandVoice: '',
-  contentPillars: [],
-  toneOfVoice: 'casual',
-  emojiUsage: 'moderate',
-  forbiddenWords: [],
-  preferredWords: [],
-  hashtagStyle: 'mixed',
-  hashtagCount: 10,
+  target_audience: '',
+  brand_voice: '',
+  content_pillars: [],
+  tone_of_voice: 'casual',
+  emoji_usage: 'moderate',
+  forbidden_words: [],
+  preferred_words: [],
+  hashtag_style: 'mixed',
+  hashtag_count: 10,
   hashtags: [],
 };
 
@@ -74,15 +74,15 @@ export default function BrandSettingsForm({
         <InputField
           label="Target Audience"
           placeholder="e.g., Gen Z, 18-25, professionals"
-          value={settings.targetAudience}
-          onChange={(v) => updateField('targetAudience', v)}
+          value={settings.target_audience}
+          onChange={(v) => updateField('target_audience', v)}
           required
         />
         <InputField
           label="Brand Voice"
           placeholder="e.g., Raw, authentic, no BS"
-          value={settings.brandVoice}
-          onChange={(v) => updateField('brandVoice', v)}
+          value={settings.brand_voice}
+          onChange={(v) => updateField('brand_voice', v)}
           required
         />
       </Section>
@@ -92,8 +92,8 @@ export default function BrandSettingsForm({
         <TagInput
           label="Content Pillars"
           placeholder="Add a pillar (e.g., confidence, dating, fitness)"
-          tags={settings.contentPillars}
-          onChange={(tags) => updateField('contentPillars', tags)}
+          tags={settings.content_pillars}
+          onChange={(tags) => updateField('content_pillars', tags)}
         />
       </Section>
 
@@ -101,8 +101,8 @@ export default function BrandSettingsForm({
       <Section title="Writing Style">
         <SelectField
           label="Tone of Voice"
-          value={settings.toneOfVoice}
-          onChange={(v) => updateField('toneOfVoice', v as any)}
+          value={settings.tone_of_voice}
+          onChange={(v) => updateField('tone_of_voice', v as any)}
           options={[
             { value: 'casual', label: 'Casual' },
             { value: 'professional', label: 'Professional' },
@@ -113,8 +113,8 @@ export default function BrandSettingsForm({
         />
         <SelectField
           label="Emoji Usage"
-          value={settings.emojiUsage}
-          onChange={(v) => updateField('emojiUsage', v as any)}
+          value={settings.emoji_usage}
+          onChange={(v) => updateField('emoji_usage', v as any)}
           options={[
             { value: 'none', label: 'None' },
             { value: 'minimal', label: 'Minimal' },
@@ -126,14 +126,14 @@ export default function BrandSettingsForm({
           <TagInput
             label="Forbidden Words"
             placeholder="Words to avoid"
-            tags={settings.forbiddenWords}
-            onChange={(tags) => updateField('forbiddenWords', tags)}
+            tags={settings.forbidden_words}
+            onChange={(tags) => updateField('forbidden_words', tags)}
           />
           <TagInput
             label="Preferred Words"
             placeholder="Words to emphasize"
-            tags={settings.preferredWords}
-            onChange={(tags) => updateField('preferredWords', tags)}
+            tags={settings.preferred_words}
+            onChange={(tags) => updateField('preferred_words', tags)}
           />
         </div>
       </Section>
@@ -143,8 +143,8 @@ export default function BrandSettingsForm({
         <div className="grid grid-cols-2 gap-4">
           <SelectField
             label="Hashtag Style"
-            value={settings.hashtagStyle}
-            onChange={(v) => updateField('hashtagStyle', v as any)}
+            value={settings.hashtag_style}
+            onChange={(v) => updateField('hashtag_style', v as any)}
             options={[
               { value: 'niche', label: 'Niche-focused' },
               { value: 'trending', label: 'Trending' },
@@ -153,8 +153,8 @@ export default function BrandSettingsForm({
           />
           <NumberField
             label="Hashtag Count"
-            value={settings.hashtagCount}
-            onChange={(v) => updateField('hashtagCount', v)}
+            value={settings.hashtag_count}
+            onChange={(v) => updateField('hashtag_count', v)}
             min={5}
             max={30}
           />

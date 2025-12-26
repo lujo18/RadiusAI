@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useTemplates, useProfiles, useCreatePost } from "@/lib/api/hooks";
-import { Template } from "@/types/template";
-import { BrandSettings } from "@/types/user";
+import type { Profile, Template, BrandSettings } from "@/types";
 import { contentApi } from "@/lib/api/client";
 import { createPostsFromTemplate } from "@/services/slideGenerator";
+
+/** Helper to safely extract brand settings from profile */
+function getBrandSettings(profile: Profile): BrandSettings | null {
+  if (!profile.brand_settings) return null;
+  return profile.brand_settings as unknown as BrandSettings;
+}
 
 export default function GeneratePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
@@ -117,21 +122,24 @@ export default function GeneratePage() {
               className="w-full bg-black border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">Choose a profile...</option>
-              {profiles?.map((profile) => (
-                <option key={profile.id} value={profile.id}>
-                  {profile.brandSettings.name}
-                </option>
-              ))}
+              {profiles?.map((profile) => {
+                const settings = getBrandSettings(profile);
+                return (
+                  <option key={profile.id} value={profile.id}>
+                    {settings?.name || 'Unnamed Profile'}
+                  </option>
+                );
+              })}
             </select>
-            {selectedProfile && profiles && (
-              <div className="mt-2 text-sm text-gray-400">
-                Niche:{" "}
-                {
-                  profiles.find((p) => p.id === selectedProfile)?.brandSettings
-                    .niche
-                }
-              </div>
-            )}
+            {selectedProfile && profiles && (() => {
+              const profile = profiles.find((p) => p.id === selectedProfile);
+              const settings = profile ? getBrandSettings(profile) : null;
+              return settings ? (
+                <div className="mt-2 text-sm text-gray-400">
+                  Niche: {settings.niche}
+                </div>
+              ) : null;
+            })()}
           </div>
 
           {/* Generate Button */}
@@ -164,7 +172,7 @@ export default function GeneratePage() {
           <p>
             BRANDSETTINGs:{" "}
             {JSON.stringify(
-              profiles?.find((p) => p.id == selectedProfile)?.brandSettings
+              profiles?.find((p) => p.id == selectedProfile)?.brand_settings
             )}
           </p>
           <div></div>

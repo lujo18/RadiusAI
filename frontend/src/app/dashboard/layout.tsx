@@ -5,12 +5,14 @@ import { FiZap, FiCalendar, FiBarChart2, FiSettings, FiLogOut, FiTrendingUp, FiL
 import { useAuthStore } from '@/store';
 import { logOut } from '@/lib/supabase/auth';
 import { useState, useEffect } from 'react';
+import SubscriptionBanner from '@/components/SubscriptionBanner';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
+  const supabaseUser = useAuthStore((state) => state.supabaseUser);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
   const [notifications] = useState(2);
@@ -31,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [isAuthenticated, isLoading, router]);
 
-  // Check for active subscription (hard paywall)
+  // Check subscription status (show banner instead of redirecting)
   useEffect(() => {
     console.log('[Dashboard] Subscription check:', {
       isLoading,
@@ -42,15 +44,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     });
     
     if (!isLoading && isAuthenticated && user) {
-      // Check if user has an active subscription (plan is not null)
-      if (!user.plan) {
-        console.log('[Dashboard] No active subscription - redirecting to pricing');
-        // Don't set subscriptionChecked - keep them out
-        router.push('/pricing?error=no_subscription');
-        return;
-      }
-      
-      console.log('[Dashboard] User has active subscription:', user.plan);
+      // User is authenticated - let them see dashboard with banner if no subscription
+      console.log('[Dashboard] User authenticated, plan:', user.plan || 'none');
       setSubscriptionChecked(true);
     } else if (!isLoading && !isAuthenticated) {
       // Not authenticated at all - redirect to login
@@ -143,12 +138,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* User Profile */}
             <div className="flex items-center gap-3 pl-4 border-l border-white/10">
               <div className="text-right hidden sm:block">
-                <div className="text-sm font-medium text-white">{user?.email?.split('@')[0] || 'User'}</div>
-                <div className="text-xs text-gray-400 capitalize">{user?.plan || 'Pro'} Plan</div>
+                <div className="text-sm font-medium text-white">
+                  {supabaseUser?.user_metadata?.full_name || 
+                   supabaseUser?.user_metadata?.name || 
+                   user?.email?.split('@')[0] || 
+                   'User'}
+                </div>
+                <div className="text-xs text-gray-400 capitalize">{user?.plan || 'Free'} Plan</div>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                {user?.email?.[0]?.toUpperCase() || 'U'}
-              </div>
+              {supabaseUser?.user_metadata?.avatar_url || supabaseUser?.user_metadata?.picture ? (
+                <img 
+                  src={supabaseUser.user_metadata.avatar_url || supabaseUser.user_metadata.picture} 
+                  alt={supabaseUser?.user_metadata?.full_name || supabaseUser?.user_metadata?.name || 'User'}
+                  className="w-10 h-10 rounded-full border-2 border-primary-500 object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  {user?.email?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -188,6 +196,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Main Content */}
         <main className="flex-1 ml-64 p-8 min-h-[calc(100vh-4rem)]">
           <div className="max-w-screen-2xl mx-auto">
+            {/* Show subscription banner if no active subscription */}
+            {user && !user.plan && <SubscriptionBanner />}
             {children}
           </div>
         </main>

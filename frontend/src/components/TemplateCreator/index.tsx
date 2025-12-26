@@ -2,12 +2,8 @@
 
 import { useState } from 'react';
 import { FiX, FiCheck } from 'react-icons/fi';
-import { 
-  DEFAULT_STYLE_CONFIGS, 
-  type TemplateCategory,
-  type CreateTemplateInput, 
-  type AspectRatio
-} from '@/types/template';
+import { DEFAULT_STYLE_CONFIGS } from '@/types';
+import type { TemplateCategory, AspectRatio, StyleConfig, CreateTemplateInput } from '@/types';
 import { type SlideDesign } from './types';
 import Step1BasicInfo from './Step1BasicInfo';
 import Step2VisualEditor from './Step2VisualEditor';
@@ -64,8 +60,8 @@ export default function TemplateCreator({ onClose, onSave, existingTemplate }: T
     const template: CreateTemplateInput = {
       name,
       category,
-      styleConfig,
-      isDefault
+      style_config: styleConfig,
+      is_default: isDefault
     };
     onSave(template);
   };

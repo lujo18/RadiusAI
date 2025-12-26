@@ -11,7 +11,8 @@ import {
   FiCheck,
 } from "react-icons/fi";
 import { Stage, Layer, Rect, Text as KonvaText, Line } from "react-konva";
-import { type AspectRatio, ASPECT_RATIOS } from "@/types/template";
+import type { AspectRatio } from "@/types";
+import { ASPECT_RATIOS } from "@/types";
 import {
   type SlideDesign,
   type TextElement,

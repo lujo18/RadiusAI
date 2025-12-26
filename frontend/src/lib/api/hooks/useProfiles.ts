@@ -10,7 +10,7 @@ import {
   addIntegration,
   removeIntegration,
 } from '@/lib/supabase/db/profiles';
-import type { BrandSettings, PlatformIntegration } from '@/types/user';
+import type { BrandSettings, PlatformIntegration, Json } from '@/types';
 
 // Query Keys
 export const profileKeys = {
@@ -43,7 +43,8 @@ export function useCreateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createProfile,
+    mutationFn: (brandSettings: BrandSettings) => 
+      createProfile(brandSettings as unknown as Json),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
@@ -57,7 +58,7 @@ export function useUpdateBrandSettings() {
     mutationFn: ({ profileId, brandSettings }: { 
       profileId: string; 
       brandSettings: BrandSettings 
-    }) => updateBrandSettings(profileId, brandSettings),
+    }) => updateBrandSettings(profileId, brandSettings as unknown as Json),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
       queryClient.invalidateQueries({ queryKey: profileKeys.detail(variables.profileId) });

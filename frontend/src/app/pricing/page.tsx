@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { FiZap, FiCheck, FiX, FiArrowRight, FiStar } from 'react-icons/fi';
 import { pricingContent } from '@/content/pricing';
 import { supabase } from '@/lib/supabase/client';
+import PublicNavbar from '@/components/PublicNavbar';
 
 interface PriceData {
   id: string;
@@ -132,26 +133,8 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-dark-600">
-      {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-600/80 backdrop-blur-lg border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <FiZap className="text-primary-500 text-2xl" />
-            <span className="text-xl font-bold text-white">ViralStack</span>
-          </Link>
-
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="/#benefits" className="text-gray-300 hover:text-white transition">Features</Link>
-            <Link href="/#how-it-works" className="text-gray-300 hover:text-white transition">How it works</Link>
-            <Link href="/#testimonials" className="text-gray-300 hover:text-white transition">Testimonials</Link>
-            <Link href="/pricing" className="text-white font-semibold">Pricing</Link>
-            <Link href="/#faq" className="text-gray-300 hover:text-white transition">FAQ</Link>
-            <Link href="/signup" className="btn-primary">
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      {/* Navbar */}
+      <PublicNavbar />
 
       {/* HERO SECTION */}
       <section className="pt-32 pb-16 px-6">

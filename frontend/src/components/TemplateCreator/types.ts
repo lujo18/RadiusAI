@@ -6,7 +6,7 @@
  */
 
 export type {
-  TextElement,
+  LegacyTextElement as TextElement,
   BackgroundConfig,
-  SlideDesign,
-} from '@/types/slide';
+  LegacySlideDesign as SlideDesign,
+} from '@/types';

@@ -9,8 +9,8 @@
 
 import Konva from 'konva';
 import type { SlideDesign, BackgroundConfig, TextElement } from '@/components/TemplateCreator/types';
-import type { AspectRatio } from '@/types/template';
-import { ASPECT_RATIOS } from '@/types/template';
+import type { AspectRatio } from '@/types';
+import { ASPECT_RATIOS } from '@/types';
 
 /**
  * Creates a background layer for a slide

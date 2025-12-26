@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
             stripe_subscription_id: subscription.id,
             subscription_status: subscription.status,
             subscription_plan: selectedPlan,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
           })
           .eq('user_id', userId);
 
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
           .from('profiles')
           .update({
             subscription_status: subscription.status,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: new Date((subscription as any).current_period_end * 1000).toISOString(),
           })
           .eq('user_id', profile.user_id);
 
@@ -123,7 +123,13 @@ export async function POST(req: NextRequest) {
           .select('user_id')
           .eq('stripe_subscription_id', subscription.id)
           .single();
-console.log(`[Webhook] Deleting subscription for user ${profile.user_id}`);
+
+        if (!profile) {
+          console.error('Profile not found for subscription:', subscription.id);
+          break;
+        }
+
+        console.log(`[Webhook] Deleting subscription for user ${profile.user_id}`);
 
         // Mark subscription as canceled and clear data
         await supabaseAdmin
@@ -142,13 +148,7 @@ console.log(`[Webhook] Deleting subscription for user ${profile.user_id}`);
           .update({ plan: null })
           .eq('id', profile.user_id);
 
-        console.log(`❌ Subscription canceled for user ${profile.user_id} - plan set to null
-            stripe_subscription_id: null,
-            current_period_end: null,
-          })
-          .eq('user_id', profile.user_id);
-
-        console.log(`❌ Subscription canceled for user ${profile.user_id}`);
+        console.log(`Subscription canceled for user ${profile.user_id}`);
         break;
       }
 

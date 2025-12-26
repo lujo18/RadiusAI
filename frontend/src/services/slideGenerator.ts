@@ -11,14 +11,23 @@
  * ```
  */
 
-import { Template, ASPECT_RATIOS } from "@/types/template";
+import type { 
+  Template, 
+  Profile, 
+  BrandSettings, 
+  Post,
+  PostContent, 
+  LegacyPostSlide,
+  BackgroundConfig 
+} from "@/types";
+import { ASPECT_RATIOS } from "@/types";
 import { uploadSlideImage } from "../lib/supabase/db/index";
-import type { PostContent, PostSlide } from "@/types/post";
-import { BrandSettings, UserProfile } from "@/types/user";
-import { Post } from "@/types";
 import { contentApi } from "@/lib/api/client";
 import Konva from 'konva';
-import type { LayoutConfig } from "@/types/template";
+
+// Type alias for backward compatibility
+type PostSlide = LegacyPostSlide;
+type LayoutConfig = PostContent['layout'];
 
 interface GenerationProgress {
   slideIndex: number;
@@ -38,10 +47,11 @@ interface GenerationError {
 
 export async function createPostsFromTemplate(
   template: Template,
-  profile: UserProfile,
+  profile: Profile,
   count: number = 1
 ): Promise<Blob[]> {
-  const brandSettings = profile.brandSettings as BrandSettings;
+  // Extract brand settings from profile (stored as Json)
+  const brandSettings = profile.brand_settings as unknown as BrandSettings;
 
   console.log("Generating posts");
   const response = await contentApi.generatePosts(
@@ -329,11 +339,12 @@ export async function generateSlideImages(
  */
 export async function generateSingleSlide(
   template: Template,
-  profile: UserProfile
+  profile: Profile
 ): Promise<Blob> {
+  const brandSettings = profile.brand_settings as unknown as BrandSettings;
   const slideSet = await contentApi.generatePosts(
     template,
-    profile.brandSettings as BrandSettings,
+    brandSettings,
     1
   );
 

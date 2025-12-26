@@ -2,7 +2,7 @@ import requests
 from backend.config import Config
 
 # Create a new profile in Late
-def create_profile(user_id: str, profile_name: str, profile_description: str):
+async def create_late_profile(profile_name: str, profile_description: str) -> str:
   
   response = requests.post(
       'https://getlate.dev/api/v1/profiles',

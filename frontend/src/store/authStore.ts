@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>()(
       supabaseUser: null,
       session: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true, // Start as true to prevent flash of unauthenticated content
 
       setUser: (user) => set({ user, isAuthenticated: true }),
       
@@ -60,6 +60,8 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       partialize: (state) => ({ 
         user: state.user,
+        supabaseUser: state.supabaseUser,
+        session: state.session,
         isAuthenticated: state.isAuthenticated 
       }),
     }

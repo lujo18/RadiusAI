@@ -13,7 +13,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('[AuthProvider] Initializing...');
-    setLoading(true);
     
     // Check active session
     const checkSession = async () => {
@@ -38,12 +37,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(user);
         setSupabaseUser(session.user);
         setSession(session);
+        setLoading(false);
       } else {
         console.log('[AuthProvider] No session found, logging out');
         logout();
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkSession();

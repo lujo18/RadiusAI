@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FiZap, FiCheck, FiArrowRight, FiPlay, FiStar } from 'react-icons/fi';
 import { landingContent, DynamicMetrics } from '@/content/landing';
+import PublicNavbar from '@/components/PublicNavbar';
 
 interface Testimonial {
   id: string;
@@ -35,27 +36,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-dark-600">
-      {/* ==========================================
-          NAVBAR
-          ========================================== */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-600/80 backdrop-blur-lg border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <FiZap className="text-primary-500 text-2xl" />
-            <span className="text-xl font-bold text-white">ViralStack</span>
-          </Link>
-
-          <div className="hidden md:flex items-center space-x-8">
-            <a href="#benefits" className="text-gray-300 hover:text-white transition">Features</a>
-            <Link href="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
-            <a href="#faq" className="text-gray-300 hover:text-white transition">FAQ</a>
-            <Link href="/login" className="text-gray-300 hover:text-white transition">Login</Link>
-            <Link href="/signup" className="btn-primary">
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+      {/* Navbar */}
+      <PublicNavbar />
 
       {/* ==========================================
           HERO SECTION

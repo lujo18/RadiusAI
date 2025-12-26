@@ -16,6 +16,13 @@ import {
   ImageIcon
 } from "lucide-react";
 import { useTemplate, useUpdateTemplate, useDeleteTemplate } from "@/lib/api/hooks";
+import type { Template, StyleConfig } from "@/types";
+
+/** Helper to safely extract style config from template */
+function getStyleConfig(template: Template): StyleConfig | null {
+  if (!template.style_config) return null;
+  return template.style_config as unknown as StyleConfig;
+}
 
 export default function TemplateDetailPage() {
   const params = useParams();
@@ -141,14 +148,14 @@ export default function TemplateDetailPage() {
                 <span className="px-3 py-1 bg-primary-500/10 text-primary-400 text-sm font-medium rounded-full border border-primary-500/20">
                   {template.category}
                 </span>
-                {template.isDefault && (
+                {template.is_default && (
                   <span className="px-3 py-1 bg-yellow-500/10 text-yellow-400 text-sm font-medium rounded-full border border-yellow-500/20 flex items-center gap-1">
                     <Star className="w-3 h-3" />
                     Default
                   </span>
                 )}
                 <span className="text-gray-500 text-sm">
-                  Created {new Date(template.createdAt).toLocaleDateString()}
+                  Created {new Date(template.created_at).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -175,7 +182,7 @@ export default function TemplateDetailPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Performance Stats */}
+        {/* Performance Stats - placeholder until performance is loaded separately */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-2">
@@ -184,7 +191,7 @@ export default function TemplateDetailPage() {
               </div>
               <div className="text-sm text-gray-400">Total Posts</div>
             </div>
-            <div className="text-3xl font-bold text-white">{template.performance.totalPosts}</div>
+            <div className="text-3xl font-bold text-white">0</div>
           </div>
 
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
@@ -194,9 +201,7 @@ export default function TemplateDetailPage() {
               </div>
               <div className="text-sm text-gray-400">Avg Impressions</div>
             </div>
-            <div className="text-3xl font-bold text-white">
-              {template.performance.avgImpressions.toFixed(0)}
-            </div>
+            <div className="text-3xl font-bold text-white">0</div>
           </div>
 
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
@@ -206,9 +211,7 @@ export default function TemplateDetailPage() {
               </div>
               <div className="text-sm text-gray-400">Avg Engagement</div>
             </div>
-            <div className="text-3xl font-bold text-white">
-              {template.performance.avgEngagementRate.toFixed(1)}%
-            </div>
+            <div className="text-3xl font-bold text-white">0%</div>
           </div>
 
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
@@ -218,9 +221,7 @@ export default function TemplateDetailPage() {
               </div>
               <div className="text-sm text-gray-400">Avg Saves</div>
             </div>
-            <div className="text-3xl font-bold text-white">
-              {template.performance.avgSaves.toFixed(0)}
-            </div>
+            <div className="text-3xl font-bold text-white">0</div>
           </div>
         </div>
 
@@ -228,49 +229,58 @@ export default function TemplateDetailPage() {
         <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-bold text-white mb-4">Template Configuration</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-medium text-gray-400 mb-2">Layout</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Slide Count:</span>
-                  <span className="text-white">{template.styleConfig.layout.slideCount}</span>
+          {(() => {
+            const styleConfig = getStyleConfig(template);
+            if (!styleConfig) {
+              return <p className="text-gray-400">No style configuration available</p>;
+            }
+            
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Layout</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Slide Count:</span>
+                      <span className="text-white">{styleConfig.layout?.slideCount ?? 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Aspect Ratio:</span>
+                      <span className="text-white">{styleConfig.layout?.aspectRatio ?? 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Status:</span>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        template.status === 'active' ? 'bg-green-500/10 text-green-400' :
+                        template.status === 'testing' ? 'bg-yellow-500/10 text-yellow-400' :
+                        'bg-gray-500/10 text-gray-400'
+                      }`}>
+                        {template.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Aspect Ratio:</span>
-                  <span className="text-white">{template.styleConfig.layout.aspectRatio}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Status:</span>
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    template.status === 'active' ? 'bg-green-500/10 text-green-400' :
-                    template.status === 'testing' ? 'bg-yellow-500/10 text-yellow-400' :
-                    'bg-gray-500/10 text-gray-400'
-                  }`}>
-                    {template.status}
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            <div>
-              <h3 className="text-sm font-medium text-gray-400 mb-2">Content Rules</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Format:</span>
-                  <span className="text-white">{template.styleConfig.contentRules.format}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Perspective:</span>
-                  <span className="text-white">{template.styleConfig.contentRules.perspective}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Hook Style:</span>
-                  <span className="text-white">{template.styleConfig.contentRules.hookStyle}</span>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Content Rules</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Format:</span>
+                      <span className="text-white">{styleConfig.contentRules?.format ?? 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Perspective:</span>
+                      <span className="text-white">{styleConfig.contentRules?.perspective ?? 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Hook Style:</span>
+                      <span className="text-white">{styleConfig.contentRules?.hookStyle ?? 'N/A'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* Posts List Placeholder */}

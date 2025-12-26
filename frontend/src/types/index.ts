@@ -1,59 +1,15 @@
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  plan: 'starter' | 'growth' | 'unlimited';
-}
+/**
+ * Types Index - Re-export all types from database.ts
+ * 
+ * Import from '@/types' for all database types:
+ *   import { User, Template, Post } from '@/types';
+ * 
+ * Or import specific categories:
+ *   import type { TemplateWithConfig, PostWithDetails } from '@/types';
+ */
 
-export interface Post {
-  id: string;
-  platform: 'Instagram' | 'TikTok';
-  title: string;
-  caption: string;
-  hashtags: string[];
-  scheduledTime: Date;
-  status: 'scheduled' | 'published' | 'failed';
-  variantId: string;
-  slides: Slide[];
-}
+// Re-export everything from database types (derived from Supabase)
+export * from './database';
 
-export interface Slide {
-  slideNumber: number;
-  slideText: string;
-  imageUrl: string;
-  imageSearchTerm: string;
-}
-
-export interface StyleGuide {
-  id: string;
-  userId: string;
-  content: string;
-  updatedAt: Date;
-}
-
-export interface Analytics {
-  postId: string;
-  impressions: number;
-  engagement: number;
-  saves: number;
-  shares: number;
-  reach: number;
-  profileVisits: number;
-  date: Date;
-}
-
-export interface VariantPerformance {
-  variantId: string;
-  name: string;
-  postsCount: number;
-  avgSaves: number;
-  avgShares: number;
-  avgEngagementRate: number;
-}
-
-export interface DashboardStats {
-  postsScheduled: number;
-  totalEngagement: number;
-  avgEngagementRate: number;
-  topPerformer: string;
-}
+// Re-export Database type for Supabase client
+export type { Database, Json } from './supabase';

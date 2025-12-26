@@ -9,6 +9,7 @@ import {
   getUserTemplates,
   updateTemplate as updateTemplateSupabase,
   deleteTemplate as deleteTemplateSupabase,
+  setDefaultTemplate as setDefaultTemplateSupabase,
   // Posts
   createPost as createPostSupabase,
   getPost as getPostSupabase,
@@ -32,8 +33,7 @@ import {
   getAllUserAnalytics,
   getTemplateAggregateAnalytics,
 } from '../supabase/db/index';
-import { BrandSettings } from '@/types/user';
-import { Template } from '@/types/template';
+import { BrandSettings, Template } from '@/types';
 
 // API Base URL - used only for backend-specific operations (scheduling, external integrations)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -168,6 +168,11 @@ export const templateApi = {
   // DELETE: Archive template
   deleteTemplate: async (templateId: string) => {
     return await deleteTemplateSupabase(templateId);
+  },
+
+  // PUT: Set template as default
+  setDefaultTemplate: async (templateId: string) => {
+    return await setDefaultTemplateSupabase(templateId);
   },
 };
 

@@ -1,21 +1,28 @@
 import { FiEdit2, FiTrash2, FiInstagram, FiTwitter } from 'react-icons/fi';
 import { SiTiktok, SiFacebook } from 'react-icons/si';
-import type { UserProfile } from '@/types/user';
+import type { Profile, BrandSettings, PlatformIntegration } from '@/types';
 import { useDeleteProfile } from '@/lib/api/hooks';
 
 interface ProfileCardProps {
-  profile: UserProfile;
+  profile: Profile;
   onEdit: (profileId: string) => void;
+}
+
+/** Helper to safely extract brand settings from profile */
+function getBrandSettings(profile: Profile): BrandSettings | null {
+  if (!profile.brand_settings) return null;
+  return profile.brand_settings as unknown as BrandSettings;
 }
 
 export default function ProfileCard({ profile, onEdit }: ProfileCardProps) {
   const deleteProfileMutation = useDeleteProfile();
+  const brandSettings = getBrandSettings(profile);
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this profile?')) return;
     
     try {
-      await deleteProfileMutation.mutateAsync(profile.profileId);
+      await deleteProfileMutation.mutateAsync(profile.id);
     } catch (error) {
       console.error('Failed to delete profile:', error);
       alert('Failed to delete profile');
@@ -28,15 +35,15 @@ export default function ProfileCard({ profile, onEdit }: ProfileCardProps) {
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <h3 className="text-xl font-semibold mb-1">
-            {profile.brandSettings.name || 'Unnamed Profile'}
+            {brandSettings?.name || 'Unnamed Profile'}
           </h3>
           <p className="text-sm text-gray-400">
-            {profile.brandSettings.niche} • {profile.brandSettings.aesthetic}
+            {brandSettings?.niche} • {brandSettings?.aesthetic}
           </p>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => onEdit(profile.profileId)}
+            onClick={() => onEdit(profile.id)}
             className="p-2 hover:bg-gray-700 rounded-lg transition"
             title="Edit profile"
           >
@@ -55,17 +62,17 @@ export default function ProfileCard({ profile, onEdit }: ProfileCardProps) {
 
       {/* Brand Info */}
       <div className="space-y-3 mb-4">
-        <InfoRow label="Target Audience" value={profile.brandSettings.targetAudience} />
-        <InfoRow label="Brand Voice" value={profile.brandSettings.brandVoice} />
-        <InfoRow label="Tone" value={profile.brandSettings.toneOfVoice} />
+        <InfoRow label="Target Audience" value={brandSettings?.target_audience} />
+        <InfoRow label="Brand Voice" value={brandSettings?.brand_voice} />
+        <InfoRow label="Tone" value={brandSettings?.tone_of_voice} />
       </div>
 
       {/* Content Pillars */}
-      {profile.brandSettings.contentPillars.length > 0 && (
+      {brandSettings?.content_pillars && brandSettings.content_pillars.length > 0 && (
         <div className="mb-4">
           <p className="text-xs text-gray-500 mb-2">Content Pillars</p>
           <div className="flex flex-wrap gap-2">
-            {profile.brandSettings.contentPillars.slice(0, 3).map((pillar, i) => (
+            {brandSettings.content_pillars.slice(0, 3).map((pillar, i) => (
               <span
                 key={i}
                 className="px-2 py-1 bg-primary-500/10 text-primary-400 text-xs rounded"
@@ -73,22 +80,22 @@ export default function ProfileCard({ profile, onEdit }: ProfileCardProps) {
                 {pillar}
               </span>
             ))}
-            {profile.brandSettings.contentPillars.length > 3 && (
+            {brandSettings.content_pillars.length > 3 && (
               <span className="px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded">
-                +{profile.brandSettings.contentPillars.length - 3}
+                +{brandSettings.content_pillars.length - 3}
               </span>
             )}
           </div>
         </div>
       )}
 
-      {/* Integrations */}
-      <IntegrationIcons integrations={profile.integrations} />
+      {/* Integrations - Note: integrations need to be fetched separately or joined */}
+      {/* <IntegrationIcons integrations={[]} /> */}
 
       {/* Stats */}
       <div className="flex gap-4 pt-4 border-t border-gray-700 mt-4">
-        <StatItem label="Templates" value={profile.templateCount} />
-        <StatItem label="Posts" value={profile.postCount} />
+        <StatItem label="Templates" value={profile.template_count ?? 0} />
+        <StatItem label="Posts" value={profile.post_count ?? 0} />
       </div>
     </div>
   );

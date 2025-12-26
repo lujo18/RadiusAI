@@ -11,7 +11,7 @@ export const userKeys = {
 
 // ==================== QUERIES ====================
 
-export function useProfile() {
+export function useUserProfile() {
   return useQuery({
     queryKey: userKeys.profile,
     queryFn: userApi.getProfile,
@@ -20,7 +20,7 @@ export function useProfile() {
 }
 
 // Alias for backward compatibility
-export const useUser = useProfile;
+export const useUser = useUserProfile;
 
 export function useConnectedAccounts() {
   return useQuery({

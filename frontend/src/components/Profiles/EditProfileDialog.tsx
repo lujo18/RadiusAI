@@ -2,23 +2,30 @@ import { useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import BrandSettingsForm from './BrandSettingsForm';
 import IntegrationsList from './IntegrationsList';
-import type { UserProfile } from '@/types/user';
+import type { Profile, BrandSettings } from '@/types';
 import { useUpdateBrandSettings } from '@/lib/api/hooks';
 
 interface EditProfileDialogProps {
-  profile: UserProfile;
+  profile: Profile;
   onClose: () => void;
+}
+
+/** Helper to safely extract brand settings from profile */
+function getBrandSettings(profile: Profile): BrandSettings | null {
+  if (!profile.brand_settings) return null;
+  return profile.brand_settings as unknown as BrandSettings;
 }
 
 export default function EditProfileDialog({ profile, onClose }: EditProfileDialogProps) {
   const [activeTab, setActiveTab] = useState<'settings' | 'integrations'>('settings');
   const updateBrandSettingsMutation = useUpdateBrandSettings();
+  const brandSettings = getBrandSettings(profile);
 
-  const handleSubmit = async (brandSettings: any) => {
+  const handleSubmit = async (newBrandSettings: BrandSettings) => {
     try {
       await updateBrandSettingsMutation.mutateAsync({
-        profileId: profile.profileId,
-        brandSettings,
+        profileId: profile.id,
+        brandSettings: newBrandSettings,
       });
       onClose();
     } catch (error) {
@@ -69,7 +76,7 @@ export default function EditProfileDialog({ profile, onClose }: EditProfileDialo
         <div className="flex-1 overflow-y-auto p-8">
           {activeTab === 'settings' ? (
             <BrandSettingsForm
-              initialValues={profile.brandSettings}
+              initialValues={brandSettings || undefined}
               onSubmit={handleSubmit}
               onCancel={onClose}
               isSubmitting={updateBrandSettingsMutation.isPending}
@@ -77,8 +84,8 @@ export default function EditProfileDialog({ profile, onClose }: EditProfileDialo
             />
           ) : (
             <IntegrationsList
-              profileId={profile.profileId}
-              integrations={profile.integrations}
+              profileId={profile.id}
+              integrations={[]}
             />
           )}
         </div>

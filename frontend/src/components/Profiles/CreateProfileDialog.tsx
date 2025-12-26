@@ -1,6 +1,6 @@
 import { FiX } from 'react-icons/fi';
 import BrandSettingsForm from './BrandSettingsForm';
-import type { BrandSettings } from '@/types/user';
+import type { BrandSettings } from '@/types';
 import { useCreateProfile } from '@/lib/api/hooks';
 
 interface CreateProfileDialogProps {

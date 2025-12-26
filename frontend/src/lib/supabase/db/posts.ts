@@ -1,37 +1,65 @@
 /**
  * Supabase Database Operations - Posts
  * 
- * Handles all post-related database operations
+ * Handles all post-related database operations.
+ * Returns raw Supabase types (snake_case) for direct use.
  */
 
 import { supabase } from '../client';
-import type { Post, PostContent, PostStatus, Platform, CreatePostRequest, UpdatePostRequest } from '@/types/post';
+import type { 
+  Post, 
+  PostInsert, 
+  PostUpdate,
+  PostContent,
+  Json 
+} from '@/types';
+
+// ==================== TYPE HELPERS ====================
+
+/** Input for creating a new post */
+export interface CreatePostInput {
+  template_id: string;
+  profile_id?: string;
+  platform: string;
+  content: PostContent;
+  scheduled_time?: string;
+  variant_set_id?: string;
+}
+
+/** Input for updating a post */
+export interface UpdatePostInput {
+  status?: string;
+  scheduled_time?: string;
+  content?: PostContent;
+}
 
 // ==================== CREATE ====================
 
-export async function createPost(request: CreatePostRequest): Promise<Post> {
+export async function createPost(input: CreatePostInput): Promise<Post> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  const insertData: PostInsert = {
+    user_id: user.id,
+    template_id: input.template_id,
+    profile_id: input.profile_id || null,
+    platform: input.platform,
+    status: 'draft',
+    content: input.content as unknown as Json,
+    scheduled_time: input.scheduled_time || null,
+    variant_set_id: input.variant_set_id || null,
+    storage_urls: { slides: [], thumbnail: null } as unknown as Json,
+    metadata: { variant_label: null, generation_params: {} } as unknown as Json,
+  };
+
   const { data, error } = await supabase
     .from('posts')
-    .insert({
-      user_id: user.id,
-      template_id: request.templateId,
-      platform: request.platform,
-      status: 'draft',
-      content: request.content as any,
-      scheduled_time: request.scheduledTime?.toISOString(),
-      variant_set_id: request.variantSetId,
-      storage_urls: { slides: [], thumbnail: null },
-      metadata: { variantLabel: null, generationParams: {} },
-    })
+    .insert(insertData)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
-
-  return transformPost(data);
+  return data;
 }
 
 // ==================== READ ====================
@@ -47,8 +75,7 @@ export async function getUserPosts(): Promise<Post[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-
-  return data.map(transformPost);
+  return data;
 }
 
 export async function getPost(postId: string): Promise<Post | null> {
@@ -67,10 +94,10 @@ export async function getPost(postId: string): Promise<Post | null> {
     throw new Error(error.message);
   }
 
-  return transformPost(data);
+  return data;
 }
 
-export async function getPostsByStatus(status: PostStatus): Promise<Post[]> {
+export async function getPostsByStatus(status: string): Promise<Post[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
@@ -82,8 +109,7 @@ export async function getPostsByStatus(status: PostStatus): Promise<Post[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-
-  return data.map(transformPost);
+  return data;
 }
 
 export async function getPostsByTemplate(templateId: string): Promise<Post[]> {
@@ -98,8 +124,7 @@ export async function getPostsByTemplate(templateId: string): Promise<Post[]> {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-
-  return data.map(transformPost);
+  return data;
 }
 
 export async function getScheduledPosts(): Promise<Post[]> {
@@ -114,21 +139,20 @@ export async function getScheduledPosts(): Promise<Post[]> {
     .order('scheduled_time', { ascending: true });
 
   if (error) throw new Error(error.message);
-
-  return data.map(transformPost);
+  return data;
 }
 
 // ==================== UPDATE ====================
 
-export async function updatePost(postId: string, updates: UpdatePostRequest): Promise<void> {
+export async function updatePost(postId: string, updates: UpdatePostInput): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  const updateData: any = {};
+  const updateData: PostUpdate = {};
   
   if (updates.status) updateData.status = updates.status;
-  if (updates.scheduledTime) updateData.scheduled_time = updates.scheduledTime.toISOString();
-  if (updates.content) updateData.content = updates.content;
+  if (updates.scheduled_time) updateData.scheduled_time = updates.scheduled_time;
+  if (updates.content) updateData.content = updates.content as unknown as Json;
 
   const { error } = await supabase
     .from('posts')
@@ -139,11 +163,11 @@ export async function updatePost(postId: string, updates: UpdatePostRequest): Pr
   if (error) throw new Error(error.message);
 }
 
-export async function updatePostStatus(postId: string, status: PostStatus): Promise<void> {
+export async function updatePostStatus(postId: string, status: string): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  const updateData: any = { status };
+  const updateData: PostUpdate = { status };
   
   if (status === 'published') {
     updateData.published_time = new Date().toISOString();
@@ -172,7 +196,7 @@ export async function updatePostStorageUrls(
       storage_urls: {
         slides: slideUrls,
         thumbnail: thumbnailUrl || null,
-      },
+      } as unknown as Json,
     })
     .eq('id', postId)
     .eq('user_id', user.id);
@@ -197,28 +221,32 @@ export async function deletePost(postId: string): Promise<void> {
 
 // ==================== HELPER FUNCTIONS ====================
 
-function transformPost(data: any): Post {
+/**
+ * Helper to safely extract content from a Post
+ * Since content is stored as Json, use this to type-cast it
+ */
+export function getPostContent(post: Post): PostContent | null {
+  return post.content as PostContent | null;
+}
+
+/**
+ * Helper to safely extract storage URLs from a Post
+ */
+export function getStorageUrls(post: Post): { slides: string[]; thumbnail: string | null } {
+  const urls = post.storage_urls as { slides?: string[]; thumbnail?: string | null } | null;
   return {
-    id: data.id,
-    userId: data.user_id,
-    templateId: data.template_id,
-    variantSetId: data.variant_set_id,
-    platform: data.platform,
-    status: data.status,
-    createdAt: new Date(data.created_at),
-    updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
-    scheduledTime: data.scheduled_time ? new Date(data.scheduled_time) : undefined,
-    publishedTime: data.published_time ? new Date(data.published_time) : undefined,
-    content: data.content as PostContent,
-    storageUrls: data.storage_urls as any,
-    analytics: {
-      impressions: 0,
-      engagement: 0,
-      saves: 0,
-      shares: 0,
-      engagementRate: 0,
-      lastUpdated: null,
-    },
-    metadata: data.metadata as any,
+    slides: urls?.slides || [],
+    thumbnail: urls?.thumbnail || null,
+  };
+}
+
+/**
+ * Helper to safely extract metadata from a Post
+ */
+export function getPostMetadata(post: Post): { variant_label: string | null; generation_params: Record<string, unknown> } {
+  const metadata = post.metadata as { variant_label?: string | null; generation_params?: Record<string, unknown> } | null;
+  return {
+    variant_label: metadata?.variant_label || null,
+    generation_params: metadata?.generation_params || {},
   };
 }

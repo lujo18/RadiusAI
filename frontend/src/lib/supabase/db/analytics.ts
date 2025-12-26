@@ -1,11 +1,12 @@
 /**
  * Supabase Database Operations - Analytics
  * 
- * Handles all analytics-related database operations
+ * Handles all analytics-related database operations.
+ * Returns raw Supabase types (snake_case) for direct use.
  */
 
 import { supabase } from '../client';
-import type { PostAnalytics } from '@/types/post';
+import type { PostAnalytics } from '@/types';
 
 // ==================== CREATE/UPDATE ====================
 
@@ -57,7 +58,7 @@ export async function updatePostAnalytics(
 
   if (!post) throw new Error('Post not found');
 
-  const updateData: any = {
+  const updateData: Partial<PostAnalytics> = {
     last_updated: new Date().toISOString(),
   };
   
@@ -103,34 +104,58 @@ export async function getPostAnalytics(postId: string): Promise<PostAnalytics | 
 
   if (error) {
     if (error.code === 'PGRST116') {
-      // No analytics yet, return defaults
-      return {
-        impressions: 0,
-        engagement: 0,
-        saves: 0,
-        shares: 0,
-        engagementRate: 0,
-        lastUpdated: null,
-      };
+      // No analytics yet
+      return null;
     }
     throw new Error(error.message);
   }
 
-  return {
-    impressions: data.impressions,
-    engagement: data.engagement,
-    saves: data.saves,
-    shares: data.shares,
-    engagementRate: Number(data.engagement_rate),
-    lastUpdated: data.last_updated ? new Date(data.last_updated) : null,
-  };
+  return data;
 }
 
-export async function getAllUserAnalytics(): Promise<Array<{ postId: string; analytics: PostAnalytics }>> {
+export async function getAllUserAnalytics(): Promise<Array<{ post_id: string; analytics: PostAnalytics }>> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
   // Get all user's posts with analytics
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      post_analytics (*)
+    `)
+    .eq('user_id', user.id);
+
+  if (error) throw new Error(error.message);
+
+  return data.map((item: any) => ({
+    post_id: item.id,
+    analytics: item.post_analytics || null,
+  }));
+}
+
+export async function getTemplateAggregateAnalytics(templateId: string): Promise<{
+  total_posts: number;
+  avg_impressions: number;
+  avg_engagement: number;
+  avg_saves: number;
+  avg_shares: number;
+  avg_engagement_rate: number;
+}> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Verify user owns the template
+  const { data: template } = await supabase
+    .from('templates')
+    .select('id')
+    .eq('id', templateId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (!template) throw new Error('Template not found');
+
+  // Get all posts for this template with analytics
   const { data, error } = await supabase
     .from('posts')
     .select(`
@@ -140,103 +165,46 @@ export async function getAllUserAnalytics(): Promise<Array<{ postId: string; ana
         engagement,
         saves,
         shares,
-        engagement_rate,
-        last_updated
+        engagement_rate
       )
     `)
+    .eq('template_id', templateId)
     .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
 
-  return data.map((item: any) => ({
-    postId: item.id,
-    analytics: item.post_analytics ? {
-      impressions: item.post_analytics.impressions,
-      engagement: item.post_analytics.engagement,
-      saves: item.post_analytics.saves,
-      shares: item.post_analytics.shares,
-      engagementRate: Number(item.post_analytics.engagement_rate),
-      lastUpdated: item.post_analytics.last_updated ? new Date(item.post_analytics.last_updated) : null,
-    } : {
-      impressions: 0,
-      engagement: 0,
-      saves: 0,
-      shares: 0,
-      engagementRate: 0,
-      lastUpdated: null,
-    },
-  }));
-}
+  // Calculate aggregates
+  const postsWithAnalytics = data.filter((item: any) => item.post_analytics);
+  const total = postsWithAnalytics.length;
 
-// ==================== AGGREGATE ANALYTICS ====================
-
-export async function getTemplateAggregateAnalytics(templateId: string): Promise<{
-  totalPosts: number;
-  avgEngagement: number;
-  avgImpressions: number;
-  avgSaves: number;
-  avgShares: number;
-  totalEngagement: number;
-  totalImpressions: number;
-}> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  // Get all posts for this template
-  const { data: posts, error: postsError } = await supabase
-    .from('posts')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('template_id', templateId);
-
-  if (postsError) throw new Error(postsError.message);
-
-  if (!posts || posts.length === 0) {
+  if (total === 0) {
     return {
-      totalPosts: 0,
-      avgEngagement: 0,
-      avgImpressions: 0,
-      avgSaves: 0,
-      avgShares: 0,
-      totalEngagement: 0,
-      totalImpressions: 0,
+      total_posts: 0,
+      avg_impressions: 0,
+      avg_engagement: 0,
+      avg_saves: 0,
+      avg_shares: 0,
+      avg_engagement_rate: 0,
     };
   }
 
-  const postIds = posts.map(p => p.id);
-
-  // Get analytics for all posts
-  const { data: analytics, error: analyticsError } = await supabase
-    .from('post_analytics')
-    .select('*')
-    .in('post_id', postIds);
-
-  if (analyticsError) throw new Error(analyticsError.message);
-
-  if (!analytics || analytics.length === 0) {
-    return {
-      totalPosts: posts.length,
-      avgEngagement: 0,
-      avgImpressions: 0,
-      avgSaves: 0,
-      avgShares: 0,
-      totalEngagement: 0,
-      totalImpressions: 0,
-    };
-  }
-
-  const totalEngagement = analytics.reduce((sum, a) => sum + a.engagement, 0);
-  const totalImpressions = analytics.reduce((sum, a) => sum + a.impressions, 0);
-  const totalSaves = analytics.reduce((sum, a) => sum + a.saves, 0);
-  const totalShares = analytics.reduce((sum, a) => sum + a.shares, 0);
+  const sums = postsWithAnalytics.reduce(
+    (acc: any, item: any) => ({
+      impressions: acc.impressions + (item.post_analytics?.impressions || 0),
+      engagement: acc.engagement + (item.post_analytics?.engagement || 0),
+      saves: acc.saves + (item.post_analytics?.saves || 0),
+      shares: acc.shares + (item.post_analytics?.shares || 0),
+      engagement_rate: acc.engagement_rate + (item.post_analytics?.engagement_rate || 0),
+    }),
+    { impressions: 0, engagement: 0, saves: 0, shares: 0, engagement_rate: 0 }
+  );
 
   return {
-    totalPosts: posts.length,
-    avgEngagement: totalEngagement / analytics.length,
-    avgImpressions: totalImpressions / analytics.length,
-    avgSaves: totalSaves / analytics.length,
-    avgShares: totalShares / analytics.length,
-    totalEngagement,
-    totalImpressions,
+    total_posts: total,
+    avg_impressions: sums.impressions / total,
+    avg_engagement: sums.engagement / total,
+    avg_saves: sums.saves / total,
+    avg_shares: sums.shares / total,
+    avg_engagement_rate: sums.engagement_rate / total,
   };
 }

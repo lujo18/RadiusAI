@@ -13,7 +13,7 @@ export default function ProfilesPage() {
   
   const { data: profiles, isLoading } = useProfiles();
 
-  const editingProfile = profiles?.find(p => p.profileId === editingProfileId);
+  const editingProfile = profiles?.find(p => p.id === editingProfileId);
 
   return (
     <div className="h-full p-8">
@@ -46,7 +46,7 @@ export default function ProfilesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {profiles.map((profile) => (
               <ProfileCard
-                key={profile.profileId}
+                key={profile.id}
                 profile={profile}
                 onEdit={(id) => setEditingProfileId(id)}
               />

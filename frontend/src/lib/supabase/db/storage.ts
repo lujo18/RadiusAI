@@ -96,13 +96,14 @@ export async function deleteSlideImages(postId: string): Promise<void> {
  * 
  * @param postId - The post ID
  * @param slideIndex - The slide index
+ * @param userId - The user ID (must be passed since this is sync)
  * @returns Public URL of the image
  */
-export function getSlideImageUrl(postId: string, slideIndex: number): string {
-  const { data: { user } } = supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const fileName = `${user.id}/${postId}/slide-${slideIndex}.png`;
+export function getSlideImageUrl(postId: string, slideIndex: number, userId?: string): string {
+  // If no userId provided, we can't construct the path correctly
+  // This is a limitation of the sync API - caller should provide userId
+  const userPath = userId || 'unknown';
+  const fileName = `${userPath}/${postId}/slide-${slideIndex}.png`;
 
   const { data } = supabase.storage
     .from('slides')
