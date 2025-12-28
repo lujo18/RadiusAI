@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { FiLoader, FiAlertCircle } from "react-icons/fi";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get("plan") || "growth";
@@ -37,6 +37,19 @@ export default function CheckoutPage() {
         }
 
         console.log('[Checkout] User authenticated, creating Stripe session...');
+
+        // Check if user already has an active subscription
+        const { data: userData } = await supabase
+          .from('users')
+          .select('subscription_status, stripe_subscription_id')
+          .eq('id', user.id)
+          .single();
+
+        if (userData?.subscription_status === 'active' && userData?.stripe_subscription_id) {
+          console.log('[Checkout] User already has active subscription - redirecting to dashboard');
+          router.push('/dashboard/settings?message=already_subscribed');
+          return;
+        }
 
         // Get product ID for the selected plan
         const productMap: Record<string, string> = {
@@ -122,5 +135,22 @@ export default function CheckoutPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-dark-600 flex items-center justify-center">
+        <div className="text-center">
+          <FiLoader className="w-12 h-12 text-primary-400 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Loading checkout...
+          </h2>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -4,7 +4,7 @@ from typing import Optional
 
 from backend.models.user import BrandSettings
 from backend.services.profile.create_profile import create_profile
-from services.late.profile import create_late_profile
+from services.integrations.late.profile import create_late_profile
 
 from backend.auth import get_current_user  # Assuming auth is set up in backend/auth.py
 

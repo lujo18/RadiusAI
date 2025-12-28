@@ -1,15 +1,18 @@
 import { type SlideDesign } from './types';
 
+import { DbSlideDesign } from "@/types/database"
+
 interface Step3SlideSequenceProps {
-  totalSlides: number;
+  slideCount: number;
   setTotalSlides: (count: number) => void;
-  slideDesigns: SlideDesign[];
+  slideDesigns: DbSlideDesign[];
   slideSequence: { slideNumber: number; designId: string }[];
   setSlideSequence: (sequence: { slideNumber: number; designId: string }[]) => void;
 }
 
+
 export default function Step3SlideSequence({ 
-  totalSlides, 
+  slideCount, 
   setTotalSlides, 
   slideDesigns, 
   slideSequence, 
@@ -48,20 +51,20 @@ export default function Step3SlideSequence({
           type="range"
           min={3}
           max={10}
-          value={totalSlides}
+          value={slideCount}
           onChange={(e) => setTotalSlides(parseInt(e.target.value))}
           className="w-full accent-primary-500"
         />
         <div className="flex justify-between text-xs text-gray-400 mt-1">
           <span>3 slides</span>
-          <span className="font-bold text-primary-400">{totalSlides} slides</span>
+          <span className="font-bold text-primary-400">{slideCount} slides</span>
           <span>10 slides</span>
         </div>
       </div>
 
       {/* Slide Mapping Grid */}
       <div className="space-y-3">
-        {Array.from({ length: totalSlides }, (_, i) => i + 1).map((slideNum) => (
+        {Array.from({ length: slideCount }, (_, i) => i + 1).map((slideNum) => (
           <div key={slideNum} className="flex items-center gap-4 bg-gray-800/50 border border-gray-700 rounded-lg p-4">
             <div className="flex-shrink-0 w-24">
               <span className="text-sm font-semibold text-gray-400">Slide {slideNum}</span>
@@ -73,7 +76,7 @@ export default function Step3SlideSequence({
                 onChange={(e) => updateSlideMapping(slideNum, e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
               >
-                {slideDesigns.map((design: SlideDesign) => (
+                {slideDesigns.map((design: DbSlideDesign) => (
                   <option key={design.id} value={design.id}>
                     {design.id} - {design.name}
                   </option>
@@ -85,15 +88,15 @@ export default function Step3SlideSequence({
             <div className="flex-shrink-0">
               {(() => {
                 const designId = getDesignForSlide(slideNum);
-                const design = slideDesigns.find((d: SlideDesign) => d.id === designId);
+                const design = slideDesigns.find((d: DbSlideDesign) => d.id === designId);
                 return (
-                  <div 
+                  <div
                     className="w-12 h-12 rounded border-2 border-gray-600"
                     style={{
-                      background: design?.background.type === 'solid' 
-                        ? design.background.color 
-                        : design?.background.type === 'gradient'
-                        ? `linear-gradient(135deg, ${design.background.gradientColors?.[0]}, ${design.background.gradientColors?.[1]})`
+                      background: design?.background_type === 'solid'
+                        ? design.background_color || '#1a1a1a'
+                        : design?.background_type === 'gradient'
+                        ? `linear-gradient(135deg, ${design.background_gradient_colors?.[0] || '#1a1a1a'}, ${design.background_gradient_colors?.[1] || '#1a1a1a'})`
                         : '#1a1a1a'
                     }}
                   />
@@ -104,11 +107,11 @@ export default function Step3SlideSequence({
         ))}
       </div>
 
-      {/* Summary */}
+      {/* Summary Block */}
       <div className="mt-6 bg-primary-500/10 border border-primary-500/30 rounded-lg p-4">
         <h4 className="font-semibold mb-2">Summary</h4>
         <div className="text-sm text-gray-300 space-y-1">
-          {slideDesigns.map((design: SlideDesign) => {
+          {slideDesigns.map((design: DbSlideDesign) => {
             const count = slideSequence.filter((s: any) => s.designId === design.id).length;
             if (count === 0) return null;
             return (

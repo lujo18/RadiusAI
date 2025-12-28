@@ -136,7 +136,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
     } else {
       // Final step - redirect to template creation
       onClose();
-      router.push('/dashboard/templates/create');
+      router.push('/dashboard/templates');
     }
   };
 

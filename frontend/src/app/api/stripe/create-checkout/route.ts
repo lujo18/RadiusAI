@@ -1,36 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
 });
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 export async function POST(req: NextRequest) {
   try {
-    const { productId, userId, plan } = await req.json();
+    const body = await req.json();
+    const { productId, priceId: directPriceId, userId, plan } = body;
 
-    if (!productId || !userId || !plan) {
+    if (!userId || !plan) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: userId and plan are required' },
         { status: 400 }
       );
     }
 
-    // Fetch the default price for this product
-    const prices = await stripe.prices.list({
-      product: productId,
-      active: true,
-      type: 'recurring',
-    });
+    // Check if user already has an active subscription
+    const { data: user } = await supabase
+      .from('users')
+      .select('subscription_status, stripe_subscription_id')
+      .eq('id', userId)
+      .single();
 
-    if (!prices.data.length) {
+    if (user?.subscription_status === 'active' && user?.stripe_subscription_id) {
       return NextResponse.json(
-        { error: 'No active price found for this product' },
+        { error: 'You already have an active subscription. Please manage it from your dashboard settings.' },
         { status: 400 }
       );
     }
 
-    const priceId = prices.data[0].id;
+    if (!productId && !directPriceId) {
+      return NextResponse.json(
+        { error: 'Missing required fields: either productId or priceId is required' },
+        { status: 400 }
+      );
+    }
+
+    let priceId = directPriceId;
+
+    // If productId is provided, look up the price
+    if (productId && !priceId) {
+      const prices = await stripe.prices.list({
+        product: productId,
+        active: true,
+        type: 'recurring',
+      });
+
+      if (!prices.data.length) {
+        return NextResponse.json(
+          { error: 'No active price found for this product' },
+          { status: 400 }
+        );
+      }
+
+      priceId = prices.data[0].id;
+    }
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -44,7 +76,7 @@ export async function POST(req: NextRequest) {
       ],
       success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}&onboarding=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing`,
-      client_reference_id: userId, // Link to our user
+      client_reference_id: userId,
       metadata: {
         userId,
         plan,

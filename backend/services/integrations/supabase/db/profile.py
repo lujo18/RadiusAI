@@ -1,9 +1,10 @@
-from backend.main import supabase
 from datetime import datetime
 
 from backend.models.user import BrandSettings
+from backend.services.integrations.supabase.client import get_supabase
 
 def create_supabase_profile(user_id: str, late_profile_id: str, profile_name: str, profile_description: str, brand_settings: BrandSettings):
+  supabase = get_supabase()
   res = supabase.table('profiles').insert({
       'user_id': user_id,
       'late_profile_id': late_profile_id,

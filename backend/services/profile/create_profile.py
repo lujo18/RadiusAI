@@ -1,5 +1,5 @@
 from backend.models.user import BrandSettings
-from integrations.supabase.profile import create_supabase_profile
+from integrations.supabase.db.profile import create_supabase_profile
 from integrations.late.profile import create_late_profile
 
 async def create_profile(user_id: str, profile_name: str, profile_description: str, brand_settings: BrandSettings) -> str:

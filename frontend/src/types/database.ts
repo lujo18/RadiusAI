@@ -397,8 +397,8 @@ export interface VariantPerformance {
   name: string;
   postsCount: number;
   avgSaves: number;
-  avgShares: number;
-  avgEngagementRate: number;
+  avg_shares: number;
+  avg_engagement_rate: number;
 }
 
 // =============================================================================
@@ -406,7 +406,8 @@ export interface VariantPerformance {
 // These types match the old camelCase interfaces used in existing code
 // =============================================================================
 
-/** Background config for slides */
+
+/** Background config for slides (camelCase for frontend) */
 export interface BackgroundConfig {
   type: BackgroundType;
   color?: string;
@@ -415,22 +416,25 @@ export interface BackgroundConfig {
   imageUrl?: string;
 }
 
-/** Legacy StyleConfig for templates (stored as JSONB) */
+
+/**
+ * Legacy StyleConfig for templates (camelCase for frontend)
+ */
 export interface StyleConfig {
   layout: {
-    slideCount: number;
-    aspectRatio: AspectRatio;
+    slide_count: number;
+    aspect_ratio: AspectRatio;
     structure?: SlideStructureType[];
   };
-  contentRules?: LegacyContentRules;
-  slideDesigns: LegacySlideDesign[];
-  slideSequence: { slideNumber: number; designId: string }[];
+  content_rules?: LegacyContentRules;
+  slide_designs: LegacySlideDesign[];
+  slide_sequence: { slide_number: number; design_id: string }[];
 }
 
-/** Legacy Content Rules interface */
+/** Legacy Content Rules interface (camelCase) */
 export interface LegacyContentRules {
   format: string;
-  slideCount: number;
+  slide_count: number;
   perspective: string;
   depthLevel: DepthLevel;
   topicFocus: string;
@@ -445,7 +449,7 @@ export interface LegacyContentRules {
   mustInclude?: string[];
 }
 
-/** Legacy Text Element type */
+/** Legacy Text Element type (camelCase) */
 export interface LegacyTextElement {
   id: string;
   type: 'text';
@@ -461,7 +465,7 @@ export interface LegacyTextElement {
   align: TextAlign;
 }
 
-/** Legacy Slide Design interface */
+/** Legacy Slide Design interface (camelCase) */
 export interface LegacySlideDesign {
   id: string;
   name: string;
@@ -470,7 +474,7 @@ export interface LegacySlideDesign {
   dynamic?: boolean;
 }
 
-/** Legacy Post Content (stored as JSONB in posts table) */
+/** Legacy Post Content (stored as JSONB in posts table, camelCase) */
 export interface PostContent {
   slides: LegacyPostSlide[];
   layout: {
@@ -482,14 +486,14 @@ export interface PostContent {
   hashtags: string[];
 }
 
-/** Legacy Post Slide */
+/** Legacy Post Slide (camelCase) */
 export interface LegacyPostSlide extends Omit<LegacySlideDesign, 'name'> {
   slideNumber: number;
   designId: string;
   imagePrompt?: string;
 }
 
-/** Create Post Request */
+/** Create Post Request (camelCase) */
 export interface CreatePostRequest {
   templateId: string;
   platform: Platform;
@@ -498,31 +502,31 @@ export interface CreatePostRequest {
   variantSetId?: string;
 }
 
-/** Create Template Input */
+/** Create Template Input (camelCase) */
 export interface CreateTemplateInput {
   name: string;
   category: TemplateCategory;
-  style_config: StyleConfig | Json;
-  is_default?: boolean;
+  styleConfig: StyleConfig | Json;
+  isDefault?: boolean;
 }
 
-/** Update Template Input */
+/** Update Template Input (camelCase) */
 export interface UpdateTemplateInput {
   name?: string;
   category?: TemplateCategory;
   status?: TemplateStatus;
-  style_config?: StyleConfig | Json;
-  is_default?: boolean;
+  styleConfig?: StyleConfig | Json;
+  isDefault?: boolean;
 }
 
-/** Update Post Request */
+/** Update Post Request (camelCase) */
 export interface UpdatePostRequest {
   status?: PostStatus;
   scheduledTime?: Date;
   content?: PostContent;
 }
 
-/** Post with template info */
+/** Post with template info (camelCase) */
 export interface PostWithTemplate extends Post {
   template?: {
     id: string;
@@ -532,7 +536,7 @@ export interface PostWithTemplate extends Post {
   analyticsHistory?: PostAnalytics[];
 }
 
-/** Category Info for TEMPLATE_CATEGORIES */
+/** Category Info for TEMPLATE_CATEGORIES (camelCase) */
 export interface CategoryInfo {
   name: string;
   structure: SlideStructureType[];

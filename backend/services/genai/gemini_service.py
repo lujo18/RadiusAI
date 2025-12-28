@@ -3,8 +3,8 @@
 import json
 from typing import List, Dict, Any
 
-from backend.ai.prompts import build_generation_prompt
-from backend.ai.structure_input import build_gemini_slide_structure
+from backend.services.genai.prompts import build_generation_prompt
+from backend.services.genai.structure_input import build_gemini_slide_structure
 from backend.models import (
     Template, 
     BrandSettings

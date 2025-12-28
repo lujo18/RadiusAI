@@ -27,11 +27,11 @@ export function useSubscriptionGuard(): SubscriptionStatus {
   }, [user?.id]);
 
   const checkSubscription = async () => {
-    // Development mode bypass
-    const paywallEnabled = process.env.NEXT_PUBLIC_ENABLE_PAYWALL === 'true';
+    // Development mode bypass - set NEXT_PUBLIC_ENABLE_PAYWALL=false to disable paywall
+    const paywallEnabled = process.env.NEXT_PUBLIC_ENABLE_PAYWALL !== 'false';
     
     if (!paywallEnabled) {
-      // In dev mode, act as if user has active subscription
+      // In dev mode with paywall disabled, act as if user has active subscription
       setSubscriptionStatus({
         isActive: true,
         isLoading: false,
@@ -54,19 +54,19 @@ export function useSubscriptionGuard(): SubscriptionStatus {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('subscription_status, plan')
-        .eq('user_id', user.id)
+        .from('users')
+        .select('subscription_status, subscription_plan')
+        .eq('id', user.id)
         .single();
 
       if (!error && data) {
-        const profile = data as any; // Type assertion until DB types are regenerated
-        const isActive = profile.subscription_status === 'active' || profile.subscription_status === 'trialing';
+        const userData = data as any;
+        const isActive = userData.subscription_status === 'active' || userData.subscription_status === 'trialing';
         setSubscriptionStatus({
           isActive,
           isLoading: false,
-          plan: profile.plan,
-          status: profile.subscription_status,
+          plan: userData.subscription_plan,
+          status: userData.subscription_status,
         });
       } else {
         setSubscriptionStatus({

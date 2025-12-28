@@ -51,19 +51,26 @@ export default function SettingsPage() {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('subscription_status, plan, current_period_end, stripe_customer_id')
-        .eq('user_id', user.id)
+      // Fetch subscription status from users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('subscription_status, subscription_plan, current_period_end')
+        .eq('id', user.id)
         .single();
 
-      if (!error && data) {
-        const profile = data as any; // Type assertion until DB types are regenerated
+      // Fetch stripe_customer_id from users (needed for customer portal)
+      const { data: profileData } = await supabase
+        .from('users')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
+        .single();
+
+      if (!userError && userData) {
         setSubscriptionInfo({
-          status: profile.subscription_status || 'inactive',
-          plan: profile.plan || 'none',
-          current_period_end: profile.current_period_end || '',
-          stripe_customer_id: profile.stripe_customer_id || '',
+          status: userData.subscription_status || 'inactive',
+          plan: userData.subscription_plan || 'none',
+          current_period_end: userData.current_period_end || '',
+          stripe_customer_id: (profileData as any)?.stripe_customer_id || '',
         });
       }
     } catch (error) {

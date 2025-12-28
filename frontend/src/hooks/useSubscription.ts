@@ -43,22 +43,22 @@ export function useSubscription(): SubscriptionData {
 
     const fetchSubscription = async () => {
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
+        const { data: userData, error } = await supabase
+          .from('users')
           .select('subscription_status, current_period_end')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .single();
 
         if (error) throw error;
 
         const activeStatuses = ['active', 'trialing'];
-        const isActive = activeStatuses.includes((profile as any)?.subscription_status || '');
+        const isActive = activeStatuses.includes((userData as any)?.subscription_status || '');
 
         let currentPeriodEnd: Date | null = null;
         let daysRemaining: number | null = null;
 
-        if ((profile as any)?.current_period_end) {
-          currentPeriodEnd = new Date((profile as any).current_period_end);
+        if ((userData as any)?.current_period_end) {
+          currentPeriodEnd = new Date((userData as any).current_period_end);
           const now = new Date();
           daysRemaining = Math.ceil(
             (currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
@@ -66,7 +66,7 @@ export function useSubscription(): SubscriptionData {
         }
 
         setSubscriptionData({
-          status: (profile as any)?.subscription_status || null,
+          status: (userData as any)?.subscription_status || null,
           currentPeriodEnd,
           daysRemaining,
           isActive,
@@ -88,7 +88,7 @@ export function useSubscription(): SubscriptionData {
 
     fetchSubscription();
 
-    // Set up real-time subscription to profile changes
+    // Set up real-time subscription to user changes
     const channel = supabase
       .channel(`subscription:${user.id}`)
       .on(
@@ -96,19 +96,19 @@ export function useSubscription(): SubscriptionData {
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'profiles',
-          filter: `user_id=eq.${user.id}`,
+          table: 'users',
+          filter: `id=eq.${user.id}`,
         },
         (payload) => {
-          const profile = payload.new as any;
+          const userData = payload.new as any;
           const activeStatuses = ['active', 'trialing'];
-          const isActive = activeStatuses.includes(profile?.subscription_status || '');
+          const isActive = activeStatuses.includes(userData?.subscription_status || '');
 
           let currentPeriodEnd: Date | null = null;
           let daysRemaining: number | null = null;
 
-          if (profile?.current_period_end) {
-            currentPeriodEnd = new Date(profile.current_period_end);
+          if (userData?.current_period_end) {
+            currentPeriodEnd = new Date(userData.current_period_end);
             const now = new Date();
             daysRemaining = Math.ceil(
               (currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
@@ -116,7 +116,7 @@ export function useSubscription(): SubscriptionData {
           }
 
           setSubscriptionData({
-            status: profile?.subscription_status || null,
+            status: userData?.subscription_status || null,
             currentPeriodEnd,
             daysRemaining,
             isActive,

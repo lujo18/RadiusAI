@@ -15,6 +15,7 @@ router = APIRouter(prefix="/api/generate", tags=["generate"])
 async def generate_post_content(
     request: GeneratePostRequest
 ):
+    print("Request ", request)
 
     """Generate post content using Gemini AI based on the provided template and brand settings."""
     try:

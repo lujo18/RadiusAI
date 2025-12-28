@@ -50,7 +50,6 @@ from .variant import (
 
 from .user import (
     BrandSettings,
-    UserProfile,
     UpdateProfileRequest,
 )
 
@@ -96,6 +95,5 @@ __all__ = [
     "CreateVariantSetRequest",
     # User models
     "BrandSettings",
-    "UserProfile",
     "UpdateProfileRequest",
 ]

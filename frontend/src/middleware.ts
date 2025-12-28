@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 
 export async function middleware(request: NextRequest) {
   // Create a Supabase client configured to use cookies
@@ -56,14 +57,14 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Check for Supabase session
-  const { data: { session }, error } = await supabase.auth.getSession();
+  // Check for authenticated user (getUser() is more secure than getSession())
+  const { data: { user }, error } = await supabase.auth.getUser();
   
   console.log('[Middleware] Auth check:', {
     path: request.nextUrl.pathname,
-    hasSession: !!session,
-    sessionError: error?.message,
-    userId: session?.user?.id
+    hasUser: !!user,
+    authError: error?.message,
+    userId: user?.id
   });
 
   // Protected routes
@@ -78,15 +79,48 @@ export async function middleware(request: NextRequest) {
   console.log('[Middleware] Route protection check:', {
     isProtectedRoute,
     hasStripeSessionId,
-    willRedirect: isProtectedRoute && !session && !hasStripeSessionId
+    willRedirect: isProtectedRoute && !user && !hasStripeSessionId
   });
   
   // Check if user is trying to access protected route
-  if (isProtectedRoute && !session && !hasStripeSessionId) {
-    console.log('[Middleware] Redirecting to login - no valid session');
+  if (isProtectedRoute && !user && !hasStripeSessionId) {
+    console.log('[Middleware] Redirecting to login - no valid user');
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Check subscription status for authenticated users accessing dashboard
+  if (isProtectedRoute && user && !hasStripeSessionId) {
+    console.log('[Middleware] Checking subscription status for user:', user.id);
+    
+    // Use service role key to query users table (RLS bypass for middleware)
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    const { data: userData, error: userError } = await serviceSupabase
+      .from('users')
+      .select('subscription_status')
+      .eq('id', user.id)
+      .single();
+
+    console.log('[Middleware] Subscription check:', {
+      userId: user.id,
+      subscriptionStatus: userData?.subscription_status,
+      error: userError?.message
+    });
+
+    // Block access if no active subscription (null, inactive, canceled, etc.)
+    const validStatuses = ['active', 'trialing'];
+    if (!userData?.subscription_status || !validStatuses.includes(userData.subscription_status)) {
+      console.log('[Middleware] Blocking access - no active subscription');
+      const pricingUrl = new URL('/pricing', request.url);
+      pricingUrl.searchParams.set('reason', 'subscription_required');
+      return NextResponse.redirect(pricingUrl);
+    }
   }
 
   return response;

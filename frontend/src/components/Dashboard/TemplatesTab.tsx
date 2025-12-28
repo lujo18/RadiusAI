@@ -98,15 +98,15 @@ export default function TemplatesTab() {
             <div className="space-y-3 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Total Posts</span>
-                <span className="font-semibold">{template.performance.totalPosts}</span>
+                <span className="font-semibold">{template.performance?.totalPosts || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Avg Engagement</span>
-                <span className="font-semibold text-green-400">{template.performance.avgEngagementRate}%</span>
+                <span className="font-semibold text-green-400">{template.performance?.avgEngagementRate || 0}%</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Avg Saves</span>
-                <span className="font-semibold">{template.performance.avgSaves}</span>
+                <span className="font-semibold">{template.performance?.avgSaves || 0}</span>
               </div>
             </div>
 
@@ -168,14 +168,14 @@ export default function TemplatesTab() {
         <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
           <div className="text-3xl font-bold text-green-400 mb-2">
             {templates && templates.length > 0
-              ? (templates.reduce((sum: number, t: any) => sum + t.performance.avgEngagementRate, 0) / templates.length).toFixed(1)
+              ? (templates.reduce((sum: number, t: any) => sum + (t.performance?.avgEngagementRate || 0), 0) / templates.length).toFixed(1)
               : '0.0'}%
           </div>
           <div className="text-sm text-gray-400">Avg Engagement Rate</div>
         </div>
         <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
           <div className="text-3xl font-bold text-blue-400 mb-2">
-            {templates?.reduce((sum: number, t: any) => sum + t.performance.totalPosts, 0) || 0}
+            {templates?.reduce((sum: number, t: any) => sum + (t.performance?.totalPosts || 0), 0) || 0}
           </div>
           <div className="text-sm text-gray-400">Total Posts Generated</div>
         </div>

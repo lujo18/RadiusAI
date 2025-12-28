@@ -11,6 +11,8 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+console.log("ADMIN", supabaseAdmin)
+
 export interface SubscriptionStatus {
   isActive: boolean;
   status: string | null;
@@ -25,19 +27,13 @@ export interface SubscriptionStatus {
  * @returns Subscription status object
  */
 export async function checkSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
-  const { data: profile, error } = await supabaseAdmin
-    .from('profiles')
-    .select('subscription_status, current_period_end')
-    .eq('user_id', userId)
-    .single();
-
-  const { data: user } = await supabaseAdmin
+  const { data: user, error } = await supabaseAdmin
     .from('users')
-    .select('plan')
+    .select('subscription_status, subscription_plan, current_period_end')
     .eq('id', userId)
     .single();
 
-  if (error || !profile) {
+  if (error || !user) {
     return {
       isActive: false,
       status: null,
@@ -48,21 +44,21 @@ export async function checkSubscriptionStatus(userId: string): Promise<Subscript
   }
 
   const activeStatuses = ['active', 'trialing'];
-  const isActive = activeStatuses.includes(profile.subscription_status || '');
+  const isActive = activeStatuses.includes(user.subscription_status || '');
 
   let currentPeriodEnd: Date | null = null;
   let daysRemaining: number | null = null;
 
-  if (profile.current_period_end) {
-    currentPeriodEnd = new Date(profile.current_period_end);
+  if (user.current_period_end) {
+    currentPeriodEnd = new Date(user.current_period_end);
     const now = new Date();
     daysRemaining = Math.ceil((currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   }
 
   return {
     isActive,
-    status: profile.subscription_status,
-    plan: user?.plan || null,
+    status: user.subscription_status,
+    plan: user.subscription_plan || null,
     currentPeriodEnd,
     daysRemaining,
   };
@@ -85,9 +81,9 @@ export async function requireActiveSubscription(userId: string): Promise<void> {
  */
 export async function getSubscriptionDetails(userId: string) {
   const { data: profile, error } = await supabaseAdmin
-    .from('profiles')
+    .from('users')
     .select('stripe_customer_id, stripe_subscription_id, subscription_status, current_period_end')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .single();
 
   if (error || !profile) {
@@ -101,11 +97,11 @@ export async function getSubscriptionDetails(userId: string) {
  * Check if user is past due on payment
  */
 export async function isPaymentPastDue(userId: string): Promise<boolean> {
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
+  const { data: user } = await supabaseAdmin
+    .from('users')
     .select('subscription_status')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .single();
 
-  return profile?.subscription_status === 'past_due';
+  return user?.subscription_status === 'past_due';
 }

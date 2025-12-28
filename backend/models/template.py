@@ -16,67 +16,67 @@ from .enums import (
 # ==================== CONFIGURATION MODELS ====================
 
 class LayoutConfig(BaseModel):
-    slideCount: int = Field(ge=3, le=10)
-    aspectRatio: AspectRatio
+    slide_count: int = Field(ge=3, le=10)
+    aspect_ratio: AspectRatio
 
 
 class ContentRules(BaseModel):
   format: str
-  slideCount: int = Field(ge=3, le=10)
+  slide_count: int = Field(ge=3, le=10)
   perspective: str
-  depthLevel: Literal['surface', 'detailed', 'comprehensive']
-  topicFocus: str
+  depth_level: Literal['surface', 'detailed', 'comprehensive']
+  topic_focus: str
   subtopics: Optional[List[str]] = None
-  hookStyle: str
-  bodyStyle: str
-  ctaStyle: str
-  includeExamples: bool
-  includeStatistics: bool
-  personalStory: bool
-  avoidTopics: Optional[List[str]] = None
-  mustInclude: Optional[List[str]] = None
+  hook_style: str
+  body_style: str
+  cta_style: str
+  include_examples: bool
+  include_statistics: bool
+  personal_story: bool
+  avoid_topics: Optional[List[str]] = None
+  must_include: Optional[List[str]] = None
     
     
 
 class StyleConfig(BaseModel):
     layout: LayoutConfig
-    contentRules: Optional[ContentRules] = None # TODO: update the typescript/frontend functionality (see comment there), then fix this
-    slideDesigns: List[SlideDesign] 
-    slideSequence: List[SlideSequence] 
+    content_rules: Optional[ContentRules] = None # TODO: update the typescript/frontend functionality (see comment there), then fix this
+    slide_designs: List[SlideDesign] 
+    slide_sequence: List[SlideSequence] 
 
 
 class TemplatePerformance(BaseModel):
-    totalPosts: int = 0
-    avgEngagementRate: float = 0.0
-    avgSaves: float = 0.0
-    avgShares: float = 0.0
-    avgImpressions: float = 0.0
-    lastUpdated: Optional[datetime] = None
+    total_posts: int = 0
+    avg_engagement_rate: float = 0.0
+    avg_saves: float = 0.0
+    avg_shares: float = 0.0
+    avg_impressions: float = 0.0
+    last_updated: Optional[datetime] = None
 
 # ==================== TEMPLATE MODELS ====================
 
 class Template(BaseModel):
     id: str
     name: str
-    isDefault: bool = False
+    is_default: bool = False
     category: TemplateCategory
     status: TemplateStatus = TemplateStatus.ACTIVE
-    createdAt: datetime
-    updatedAt: datetime
-    styleConfig: StyleConfig
-    geminiPrompt: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    style_config: StyleConfig
+    gemini_prompt: Optional[str] = None
     performance: TemplatePerformance = TemplatePerformance()
-    parentTemplateId: Optional[str] = None
+    parent_template_id: Optional[str] = None
 
 class CreateTemplateRequest(BaseModel):
     name: str
     category: TemplateCategory
-    styleConfig: StyleConfig
-    isDefault: bool = False
+    style_config: StyleConfig
+    is_default: bool = False
 
 class UpdateTemplateRequest(BaseModel):
     name: Optional[str] = None
     category: Optional[TemplateCategory] = None
     status: Optional[TemplateStatus] = None
-    styleConfig: Optional[StyleConfig] = None
-    isDefault: Optional[bool] = None
+    style_config: Optional[StyleConfig] = None
+    is_default: Optional[bool] = None

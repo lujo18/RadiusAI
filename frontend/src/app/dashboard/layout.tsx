@@ -197,7 +197,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 ml-64 p-8 min-h-[calc(100vh-4rem)]">
           <div className="max-w-screen-2xl mx-auto">
             {/* Show subscription banner if no active subscription */}
-            {user && !user.plan && <SubscriptionBanner />}
+            <SubscriptionBanner />
             {children}
           </div>
         </main>

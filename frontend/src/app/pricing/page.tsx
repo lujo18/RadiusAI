@@ -32,8 +32,17 @@ export default function PricingPage() {
   const [prices, setPrices] = useState<any>(null);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
 
   useEffect(() => {
+    // Check if redirected due to subscription requirement
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reason') === 'subscription_required') {
+      setShowSubscriptionAlert(true);
+      // Remove the query param from URL after reading
+      window.history.replaceState({}, '', '/pricing');
+    }
+
     // Fetch Stripe prices
     fetch('/api/stripe/prices')
       .then(res => res.json())
@@ -135,6 +144,33 @@ export default function PricingPage() {
     <div className="min-h-screen bg-dark-600">
       {/* Navbar */}
       <PublicNavbar />
+
+      {/* Subscription Required Alert */}
+      {showSubscriptionAlert && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <div className="glass-card bg-yellow-500/10 border-yellow-500/30 p-4 rounded-lg shadow-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FiZap className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-medium text-yellow-400">
+                  Active Subscription Required
+                </h3>
+                <p className="mt-1 text-sm text-gray-300">
+                  You need an active subscription to access the dashboard. Choose a plan below to get started!
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSubscriptionAlert(false)}
+                className="ml-4 flex-shrink-0 text-gray-400 hover:text-white"
+              >
+                <FiX className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* HERO SECTION */}
       <section className="pt-32 pb-16 px-6">

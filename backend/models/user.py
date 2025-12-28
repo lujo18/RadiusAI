@@ -10,31 +10,30 @@ class BrandSettings(BaseModel):
     """Account-level brand settings for AI content generation"""
     niche: str
     aesthetic: str
-    targetAudience: str
-    brandVoice: str
-    contentPillars: List[str]
-    
-    toneOfVoice: Optional[Literal["professional", "casual", "humorous", "edgy", "inspirational"]] = None
-    emojiUsage: Optional[Literal["none", "minimal", "moderate", "heavy"]] = None
-    forbiddenWords: Optional[List[str]] = None
-    preferredWords: Optional[List[str]] = None
-    
-    hashtagStyle: Optional[Literal["niche", "trending", "mixed"]] = None
-    hashtagCount: Optional[int] = None
+    target_audience: str
+    brand_voice: str
+    content_pillars: List[str]
+
+    tone_of_voice: Optional[Literal["professional", "casual", "humorous", "edgy", "inspirational"]] = None
+    emoji_usage: Optional[Literal["none", "minimal", "moderate", "heavy"]] = None
+    forbidden_words: Optional[List[str]] = None
+    preferred_words: Optional[List[str]] = None
+
+    hashtag_style: Optional[Literal["niche", "trending", "mixed"]] = None
+    hashtag_count: Optional[int] = None
     hashtags: Optional[List[str]] = None
 
-class UserProfile(BaseModel):
+class User(BaseModel):
     """User account information"""
     id: str
     email: str
     name: str
     plan: str = "free"  # free, pro, enterprise
-    defaultTemplateId: Optional[str] = None
-    brandSettings: BrandSettings
-    createdAt: datetime
-    updatedAt: datetime
-
+    default_template_id: Optional[str] = None
+    brand_settings: BrandSettings
+    created_at: datetime
+    updated_at: datetime
 class UpdateProfileRequest(BaseModel):
     """Request to update user profile"""
     name: Optional[str] = None
-    brandSettings: Optional[BrandSettings] = None
+    brand_settings: Optional[BrandSettings] = None
