@@ -1,5 +1,6 @@
+import React from "react";
 import { FiCheck } from 'react-icons/fi';
-import { type TemplateCategory } from '@/types';
+import type { TemplateCategory } from '@/types/database';
 
 interface CategoryCardProps {
   categoryKey: TemplateCategory;

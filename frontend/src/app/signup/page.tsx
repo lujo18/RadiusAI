@@ -1,3 +1,5 @@
+
+import React from "react";
 'use client';
 
 import { useState } from 'react';
@@ -149,7 +151,7 @@ export default function SignupPage() {
               {/* Email Button */}
               <button
                 onClick={handleContinueWithEmail}
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary-500/50"
+                className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-kinetic-mint/50"
               >
                 Continue with Email
               </button>
@@ -194,7 +196,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary-500/50"
+                  className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 disabled:bg-gray-700 disabled:cursor-not-allowed text-obsidian py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-kinetic-mint/50"
                 >
                   {isLoading ? 'Creating Account...' : 'Continue'}
                 </button>

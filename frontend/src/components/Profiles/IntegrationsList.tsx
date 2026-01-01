@@ -1,3 +1,4 @@
+import React from "react";
 import { FiInstagram, FiTwitter } from 'react-icons/fi';
 import { SiTiktok, SiFacebook } from 'react-icons/si';
 import type { PlatformIntegration } from '@/types';

@@ -1,3 +1,4 @@
+import React from "react";
 import { FiZap, FiCalendar, FiBarChart2, FiSettings, FiLogOut, FiTrendingUp, FiLayers } from 'react-icons/fi';
 
 interface SidebarProps {

@@ -8,9 +8,8 @@ class GeminiClient:
     def __getattr__(self, name):
         if self._client is None:
             # Lazy import to avoid Python 3.14 protobuf issues at startup
-            import google.generativeai as genai
-            genai.configure(api_key=Config.GEMINI_API_KEY)
-            self._client = genai.GenerativeModel('gemini-2.0-flash-exp')
+            from google import genai
+            self._client = genai.Client(api_key=Config.GEMINI_API_KEY)
         return getattr(self._client, name)
 
 client = GeminiClient()

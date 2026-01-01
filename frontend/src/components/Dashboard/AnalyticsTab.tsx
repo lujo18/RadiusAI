@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from 'react';
 import { FiTrendingUp, FiRefreshCw, FiZap } from 'react-icons/fi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -44,7 +45,7 @@ export default function AnalyticsTab({ variantPerformance, performanceData }: An
           <h1 className="text-4xl font-bold mb-2">A/B Testing</h1>
           <p className="text-gray-400">Compare template performance and optimize</p>
         </div>
-        <button className="bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+        <button className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
           <FiTrendingUp />
           Create A/B Test
         </button>
@@ -139,7 +140,7 @@ export default function AnalyticsTab({ variantPerformance, performanceData }: An
       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Historical Performance</h2>
-          <button className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg flex items-center gap-2">
+          <button className="px-4 py-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg flex items-center gap-2">
             <FiRefreshCw />
             Refresh Data
           </button>

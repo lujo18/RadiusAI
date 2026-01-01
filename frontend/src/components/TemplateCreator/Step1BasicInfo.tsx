@@ -1,7 +1,5 @@
-import { 
-  TEMPLATE_CATEGORIES, 
-  type TemplateCategory
-} from '@/types';
+import React from "react";
+import { TEMPLATE_CATEGORIES, TemplateCategory } from './categoryData';
 import CategoryCard from './CategoryCard';
 
 interface Step1BasicInfoProps {
@@ -24,7 +22,7 @@ export default function Step1BasicInfo({
   return (
     <div className="p-6 overflow-y-auto h-full space-y-4">
       <div>
-        <label className="block text-sm font-semibold mb-2">Template Name</label>
+        <label className="block text-sm font-semibold mb-2">Template Name (Radius)</label>
         <input 
           type="text"
           value={name}
@@ -56,7 +54,13 @@ export default function Step1BasicInfo({
             <CategoryCard 
               key={key}
               categoryKey={key as TemplateCategory}
-              info={info}
+              info={info as {
+                name: string;
+                icon: string;
+                bestFor: string;
+                structure: string[];
+                hookStyles: string[];
+              }}
               selected={category === key}
               onSelect={() => setCategory(key as TemplateCategory)}
             />

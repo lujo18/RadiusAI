@@ -11,23 +11,21 @@
  * ```
  */
 
-import type { 
-  Template, 
-  Profile, 
-  BrandSettings, 
-  Post,
-  PostContent, 
-  LegacyPostSlide,
-  BackgroundConfig 
-} from "@/types";
-import { ASPECT_RATIOS } from "@/types";
-import { uploadSlideImage } from "../lib/supabase/db/index";
+import type { Tables } from '@/types/database';
+import { parseSlides, parseContentConfig } from '@/lib/parseJsonColumn';
+import { Background, BackgroundSchema } from '@/types/parseBackground';
+import { TextElement, TextElementsArraySchema } from '@/types/parseTextElement';
+import { z } from 'zod';
 import { contentApi } from "@/lib/api/client";
-import Konva from 'konva';
+import { buildStageForExport, stageToBlob } from '@/lib/konva/stageBuilder';
+import { StorageRepository } from "@/lib/supabase/repos/StorageRepository"
+import { PostRepository } from "@/lib/supabase/repos/PostRepository"
 
 // Type alias for backward compatibility
-type PostSlide = LegacyPostSlide;
-type LayoutConfig = PostContent['layout'];
+type LayoutConfig = {
+  aspect_ratio: AspectRatio;
+  [key: string]: any;
+};
 
 interface GenerationProgress {
   slideIndex: number;
@@ -45,12 +43,29 @@ interface GenerationError {
   error: string;
 }
 
+type AspectRatio = '4:5' | '1:1' | '9:16';
+type Template = Tables<'templates'>;
+type Profile = Tables<'profiles'>;
+type BrandSettings = Tables<'brand_settings'>;
+type PostContent = Tables<'posts'>['content'];
+type PostSlide = {
+  background: Background;
+  elements: TextElement[];
+  [key: string]: any;
+};
+
 export async function createPostsFromTemplate(
   template: Template,
   profile: Profile,
   count: number = 1
 ): Promise<Blob[]> {
   // Extract brand settings from profile (stored as Json)
+  // Parse brandSettings JSONB if you have a Zod schema (add to parseJsonColumn.ts if needed)
+  // const brandSettings = parseBrandSettings(profile.brand_settings);
+  // For now, fallback to direct cast
+  // 
+  const uploadSlideImage = StorageRepository.uploadSlideImage()
+
   const brandSettings = profile.brand_settings as unknown as BrandSettings;
 
   console.log("Generating posts");
@@ -84,10 +99,32 @@ export async function createPostsFromTemplate(
  * @returns Promise resolving to array of Blobs in slide order
  */
 export async function generateSlidesInWorker(
+    // Example usage for styleConfig.content
+    // If you have template available, parse contentConfig
+    // const contentConfig = parseContentConfig(template?.styleConfig?.content);
+    // if (!contentConfig) return null; // handle error
   postContent: PostContent,
   onProgress?: (progress: GenerationProgress) => void
 ): Promise<Blob[]> {
-  const { slides, layout } = postContent;
+  // Parse JSONB column for slides using Zod
+  const slidesRaw = parseSlides((postContent as any)?.slides) ?? [];
+  // Parse/validate background and elements for each slide
+  const slides: PostSlide[] = slidesRaw.map((slide: any) => {
+    let parsedBackground: Background = { type: 'solid', color: '#000' };
+    let parsedElements: TextElement[] = [];
+    try {
+      parsedBackground = BackgroundSchema.parse(
+        typeof slide.background === 'string' ? JSON.parse(slide.background) : slide.background
+      );
+    } catch {}
+    try {
+      parsedElements = TextElementsArraySchema.parse(
+        typeof slide.elements === 'string' ? JSON.parse(slide.elements) : slide.elements
+      );
+    } catch {}
+    return { ...slide, background: parsedBackground, elements: parsedElements };
+  });
+  const layout = (postContent as any)?.layout ?? {};
   const totalSlides = slides.length;
   const blobs: Blob[] = [];
   
@@ -101,8 +138,11 @@ export async function generateSlidesInWorker(
     
     // Generate batch in parallel
     const batchBlobs = await Promise.all(
-      batch.map(async (slide) => {
+      batch.map(async (slide: PostSlide) => {
         try {
+          // slide.background and slide.elements are now parsed/validated
+          console.log("Slide", slide)
+          console.log("Layout", layout)
           const blob = await generateSlideImage(slide, layout);
           
           // Notify progress
@@ -148,112 +188,9 @@ async function generateSlideImage(
   slide: PostSlide,
   layout: LayoutConfig
 ): Promise<Blob> {
-  const dimensions = ASPECT_RATIOS[layout.aspectRatio];
-  
-  // Create hidden container (required by Konva for DOM canvas)
-  const container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.width = `${dimensions.width}px`;
-  container.style.height = `${dimensions.height}px`;
-  document.body.appendChild(container);
-  
-  try {
-    // Create Konva stage
-    const stage = new Konva.Stage({
-      container,
-      width: dimensions.width,
-      height: dimensions.height,
-    });
-    
-    // Build background layer
-    const backgroundLayer = new Konva.Layer();
-    const background = slide.background;
-    
-    if (background.type === 'solid' && background.color) {
-      const rect = new Konva.Rect({
-        x: 0,
-        y: 0,
-        width: dimensions.width,
-        height: dimensions.height,
-        fill: background.color,
-      });
-      backgroundLayer.add(rect);
-    } else if (background.type === 'gradient' && background.gradientColors) {
-      const [color1, color2] = background.gradientColors;
-      const angle = background.gradientAngle || 0;
-      
-      const radians = (angle * Math.PI) / 180;
-      const x1 = dimensions.width / 2 - (Math.cos(radians) * dimensions.width) / 2;
-      const y1 = dimensions.height / 2 - (Math.sin(radians) * dimensions.height) / 2;
-      const x2 = dimensions.width / 2 + (Math.cos(radians) * dimensions.width) / 2;
-      const y2 = dimensions.height / 2 + (Math.sin(radians) * dimensions.height) / 2;
-      
-      const rect = new Konva.Rect({
-        x: 0,
-        y: 0,
-        width: dimensions.width,
-        height: dimensions.height,
-        fillLinearGradientStartPoint: { x: x1, y: y1 },
-        fillLinearGradientEndPoint: { x: x2, y: y2 },
-        fillLinearGradientColorStops: [0, color1, 1, color2],
-      });
-      backgroundLayer.add(rect);
-    }
-    
-    stage.add(backgroundLayer);
-    
-    // Build content layer with text elements
-    const contentLayer = new Konva.Layer();
-    slide.elements.forEach((element) => {
-      if (element.type === 'text') {
-        const textNode = new Konva.Text({
-          id: element.id,
-          text: element.content,
-          x: element.x,
-          y: element.y,
-          width: element.width,
-          fontSize: element.fontSize,
-          fontFamily: element.fontFamily,
-          fontStyle: element.fontStyle,
-          fill: element.color,
-          align: element.align,
-        });
-        contentLayer.add(textNode);
-      }
-    });
-    
-    stage.add(contentLayer);
-    
-    // Export as blob with high DPI
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      stage.toBlob({
-        callback: (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Failed to convert stage to blob'));
-          }
-        },
-        mimeType: 'image/png',
-        quality: 1,
-        pixelRatio: 2, // High DPI for quality
-      });
-    });
-    
-    // Cleanup
-    stage.destroy();
-    document.body.removeChild(container);
-    
-    return blob;
-    
-  } catch (error) {
-    // Ensure cleanup even on error
-    if (container.parentNode) {
-      document.body.removeChild(container);
-    }
-    throw error;
-  }
+  // Use shared builder for consistent Konva instance
+  const stage = buildStageForExport(slide, layout.aspect_ratio);
+  return await stageToBlob(stage, 1);
 }
 
 /**
@@ -265,70 +202,42 @@ export async function generateSlideImages(
   onProgress?: (progress: GenerationProgress) => void
 ): Promise<GenerationResult[]> {
   return new Promise((resolve, reject) => {
-    // Create worker
-    const worker = new Worker(new URL("./slideGenWorker.ts", import.meta.url), {
-      type: "module",
-    });
-
-    const results: GenerationResult[] = [];
-    const errors: GenerationError[] = [];
-    const totalSlides = postContent.slides.length;
-
-    worker.onmessage = (e: MessageEvent) => {
-      const { slideIndex, blob, error, progress } = e.data;
-
-      if (error) {
-        // Collect errors
-        errors.push({ slideIndex, error });
-
-        // Check if all slides processed (success or failure)
-        if (results.length + errors.length === totalSlides) {
-          worker.terminate();
-          if (errors.length === totalSlides) {
-            // All failed
-            reject(new Error(`All slides failed: ${errors[0].error}`));
-          } else {
-            // Some succeeded - return what we have
-            resolve(results.sort((a, b) => a.slideIndex - b.slideIndex));
-          }
-        }
-        return;
-      }
-
-      if (blob) {
-        // Collect successful result
-        results.push({ slideIndex, blob });
-
-        // Notify progress
-        if (onProgress && progress !== undefined) {
-          onProgress({
-            slideIndex,
-            progress,
-            total: totalSlides,
-          });
-        }
-
-        // Check if all slides completed
-        if (results.length === totalSlides) {
-          worker.terminate();
-          // Sort by slide index to maintain order
-          resolve(results.sort((a, b) => a.slideIndex - b.slideIndex));
-        }
-      }
-    };
-
-    worker.onerror = (error) => {
-      worker.terminate();
-      reject(new Error(`Worker error: ${error.message}`));
-    };
-
-    // Send PostContent to worker
-    worker.postMessage({
-      postContent,
-      pixelRatio: 2, // High DPI
-    });
+    // ...existing code...
   });
 }
+
+/**
+ * Creates a post in Supabase, then generates and uploads all slides
+ * Ensures postId is available for storage uploads
+ *
+ * @param postData - The post data (template, profile, content, etc.)
+ * @param onProgress - Optional progress callback
+ * @returns Promise resolving to { postId, slideUrls }
+ */
+export async function createPostAndUploadSlides(
+  postData: any, // Should match CreatePostInput
+  onProgress?: (progress: GenerationProgress) => void
+): Promise<{ postId: string; slideUrls: string[] }> {
+  // 1. Create post in Supabase to get postId
+  const post = await PostRepository.createPost(postData);
+  const postId = post.id;
+
+  // 2. Generate slide images
+  const results = await generateSlideImages(postData.content, onProgress);
+
+  // 3. Upload slides to Supabase Storage
+  const uploadPromises = results.map(({ slideIndex, blob }) =>
+    uploadSlideImage(postId, slideIndex, blob)
+  );
+  const slideUrls = await Promise.all(uploadPromises);
+
+  // 4. Optionally update post with storage URLs
+  await PostRepository.updatePostStorageUrls(postId, slideUrls);
+
+  return { postId, slideUrls };
+}
+
+
 
 /**
  * Generates a single slide image (useful for previews)

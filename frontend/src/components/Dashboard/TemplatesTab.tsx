@@ -1,6 +1,8 @@
+import React from "react";
+// NOTE: All template objects from the backend use snake_case keys (e.g., is_default, performance.total_posts)
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiLayers } from 'react-icons/fi';
+import Image from 'next/image';
 import { useTemplates, useCreateTemplate, useDeleteTemplate } from '@/lib/api/hooks';
 import TemplateCreator from '@/components/TemplateCreator/index';
 
@@ -41,14 +43,14 @@ export default function TemplatesTab() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-4xl font-bold mb-2">Templates</h1>
+          <h1 className="text-4xl font-bold font-main mb-2">Templates</h1>
           <p className="text-gray-400">Create and manage slide templates for A/B testing</p>
         </div>
         <button 
           onClick={() => setShowCreateModal(true)}
-          className="bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
+          className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
         >
-          <FiLayers />
+          <Image src="/images/icon-primary.png" alt="Radius Logo" width={24} height={24} />
           Create Template
         </button>
       </div>
@@ -72,7 +74,7 @@ export default function TemplatesTab() {
           <div 
             key={template.id}
             className={`bg-gray-800/50 border rounded-xl p-6 cursor-pointer transition hover:border-primary-500 ${
-              template.isDefault ? 'border-primary-500' : 'border-gray-700'
+              template.is_default ? 'border-primary-500' : 'border-gray-700'
             }`}
             onClick={() => setSelectedTemplate(template.id)}
           >
@@ -82,7 +84,7 @@ export default function TemplatesTab() {
                 <h3 className="text-xl font-bold mb-1">{template.name}</h3>
                 <span className="text-xs text-gray-400 uppercase">{template.category}</span>
               </div>
-              {template.isDefault && (
+              {template.is_default && (
                 <span className="text-xs bg-primary-500/20 text-primary-400 px-3 py-1 rounded-full">
                   Default
                 </span>
@@ -98,15 +100,15 @@ export default function TemplatesTab() {
             <div className="space-y-3 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Total Posts</span>
-                <span className="font-semibold">{template.performance?.totalPosts || 0}</span>
+                <span className="font-semibold">{template.performance?.total_posts || 0}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Avg Engagement</span>
-                <span className="font-semibold text-green-400">{template.performance?.avgEngagementRate || 0}%</span>
+                <span className="font-semibold text-green-400">{template.performance?.avg_engagement_rate || 0}%</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Avg Saves</span>
-                <span className="font-semibold">{template.performance?.avgSaves || 0}</span>
+                <span className="font-semibold">{template.performance?.avg_saves || 0}</span>
               </div>
             </div>
 
@@ -136,11 +138,11 @@ export default function TemplatesTab() {
         ) : (
           // Empty state
           <div className="col-span-3 text-center py-12">
-            <FiLayers className="text-6xl text-gray-600 mx-auto mb-4" />
+            <Image src="/images/icon-primary.png" alt="Radius Logo" width={48} height={48} className="mx-auto mb-4" />
             <p className="text-gray-400 mb-4">No templates yet</p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-primary-500 hover:bg-primary-600 rounded-lg transition"
+              className="px-6 py-3 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg transition"
             >
               Create Your First Template
             </button>
@@ -152,7 +154,7 @@ export default function TemplatesTab() {
           onClick={() => setShowCreateModal(true)}
           className="bg-gray-800/30 border border-dashed border-gray-600 rounded-xl p-6 cursor-pointer transition hover:border-primary-500 flex flex-col items-center justify-center min-h-[300px]"
         >
-          <FiLayers className="text-6xl text-gray-600 mb-4" />
+          <Image src="/images/icon-primary.png" alt="Radius Logo" width={48} height={48} className="mb-4" />
           <p className="text-gray-400 font-semibold">Create New Template</p>
         </div>
       </div>
@@ -168,14 +170,14 @@ export default function TemplatesTab() {
         <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
           <div className="text-3xl font-bold text-green-400 mb-2">
             {templates && templates.length > 0
-              ? (templates.reduce((sum: number, t: any) => sum + (t.performance?.avgEngagementRate || 0), 0) / templates.length).toFixed(1)
+              ? (templates.reduce((sum: number, t: any) => sum + (t.performance?.avg_engagement_rate || 0), 0) / templates.length).toFixed(1)
               : '0.0'}%
           </div>
           <div className="text-sm text-gray-400">Avg Engagement Rate</div>
         </div>
         <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
           <div className="text-3xl font-bold text-blue-400 mb-2">
-            {templates?.reduce((sum: number, t: any) => sum + (t.performance?.totalPosts || 0), 0) || 0}
+            {templates?.reduce((sum: number, t: any) => sum + (t.performance?.total_posts || 0), 0) || 0}
           </div>
           <div className="text-sm text-gray-400">Total Posts Generated</div>
         </div>

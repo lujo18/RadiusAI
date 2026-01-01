@@ -1,23 +1,34 @@
+import React from "react";
 import { useState, useRef, useEffect } from "react";
 import {
   FiPlus,
   FiTrash2,
   FiCopy,
-  FiLayers,
   FiType,
   FiImage,
   FiZoomIn,
   FiZoomOut,
   FiCheck,
+  FiLayers,
 } from "react-icons/fi";
+import Image from "next/image";
 import { Stage, Layer, Rect, Text as KonvaText, Line } from "react-konva";
-import type { AspectRatio } from "@/types";
-import { ASPECT_RATIOS } from "@/types";
-import {
-  type SlideDesign,
-  type TextElement,
-  type BackgroundConfig,
-} from "./types";
+import type { Tables } from "@/types/database";
+import { TextElement, TextElementsArraySchema } from "@/types/parseTextElement";
+import { BackgroundSchema } from "@/types/parseBackground";
+import { z } from "zod";
+type SlideDesign = Tables<"slide_designs"> & {
+  text_elements: TextElement[];
+  background: any;
+};
+type AspectRatio = Tables<"layout_configs">["aspect_ratio"];
+// Aspect ratios constant (define locally if missing)
+const ASPECT_RATIOS = {
+  "4:5": { width: 1080, height: 1350 },
+  "1:1": { width: 1080, height: 1080 },
+  "9:16": { width: 1080, height: 1920 },
+} as const;
+
 import Toggle from "./Toggle";
 
 interface Step2VisualEditorProps {
@@ -47,10 +58,48 @@ export default function Step2VisualEditor({
   deleteDesign,
   duplicateDesign,
 }: Step2VisualEditorProps) {
-  const selectedDesign = slideDesigns.find(
-    (d: SlideDesign) => d.id === selectedDesignId
-  );
-  const canvasDimensions = ASPECT_RATIOS[aspectRatio as AspectRatio];
+  // Parse/validate JSONB columns for selectedDesign
+  const rawDesign = slideDesigns.find((d) => d.id === selectedDesignId);
+  let selectedDesign: SlideDesign;
+  if (rawDesign) {
+    let parsedBackground: any = { type: "solid", color: "#000" };
+    let parsedTextElements: TextElement[] = [];
+    try {
+      parsedBackground = BackgroundSchema.parse(
+        typeof rawDesign.background === "string"
+          ? JSON.parse(rawDesign.background)
+          : rawDesign.background
+      );
+    } catch {
+      parsedBackground = { type: "solid", color: "#000" };
+    }
+    try {
+      parsedTextElements = TextElementsArraySchema.parse(
+        typeof rawDesign.text_elements === "string"
+          ? JSON.parse(rawDesign.text_elements)
+          : rawDesign.text_elements
+      );
+    } catch {
+      parsedTextElements = [];
+    }
+    selectedDesign = {
+      ...rawDesign,
+      background: parsedBackground,
+      text_elements: parsedTextElements,
+    };
+  } else {
+    selectedDesign = {
+      id: "",
+      name: "",
+      background: { type: "solid", color: "#000" },
+      dynamic: false,
+      text_elements: [],
+      template_id: "",
+      created_at: "",
+    } as SlideDesign;
+  }
+  const canvasDimensions =
+    ASPECT_RATIOS[aspectRatio as keyof typeof ASPECT_RATIOS];
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [maxZoom, setMaxZoom] = useState(1);
@@ -101,13 +150,23 @@ export default function Step2VisualEditor({
     );
   };
 
-  const updateBackground = (updates: Partial<BackgroundConfig>) => {
+  const updateBackground = (updates: Partial<SlideDesign["background"]>) => {
     setSlideDesigns(
-      slideDesigns.map((d: SlideDesign) =>
-        d.id === selectedDesignId
-          ? { ...d, background: { ...d.background, ...updates } }
-          : d
-      )
+      slideDesigns.map((d: SlideDesign) => {
+        if (d.id !== selectedDesignId) return d;
+        // Parse current background
+        let currentBg: any = { type: "solid", color: "#000" };
+        try {
+          currentBg = BackgroundSchema.parse(
+            typeof d.background === "string"
+              ? JSON.parse(d.background)
+              : d.background
+          );
+        } catch {}
+        // Merge updates
+        const newBg = { ...currentBg, ...updates };
+        return { ...d, background: newBg };
+      })
     );
   };
 
@@ -132,54 +191,79 @@ export default function Step2VisualEditor({
           : textType === "subheader"
           ? "Add Subheader"
           : "Add Caption",
-      fontSize: fontSizes[textType],
-      fontFamily: "Inter",
-      fontStyle:
+      font_size: fontSizes[textType],
+      font_family: "Inter",
+      font_style:
         textType === "header" || textType === "subheader" ? "bold" : "normal",
       color: "#ffffff",
       x: 100,
-      y: 100 + (selectedDesign?.elements.length || 0) * 100,
+      y: 100 + (selectedDesign?.text_elements?.length || 0) * 100,
       width: canvasDimensions.width - 200,
       align: "center",
     };
 
     setSlideDesigns(
-      slideDesigns.map((d: SlideDesign) =>
-        d.id === selectedDesignId
-          ? { ...d, elements: [...d.elements, newElement] }
-          : d
-      )
+      slideDesigns.map((d: SlideDesign) => {
+        if (d.id !== selectedDesignId) return d;
+        let currentElements: TextElement[] = [];
+        try {
+          currentElements = TextElementsArraySchema.parse(
+            typeof d.text_elements === "string"
+              ? JSON.parse(d.text_elements)
+              : d.text_elements
+          );
+        } catch {}
+        return { ...d, text_elements: [...currentElements, newElement] };
+      })
     );
-    setSelectedElementId(newElement.id);
   };
 
   const updateElement = (elementId: string, updates: Partial<TextElement>) => {
     setSlideDesigns(
-      slideDesigns.map((d: SlideDesign) =>
-        d.id === selectedDesignId
-          ? {
-              ...d,
-              elements: d.elements.map((el) =>
-                el.id === elementId ? { ...el, ...updates } : el
-              ),
-            }
-          : d
-      )
+      slideDesigns.map((d: SlideDesign) => {
+        if (d.id !== selectedDesignId) return d;
+        let currentElements: TextElement[] = [];
+        try {
+          currentElements = TextElementsArraySchema.parse(
+            typeof d.text_elements === "string"
+              ? JSON.parse(d.text_elements)
+              : d.text_elements
+          );
+        } catch {}
+        return {
+          ...d,
+          text_elements: currentElements.map((el: TextElement) =>
+            el.id === elementId ? { ...el, ...updates } : el
+          ),
+        };
+      })
     );
   };
 
   const deleteElement = (elementId: string) => {
     setSlideDesigns(
-      slideDesigns.map((d: SlideDesign) =>
-        d.id === selectedDesignId
-          ? { ...d, elements: d.elements.filter((el) => el.id !== elementId) }
-          : d
-      )
+      slideDesigns.map((d: SlideDesign) => {
+        if (d.id !== selectedDesignId) return d;
+        let currentElements: TextElement[] = [];
+        try {
+          currentElements = TextElementsArraySchema.parse(
+            typeof d.text_elements === "string"
+              ? JSON.parse(d.text_elements)
+              : d.text_elements
+          );
+        } catch {}
+        return {
+          ...d,
+          text_elements: currentElements.filter(
+            (el: TextElement) => el.id !== elementId
+          ),
+        };
+      })
     );
     setSelectedElementId(null);
   };
 
-  const selectedElement = selectedDesign?.elements.find(
+  const selectedElement = (selectedDesign?.text_elements || []).find(
     (el: TextElement) => el.id === selectedElementId
   );
 
@@ -191,7 +275,7 @@ export default function Step2VisualEditor({
           <h3 className="font-semibold mb-2">Slide Designs</h3>
           <button
             onClick={addNewDesign}
-            className="w-full bg-primary-500 hover:bg-primary-600 px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
+            className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
           >
             <FiPlus /> New Design
           </button>
@@ -209,7 +293,15 @@ export default function Step2VisualEditor({
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-sm">{design.id}</span>
+                <span className="font-semibold text-sm flex items-center gap-2">
+                  <Image
+                    src="/images/icon-primary.png"
+                    alt="Radius Logo"
+                    width={18}
+                    height={18}
+                  />
+                  {design.id}
+                </span>
                 <div className="flex gap-1">
                   <button
                     onClick={(e) => {
@@ -235,13 +327,12 @@ export default function Step2VisualEditor({
               </div>
               <p className="text-xs text-gray-400">{design.name}</p>
               <p className="text-xs text-gray-500 mt-1">
-                {design.elements.length} elements
+                {(design.text_elements || []).length} elements
               </p>
             </div>
           ))}
         </div>
       </div>
-
       {/* Center Canvas */}
       <div
         ref={containerRef}
@@ -320,14 +411,14 @@ export default function Step2VisualEditor({
             >
               <Layer>
                 {/* Background */}
-                {selectedDesign?.background.type === "solid" && (
+                {selectedDesign?.background?.type === "solid" && (
                   <Rect
                     width={canvasDimensions.width}
                     height={canvasDimensions.height}
                     fill={selectedDesign.background.color || "#000000"}
                   />
                 )}
-                {selectedDesign?.background.type === "gradient" && (
+                {selectedDesign?.background?.type === "gradient" && (
                   <Rect
                     width={canvasDimensions.width}
                     height={canvasDimensions.height}
@@ -338,10 +429,10 @@ export default function Step2VisualEditor({
                     }}
                     fillLinearGradientColorStops={[
                       0,
-                      selectedDesign.background.gradientColors?.[0] ||
+                      selectedDesign.background.gradient_colors?.[0] ||
                         "#667eea",
                       1,
-                      selectedDesign.background.gradientColors?.[1] ||
+                      selectedDesign.background.gradient_colors?.[1] ||
                         "#764ba2",
                     ]}
                   />
@@ -378,384 +469,384 @@ export default function Step2VisualEditor({
                 )}
 
                 {/* Text Elements */}
-                {selectedDesign?.elements.map((element: TextElement) => {
-                  const SNAP_THRESHOLD = 10; // pixels
-                  const centerX = canvasDimensions.width / 2;
-                  const centerY = canvasDimensions.height / 2;
+                {(selectedDesign?.text_elements || []).map(
+                  (element: TextElement) => {
+                    const SNAP_THRESHOLD = 10; // pixels
+                    const centerX = canvasDimensions.width / 2;
+                    const centerY = canvasDimensions.height / 2;
 
-                  return (
-                    <KonvaText
-                      key={element.id}
-                      text={element.content}
-                      x={element.x}
-                      y={element.y}
-                      width={element.width}
-                      fontSize={element.fontSize}
-                      fontFamily={element.fontFamily}
-                      fontStyle={element.fontStyle}
-                      fill={element.color}
-                      align={element.align}
-                      perfectDrawEnabled={false}
-                      draggable
-                      onClick={() => setSelectedElementId(element.id)}
-                      onTap={() => setSelectedElementId(element.id)}
-                      onDragMove={(e) => {
-                        const node = e.target;
-                        const elementCenterX = node.x() + node.width() / 2;
-                        const elementCenterY = node.y() + node.height() / 2;
+                    return (
+                      <KonvaText
+                        key={element.id}
+                        text={element.content}
+                        x={element.x}
+                        y={element.y}
+                        width={element.width}
+                        fontSize={element.font_size}
+                        fontFamily={element.font_family}
+                        fontStyle={element.font_style}
+                        fill={element.color}
+                        align={element.align}
+                        perfectDrawEnabled={false}
+                        draggable
+                        onClick={() => setSelectedElementId(element.id)}
+                        onTap={() => setSelectedElementId(element.id)}
+                        onDragMove={(e) => {
+                          const node = e.target;
+                          const elementCenterX = node.x() + node.width() / 2;
+                          const elementCenterY = node.y() + node.height() / 2;
 
-                        let newX = node.x();
-                        let newY = node.y();
-                        let showVerticalGuide = false;
-                        let showHorizontalGuide = false;
+                          let newX = node.x();
+                          let newY = node.y();
+                          let showVerticalGuide = false;
+                          let showHorizontalGuide = false;
 
-                        // Snap to vertical center
-                        if (
-                          Math.abs(elementCenterX - centerX) < SNAP_THRESHOLD
-                        ) {
-                          newX = centerX - node.width() / 2;
-                          showVerticalGuide = true;
-                        }
+                          // Snap to vertical center
+                          if (
+                            Math.abs(elementCenterX - centerX) < SNAP_THRESHOLD
+                          ) {
+                            newX = centerX - node.width() / 2;
+                            showVerticalGuide = true;
+                          }
 
-                        // Snap to horizontal center
-                        if (
-                          Math.abs(elementCenterY - centerY) < SNAP_THRESHOLD
-                        ) {
-                          newY = centerY - node.height() / 2;
-                          showHorizontalGuide = true;
-                        }
+                          // Snap to horizontal center
+                          if (
+                            Math.abs(elementCenterY - centerY) < SNAP_THRESHOLD
+                          ) {
+                            newY = centerY - node.height() / 2;
+                            showHorizontalGuide = true;
+                          }
 
-                        node.x(newX);
-                        node.y(newY);
-
-                        setSnapGuides({
-                          vertical: showVerticalGuide,
-                          horizontal: showHorizontalGuide,
-                        });
-                      }}
-                      onDragEnd={(e) => {
-                        updateElement(element.id, {
-                          x: e.target.x(),
-                          y: e.target.y(),
-                        });
-                        setSnapGuides({ vertical: false, horizontal: false });
-                      }}
-                      stroke={
-                        selectedElementId === element.id ? "#6366f1" : undefined
-                      }
-                      strokeWidth={selectedElementId === element.id ? 2 : 0}
-                    />
-                  );
-                })}
+                          node.x(newX);
+                          node.y(newY);
+                        }}
+                      />
+                    );
+                  }
+                )}
               </Layer>
             </Stage>
           </div>
         </div>
 
-        <div className="mt-2 text-xs text-gray-400 flex-shrink-0">
-          Click and drag to reposition • {canvasDimensions.width} ×{" "}
-          {canvasDimensions.height}px
-        </div>
-      </div>
-
-      {/* Right Sidebar - Properties Panel */}
-      <div className="w-80 border-l border-gray-700 flex flex-col overflow-y-auto">
-        {/* Design Name */}
-        <div className="p-4 border-b border-gray-700">
-          <label className="block text-xs font-semibold mb-2 text-gray-400">
-            Design Name
-          </label>
-          <input
-            type="text"
-            value={selectedDesign?.name || ""}
-            onChange={(e) => {
-              setSlideDesigns(
-                slideDesigns.map((d: SlideDesign) =>
-                  d.id === selectedDesignId ? { ...d, name: e.target.value } : d
-                )
-              );
-            }}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div className="p-4 border-b border-gray-700">
-          <div className="flex flex-row flex-1 justify-between items-center mb-2">
-            <h3 className="font-semibold text-sm flex gap-2">
-              Dynamic Content
-            </h3>
-            <Toggle
-              checked={selectedDesign?.dynamic || false}
-              onChange={() => toggleDynmaic(!selectedDesign?.dynamic)}
+        {/* Right Sidebar - Properties Panel */}
+        <div className="w-80 border-l border-gray-700 flex flex-col overflow-y-auto">
+          {/* Design Name */}
+          <div className="p-4 border-b border-gray-700">
+            <label className="block text-xs font-semibold mb-2 text-gray-400">
+              Design Name
+            </label>
+            <input
+              type="text"
+              value={selectedDesign?.name || ""}
+              onChange={(e) => {
+                setSlideDesigns(
+                  slideDesigns.map((d: SlideDesign) =>
+                    d.id === selectedDesignId
+                      ? { ...d, name: e.target.value }
+                      : d
+                  )
+                );
+              }}
+              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
             />
           </div>
-          <label className="block text-xs font-semibold mb-2 text-gray-400">
-            Text elements on this page will be autofilled when generating content.
-          </label>
-        </div>
 
-        {/* Add Elements */}
-        <div className="p-4 border-b border-gray-700">
-          <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-            <FiPlus /> Add Element
-          </h3>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => addTextElement("header")}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-            >
-              <FiType /> Header
-            </button>
-            <button
-              onClick={() => addTextElement("subheader")}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-            >
-              <FiType /> Subheader
-            </button>
-            <button
-              onClick={() => addTextElement("body")}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-            >
-              <FiType /> Body
-            </button>
-            <button
-              onClick={() => addTextElement("caption")}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-            >
-              <FiType /> Caption
-            </button>
-          </div>
-        </div>
-
-        {/* Background Settings */}
-        <div className="p-4 border-b border-gray-700">
-          <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-            <FiImage /> Background
-          </h3>
-
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold mb-2 text-gray-400">
-                Type
-              </label>
-              <div className="flex gap-2">
-                {["solid", "gradient", "image"].map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => updateBackground({ type: type as any })}
-                    className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
-                      selectedDesign?.background.type === type
-                        ? "bg-primary-500"
-                        : "bg-gray-700 hover:bg-gray-600"
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {selectedDesign?.background.type === "solid" && (
-              <div>
-                <label className="block text-xs font-semibold mb-2 text-gray-400">
-                  Color
-                </label>
-                <input
-                  type="color"
-                  value={selectedDesign.background.color}
-                  onChange={(e) => updateBackground({ color: e.target.value })}
-                  className="w-full h-10 rounded cursor-pointer"
-                />
-              </div>
-            )}
-
-            {selectedDesign?.background.type === "gradient" && (
-              <>
-                <div>
-                  <label className="block text-xs font-semibold mb-2 text-gray-400">
-                    Color 1
-                  </label>
-                  <input
-                    type="color"
-                    value={selectedDesign.background.gradientColors?.[0]}
-                    onChange={(e) =>
-                      updateBackground({
-                        gradientColors: [
-                          e.target.value,
-                          selectedDesign.background.gradientColors?.[1] ||
-                            "#764ba2",
-                        ],
-                      })
-                    }
-                    className="w-full h-10 rounded cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-2 text-gray-400">
-                    Color 2
-                  </label>
-                  <input
-                    type="color"
-                    value={selectedDesign.background.gradientColors?.[1]}
-                    onChange={(e) =>
-                      updateBackground({
-                        gradientColors: [
-                          selectedDesign.background.gradientColors?.[0] ||
-                            "#667eea",
-                          e.target.value,
-                        ],
-                      })
-                    }
-                    className="w-full h-10 rounded cursor-pointer"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Element Properties */}
-        {selectedElement && (
           <div className="p-4 border-b border-gray-700">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">
-                <FiLayers /> Text Properties
+            <div className="flex flex-row flex-1 justify-between items-center mb-2">
+              <h3 className="font-semibold text-sm flex gap-2">
+                Dynamic Content
               </h3>
+              <Toggle
+                checked={selectedDesign?.dynamic || false}
+                onChange={() => toggleDynmaic(!selectedDesign?.dynamic)}
+              />
+            </div>
+            <label className="block text-xs font-semibold mb-2 text-gray-400">
+              Text elements on this page will be autofilled when generating
+              content.
+            </label>
+          </div>
+
+          {/* Add Elements */}
+          <div className="p-4 border-b border-gray-700">
+            <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
+              <FiPlus /> Add Element
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => deleteElement(selectedElement.id)}
-                className="text-red-400 hover:text-red-300"
+                onClick={() => addTextElement("header")}
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
               >
-                <FiTrash2 size={16} />
+                <FiType /> Header
+              </button>
+              <button
+                onClick={() => addTextElement("subheader")}
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
+              >
+                <FiType /> Subheader
+              </button>
+              <button
+                onClick={() => addTextElement("body")}
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
+              >
+                <FiType /> Body
+              </button>
+              <button
+                onClick={() => addTextElement("caption")}
+                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
+              >
+                <FiType /> Caption
               </button>
             </div>
+          </div>
+
+          {/* Background Settings */}
+          <div className="p-4 border-b border-gray-700">
+            <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
+              <FiImage /> Background
+            </h3>
 
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold mb-2 text-gray-400">
-                  Content
+                  Type
                 </label>
-                <textarea
-                  value={selectedDesign?.dynamic ? selectedElement.content : "Content will be generated by AI"}
-                  onChange={(e) =>
-                    updateElement(selectedElement.id, {
-                      content: e.target.value,
-                    })
-                  }
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm resize-none"
-                  rows={3}
-                  disabled={!selectedDesign?.dynamic}
-                />
+                <div className="flex gap-2">
+                  {["solid", "gradient", "image"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() =>
+                        updateBackground({
+                          type: type as "solid" | "gradient" | "image",
+                        })
+                      }
+                      className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
+                        selectedDesign?.background?.type === type
+                          ? "bg-primary-500"
+                          : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-2 text-gray-400">
-                    Font Size
-                  </label>
-                  <input
-                    type="number"
-                    value={selectedElement.fontSize}
-                    onChange={(e) =>
-                      updateElement(selectedElement.id, {
-                        fontSize: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
-                    min={12}
-                    max={120}
-                  />
-                </div>
+              {selectedDesign?.background?.type === "solid" && (
                 <div>
                   <label className="block text-xs font-semibold mb-2 text-gray-400">
                     Color
                   </label>
                   <input
                     type="color"
-                    value={selectedElement.color}
+                    value={selectedDesign.background.color || "#000000"}
                     onChange={(e) =>
-                      updateElement(selectedElement.id, {
-                        color: e.target.value,
-                      })
+                      updateBackground({ color: e.target.value })
                     }
-                    className="w-full h-9 rounded cursor-pointer"
+                    className="w-full h-10 rounded cursor-pointer"
                   />
                 </div>
-              </div>
+              )}
 
-              <div>
-                <label className="block text-xs font-semibold mb-2 text-gray-400">
-                  Font Family
-                </label>
-                <select
-                  value={selectedElement.fontFamily}
-                  onChange={(e) =>
-                    updateElement(selectedElement.id, {
-                      fontFamily: e.target.value,
-                    })
-                  }
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
+              {selectedDesign?.background?.type === "gradient" && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold mb-2 text-gray-400">
+                      Color 1
+                    </label>
+                    <input
+                      type="color"
+                      value={
+                        selectedDesign.background.gradient_colors?.[0] ||
+                        "#667eea"
+                      }
+                      onChange={(e) =>
+                        updateBackground({
+                          gradient_colors: [
+                            e.target.value,
+                            selectedDesign.background.gradient_colors?.[1] ||
+                              "#764ba2",
+                          ],
+                        })
+                      }
+                      className="w-full h-10 rounded cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-2 text-gray-400">
+                      Color 2
+                    </label>
+                    <input
+                      type="color"
+                      value={
+                        selectedDesign.background.gradient_colors?.[1] ||
+                        "#764ba2"
+                      }
+                      onChange={(e) =>
+                        updateBackground({
+                          gradient_colors: [
+                            selectedDesign.background.gradient_colors?.[0] ||
+                              "#667eea",
+                            e.target.value,
+                          ],
+                        })
+                      }
+                      className="w-full h-10 rounded cursor-pointer"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Element Properties */}
+          {selectedElement && (
+            <div className="p-4 border-b border-gray-700">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <FiLayers /> Text Properties
+                </h3>
+                <button
+                  onClick={() => deleteElement(selectedElement.id)}
+                  className="text-red-400 hover:text-red-300"
                 >
-                  <option>Inter</option>
-                  <option>Montserrat</option>
-                  <option>Poppins</option>
-                  <option>Georgia</option>
-                  <option>Arial</option>
-                  <option>Helvetica</option>
-                </select>
+                  <FiTrash2 size={16} />
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-2 text-gray-400">
-                  Font Style
-                </label>
-                <div className="flex gap-2">
-                  {["normal", "bold", "italic"].map((style) => (
-                    <button
-                      key={style}
-                      onClick={() =>
-                        updateElement(selectedElement.id, {
-                          fontStyle: style as any,
-                        })
-                      }
-                      className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
-                        selectedElement.fontStyle === style
-                          ? "bg-primary-500"
-                          : "bg-gray-700 hover:bg-gray-600"
-                      }`}
-                    >
-                      {style}
-                    </button>
-                  ))}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-2 text-gray-400">
+                    Content
+                  </label>
+                  <textarea
+                    value={
+                      selectedDesign?.dynamic
+                        ? selectedElement.content
+                        : "Content will be generated by AI"
+                    }
+                    onChange={(e) =>
+                      updateElement(selectedElement.id, {
+                        content: e.target.value,
+                      })
+                    }
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm resize-none"
+                    rows={3}
+                    disabled={!selectedDesign?.dynamic}
+                  />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-2 text-gray-400">
-                  Alignment
-                </label>
-                <div className="flex gap-2">
-                  {["left", "center", "right"].map((align) => (
-                    <button
-                      key={align}
-                      onClick={() =>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold mb-2 text-gray-400">
+                      Font Size
+                    </label>
+                    <input
+                      type="number"
+                      value={selectedElement.font_size}
+                      onChange={(e) =>
                         updateElement(selectedElement.id, {
-                          align: align as any,
+                          font_size: parseInt(e.target.value),
                         })
                       }
-                      className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
-                        selectedElement.align === align
-                          ? "bg-primary-500"
-                          : "bg-gray-700 hover:bg-gray-600"
-                      }`}
-                    >
-                      {align}
-                    </button>
-                  ))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
+                      min={12}
+                      max={120}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold mb-2 text-gray-400">
+                      Color
+                    </label>
+                    <input
+                      type="color"
+                      value={selectedElement.color}
+                      onChange={(e) =>
+                        updateElement(selectedElement.id, {
+                          color: e.target.value,
+                        })
+                      }
+                      className="w-full h-9 rounded cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-2 text-gray-400">
+                    Font Family
+                  </label>
+                  <select
+                    value={selectedElement.font_family}
+                    onChange={(e) =>
+                      updateElement(selectedElement.id, {
+                        font_family: e.target.value,
+                      })
+                    }
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
+                  >
+                    <option>Inter</option>
+                    <option>Montserrat</option>
+                    <option>Poppins</option>
+                    <option>Georgia</option>
+                    <option>Arial</option>
+                    <option>Helvetica</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-2 text-gray-400">
+                    Font Style
+                  </label>
+                  <div className="flex gap-2">
+                    {["normal", "bold", "italic"].map((style) => (
+                      <button
+                        key={style}
+                        onClick={() =>
+                          updateElement(selectedElement.id, {
+                            font_style: style as any,
+                          })
+                        }
+                        className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
+                          selectedElement.font_style === style
+                            ? "bg-primary-500"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        {style}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-2 text-gray-400">
+                    Alignment
+                  </label>
+                  <div className="flex gap-2">
+                    {["left", "center", "right"].map((align) => (
+                      <button
+                        key={align}
+                        onClick={() =>
+                          updateElement(selectedElement.id, {
+                            align: align as any,
+                          })
+                        }
+                        className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
+                          selectedElement.align === align
+                            ? "bg-primary-500"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        {align}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

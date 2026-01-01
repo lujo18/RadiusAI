@@ -1,3 +1,4 @@
+import React from "react";
 import { useAuthStore } from '@/store/authStore';
 import { STRIPE_CONFIG } from '@/lib/stripe/config';
 

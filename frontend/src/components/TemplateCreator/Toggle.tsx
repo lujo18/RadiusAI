@@ -1,3 +1,4 @@
+import React from "react";
 interface ToggleProps {
   checked: boolean;
   onChange: () => void;

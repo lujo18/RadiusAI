@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/lib/supabase/client';

@@ -3,13 +3,14 @@
 import json
 from typing import List, Dict, Any
 
+
 from backend.services.genai.prompts import build_generation_prompt
 from backend.services.genai.structure_input import build_gemini_slide_structure
 from backend.models import (
     Template, 
     BrandSettings
 )
-from backend.models.slide import PostContent
+from backend.models.slide import PostContent, LayoutConfig
 from backend.config import Config
 import sys
 from pathlib import Path
@@ -18,16 +19,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Lazy import of genai to avoid protobuf issues on module load
-_genai = None
-
-def _get_genai():
-    """Lazy load google.generativeai to avoid import errors at startup"""
-    global _genai
-    if _genai is None:
-        import google.generativeai as genai
-        genai.configure(api_key=Config.GEMINI_API_KEY)
-        _genai = genai
-    return _genai
+from .client import client 
+from google.genai import types
 
 def generate_content_with_gemini(
     template: Template, 
@@ -39,23 +32,23 @@ def generate_content_with_gemini(
     Returns structured JSON parsed into GeminiCarouselResponse objects.
     """
     
+    print("Building Gemini slide structure...")
+    
     request_data = build_gemini_slide_structure(template, brandSettings, count)
+    
+    print("Request data prepared for Gemini:")
+    print(request_data)
     
     prompt = build_generation_prompt(request_data, count)
     
     print("Prompt generated: ")
     print(prompt)
     
-    # Get genai module (lazy loaded)
-    genai = _get_genai()
-    
-    # Create model instance
-    model = genai.GenerativeModel('gemini-2.0-flash-exp')
-    
     # Generate content with JSON mode
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt,
+        config=types.GenerateContentConfig(
             temperature=0.85,
             max_output_tokens=2048,
             response_mime_type="application/json"
@@ -130,8 +123,8 @@ def _convert_to_post_content(
         slide_num = gen_slide["slideNumber"]
         
         # Find original slide design
-        seq = next(s for s in template.styleConfig.slideSequence if s.slideNumber == slide_num)
-        design = next(d for d in template.styleConfig.slideDesigns if d.id == seq.designId)
+        seq = next(s for s in template.style_config.slide_sequence if s.slide_number == slide_num)
+        design = next(d for d in template.style_config.slide_designs if d.id == seq.design_id)
         
         # Clone design elements and fill with generated content
         filled_elements = []
@@ -147,17 +140,19 @@ def _convert_to_post_content(
                 filled_elements.append(element.dict())
         
         post_slides.append({
-            "slideNumber": slide_num,
-            "designId": design.id,
+            "slide_number": slide_num,
+            "design_id": design.id,
             "background": design.background.dict(),
             "dynamic": design.dynamic,
             "elements": filled_elements,
-            "imagePrompt": None  # Could add AI background prompts later
+            "image_prompt": None  # Could add AI background prompts later
         })
+        
+    
     
     return PostContent(
         slides=post_slides,
-        layout=template.styleConfig.layout, # FIXME: pushing in a template layoutconfig into a slide layoutconfig (check both modals and determine the best action to convert)
+        layout=LayoutConfig(**template.style_config.layout.dict()),
         caption=generated["caption"],
         hashtags=generated["hashtags"]
     )

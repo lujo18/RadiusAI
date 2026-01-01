@@ -1,28 +1,23 @@
-import { create } from 'zustand';
 
-interface PerformanceData {
-  day: string;
-  impressions: number;
-  engagement: number;
-  saves: number;
-}
+import type { Tables } from '@/types/database';
+import { create } from 'zustand/react';
 
-interface VariantPerformance {
+type AnalyticsPerformance = Tables<'post_analytics'>;
+type VariantPerformance = {
   variant: string;
   posts: number;
   avgSaves: number;
   avgShares: number;
-}
+};
 
 interface AnalyticsState {
-  performanceData: PerformanceData[];
+  performanceData: AnalyticsPerformance[];
   variantPerformance: VariantPerformance[];
   timeframe: 'day' | 'week' | 'month';
   isLoading: boolean;
   lastFetched: Date | null;
-  
   // Actions
-  setPerformanceData: (data: PerformanceData[]) => void;
+  setPerformanceData: (data: AnalyticsPerformance[]) => void;
   setVariantPerformance: (data: VariantPerformance[]) => void;
   setTimeframe: (timeframe: AnalyticsState['timeframe']) => void;
   setLoading: (loading: boolean) => void;

@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from 'react';
 import { FiPlus, FiX } from 'react-icons/fi';
 import type { BrandSettings } from '@/types';
@@ -315,7 +316,7 @@ function TagInput({
         <button
           type="button"
           onClick={addTag}
-          className="px-4 py-2 bg-primary-500 hover:bg-primary-600 rounded-lg transition"
+          className="px-4 py-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg transition"
         >
           <FiPlus />
         </button>
@@ -360,7 +361,7 @@ function FormActions({
       <button
         type="submit"
         disabled={isSubmitting}
-        className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 rounded-lg font-semibold transition disabled:opacity-50"
+        className="px-6 py-2.5 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg font-semibold transition disabled:opacity-50"
       >
         {isSubmitting ? 'Saving...' : submitLabel}
       </button>

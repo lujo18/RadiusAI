@@ -27,19 +27,18 @@ class PostMetadata(BaseModel):
 
 class Post(BaseModel):
     id: str
-    userId: str
-    templateId: str
-    variantSetId: Optional[str] = None
-    platform: Literal["instagram", "tiktok"]
-    status: Literal["draft", "scheduled", "published", "failed"]
-    createdAt: datetime
-    updatedAt: Optional[datetime] = None
-    scheduledTime: Optional[datetime] = None
-    publishedTime: Optional[datetime] = None
-    content: GeminiCarouselResponse
-    storageUrls: StorageUrls = StorageUrls()
-    analytics: PostAnalytics = PostAnalytics()
-    metadata: PostMetadata = PostMetadata()
+    user_id: str
+    template_id: str
+    variant_set_id: Optional[str] = None
+    platform: str  # Supabase: string
+    status: str  # Supabase: string
+    created_at: str  # Supabase: string (ISO)
+    updated_at: Optional[str] = None
+    scheduled_time: Optional[str] = None
+    published_time: Optional[str] = None
+    content: dict  # Supabase: JSON
+    storage_urls: dict = {}
+    metadata: dict = {}
 
 class CreatePostRequest(BaseModel):
     templateId: str

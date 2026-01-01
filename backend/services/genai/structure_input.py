@@ -11,15 +11,15 @@ def build_gemini_slide_structure(
   Maps each text element with context about its role.
   """
   
-  style_config = template.styleConfig
+  style_config = template.style_config
   
   slides_structure = []
   
   # Use the template's slide sequence
-  for sequence in style_config.slideSequence:
+  for sequence in style_config.slide_sequence:
     
     design = next(
-      (design for design in template.styleConfig.slideDesigns if design.id == sequence.designId), 
+      (design for design in template.style_config.slide_designs if design.id == sequence.design_id), 
       None
     )
     
@@ -37,7 +37,7 @@ def build_gemini_slide_structure(
         
         
     slides_structure.append({
-      "slideNumber": sequence.slideNumber,
+      "slideNumber": sequence.slide_number,
       "designId": design.id,
       "designName": design.name,
       "textElements": text_elements
@@ -48,10 +48,10 @@ def build_gemini_slide_structure(
       "brandContext": {
         "niche": brand_settings.niche,
         "aesthetic": brand_settings.aesthetic,
-        "tone": brand_settings.toneOfVoice,
-        "emojiUsage": brand_settings.emojiUsage,
-        "forbidden": brand_settings.forbiddenWords,
-        "preferred": brand_settings.preferredWords
+        "tone": brand_settings.tone_of_voice,
+        "emojiUsage": brand_settings.emoji_usage,
+        "forbidden": brand_settings.forbidden_words,
+        "preferred": brand_settings.preferred_words
       },
       # "templateRules": {
       #   "format": style_config.contentRules.format,

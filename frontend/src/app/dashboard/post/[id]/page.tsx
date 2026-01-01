@@ -1,5 +1,25 @@
+
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  ArrowLeft, 
+  Edit2, 
+  Calendar,
+  Eye,
+  Heart,
+  Share2,
+  Bookmark,
+  MessageCircle,
+  TrendingUp,
+  Download,
+  ExternalLink,
+  Image as ImageIcon
+} from "lucide-react";
+import Image from "next/image";
 "use client";
 
+import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -172,7 +192,7 @@ export default function PostDetailPage() {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">Post Details</h1>
+                <h1 className="text-3xl font-bold font-main text-gray-900">Post Details</h1>
                 <span className={`px-3 py-1 text-sm font-medium rounded-full ${
                   post.status === 'published' ? 'bg-green-100 text-green-700' :
                   post.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
@@ -225,7 +245,7 @@ export default function PostDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Slides */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Slides</h2>
+              <h2 className="text-xl font-bold font-main text-gray-900 mb-4">Slides</h2>
               
               <div className="grid grid-cols-2 gap-4">
                 {post.storageUrls.slides.length > 0 ? (
@@ -263,7 +283,7 @@ export default function PostDetailPage() {
 
             {/* Slide Content */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Slide Content</h2>
+              <h2 className="text-xl font-bold font-main text-gray-900 mb-4">Slide Content</h2>
               
               <div className="space-y-4">
                 {post.content.slides.map((slide, index) => (
@@ -284,7 +304,7 @@ export default function PostDetailPage() {
 
             {/* Caption & Hashtags */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Caption & Hashtags</h2>
+              <h2 className="text-xl font-bold font-main text-gray-900 mb-4">Caption & Hashtags</h2>
               
               <div className="space-y-4">
                 <div>
@@ -311,7 +331,7 @@ export default function PostDetailPage() {
             {/* Template Info */}
             {post.template && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4">Template</h2>
+                <h2 className="text-lg font-bold font-main text-gray-900 mb-4">Template</h2>
                 <div className="space-y-2">
                   <p className="text-gray-900 font-medium">{post.template.name}</p>
                   <span className="inline-block px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full">
@@ -325,7 +345,7 @@ export default function PostDetailPage() {
             {post.status === 'published' && (
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">Analytics</h2>
+                  <h2 className="text-lg font-bold font-main text-gray-900">Analytics</h2>
                   {post.analytics.lastUpdated && (
                     <span className="text-xs text-gray-500">
                       Updated {new Date(post.analytics.lastUpdated).toLocaleDateString()}
@@ -391,7 +411,7 @@ export default function PostDetailPage() {
 
             {/* Post Info */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Post Information</h2>
+              <h2 className="text-lg font-bold font-main text-gray-900 mb-4">Post Information</h2>
               
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">

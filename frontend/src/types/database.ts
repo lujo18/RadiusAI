@@ -1,752 +1,1823 @@
-/**
- * Database Types - Single Source of Truth
- * 
- * All types derived from Supabase generated types.
- * Regenerate supabase.ts when schema changes:
- *   npx supabase gen types typescript --linked > src/types/supabase.ts
- */
-
-import type { Database } from './supabase';
-
-// =============================================================================
-// CORE TYPE HELPERS
-// =============================================================================
-
-/** All table names */
-export type TableName = keyof Database['public']['Tables'];
-
-/** Get Row type for a table */
-export type Row<T extends TableName> = Database['public']['Tables'][T]['Row'];
-
-/** Get Insert type for a table */
-export type Insert<T extends TableName> = Database['public']['Tables'][T]['Insert'];
-
-/** Get Update type for a table */
-export type Update<T extends TableName> = Database['public']['Tables'][T]['Update'];
-
-/** JSON type from Supabase */
-export type Json = Database['public']['Tables']['posts']['Row']['content'];
-
-// =============================================================================
-// DATABASE ROW TYPES (snake_case - direct from Supabase)
-// =============================================================================
-
-// These are the raw types returned by Supabase queries
-export type DbUser = Row<'users'>;
-export type DbProfile = Row<'profiles'>;
-export type DbBrandSettings = Row<'brand_settings'>;
-export type DbPlatformIntegration = Row<'platform_integrations'>;
-
-export type DbTemplate = Row<'templates'>;
-export type DbLayoutConfig = Row<'layout_configs'>;
-export type DbContentRules = Row<'content_rules'>;
-export type DbSlideDesign = Row<'slide_designs'>;
-export type DbTextElement = Row<'text_elements'>;
-export type DbTemplatePerformance = Row<'template_performance'>;
-
-export type DbPost = Row<'posts'>;
-export type DbPostSlide = Row<'post_slides'>;
-export type DbPostSlideTextElement = Row<'post_slide_text_elements'>;
-export type DbPostMetadata = Row<'post_metadata'>;
-export type DbStorageUrls = Row<'storage_urls'>;
-export type DbPostAnalytics = Row<'post_analytics'>;
-
-export type DbVariantSet = Row<'variant_sets'>;
-export type DbVariantSetTemplate = Row<'variant_set_templates'>;
-export type DbVariantSetStats = Row<'variant_set_stats'>;
-
-export type DbTestimonial = Row<'testimonials'>;
-
-// =============================================================================
-// APPLICATION TYPES (camelCase - for frontend use)
-// These provide a friendlier interface while still being Supabase-backed
-// =============================================================================
-
-/** User type - use snake_case fields directly from Supabase */
-export type User = DbUser;
-
-/** Profile - direct from Supabase */  
-export type Profile = DbProfile;
-
-/** Brand Settings - direct from DB or legacy interface */
-export interface BrandSettings {
-  // From DB (snake_case)
-  id?: string;
-  profile_id?: string;
-  name: string;
-  niche: string;
-  aesthetic: string;
-  target_audience: string;
-  brand_voice: string;
-  content_pillars: string[];
-  tone_of_voice: ToneOfVoice;
-  emoji_usage: EmojiUsage;
-  forbidden_words: string[];
-  preferred_words: string[];
-  hashtag_style: HashtagStyle;
-  hashtag_count: number;
-  hashtags?: string[] | null;
-  created_at?: string;
-  updated_at?: string;
-  
-  // Legacy camelCase aliases (optional, for gradual migration)
-  targetAudience?: string;
-  brandVoice?: string;
-  contentPillars?: string[];
-  toneOfVoice?: ToneOfVoice;
-  emojiUsage?: EmojiUsage;
-  forbiddenWords?: string[];
-  preferredWords?: string[];
-  hashtagStyle?: HashtagStyle;
-  hashtagCount?: number;
-}
-
-/** Platform Integration */
-export type PlatformIntegration = DbPlatformIntegration;
-
-/** User Profile - extends DB type with legacy camelCase aliases */
-export interface UserProfile extends DbProfile {
-  // Legacy camelCase aliases for backward compatibility
-  userId?: string;
-  brandSettings?: BrandSettings;
-  templateCount?: number;
-  postCount?: number;
-  createdAt?: Date;
-  profileId?: string; // alias for id
-  integrations?: PlatformIntegration[];
-}
-
-// Template types - use DB types directly
-export type Template = DbTemplate;
-export type LayoutConfig = DbLayoutConfig;
-export type ContentRules = DbContentRules;
-export type SlideDesign = DbSlideDesign;
-export type TextElement = DbTextElement;
-export type TemplatePerformance = DbTemplatePerformance;
-
-// Post types - use DB types directly
-export type Post = DbPost;
-export type PostSlide = DbPostSlide;
-export type PostSlideTextElement = DbPostSlideTextElement;
-export type PostMetadata = DbPostMetadata;
-export type StorageUrls = DbStorageUrls;
-export type PostAnalytics = DbPostAnalytics;
-
-// Variant types - use DB types directly
-export type VariantSet = DbVariantSet;
-export type VariantSetTemplate = DbVariantSetTemplate;
-export type VariantSetStats = DbVariantSetStats;
-
-export type Testimonial = DbTestimonial;
-
-// =============================================================================
-// INSERT TYPES (Create new records)
-// =============================================================================
-
-export type UserInsert = Insert<'users'>;
-export type ProfileInsert = Insert<'profiles'>;
-export type BrandSettingsInsert = Insert<'brand_settings'>;
-export type PlatformIntegrationInsert = Insert<'platform_integrations'>;
-
-export type TemplateInsert = Insert<'templates'>;
-export type LayoutConfigInsert = Insert<'layout_configs'>;
-export type ContentRulesInsert = Insert<'content_rules'>;
-export type SlideDesignInsert = Insert<'slide_designs'>;
-export type TextElementInsert = Insert<'text_elements'>;
-
-export type PostInsert = Insert<'posts'>;
-export type PostSlideInsert = Insert<'post_slides'>;
-export type PostSlideTextElementInsert = Insert<'post_slide_text_elements'>;
-export type PostMetadataInsert = Insert<'post_metadata'>;
-export type StorageUrlsInsert = Insert<'storage_urls'>;
-export type PostAnalyticsInsert = Insert<'post_analytics'>;
-
-export type VariantSetInsert = Insert<'variant_sets'>;
-export type VariantSetTemplateInsert = Insert<'variant_set_templates'>;
-export type VariantSetStatsInsert = Insert<'variant_set_stats'>;
-
-// =============================================================================
-// UPDATE TYPES (Partial updates)
-// =============================================================================
-
-export type UserUpdate = Update<'users'>;
-export type ProfileUpdate = Update<'profiles'>;
-export type BrandSettingsUpdate = Update<'brand_settings'>;
-export type PlatformIntegrationUpdate = Update<'platform_integrations'>;
-
-export type TemplateUpdate = Update<'templates'>;
-export type LayoutConfigUpdate = Update<'layout_configs'>;
-export type ContentRulesUpdate = Update<'content_rules'>;
-export type SlideDesignUpdate = Update<'slide_designs'>;
-export type TextElementUpdate = Update<'text_elements'>;
-
-export type PostUpdate = Update<'posts'>;
-export type PostSlideUpdate = Update<'post_slides'>;
-export type PostMetadataUpdate = Update<'post_metadata'>;
-export type StorageUrlsUpdate = Update<'storage_urls'>;
-export type PostAnalyticsUpdate = Update<'post_analytics'>;
-
-export type VariantSetUpdate = Update<'variant_sets'>;
-export type VariantSetStatsUpdate = Update<'variant_set_stats'>;
-
-// =============================================================================
-// RELATIONS / JOINED TYPES
-// =============================================================================
-
-/** User with all profiles */
-export type UserWithProfiles = User & {
-  profiles: Profile[];
-};
-
-/** Profile with brand settings and integrations */
-export type ProfileWithDetails = Profile & {
-  brand_settings: BrandSettings | null;
-  platform_integrations: PlatformIntegration[];
-};
-
-/** Template with all related config */
-export type TemplateWithConfig = Template & {
-  layout_configs: LayoutConfig | null;
-  content_rules: ContentRules | null;
-  slide_designs: SlideDesignWithElements[];
-  template_performance: TemplatePerformance | null;
-};
-
-/** Slide design with text elements */
-export type SlideDesignWithElements = SlideDesign & {
-  text_elements: TextElement[];
-};
-
-/** Post with all related data */
-export type PostWithDetails = Post & {
-  templates: Template | null;
-  post_slides: PostSlideWithElements[];
-  post_metadata: PostMetadata | null;
-  storage_urls: StorageUrls | null;
-  post_analytics: PostAnalytics | null;
-};
-
-/** Post slide with text elements */
-export type PostSlideWithElements = PostSlide & {
-  post_slide_text_elements: PostSlideTextElement[];
-};
-
-/** Variant set with templates and stats */
-export type VariantSetWithDetails = VariantSet & {
-  variant_set_templates: (VariantSetTemplate & {
-    templates: Template;
-  })[];
-  variant_set_stats: VariantSetStats[];
-};
-
-// =============================================================================
-// ENUMS / LITERAL TYPES
-// =============================================================================
-
-/** Template categories */
-export type TemplateCategory = 
-  | 'listicle' 
-  | 'quote' 
-  | 'story' 
-  | 'educational' 
-  | 'comparison'
-  | 'custom';
-
-/** Template status */
-export type TemplateStatus = 'active' | 'archived' | 'testing';
-
-/** Post status */
-export type PostStatus = 'draft' | 'scheduled' | 'published' | 'failed';
-
-/** Platform */
-export type Platform = 'instagram' | 'tiktok';
-
-/** Subscription plans */
-export type SubscriptionPlan = 'starter' | 'growth' | 'unlimited';
-
-/** Subscription status */
-export type SubscriptionStatus = 
-  | 'active' 
-  | 'canceled' 
-  | 'past_due' 
-  | 'unpaid' 
-  | 'paused' 
-  | 'incomplete' 
-  | 'incomplete_expired' 
-  | 'trialing';
-
-/** Aspect ratios */
-export type AspectRatio = '1:1' | '4:5' | '3:4' | '9:16';
-
-/** Background types */
-export type BackgroundType = 'solid' | 'gradient' | 'image';
-
-/** Font styles */
-export type FontStyle = 'normal' | 'bold' | 'italic';
-
-/** Text alignment */
-export type TextAlign = 'left' | 'center' | 'right';
-
-/** Depth level */
-export type DepthLevel = 'surface' | 'detailed' | 'comprehensive';
-
-/** Hook styles */
-export type HookStyle = 'question' | 'statement' | 'number';
-
-/** Tone of voice */
-export type ToneOfVoice = 'casual' | 'professional' | 'humorous' | 'edgy' | 'inspirational';
-
-/** Emoji usage */
-export type EmojiUsage = 'none' | 'minimal' | 'moderate' | 'heavy';
-
-/** Hashtag style */
-export type HashtagStyle = 'niche' | 'trending' | 'mixed';
-
-/** Variant set status */
-export type VariantSetStatus = 'running' | 'completed' | 'cancelled';
-
-/** Slide structure types */
-export type SlideStructureType = 
-  | 'hook' 
-  | 'intro' 
-  | 'value' 
-  | 'point' 
-  | 'quote' 
-  | 'setup' 
-  | 'conflict' 
-  | 'resolution' 
-  | 'lesson' 
-  | 'problem' 
-  | 'solution' 
-  | 'example' 
-  | 'before' 
-  | 'after' 
-  | 'cta';
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-export const ASPECT_RATIOS = {
-  '1:1': { width: 1080, height: 1080, label: 'Square (1:1)' },
-  '4:5': { width: 1080, height: 1350, label: 'Portrait (4:5)' },
-  '3:4': { width: 1080, height: 1440, label: 'Tall Portrait (3:4)' },
-  '9:16': { width: 1080, height: 1920, label: 'Stories (9:16)' },
-} as const;
-
-export const TEMPLATE_CATEGORIES = {
-  listicle: {
-    name: 'Listicle',
-    structure: ['hook', 'intro', 'point', 'point', 'point', 'point', 'cta'] as SlideStructureType[],
-    hookStyles: ['number', 'question'] as HookStyle[],
-    bestFor: 'How-to guides, tips, recommendations',
-    icon: 'FiList'
-  },
-  quote: {
-    name: 'Bold Quotes',
-    structure: ['hook', 'quote', 'quote', 'quote', 'cta'] as SlideStructureType[],
-    hookStyles: ['statement'] as HookStyle[],
-    bestFor: 'Motivation, inspiration',
-    icon: 'FiMessageSquare'
-  },
-  story: {
-    name: 'Story Arc',
-    structure: ['hook', 'setup', 'conflict', 'resolution', 'lesson', 'cta'] as SlideStructureType[],
-    hookStyles: ['question', 'statement'] as HookStyle[],
-    bestFor: 'Personal experiences, case studies',
-    icon: 'FiBook'
-  },
-  educational: {
-    name: 'Educational',
-    structure: ['hook', 'problem', 'solution', 'example', 'example', 'cta'] as SlideStructureType[],
-    hookStyles: ['question'] as HookStyle[],
-    bestFor: 'Tutorials, explainers',
-    icon: 'FiAward'
-  },
-  comparison: {
-    name: 'Before/After',
-    structure: ['hook', 'before', 'problem', 'solution', 'after', 'cta'] as SlideStructureType[],
-    hookStyles: ['statement'] as HookStyle[],
-    bestFor: 'Transformations, results',
-    icon: 'FiRefreshCw'
-  },
-  custom: {
-    name: 'Custom',
-    structure: ['hook', 'value', 'value', 'value', 'cta'] as SlideStructureType[],
-    hookStyles: ['question', 'statement', 'number'] as HookStyle[],
-    bestFor: 'Your own format',
-    icon: 'FiEdit'
-  }
-} as const;
-
-// =============================================================================
-// UTILITY TYPES FOR API RESPONSES
-// =============================================================================
-
-/** Dashboard stats aggregation */
-export interface DashboardStats {
-  postsScheduled: number;
-  totalEngagement: number;
-  avgEngagementRate: number;
-  topPerformer: string;
-}
-
-/** Variant performance comparison */
-export interface VariantPerformance {
-  variantId: string;
-  name: string;
-  postsCount: number;
-  avgSaves: number;
-  avg_shares: number;
-  avg_engagement_rate: number;
-}
-
-// =============================================================================
-// LEGACY TYPES (for backward compatibility during migration)
-// These types match the old camelCase interfaces used in existing code
-// =============================================================================
-
-
-/** Background config for slides (camelCase for frontend) */
-export interface BackgroundConfig {
-  type: BackgroundType;
-  color?: string;
-  gradientColors?: [string, string];
-  gradientAngle?: number;
-  imageUrl?: string;
-}
-
-
-/**
- * Legacy StyleConfig for templates (camelCase for frontend)
- */
-export interface StyleConfig {
-  layout: {
-    slide_count: number;
-    aspect_ratio: AspectRatio;
-    structure?: SlideStructureType[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+
+  __InternalSupabase: {
+    PostgrestVersion: "14.1";
   };
-  content_rules?: LegacyContentRules;
-  slide_designs: LegacySlideDesign[];
-  slide_sequence: { slide_number: number; design_id: string }[];
-}
 
-/** Legacy Content Rules interface (camelCase) */
-export interface LegacyContentRules {
-  format: string;
-  slide_count: number;
-  perspective: string;
-  depthLevel: DepthLevel;
-  topicFocus: string;
-  subtopics?: string[];
-  hookStyle: string;
-  bodyStyle: string;
-  ctaStyle: string;
-  includeExamples: boolean;
-  includeStatistics: boolean;
-  personalStory: boolean;
-  avoidTopics?: string[];
-  mustInclude?: string[];
-}
+  public: {
+    Tables: {
+      brand_settings: {
+        Row: {
+          aesthetic: string;
 
-/** Legacy Text Element type (camelCase) */
-export interface LegacyTextElement {
-  id: string;
-  type: 'text';
-  content: string;
-  role?: string;
-  fontSize: number;
-  fontFamily: string;
-  fontStyle: FontStyle;
-  color: string;
-  x: number;
-  y: number;
-  width: number;
-  align: TextAlign;
-}
+          brand_voice: string;
 
-/** Legacy Slide Design interface (camelCase) */
-export interface LegacySlideDesign {
-  id: string;
-  name: string;
-  background: BackgroundConfig;
-  elements: LegacyTextElement[];
-  dynamic?: boolean;
-}
+          content_pillars: string[];
 
-/** Legacy Post Content (stored as JSONB in posts table, camelCase) */
-export interface PostContent {
-  slides: LegacyPostSlide[];
-  layout: {
-    slideCount: number;
-    aspectRatio: AspectRatio;
-    structure?: SlideStructureType[];
-  };
-  caption: string;
-  hashtags: string[];
-}
+          created_at: string;
 
-/** Legacy Post Slide (camelCase) */
-export interface LegacyPostSlide extends Omit<LegacySlideDesign, 'name'> {
-  slideNumber: number;
-  designId: string;
-  imagePrompt?: string;
-}
+          emoji_usage: string;
 
-/** Create Post Request (camelCase) */
-export interface CreatePostRequest {
-  templateId: string;
-  platform: Platform;
-  content: PostContent;
-  scheduledTime?: Date;
-  variantSetId?: string;
-}
+          forbidden_words: string[];
 
-/** Create Template Input (camelCase) */
-export interface CreateTemplateInput {
-  name: string;
-  category: TemplateCategory;
-  styleConfig: StyleConfig | Json;
-  isDefault?: boolean;
-}
+          hashtag_count: number;
 
-/** Update Template Input (camelCase) */
-export interface UpdateTemplateInput {
-  name?: string;
-  category?: TemplateCategory;
-  status?: TemplateStatus;
-  styleConfig?: StyleConfig | Json;
-  isDefault?: boolean;
-}
+          hashtag_style: string;
 
-/** Update Post Request (camelCase) */
-export interface UpdatePostRequest {
-  status?: PostStatus;
-  scheduledTime?: Date;
-  content?: PostContent;
-}
+          hashtags: string[] | null;
 
-/** Post with template info (camelCase) */
-export interface PostWithTemplate extends Post {
-  template?: {
-    id: string;
-    name: string;
-    category: string;
-  };
-  analyticsHistory?: PostAnalytics[];
-}
+          id: string;
 
-/** Category Info for TEMPLATE_CATEGORIES (camelCase) */
-export interface CategoryInfo {
-  name: string;
-  structure: SlideStructureType[];
-  hookStyles: HookStyle[];
-  bestFor: string;
-  icon: string;
-}
+          name: string;
 
-// =============================================================================
-// OLD STYLE CONFIG (for template editor default configs)
-// Different from the normalized StyleConfig - includes visual/content sections
-// =============================================================================
+          niche: string;
 
-export interface OldStyleConfig {
-  layout: {
-    slideCount: number;
-    aspectRatio: AspectRatio;
-    structure?: SlideStructureType[];
-  };
-  visual: {
-    background: {
-      type: BackgroundType;
-      colors: string[];
-      opacity: number;
+          preferred_words: string[];
+
+          profile_id: string;
+
+          target_audience: string;
+
+          tone_of_voice: string;
+
+          updated_at: string;
+        };
+
+        Insert: {
+          aesthetic: string;
+
+          brand_voice: string;
+
+          content_pillars?: string[];
+
+          created_at?: string;
+
+          emoji_usage: string;
+
+          forbidden_words?: string[];
+
+          hashtag_count: number;
+
+          hashtag_style: string;
+
+          hashtags?: string[] | null;
+
+          id?: string;
+
+          name: string;
+
+          niche: string;
+
+          preferred_words?: string[];
+
+          profile_id: string;
+
+          target_audience: string;
+
+          tone_of_voice: string;
+
+          updated_at?: string;
+        };
+
+        Update: {
+          aesthetic?: string;
+
+          brand_voice?: string;
+
+          content_pillars?: string[];
+
+          created_at?: string;
+
+          emoji_usage?: string;
+
+          forbidden_words?: string[];
+
+          hashtag_count?: number;
+
+          hashtag_style?: string;
+
+          hashtags?: string[] | null;
+
+          id?: string;
+
+          name?: string;
+
+          niche?: string;
+
+          preferred_words?: string[];
+
+          profile_id?: string;
+
+          target_audience?: string;
+
+          tone_of_voice?: string;
+
+          updated_at?: string;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "brand_settings_profile_id_fkey";
+
+            columns: ["profile_id"];
+
+            isOneToOne: true;
+
+            referencedRelation: "profiles";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      content_rules: {
+        Row: {
+          avoid_topics: string[] | null;
+
+          body_style: string;
+
+          created_at: string;
+
+          cta_style: string;
+
+          depth_level: string;
+
+          format: string;
+
+          hook_style: string;
+
+          id: string;
+
+          include_examples: boolean;
+
+          include_statistics: boolean;
+
+          must_include: string[] | null;
+
+          personal_story: boolean;
+
+          perspective: string;
+
+          slide_count: number;
+
+          subtopics: string[] | null;
+
+          template_id: string;
+
+          topic_focus: string;
+
+          updated_at: string;
+        };
+
+        Insert: {
+          avoid_topics?: string[] | null;
+
+          body_style: string;
+
+          created_at?: string;
+
+          cta_style: string;
+
+          depth_level: string;
+
+          format: string;
+
+          hook_style: string;
+
+          id?: string;
+
+          include_examples?: boolean;
+
+          include_statistics?: boolean;
+
+          must_include?: string[] | null;
+
+          personal_story?: boolean;
+
+          perspective: string;
+
+          slide_count: number;
+
+          subtopics?: string[] | null;
+
+          template_id: string;
+
+          topic_focus: string;
+
+          updated_at?: string;
+        };
+
+        Update: {
+          avoid_topics?: string[] | null;
+
+          body_style?: string;
+
+          created_at?: string;
+
+          cta_style?: string;
+
+          depth_level?: string;
+
+          format?: string;
+
+          hook_style?: string;
+
+          id?: string;
+
+          include_examples?: boolean;
+
+          include_statistics?: boolean;
+
+          must_include?: string[] | null;
+
+          personal_story?: boolean;
+
+          perspective?: string;
+
+          slide_count?: number;
+
+          subtopics?: string[] | null;
+
+          template_id?: string;
+
+          topic_focus?: string;
+
+          updated_at?: string;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "content_rules_template_id_fkey";
+
+            columns: ["template_id"];
+
+            isOneToOne: true;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      layout_configs: {
+        Row: {
+          aspect_ratio: string;
+
+          created_at: string;
+
+          id: string;
+
+          slide_count: number;
+
+          slide_design_ids: string[];
+
+          structure: string[];
+
+          template_id: string;
+        };
+
+        Insert: {
+          aspect_ratio: string;
+
+          created_at?: string;
+
+          id?: string;
+
+          slide_count: number;
+
+          slide_design_ids?: string[];
+
+          structure: string[];
+
+          template_id: string;
+        };
+
+        Update: {
+          aspect_ratio?: string;
+
+          created_at?: string;
+
+          id?: string;
+
+          slide_count?: number;
+
+          slide_design_ids?: string[];
+
+          structure?: string[];
+
+          template_id?: string;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "layout_configs_template_id_fkey";
+
+            columns: ["template_id"];
+
+            isOneToOne: true;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      platform_integrations: {
+        Row: {
+          bio: string | null;
+
+          created_at: string;
+
+          followers_count: number | null;
+
+          following_count: number | null;
+
+          full_name: string | null;
+
+          id: string;
+
+          is_business_account: boolean | null;
+
+          late_platform_id: string;
+
+          platform: string;
+
+          profile_id: string | null;
+
+          profile_picture_url: string | null;
+
+          updated_at: string;
+
+          user_id: string;
+
+          username: string;
+
+          website_url: string | null;
+        };
+
+        Insert: {
+          bio?: string | null;
+
+          created_at?: string;
+
+          followers_count?: number | null;
+
+          following_count?: number | null;
+
+          full_name?: string | null;
+
+          id?: string;
+
+          is_business_account?: boolean | null;
+
+          late_platform_id: string;
+
+          platform: string;
+
+          profile_id?: string | null;
+
+          profile_picture_url?: string | null;
+
+          updated_at?: string;
+
+          user_id: string;
+
+          username: string;
+
+          website_url?: string | null;
+        };
+
+        Update: {
+          bio?: string | null;
+
+          created_at?: string;
+
+          followers_count?: number | null;
+
+          following_count?: number | null;
+
+          full_name?: string | null;
+
+          id?: string;
+
+          is_business_account?: boolean | null;
+
+          late_platform_id?: string;
+
+          platform?: string;
+
+          profile_id?: string | null;
+
+          profile_picture_url?: string | null;
+
+          updated_at?: string;
+
+          user_id?: string;
+
+          username?: string;
+
+          website_url?: string | null;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "platform_integrations_profile_id_fkey";
+
+            columns: ["profile_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "profiles";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "platform_integrations_user_id_fkey";
+
+            columns: ["user_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "users";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      post_analytics: {
+        Row: {
+          engagement: number;
+
+          engagement_rate: number | null;
+
+          id: string;
+
+          impressions: number;
+
+          last_updated: string | null;
+
+          post_id: string;
+
+          saves: number;
+
+          shares: number;
+        };
+
+        Insert: {
+          engagement?: number;
+
+          engagement_rate?: number | null;
+
+          id?: string;
+
+          impressions?: number;
+
+          last_updated?: string | null;
+
+          post_id: string;
+
+          saves?: number;
+
+          shares?: number;
+        };
+
+        Update: {
+          engagement?: number;
+
+          engagement_rate?: number | null;
+
+          id?: string;
+
+          impressions?: number;
+
+          last_updated?: string | null;
+
+          post_id?: string;
+
+          saves?: number;
+
+          shares?: number;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "post_analytics_post_id_fkey";
+
+            columns: ["post_id"];
+
+            isOneToOne: true;
+
+            referencedRelation: "posts";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      post_metadata: {
+        Row: {
+          created_at: string;
+
+          generation_params: Json;
+
+          id: string;
+
+          post_id: string;
+
+          variant_label: string | null;
+        };
+
+        Insert: {
+          created_at?: string;
+
+          generation_params?: Json;
+
+          id?: string;
+
+          post_id: string;
+
+          variant_label?: string | null;
+        };
+
+        Update: {
+          created_at?: string;
+
+          generation_params?: Json;
+
+          id?: string;
+
+          post_id?: string;
+
+          variant_label?: string | null;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "post_metadata_post_id_fkey";
+
+            columns: ["post_id"];
+
+            isOneToOne: true;
+
+            referencedRelation: "posts";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      post_slide_text_elements: {
+        Row: {
+          color: string;
+
+          content: string;
+
+          created_at: string;
+
+          font_family: string;
+
+          font_size: number;
+
+          font_style: string;
+
+          id: string;
+
+          post_slide_id: string;
+
+          role: string | null;
+
+          text_align: string;
+
+          width: number;
+
+          x: number;
+
+          y: number;
+        };
+
+        Insert: {
+          color: string;
+
+          content: string;
+
+          created_at?: string;
+
+          font_family: string;
+
+          font_size: number;
+
+          font_style: string;
+
+          id?: string;
+
+          post_slide_id: string;
+
+          role?: string | null;
+
+          text_align: string;
+
+          width: number;
+
+          x: number;
+
+          y: number;
+        };
+
+        Update: {
+          color?: string;
+
+          content?: string;
+
+          created_at?: string;
+
+          font_family?: string;
+
+          font_size?: number;
+
+          font_style?: string;
+
+          id?: string;
+
+          post_slide_id?: string;
+
+          role?: string | null;
+
+          text_align?: string;
+
+          width?: number;
+
+          x?: number;
+
+          y?: number;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "post_slide_text_elements_post_slide_id_fkey";
+
+            columns: ["post_slide_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "post_slides";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      post_slides: {
+        Row: {
+          background: Json;
+
+          created_at: string;
+
+          id: string;
+
+          image_prompt: string | null;
+
+          post_id: string;
+
+          slide_design_id: string | null;
+
+          slide_number: number;
+        };
+
+        Insert: {
+          background: Json;
+
+          created_at?: string;
+
+          id?: string;
+
+          image_prompt?: string | null;
+
+          post_id: string;
+
+          slide_design_id?: string | null;
+
+          slide_number: number;
+        };
+
+        Update: {
+          background?: Json;
+
+          created_at?: string;
+
+          id?: string;
+
+          image_prompt?: string | null;
+
+          post_id?: string;
+
+          slide_design_id?: string | null;
+
+          slide_number?: number;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "post_slides_post_id_fkey";
+
+            columns: ["post_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "posts";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "post_slides_slide_design_id_fkey";
+
+            columns: ["slide_design_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "slide_designs";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      posts: {
+        Row: {
+          content: Json;
+
+          created_at: string;
+
+          id: string;
+
+          metadata: Json | null;
+
+          platform: string;
+
+          profile_id: string | null;
+
+          published_time: string | null;
+
+          scheduled_time: string | null;
+
+          status: string;
+
+          storage_urls: Json;
+
+          template_id: string | null;
+
+          updated_at: string | null;
+
+          user_id: string;
+
+          variant_set_id: string | null;
+        };
+
+        Insert: {
+          content: Json;
+
+          created_at?: string;
+
+          id?: string;
+
+          metadata?: Json | null;
+
+          platform: string;
+
+          profile_id?: string | null;
+
+          published_time?: string | null;
+
+          scheduled_time?: string | null;
+
+          status?: string;
+
+          storage_urls?: Json;
+
+          template_id?: string | null;
+
+          updated_at?: string | null;
+
+          user_id: string;
+
+          variant_set_id?: string | null;
+        };
+
+        Update: {
+          content?: Json;
+
+          created_at?: string;
+
+          id?: string;
+
+          metadata?: Json | null;
+
+          platform?: string;
+
+          profile_id?: string | null;
+
+          published_time?: string | null;
+
+          scheduled_time?: string | null;
+
+          status?: string;
+
+          storage_urls?: Json;
+
+          template_id?: string | null;
+
+          updated_at?: string | null;
+
+          user_id?: string;
+
+          variant_set_id?: string | null;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "posts_profile_id_fkey";
+
+            columns: ["profile_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "profiles";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "posts_template_id_fkey";
+
+            columns: ["template_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "posts_user_id_fkey";
+
+            columns: ["user_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "users";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      profiles: {
+        Row: {
+          brand_settings: Json;
+
+          created_at: string;
+
+          description: string | null;
+
+          id: string;
+
+          late_profile_id: string;
+
+          post_count: number;
+
+          template_count: number;
+
+          updated_at: string;
+
+          user_id: string;
+        };
+
+        Insert: {
+          brand_settings: Json;
+
+          created_at?: string;
+
+          description?: string | null;
+
+          id?: string;
+
+          late_profile_id: string;
+
+          post_count?: number;
+
+          template_count?: number;
+
+          updated_at?: string;
+
+          user_id: string;
+        };
+
+        Update: {
+          brand_settings?: Json;
+
+          created_at?: string;
+
+          description?: string | null;
+
+          id?: string;
+
+          late_profile_id?: string;
+
+          post_count?: number;
+
+          template_count?: number;
+
+          updated_at?: string;
+
+          user_id?: string;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey";
+
+            columns: ["user_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "users";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      slide_designs: {
+        Row: {
+          background: Json | null;
+
+          created_at: string;
+
+          dynamic: boolean;
+
+          id: string;
+
+          name: string;
+
+          template_id: string;
+
+          text_elements: Json;
+        };
+
+        Insert: {
+          background?: Json | null;
+
+          created_at?: string;
+
+          dynamic?: boolean;
+
+          id?: string;
+
+          name: string;
+
+          template_id: string;
+
+          text_elements?: Json;
+        };
+
+        Update: {
+          background?: Json | null;
+
+          created_at?: string;
+
+          dynamic?: boolean;
+
+          id?: string;
+
+          name?: string;
+
+          template_id?: string;
+
+          text_elements?: Json;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "slide_designs_template_id_fkey";
+
+            columns: ["template_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      storage_urls: {
+        Row: {
+          created_at: string;
+
+          id: string;
+
+          post_id: string;
+
+          slide_urls: string[];
+
+          thumbnail: string | null;
+        };
+
+        Insert: {
+          created_at?: string;
+
+          id?: string;
+
+          post_id: string;
+
+          slide_urls?: string[];
+
+          thumbnail?: string | null;
+        };
+
+        Update: {
+          created_at?: string;
+
+          id?: string;
+
+          post_id?: string;
+
+          slide_urls?: string[];
+
+          thumbnail?: string | null;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "storage_urls_post_id_fkey";
+
+            columns: ["post_id"];
+
+            isOneToOne: true;
+
+            referencedRelation: "posts";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      template_performance: {
+        Row: {
+          avg_engagement_rate: number | null;
+
+          avg_impressions: number | null;
+
+          avg_saves: number | null;
+
+          avg_shares: number | null;
+
+          id: string;
+
+          last_updated: string | null;
+
+          template_id: string;
+
+          total_posts: number;
+        };
+
+        Insert: {
+          avg_engagement_rate?: number | null;
+
+          avg_impressions?: number | null;
+
+          avg_saves?: number | null;
+
+          avg_shares?: number | null;
+
+          id?: string;
+
+          last_updated?: string | null;
+
+          template_id: string;
+
+          total_posts?: number;
+        };
+
+        Update: {
+          avg_engagement_rate?: number | null;
+
+          avg_impressions?: number | null;
+
+          avg_saves?: number | null;
+
+          avg_shares?: number | null;
+
+          id?: string;
+
+          last_updated?: string | null;
+
+          template_id?: string;
+
+          total_posts?: number;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "template_performance_template_id_fkey";
+
+            columns: ["template_id"];
+
+            isOneToOne: true;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      templates: {
+        Row: {
+          category: string;
+
+          created_at: string;
+
+          favorite: boolean;
+
+          id: string;
+
+          is_default: boolean;
+
+          name: string;
+
+          profile_id: string | null;
+
+          status: string;
+
+          style_config: Json;
+
+          tags: string[] | null;
+
+          updated_at: string;
+
+          user_id: string;
+        };
+
+        Insert: {
+          category: string;
+
+          created_at?: string;
+
+          favorite?: boolean;
+
+          id?: string;
+
+          is_default?: boolean;
+
+          name: string;
+
+          profile_id?: string | null;
+
+          status?: string;
+
+          style_config: Json;
+
+          tags?: string[] | null;
+
+          updated_at?: string;
+
+          user_id: string;
+        };
+
+        Update: {
+          category?: string;
+
+          created_at?: string;
+
+          favorite?: boolean;
+
+          id?: string;
+
+          is_default?: boolean;
+
+          name?: string;
+
+          profile_id?: string | null;
+
+          status?: string;
+
+          style_config?: Json;
+
+          tags?: string[] | null;
+
+          updated_at?: string;
+
+          user_id?: string;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "templates_profile_id_fkey";
+
+            columns: ["profile_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "profiles";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "templates_user_id_fkey";
+
+            columns: ["user_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "users";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      testimonials: {
+        Row: {
+          avatar_url: string | null;
+
+          company: string | null;
+
+          created_at: string | null;
+
+          featured: boolean | null;
+
+          id: string;
+
+          name: string;
+
+          published: boolean | null;
+
+          quote: string;
+
+          rating: number | null;
+
+          role: string | null;
+
+          updated_at: string | null;
+        };
+
+        Insert: {
+          avatar_url?: string | null;
+
+          company?: string | null;
+
+          created_at?: string | null;
+
+          featured?: boolean | null;
+
+          id?: string;
+
+          name: string;
+
+          published?: boolean | null;
+
+          quote: string;
+
+          rating?: number | null;
+
+          role?: string | null;
+
+          updated_at?: string | null;
+        };
+
+        Update: {
+          avatar_url?: string | null;
+
+          company?: string | null;
+
+          created_at?: string | null;
+
+          featured?: boolean | null;
+
+          id?: string;
+
+          name?: string;
+
+          published?: boolean | null;
+
+          quote?: string;
+
+          rating?: number | null;
+
+          role?: string | null;
+
+          updated_at?: string | null;
+        };
+
+        Relationships: [];
+      };
+
+      users: {
+        Row: {
+          created_at: string;
+
+          current_period_end: string | null;
+
+          email: string;
+
+          id: string;
+
+          name: string;
+
+          post_count: number;
+
+          stripe_customer_id: string | null;
+
+          stripe_subscription_id: string | null;
+
+          subscription_plan: string | null;
+
+          subscription_status: string | null;
+
+          template_count: number;
+
+          updated_at: string;
+        };
+
+        Insert: {
+          created_at?: string;
+
+          current_period_end?: string | null;
+
+          email: string;
+
+          id: string;
+
+          name: string;
+
+          post_count?: number;
+
+          stripe_customer_id?: string | null;
+
+          stripe_subscription_id?: string | null;
+
+          subscription_plan?: string | null;
+
+          subscription_status?: string | null;
+
+          template_count?: number;
+
+          updated_at?: string;
+        };
+
+        Update: {
+          created_at?: string;
+
+          current_period_end?: string | null;
+
+          email?: string;
+
+          id?: string;
+
+          name?: string;
+
+          post_count?: number;
+
+          stripe_customer_id?: string | null;
+
+          stripe_subscription_id?: string | null;
+
+          subscription_plan?: string | null;
+
+          subscription_status?: string | null;
+
+          template_count?: number;
+
+          updated_at?: string;
+        };
+
+        Relationships: [];
+      };
+
+      variant_set_stats: {
+        Row: {
+          avg_engagement: number;
+
+          avg_engagement_rate: number;
+
+          avg_impressions: number;
+
+          avg_saves: number;
+
+          created_at: string;
+
+          id: string;
+
+          template_id: string;
+
+          total_posts: number;
+
+          updated_at: string;
+
+          variant_set_id: string;
+        };
+
+        Insert: {
+          avg_engagement?: number;
+
+          avg_engagement_rate?: number;
+
+          avg_impressions?: number;
+
+          avg_saves?: number;
+
+          created_at?: string;
+
+          id?: string;
+
+          template_id: string;
+
+          total_posts?: number;
+
+          updated_at?: string;
+
+          variant_set_id: string;
+        };
+
+        Update: {
+          avg_engagement?: number;
+
+          avg_engagement_rate?: number;
+
+          avg_impressions?: number;
+
+          avg_saves?: number;
+
+          created_at?: string;
+
+          id?: string;
+
+          template_id?: string;
+
+          total_posts?: number;
+
+          updated_at?: string;
+
+          variant_set_id?: string;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "variant_set_stats_template_id_fkey";
+
+            columns: ["template_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "variant_set_stats_variant_set_id_fkey";
+
+            columns: ["variant_set_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "variant_sets";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      variant_set_templates: {
+        Row: {
+          created_at: string;
+
+          id: string;
+
+          template_id: string;
+
+          variant_set_id: string;
+        };
+
+        Insert: {
+          created_at?: string;
+
+          id?: string;
+
+          template_id: string;
+
+          variant_set_id: string;
+        };
+
+        Update: {
+          created_at?: string;
+
+          id?: string;
+
+          template_id?: string;
+
+          variant_set_id?: string;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "variant_set_templates_template_id_fkey";
+
+            columns: ["template_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "variant_set_templates_variant_set_id_fkey";
+
+            columns: ["variant_set_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "variant_sets";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      variant_sets: {
+        Row: {
+          completed_at: string | null;
+
+          confidence_score: number | null;
+
+          created_at: string;
+
+          end_date: string;
+
+          id: string;
+
+          insights: string[] | null;
+
+          name: string;
+
+          posts_per_template: number;
+
+          start_date: string;
+
+          status: string;
+
+          updated_at: string;
+
+          user_id: string;
+
+          winning_template_id: string | null;
+        };
+
+        Insert: {
+          completed_at?: string | null;
+
+          confidence_score?: number | null;
+
+          created_at?: string;
+
+          end_date: string;
+
+          id?: string;
+
+          insights?: string[] | null;
+
+          name: string;
+
+          posts_per_template: number;
+
+          start_date: string;
+
+          status: string;
+
+          updated_at?: string;
+
+          user_id: string;
+
+          winning_template_id?: string | null;
+        };
+
+        Update: {
+          completed_at?: string | null;
+
+          confidence_score?: number | null;
+
+          created_at?: string;
+
+          end_date?: string;
+
+          id?: string;
+
+          insights?: string[] | null;
+
+          name?: string;
+
+          posts_per_template?: number;
+
+          start_date?: string;
+
+          status?: string;
+
+          updated_at?: string;
+
+          user_id?: string;
+
+          winning_template_id?: string | null;
+        };
+
+        Relationships: [
+          {
+            foreignKeyName: "variant_sets_user_id_fkey";
+
+            columns: ["user_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "users";
+
+            referencedColumns: ["id"];
+          },
+
+          {
+            foreignKeyName: "variant_sets_winning_template_id_fkey";
+
+            columns: ["winning_template_id"];
+
+            isOneToOne: false;
+
+            referencedRelation: "templates";
+
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
-    font: {
-      family: string;
-      size: number;
-      color: string;
-      effects: string[];
-    };
-    accentColor: string;
-  };
-  content: {
-    tone: string;
-    hookStyle: string;
-    useEmojis: boolean;
-    ctaTemplate: string;
-    forbiddenWords: string[];
-  };
-}
 
-/** Default style configurations for each template category */
-export const DEFAULT_STYLE_CONFIGS: Record<TemplateCategory, OldStyleConfig> = {
-  listicle: {
-    layout: {
-      slideCount: 7,
-      aspectRatio: '9:16',
-      structure: ['hook', 'intro', 'point', 'point', 'point', 'point', 'cta']
-    },
-    visual: {
-      background: {
-        type: 'gradient',
-        colors: ['#0f0f0f', '#1a1a1a'],
-        opacity: 0.9
-      },
-      font: {
-        family: 'Inter Bold',
-        size: 48,
-        color: '#ffffff',
-        effects: ['drop-shadow']
-      },
-      accentColor: '#ff4f8b'
-    },
-    content: {
-      tone: 'direct',
-      hookStyle: 'number',
-      useEmojis: true,
-      ctaTemplate: 'Save this for later!',
-      forbiddenWords: ['journey', 'game-changer', 'unlock']
-    }
-  },
-  quote: {
-    layout: {
-      slideCount: 5,
-      aspectRatio: '1:1',
-      structure: ['hook', 'quote', 'quote', 'quote', 'cta']
-    },
-    visual: {
-      background: {
-        type: 'solid',
-        colors: ['#000000'],
-        opacity: 1.0
-      },
-      font: {
-        family: 'Montserrat Bold',
-        size: 56,
-        color: '#ffffff',
-        effects: ['outline']
-      },
-      accentColor: '#ffd700'
-    },
-    content: {
-      tone: 'professional',
-      hookStyle: 'statement',
-      useEmojis: false,
-      ctaTemplate: 'Follow for daily inspiration',
-      forbiddenWords: ['basically', 'literally']
-    }
-  },
-  story: {
-    layout: {
-      slideCount: 6,
-      aspectRatio: '9:16',
-      structure: ['hook', 'setup', 'conflict', 'resolution', 'lesson', 'cta']
-    },
-    visual: {
-      background: {
-        type: 'gradient',
-        colors: ['#1a1a2e', '#16213e'],
-        opacity: 0.95
-      },
-      font: {
-        family: 'Georgia',
-        size: 42,
-        color: '#f0f0f0',
-        effects: []
-      },
-      accentColor: '#0abde3'
-    },
-    content: {
-      tone: 'casual',
-      hookStyle: 'question',
-      useEmojis: true,
-      ctaTemplate: 'Share if this resonates',
-      forbiddenWords: ['journey', 'dive deep']
-    }
-  },
-  educational: {
-    layout: {
-      slideCount: 6,
-      aspectRatio: '4:5',
-      structure: ['hook', 'problem', 'solution', 'example', 'example', 'cta']
-    },
-    visual: {
-      background: {
-        type: 'gradient',
-        colors: ['#f8f9fa', '#e9ecef'],
-        opacity: 1.0
-      },
-      font: {
-        family: 'Inter Bold',
-        size: 44,
-        color: '#212529',
-        effects: []
-      },
-      accentColor: '#5f27cd'
-    },
-    content: {
-      tone: 'professional',
-      hookStyle: 'question',
-      useEmojis: false,
-      ctaTemplate: 'Follow for more tips',
-      forbiddenWords: ['hack', 'secret']
-    }
-  },
-  comparison: {
-    layout: {
-      slideCount: 6,
-      aspectRatio: '9:16',
-      structure: ['hook', 'before', 'problem', 'solution', 'after', 'cta']
-    },
-    visual: {
-      background: {
-        type: 'gradient',
-        colors: ['#ee5a6f', '#f29263'],
-        opacity: 0.85
-      },
-      font: {
-        family: 'Poppins Bold',
-        size: 50,
-        color: '#ffffff',
-        effects: ['drop-shadow']
-      },
-      accentColor: '#00d2d3'
-    },
-    content: {
-      tone: 'direct',
-      hookStyle: 'statement',
-      useEmojis: true,
-      ctaTemplate: 'Want results like this? Follow!',
-      forbiddenWords: ['miracle', 'overnight']
-    }
-  },
-  custom: {
-    layout: {
-      slideCount: 5,
-      aspectRatio: '9:16',
-      structure: ['hook', 'value', 'value', 'value', 'cta']
-    },
-    visual: {
-      background: {
-        type: 'gradient',
-        colors: ['#0f0f0f', '#1a1a1a'],
-        opacity: 0.9
-      },
-      font: {
-        family: 'Inter',
-        size: 48,
-        color: '#ffffff',
-        effects: []
-      },
-      accentColor: '#ff4f8b'
-    },
-    content: {
-      tone: 'casual',
-      hookStyle: 'question',
-      useEmojis: true,
-      ctaTemplate: 'Follow for more',
-      forbiddenWords: []
-    }
-  }
+    Views: {
+      [_ in never]: never;
+    };
+
+    Functions: {
+      [_ in never]: never;
+    };
+
+    Enums: {
+      [_ in never]: never;
+    };
+
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
 };
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] &
+      DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R;
+    }
+    ? R
+    : never
+  : never;
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I;
+    }
+    ? I
+    : never
+  : never;
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U;
+    }
+    ? U
+    : never
+  : never;
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never;
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals;
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never;
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const;

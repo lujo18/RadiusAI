@@ -25,14 +25,14 @@ class VariantSetResults(BaseModel):
 
 class VariantSet(BaseModel):
     id: str
-    userId: str
+    user_id: str
     name: str
     templates: List[str]  # Template IDs
-    startDate: datetime
-    endDate: datetime
-    status: VariantSetStatus
-    postsPerTemplate: int
-    results: Optional[VariantSetResults] = None
+    start_date: str  # Supabase: string (ISO)
+    end_date: str  # Supabase: string (ISO)
+    status: str  # Supabase: string
+    posts_per_template: int
+    results: Optional[dict] = None
 
 class CreateVariantSetRequest(BaseModel):
     name: str

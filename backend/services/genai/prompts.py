@@ -17,12 +17,12 @@ CRITICAL RULES:
 Your output will be directly inserted into a visual design, so accuracy is critical.
 """
 
-def build_generation_prompt(request_data: Dict[str, Any], count: int) -> str:
+def build_generation_prompt(requestData: Dict[str, Any], count: int) -> str:
     """
     Build the complete prompt for Gemini including structure and instructions.
     """
-    slides = request_data["slides"]
-    brand = request_data["brandContext"]
+    slides = requestData["slides"]
+    brand = requestData["brandContext"]
     # rules = request_data["templateRules"] TODO: TemplateRules, Determine implementation
     # goal = request_data["contentGoal"]
     
@@ -77,7 +77,7 @@ REQUIRED OUTPUT FORMAT (strict JSON array with {count} different variations):
 ]
 
 INPUT STRUCTURE (you must fill the textElements for each slide):
-{json.dumps(request_data['slides'], indent=2)}
+{json.dumps(requestData['slides'], indent=2)}
 
 CRITICAL RULES:
 1. Each slide object appears ONLY ONCE in the slides array

@@ -2,38 +2,11 @@ import axios, { AxiosError } from 'axios';
 import { getAccessToken, requireUserId } from '@/lib/supabase/auth';
 
 // Import all Supabase CRUD operations
-import {
-  // Templates
-  createTemplate as createTemplateSupabase,
-  getTemplate as getTemplateSupabase,
-  getUserTemplates,
-  updateTemplate as updateTemplateSupabase,
-  deleteTemplate as deleteTemplateSupabase,
-  setDefaultTemplate as setDefaultTemplateSupabase,
-  // Posts
-  createPost as createPostSupabase,
-  getPost as getPostSupabase,
-  getUserPosts,
-  getPostsByStatus,
-  getScheduledPosts as getScheduledPostsSupabase,
-  updatePost as updatePostSupabase,
-  deletePost as deletePostSupabase,
-  updatePostStatus,
-  getPostsByTemplate,
-  // Storage
-  uploadSlideImage,
-  uploadSlideImages,
-  deleteSlideImages,
-  uploadThumbnail,
-  getSlideImageUrl,
-  // Analytics
-  getPostAnalytics,
-  updatePostAnalytics,
-  createPostAnalytics,
-  getAllUserAnalytics,
-  getTemplateAggregateAnalytics,
-} from '../supabase/db/index';
-import { BrandSettings, Template } from '@/types';
+import { TemplateRepository } from '../supabase/repos/TemplateRepository';
+import { PostRepository } from '../supabase/repos/PostRepository';
+import { StorageRepository } from '../supabase/repos/StorageRepository';
+import { AnalyticsRepository } from '../supabase/repos/AnalyticsRepository';
+import type { Database } from '@/types/database';
 
 // API Base URL - used only for backend-specific operations (scheduling, external integrations)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -79,12 +52,12 @@ apiClient.interceptors.response.use(
 export const contentApi = {
   // GET: Fetch all scheduled posts
   getScheduledPosts: async () => {
-    return await getScheduledPostsSupabase();
+    const userId = await requireUserId();
+    return await PostRepository.getScheduledPosts(userId);
   },
 
 
-  generatePosts: async (template: Template, brandSettings: BrandSettings, count: number = 1) => {
-
+  generatePosts: async (template: Database['public']['Tables']['templates']['Row'], brandSettings: Database['public']['Tables']['brand_settings']['Row'], count: number = 1) => {
     const { data } = await apiClient.post('/api/generate/post', {
       template,
       brandSettings,
@@ -103,12 +76,14 @@ export const contentApi = {
 
   // DELETE: Remove a post
   deletePost: async (postId: string) => {
-    return await deletePostSupabase(postId);
+    const userId = await requireUserId();
+    return await PostRepository.deletePost(postId, userId);
   },
 
   // PUT: Update a post
   updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    return await updatePostSupabase(postId, updates);
+    const userId = await requireUserId();
+    return await PostRepository.updatePost(postId, updates, userId);
   },
 };
 
@@ -117,7 +92,7 @@ export const contentApi = {
 export const analyticsApi = {
   // GET: Fetch analytics data
   getAnalytics: async (timeframe: 'day' | 'week' | 'month' = 'week') => {
-    return await getAllUserAnalytics();
+    return await AnalyticsRepository.getAllUserAnalytics();
   },
 
   // GET: Fetch variant performance (A/B tests)
@@ -138,20 +113,34 @@ export const analyticsApi = {
 export const templateApi = {
   // GET: Fetch all templates
   getTemplates: async () => {
-    return await getUserTemplates();
+    const userId = await requireUserId();
+    return await TemplateRepository.getTemplates(userId);
   },
 
   // GET: Fetch single template with details
   getTemplate: async (templateId: string) => {
-    return await getTemplateSupabase(templateId);
+    const userId = await requireUserId();
+    return await TemplateRepository.getTemplate(templateId, userId);
   },
 
   // POST: Create new template
+  /**
+   * Create new template (expects snake_case keys only!)
+   * If you pass camelCase keys (e.g., isDefault, styleConfig), the backend will reject them.
+   * Always map UI state to snake_case before calling this function.
+   */
   createTemplate: async (templateData: any) => {
+    // DEV WARNING: Check for camelCase keys in dev mode
+    if (process.env.NODE_ENV !== 'production') {
+      const camelCaseKeys = Object.keys(templateData).filter(k => /[A-Z]/.test(k));
+      if (camelCaseKeys.length > 0) {
+        // eslint-disable-next-line no-console
+        console.warn('[templateApi.createTemplate] Payload contains camelCase keys:', camelCaseKeys);
+      }
+    }
     console.log('API: Creating template with data:', templateData);
-    
     try {
-      const templateId = await createTemplateSupabase(templateData);
+      const templateId = await TemplateRepository.createTemplate(templateData);
       console.log('API: Template created:', templateId);
       return templateId;
     } catch (error: any) {
@@ -162,17 +151,20 @@ export const templateApi = {
 
   // PUT: Update template
   updateTemplate: async ({ templateId, updates }: { templateId: string; updates: any }) => {
-    return await updateTemplateSupabase(templateId, updates);
+    const userId = await requireUserId();
+    return await TemplateRepository.updateTemplate(templateId, updates, userId);
   },
 
   // DELETE: Archive template
   deleteTemplate: async (templateId: string) => {
-    return await deleteTemplateSupabase(templateId);
+    const userId = await requireUserId();
+    return await TemplateRepository.deleteTemplate(templateId, userId);
   },
 
   // PUT: Set template as default
   setDefaultTemplate: async (templateId: string) => {
-    return await setDefaultTemplateSupabase(templateId);
+    const userId = await requireUserId();
+    return await TemplateRepository.setDefaultTemplate(templateId, userId);
   },
 };
 
@@ -181,31 +173,35 @@ export const templateApi = {
 export const postApi = {
   // GET: Fetch all posts
   getPosts: async (status?: string, limit?: number) => {
+    const userId = await requireUserId();
     if (status) {
-      return await getPostsByStatus(status as any);
+      return await PostRepository.getPostsByStatus(userId, status as any);
     }
-    return await getUserPosts();
+    return await PostRepository.getPosts(userId);
   },
 
   // GET: Fetch single post with details
   getPost: async (postId: string) => {
-    return await getPostSupabase(postId);
+    const userId = await requireUserId();
+    return await PostRepository.getPost(postId, userId);
   },
 
   // POST: Create new post
   createPost: async (postData: any) => {
-    return await createPostSupabase(postData);
+    return await PostRepository.createPost(postData);
   },
 
   // PUT: Update post
   updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    return await updatePostSupabase(postId, updates);
+    const userId = await requireUserId();
+    return await PostRepository.updatePost(postId, updates, userId);
   },
 
   // POST: Publish post (uses backend for Ayrshare integration)
   publishPost: async (postId: string) => {
+    const userId = await requireUserId();
     // First update status in Supabase
-    await updatePostStatus(postId, 'published');
+    await PostRepository.updatePostStatus(postId, 'published', userId);
     // Then trigger backend publishing to social platforms
     const { data } = await apiClient.post(`/api/posts/${postId}/publish`);
     return data;
@@ -213,12 +209,12 @@ export const postApi = {
 
   // POST: Upload slide image
   uploadSlide: async ({ postId, slideNumber, file }: { postId: string; slideNumber: number; file: File }) => {
-    return await uploadSlideImage(postId, slideNumber, file);
+    return await StorageRepository.uploadSlideImage(postId, slideNumber, file);
   },
 
   // POST: Track analytics
   trackAnalytics: async ({ postId, analyticsData }: { postId: string; analyticsData: any }) => {
-    return await updatePostAnalytics(postId, analyticsData);
+    return await AnalyticsRepository.updatePostAnalytics(postId, analyticsData);
   },
 };
 

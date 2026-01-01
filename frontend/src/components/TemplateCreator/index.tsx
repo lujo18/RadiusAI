@@ -1,15 +1,28 @@
+import React from "react";
 "use client";
 
 import { useState } from "react";
 import { FiX, FiCheck } from "react-icons/fi";
-import { DEFAULT_STYLE_CONFIGS } from "@/types";
-import type {
-  TemplateCategory,
-  AspectRatio,
-  StyleConfig,
-  CreateTemplateInput,
-} from "@/types";
-import { type SlideDesign } from "./types";
+import { StyleConfig } from "./styleConfigTypes";
+import type { Tables } from '@/types/database';
+import { TextElementsArraySchema } from '@/types/parseTextElement';
+import { BackgroundSchema } from '@/types/parseBackground';
+import type { Background } from '@/types/parseBackground';
+import type { TextElement } from '@/types/parseTextElement';
+import { z } from 'zod';
+type AspectRatio = Tables<'layout_configs'>['aspect_ratio'];
+type SlideDesign = Tables<'slide_designs'>;
+
+// TemplateCategory type
+export type TemplateCategory = 'listicle' | 'quote' | 'story' | 'educational' | 'comparison';
+
+type CreateTemplateInput = {
+  name: string;
+  category: TemplateCategory;
+  style_config: StyleConfig;
+  is_default: boolean;
+};
+type PostSlide = any;
 import Step1BasicInfo from "./Step1BasicInfo";
 import Step2VisualEditor from "./Step2VisualEditor";
 import Step3SlideSequence from "./Step3SlideSequence";
@@ -42,20 +55,48 @@ export default function TemplateCreator({
       name: "Hook Slide",
       background: {
         type: "gradient",
-        gradientColors: ["#667eea", "#764ba2"],
-        gradientAngle: 135,
+        gradient_colors: ["#667eea", "#764ba2"],
+        gradient_angle: 135,
+        color: null,
+        image_url: null,
       },
-      elements: [],
       dynamic: true,
+      template_id: "", // Will be set when saving
+      created_at: new Date().toISOString(),
+      text_elements: [],
     },
   ]);
 
   // Slide sequence mapping (which design to use for each slide number)
+  // Always keep slideSequence in sync with slideCount and slideDesigns
+  const initialSequence = Array.from({ length: 5 }, (_, i) => ({
+    slide_number: i + 1,
+    design_id: "S1"
+  }));
   const [slideSequence, setSlideSequence] = useState<
-    { slide_number: number; design_id: string }[]
-  >([{ slide_number: 1, design_id: "S1" }]);
+    Array<{ slide_number: number; design_id: string }>
+  >(initialSequence);
 
-  const [slideCount, setTotalSlides] = useState(5);
+  // Sync slideSequence when slideCount changes
+  const syncSlideSequence = (newCount: number) => {
+    setSlideSequence((seq: Array<{ slide_number: number; design_id: string }>) => {
+      const designId = slideDesigns[0]?.id || "S1";
+      // Fill or trim to newCount
+      const filled = Array.from({ length: newCount }, (_, i) => {
+        const existing = seq.find((s: { slide_number: number; design_id: string }) => s["slide_number"] === i + 1);
+        return existing && existing["design_id"] ? existing : { slide_number: i + 1, design_id: designId };
+      });
+      return filled;
+    });
+  };
+
+  // Update slideCount and sync sequence
+  const handleSetTotalSlides = (count: number) => {
+    setSlideCount(count);
+    syncSlideSequence(count);
+  };
+
+  const [slideCount, setSlideCount] = useState(5);
   const [selectedDesignId, setSelectedDesignId] = useState("S1");
   const [selectedElementId, setSelectedElementId] = useState<string | null>(
     null
@@ -65,64 +106,117 @@ export default function TemplateCreator({
     setCategory(newCategory);
   };
 
+
+  // IMPORTANT: Map all UI state (camelCase) to API payload (snake_case) before saving.
+  // This ensures compatibility with backend/Supabase expectations.
   const handleSave = () => {
-    // Convert slide designs to styleConfig format for backend compatibility
-    const style_config = {
+    // Convert slide designs to legacy format for backend compatibility
+    const legacySlideDesigns = slideDesigns.map(design => {
+      let parsedBackground: Background = { type: 'solid', color: '#000' };
+      let parsedTextElements: TextElement[] = [];
+      try {
+        parsedBackground = BackgroundSchema.parse(
+          typeof design.background === 'string' ? JSON.parse(design.background) : design.background
+        );
+      } catch {}
+      try {
+        parsedTextElements = TextElementsArraySchema.parse(
+          typeof design.text_elements === 'string' ? JSON.parse(design.text_elements) : design.text_elements
+        );
+      } catch {}
+      return {
+        id: design.id,
+        name: design.name,
+        background: parsedBackground,
+        text_elements: parsedTextElements.map((te: TextElement) => ({
+          id: te.id,
+          type: te.type,
+          content: te.content,
+          font_size: te.font_size,
+          font_family: te.font_family,
+          font_style: te.font_style,
+          color: te.color,
+          x: te.x,
+          y: te.y,
+          width: te.width,
+          align: te.align,
+        })),
+        dynamic: design.dynamic,
+      };
+    });
+
+    // Use slideSequence directly (camelCase)
+    const styleConfig = {
       layout: {
         aspect_ratio: aspectRatio,
         slide_count: slideCount,
       },
-      slide_designs: slideDesigns,
+      slide_designs: legacySlideDesigns,
       slide_sequence: slideSequence,
-    } as StyleConfig;
+    };
 
     const template: CreateTemplateInput = {
       name,
       category,
-      style_config,
+      style_config: styleConfig,
       is_default: isDefault,
     };
     onSave(template);
   };
 
   const addNewDesign = () => {
-    const newId = `S${slide_designs.length + 1}`;
+    const newId = `S${slideDesigns.length + 1}`;
     setSlideDesigns([
-      ...slide_designs,
+      ...slideDesigns,
       {
         id: newId,
-        name: `Slide Design ${slide_designs.length + 1}`,
+        name: `Slide Design ${slideDesigns.length + 1}`,
         background: { type: "solid", color: "#1a1a1a" },
-        elements: [],
-        dynamic: true,
+        dynamic: false,
+        template_id: "",
+        created_at: new Date().toISOString(),
+        text_elements: [],
       },
     ]);
     setSelectedDesignId(newId);
   };
 
   const deleteDesign = (designId: string) => {
-    if (slide_designs.length === 1) return; // Keep at least one design
-    setSlideDesigns(slide_designs.filter((d) => d.id !== designId));
+    if (slideDesigns.length === 1) return; // Keep at least one design
+    setSlideDesigns(slideDesigns.filter((d) => d.id !== designId));
     if (selectedDesignId === designId) {
-      setSelectedDesignId(slide_designs[0].id);
+      setSelectedDesignId(slideDesigns[0].id);
     }
   };
 
   const duplicateDesign = (designId: string) => {
-    const designToDuplicate = slide_designs.find((d) => d.id === designId);
+    const designToDuplicate = slideDesigns.find((d) => d.id === designId);
     if (!designToDuplicate) return;
 
-    const newId = `S${slide_designs.length + 1}`;
+    const newId = `S${slideDesigns.length + 1}`;
+    let parsedBackground: Background = { type: 'solid', color: '#000' };
+    let parsedTextElements: TextElement[] = [];
+    try {
+      parsedBackground = BackgroundSchema.parse(
+        typeof designToDuplicate.background === 'string' ? JSON.parse(designToDuplicate.background) : designToDuplicate.background
+      );
+    } catch {}
+    try {
+      parsedTextElements = TextElementsArraySchema.parse(
+        typeof designToDuplicate.text_elements === 'string' ? JSON.parse(designToDuplicate.text_elements) : designToDuplicate.text_elements
+      );
+    } catch {}
     setSlideDesigns([
-      ...slide_designs,
+      ...slideDesigns,
       {
         ...designToDuplicate,
         id: newId,
         name: `${designToDuplicate.name} (Copy)`,
-        elements: designToDuplicate.elements.map((el) => ({
+        text_elements: parsedTextElements.map((el: TextElement) => ({
           ...el,
           id: `${newId}-${Math.random()}`,
         })),
+        background: parsedBackground,
       },
     ]);
   };
@@ -133,7 +227,7 @@ export default function TemplateCreator({
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-3 border-b border-gray-700">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold">
+            <h2 className="text-xl font-bold font-main">
               {existingTemplate ? "Edit Template" : "Create New Template"}
             </h2>
             {/* Progress Bar - Inline */}
@@ -173,8 +267,22 @@ export default function TemplateCreator({
             <Step2VisualEditor
               aspectRatio={aspectRatio}
               setAspectRatio={setAspectRatio}
-              slideDesigns={slideDesigns}
-              setSlideDesigns={setSlideDesigns}
+              slideDesigns={slideDesigns.map((d) => {
+                let parsedBackground: Background = { type: 'solid', color: '#000' };
+                let parsedTextElements: TextElement[] = [];
+                try {
+                  parsedBackground = BackgroundSchema.parse(
+                    typeof d.background === 'string' ? JSON.parse(d.background) : d.background
+                  );
+                } catch {}
+                try {
+                  parsedTextElements = TextElementsArraySchema.parse(
+                    typeof d.text_elements === 'string' ? JSON.parse(d.text_elements) : d.text_elements
+                  );
+                } catch {}
+                return { ...d, background: parsedBackground, text_elements: parsedTextElements };
+              })}
+              setSlideDesigns={setSlideDesigns as unknown as (designs: SlideDesign[]) => void}
               selectedDesignId={selectedDesignId}
               setSelectedDesignId={setSelectedDesignId}
               selectedElementId={selectedElementId}
@@ -187,7 +295,7 @@ export default function TemplateCreator({
           {step === 3 && (
             <Step3SlideSequence
               slideCount={slideCount}
-              setTotalSlides={setTotalSlides}
+              setTotalSlides={handleSetTotalSlides}
               slideDesigns={slideDesigns}
               slideSequence={slideSequence}
               setSlideSequence={setSlideSequence}
@@ -208,7 +316,7 @@ export default function TemplateCreator({
               <button
                 onClick={() => setStep(step + 1)}
                 disabled={step === 1 && !name}
-                className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-700 disabled:cursor-not-allowed px-5 py-2 rounded-lg text-sm font-semibold transition"
+                className="bg-kinetic-mint hover:bg-kinetic-mint/80 disabled:bg-gray-700 disabled:cursor-not-allowed text-obsidian px-5 py-2 rounded-lg text-sm font-semibold transition"
               >
                 Next
               </button>

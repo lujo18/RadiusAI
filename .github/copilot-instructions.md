@@ -1,7 +1,7 @@
 # ViralStack AI Coding Instructions
 
 ## Project Overview
-ViralStack (formerly SlideForge) is an AI-powered carousel content automation platform for social media. It uses Gemini 2.0 to generate multi-slide Instagram/TikTok carousels based on user-defined templates with A/B testing capabilities.
+Radius (formerly ViralStack) is an AI-powered carousel content automation platform for social media. It uses Gemini 2.0 to generate multi-slide Instagram/TikTok carousels based on user-defined templates with A/B testing capabilities.
 
 **Architecture**: Monorepo with FastAPI backend (Python) + Next.js 14 frontend (TypeScript)
 
@@ -13,34 +13,41 @@ ViralStack (formerly SlideForge) is an AI-powered carousel content automation pl
 
 ## Design System & Styling
 
-### Visual Identity
-- **Brand Name**: ViralStack
-- **Color Palette**: Dark theme with vibrant accents
-  - Primary: `primary-500` (#0066e6) - Blue
-  - Accent Purple: `accent-purple` (#8b5cf6)
-  - Accent Pink: `accent-pink` (#ec4899)
-  - Background: `dark-600` (#0a0a0a), `dark-500` (#0d0d0d), `dark-400` (#101010)
-- **Typography**: Inter (sans-serif) with bold weights for headings
+### Visual Identity (Radius "Obsidian & Pulse")
+- **Brand Name**: Radius
+- **Color Palette**:
+   - Primary Background: `obsidian` (#0B0B0C) — Deep, modern, professional
+   - Primary Accent: `kinetic-mint` (#10B981) — Growth, momentum, vitality
+   - Secondary Accent: `electric-violet` (#8B5CF6) — Intelligence, high-end AI power
+   - Text/Surface: `ghost-white` (#F8FAFC) — High readability, crispness
+- **Typography**:
+   - Headlines: Plus Jakarta Sans (Bold, geometric, modern, expensive look)
+   - Body: Inter (sans-serif, gold standard for SaaS readability)
+
+### UI Philosophy: "The Minimalist Canvas"
+- Semi-transparent glassmorphism backgrounds with subtle blurs
+- Smooth, spring-based animations (not just flashing on screen)
+- High contrast, premium feel (no SaaS blue)
 
 ### UI Component Standards
 **CRITICAL**: ALL new UI components must follow these patterns from [app/page.tsx](frontend/src/app/page.tsx):
 
 1. **Background Colors**:
-   - Main pages: `bg-dark-600`
-   - Sections: Alternate between `bg-dark-600` and `bg-dark-500`
+   - Main pages: `bg-obsidian`
+   - Sections: Alternate between `bg-obsidian` and `bg-background`
    - Cards: `glass-card` class (glassmorphism with `bg-white/5 backdrop-blur-md border border-white/10`)
-   - Inputs: `bg-dark-400 border border-gray-700` with `focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20`
+   - Inputs: `bg-obsidian border border-ghost-white/10` with `focus:border-kinetic-mint focus:ring-2 focus:ring-kinetic-mint/20`
 
 2. **Text Colors**:
-   - Headings: `text-white`
-   - Body text: `text-gray-400`
-   - Links: `text-primary-400 hover:text-primary-300`
-   - Muted text: `text-gray-500`
+   - Headings: `text-ghost-white`
+   - Body text: `text-ghost-white/80`
+   - Links: `text-kinetic-mint hover:text-kinetic-mint/80`
+   - Muted text: `text-ghost-white/50`
 
 3. **Buttons**:
-   - Primary: `btn-primary` or `bg-primary-500 hover:bg-primary-600 text-white shadow-lg hover:shadow-primary-500/50`
+   - Primary: `btn-primary` or `bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian shadow-lg hover:shadow-kinetic-mint/50`
    - Secondary: `btn-secondary` or `bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md`
-   - Ghost: `btn-ghost` or `bg-transparent hover:bg-white/5 text-gray-300 hover:text-white`
+   - Ghost: `btn-ghost` or `bg-transparent hover:bg-white/5 text-ghost-white/80 hover:text-ghost-white`
 
 4. **Layout Patterns**:
    - Max width containers: `max-w-6xl mx-auto` or `max-w-7xl mx-auto`
@@ -49,15 +56,15 @@ ViralStack (formerly SlideForge) is an AI-powered carousel content automation pl
    - Spacing: Use `space-y-4`, `space-y-8`, `gap-4`, `gap-8` consistently
 
 5. **Split-Screen Auth Pages**:
-   - Left side: Form content with `bg-dark-600` or dark background
-   - Right side: Gradient illustration `bg-gradient-to-br from-primary-500 via-accent-purple to-accent-pink`
+   - Left side: Form content with `bg-obsidian` or dark background
+   - Right side: Gradient illustration `bg-gradient-to-br from-kinetic-mint via-electric-violet to-ghost-white`
    - Hidden on mobile: `hidden lg:flex` for right side
    - White text with dark inputs throughout
 
 6. **Glassmorphism Effects**:
    - Use `glass-card` class for cards: adds backdrop blur, subtle border, and shadow
    - Hover states: `hover:bg-white/10 hover:border-white/20 transition-all duration-300`
-   - Forms: Dark inputs (`bg-dark-400`) with subtle borders
+   - Forms: Obsidian inputs (`bg-obsidian`) with subtle borders
 
 7. **Animations**:
    - Available: `animate-pulse`, `animate-bounce`, `animate-spin-slow`, `animate-fade-in`
@@ -175,3 +182,10 @@ npm run dev
 - Backend: Google Cloud Run (see [TODO.md](TODO.md#Production))
 - Frontend: Vercel (auto-deploy from main branch)
 - Set `ENV=production` in cloud environment variables
+
+
+## Nonnegotiables after each edit
+
+- Always run `cd .\frontend\` if not in \frontend, then `npm run lint` after each edit made
+- Fix all errors if there are any
+- Repeat until you get no errors returned

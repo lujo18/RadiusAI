@@ -1,5 +1,25 @@
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuthStore } from '@/store';
+import { supabase } from '@/lib/supabase/client';
+import {
+  FiUser,
+  FiMail,
+  FiCreditCard,
+  FiShield,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiExternalLink,
+  FiLoader,
+  FiX,
+} from 'react-icons/fi';
+
+interface SubscriptionInfo {
+  status: string;
 'use client';
 
+import React from "react";
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store';
@@ -118,6 +138,8 @@ export default function SettingsPage() {
       starter: 'Starter Plan',
       growth: 'Growth Plan',
       unlimited: 'Unlimited Plan',
+      pro: 'Pro (Radius)',
+      agency: 'Agency (Radius)',
     };
     return planMap[plan] || 'No Plan';
   };
@@ -142,7 +164,6 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Success Banner */}
-      {showSuccessBanner && (
         <div className="glass-card p-4 border-2 border-green-500/30 bg-green-500/10 animate-slide-down">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -186,6 +207,7 @@ export default function SettingsPage() {
                 <Icon className="w-5 h-5" />
                 {tab.label}
               </button>
+
             );
           })}
         </div>

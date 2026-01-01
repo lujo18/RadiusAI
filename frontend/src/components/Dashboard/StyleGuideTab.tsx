@@ -1,3 +1,4 @@
+import React from "react";
 import { useStyleGuideStore } from '@/store';
 
 export default function StyleGuideTab() {
@@ -32,7 +33,7 @@ export default function StyleGuideTab() {
         <div className="flex gap-4 mt-4">
           <button 
             onClick={handleSave}
-            className="bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-lg font-semibold"
+            className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-semibold"
           >
             Save Changes
           </button>

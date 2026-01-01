@@ -1,14 +1,7 @@
-import { create } from 'zustand';
 
-interface Post {
-  id: string;
-  platform: 'Instagram' | 'TikTok';
-  title: string;
-  caption: string;
-  scheduledTime: Date;
-  status: 'scheduled' | 'published' | 'failed';
-  variantId: string;
-}
+import type { Tables } from '@/types/database';
+
+type DashboardPost = Tables<'posts'> & { scheduledTime?: Date; isSelected?: boolean };
 
 interface DashboardStats {
   postsScheduled: number;
@@ -20,17 +13,16 @@ interface DashboardStats {
 interface DashboardState {
   activeTab: 'overview' | 'calendar' | 'templates' | 'analytics' | 'style';
   isGenerating: boolean;
-  scheduledPosts: Post[];
+  scheduledPosts: DashboardPost[];
   stats: DashboardStats | null;
-  
   // Actions
   setActiveTab: (tab: DashboardState['activeTab']) => void;
   setIsGenerating: (generating: boolean) => void;
-  setScheduledPosts: (posts: Post[]) => void;
+  setScheduledPosts: (posts: DashboardPost[]) => void;
   setStats: (stats: DashboardStats) => void;
-  addPost: (post: Post) => void;
+  addPost: (post: DashboardPost) => void;
   removePost: (postId: string) => void;
-  updatePost: (postId: string, updates: Partial<Post>) => void;
+  updatePost: (postId: string, updates: Partial<DashboardPost>) => void;
 }
 
 export const useDashboardStore = create<DashboardState>((set) => ({
@@ -61,3 +53,4 @@ export const useDashboardStore = create<DashboardState>((set) => ({
     )
   })),
 }));
+import { create } from 'zustand';

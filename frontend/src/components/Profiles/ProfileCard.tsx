@@ -1,3 +1,4 @@
+import React from "react";
 import { FiEdit2, FiTrash2, FiInstagram, FiTwitter } from 'react-icons/fi';
 import { SiTiktok, SiFacebook } from 'react-icons/si';
 import type { Profile, BrandSettings, PlatformIntegration } from '@/types';

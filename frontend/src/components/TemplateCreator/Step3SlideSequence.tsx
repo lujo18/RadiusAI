@@ -1,13 +1,16 @@
-import { type SlideDesign } from './types';
+import React from "react";
 
-import { DbSlideDesign } from "@/types/database"
+
+import type { Tables } from '@/types/database';
+import { Background, BackgroundSchema } from '@/types/parseBackground';
+type SlideDesign = Tables<'slide_designs'>;
 
 interface Step3SlideSequenceProps {
   slideCount: number;
   setTotalSlides: (count: number) => void;
-  slideDesigns: DbSlideDesign[];
-  slideSequence: { slideNumber: number; designId: string }[];
-  setSlideSequence: (sequence: { slideNumber: number; designId: string }[]) => void;
+  slideDesigns: SlideDesign[];
+  slideSequence: Array<{ slide_number: number; design_id: string }>;
+  setSlideSequence: (sequence: Array<{ slide_number: number; design_id: string }>) => void;
 }
 
 
@@ -19,20 +22,20 @@ export default function Step3SlideSequence({
   setSlideSequence 
 }: Step3SlideSequenceProps) {
   const updateSlideMapping = (slideNumber: number, designId: string) => {
-    const existing = slideSequence.find((s: any) => s.slideNumber === slideNumber);
+    const existing = slideSequence.find((s: any) => s["slide_number"] === slideNumber);
     if (existing) {
       setSlideSequence(
         slideSequence.map((s: any) => 
-          s.slideNumber === slideNumber ? { ...s, designId } : s
+          s["slide_number"] === slideNumber ? { ...s, design_id: designId } : s
         )
       );
     } else {
-      setSlideSequence([...slideSequence, { slideNumber, designId }]);
+      setSlideSequence([...slideSequence, { slide_number: slideNumber, design_id: designId }]);
     }
   };
 
   const getDesignForSlide = (slideNumber: number) => {
-    return slideSequence.find((s: any) => s.slideNumber === slideNumber)?.designId || slideDesigns[0]?.id;
+    return slideSequence.find((s: any) => s["slide_number"] === slideNumber)?.design_id || slideDesigns[0]?.id;
   };
 
   return (
@@ -46,7 +49,7 @@ export default function Step3SlideSequence({
 
       {/* Total Slides Control */}
       <div className="mb-4">
-        <label className="block text-sm font-semibold mb-2">Total Number of Slides</label>
+        <label className="block text-sm font-semibold mb-2">Total Number of Slides (Radius)</label>
         <input
           type="range"
           min={3}
@@ -76,7 +79,7 @@ export default function Step3SlideSequence({
                 onChange={(e) => updateSlideMapping(slideNum, e.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
               >
-                {slideDesigns.map((design: DbSlideDesign) => (
+                {slideDesigns.map((design: SlideDesign) => (
                   <option key={design.id} value={design.id}>
                     {design.id} - {design.name}
                   </option>
@@ -88,15 +91,17 @@ export default function Step3SlideSequence({
             <div className="flex-shrink-0">
               {(() => {
                 const designId = getDesignForSlide(slideNum);
-                const design = slideDesigns.find((d: DbSlideDesign) => d.id === designId);
+                const design = slideDesigns.find((d: SlideDesign) => d.id === designId);
+
+                const background: Background = BackgroundSchema.parse(design?.background)
                 return (
                   <div
                     className="w-12 h-12 rounded border-2 border-gray-600"
                     style={{
-                      background: design?.background_type === 'solid'
-                        ? design.background_color || '#1a1a1a'
-                        : design?.background_type === 'gradient'
-                        ? `linear-gradient(135deg, ${design.background_gradient_colors?.[0] || '#1a1a1a'}, ${design.background_gradient_colors?.[1] || '#1a1a1a'})`
+                      background: background.type === 'solid'
+                        ? background.color || '#1a1a1a'
+                        : background.type === 'gradient'
+                        ? `linear-gradient(135deg, ${background.gradient_colors?.[0] || '#1a1a1a'}, ${background.gradient_colors?.[1] || '#1a1a1a'})`
                         : '#1a1a1a'
                     }}
                   />
@@ -111,8 +116,8 @@ export default function Step3SlideSequence({
       <div className="mt-6 bg-primary-500/10 border border-primary-500/30 rounded-lg p-4">
         <h4 className="font-semibold mb-2">Summary</h4>
         <div className="text-sm text-gray-300 space-y-1">
-          {slideDesigns.map((design: DbSlideDesign) => {
-            const count = slideSequence.filter((s: any) => s.designId === design.id).length;
+          {slideDesigns.map((design: SlideDesign) => {
+            const count = slideSequence.filter((s: any) => s.design_id === design.id).length;
             if (count === 0) return null;
             return (
               <div key={design.id}>

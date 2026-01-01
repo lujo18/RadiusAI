@@ -1,13 +1,47 @@
-'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { FiZap, FiCalendar, FiBarChart2, FiSettings, FiLogOut, FiTrendingUp, FiLayers, FiUser, FiBell, FiSearch } from 'react-icons/fi';
-import { useAuthStore } from '@/store';
-import { logOut } from '@/lib/supabase/auth';
-import { useState, useEffect } from 'react';
-import SubscriptionBanner from '@/components/SubscriptionBanner';
+import { usePathname, useRouter } from "next/navigation";
+import {
+  FiCalendar,
+  FiBarChart2,
+  FiSettings,
+  FiLogOut,
+  FiTrendingUp,
+  FiLayers,
+  FiUser,
+  FiBell,
+  FiSearch,
+} from "react-icons/fi";
+import Image from "next/image";
+import { useAuthStore } from "@/store";
+import { logOut } from "@/lib/supabase/auth";
+import { useState, useEffect } from "react";
+import SubscriptionBanner from "@/components/SubscriptionBanner";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+"use client";
+
+import React from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  FiCalendar,
+  FiBarChart2,
+  FiSettings,
+  FiLogOut,
+  FiTrendingUp,
+  FiLayers,
+  FiUser,
+  FiBell,
+  FiSearch,
+} from "react-icons/fi";
+import Image from "next/image";
+import { useAuthStore } from "@/store";
+import { logOut } from "@/lib/supabase/auth";
+import { useState, useEffect } from "react";
+import SubscriptionBanner from "@/components/SubscriptionBanner";
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const logout = useAuthStore((state) => state.logout);
@@ -20,37 +54,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Redirect if not authenticated
   useEffect(() => {
-    console.log('[Dashboard] Auth check:', {
+    console.log("[Dashboard] Auth check:", {
       isLoading,
       isAuthenticated,
       hasUser: !!user,
-      userId: user?.id
+      userId: user?.id,
     });
-    
+
     if (!isLoading && !isAuthenticated) {
-      console.log('[Dashboard] Not authenticated - redirecting to login');
-      router.push('/login');
+      console.log("[Dashboard] Not authenticated - redirecting to login");
+      router.push("/login");
     }
   }, [isAuthenticated, isLoading, router]);
 
   // Check subscription status (show banner instead of redirecting)
   useEffect(() => {
-    console.log('[Dashboard] Subscription check:', {
+    console.log("[Dashboard] Subscription check:", {
       isLoading,
       isAuthenticated,
       hasUser: !!user,
       userPlan: user?.plan,
-      subscriptionChecked
     });
-    
+
     if (!isLoading && isAuthenticated && user) {
       // User is authenticated - let them see dashboard with banner if no subscription
-      console.log('[Dashboard] User authenticated, plan:', user.plan || 'none');
+      console.log("[Dashboard] User authenticated, plan:", user.plan || "none");
       setSubscriptionChecked(true);
     } else if (!isLoading && !isAuthenticated) {
       // Not authenticated at all - redirect to login
-      console.log('[Dashboard] Not authenticated - redirecting to login');
-      router.push('/login');
+      console.log("[Dashboard] Not authenticated - redirecting to login");
+      router.push("/login");
     }
   }, [isAuthenticated, isLoading, user, router]);
 
@@ -58,27 +91,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       await logOut();
       logout();
-      router.push('/login');
+      router.push("/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       logout();
-      router.push('/login');
+      router.push("/login");
     }
   };
 
   // Show loading state while checking auth and subscription
-  console.log('[Dashboard] Render check:', {
+  console.log("[Dashboard] Render check:", {
     isLoading,
     isAuthenticated,
     subscriptionChecked,
     willShowLoading: isLoading || (isAuthenticated && !subscriptionChecked),
-    willRenderNull: !isAuthenticated || !subscriptionChecked
+    willRenderNull: !isAuthenticated || !subscriptionChecked,
   });
-  
+
   if (isLoading || (isAuthenticated && !subscriptionChecked)) {
-    console.log('[Dashboard] Showing loading screen');
+    console.log("[Dashboard] Showing loading screen");
     return (
       <div className="min-h-screen bg-dark-600 flex items-center justify-center">
+
         <div className="text-white">Loading...</div>
       </div>
     );
@@ -86,18 +120,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Don't render dashboard if not authenticated or no subscription
   if (!isAuthenticated || !subscriptionChecked) {
-    console.log('[Dashboard] Not rendering - returning null');
+    console.log("[Dashboard] Not rendering - returning null");
     return null;
   }
 
   const navItems = [
-    { path: '/dashboard', icon: <FiBarChart2 />, label: 'Dashboard' },
-    { path: '/dashboard/generate', icon: <FiZap />, label: 'Generate' },
-    { path: '/dashboard/calendar', icon: <FiCalendar />, label: 'Calendar' },
-    { path: '/dashboard/templates', icon: <FiLayers />, label: 'Templates' },
-    { path: '/dashboard/profiles', icon: <FiUser />, label: 'Profiles' },
-    { path: '/dashboard/analytics', icon: <FiTrendingUp />, label: 'Analytics' },
-    { path: '/dashboard/settings', icon: <FiSettings />, label: 'Settings' },
+    { path: "/dashboard", icon: <FiBarChart2 />, label: "Dashboard" },
+    { path: "/dashboard/generate", icon: <FiBarChart2 />, label: "Generate" },
+    { path: "/dashboard/calendar", icon: <FiCalendar />, label: "Calendar" },
+    { path: "/dashboard/templates", icon: <FiLayers />, label: "Templates" },
+    { path: "/dashboard/profiles", icon: <FiUser />, label: "Profiles" },
+    {
+      path: "/dashboard/analytics",
+      icon: <FiTrendingUp />,
+      label: "Analytics",
+    },
+    { path: "/dashboard/settings", icon: <FiSettings />, label: "Settings" },
   ];
 
   return (
@@ -107,10 +145,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex items-center justify-between h-full max-w-screen-2xl mx-auto">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <FiZap className="text-white text-lg" />
-            </div>
-            <span className="text-xl font-bold gradient-text">ViralStack</span>
+            <Image
+              src="/images/icon-primary.png"
+              alt="Radius Logo"
+              width={32}
+              height={32}
+            />
+            <span className="text-xl font-display font-medium text-white">Radius</span>
           </div>
 
           {/* Search Bar */}
@@ -139,22 +180,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-3 pl-4 border-l border-white/10">
               <div className="text-right hidden sm:block">
                 <div className="text-sm font-medium text-white">
-                  {supabaseUser?.user_metadata?.full_name || 
-                   supabaseUser?.user_metadata?.name || 
-                   user?.email?.split('@')[0] || 
-                   'User'}
+                  {supabaseUser?.user_metadata?.full_name ||
+                    supabaseUser?.user_metadata?.name ||
+                    user?.email?.split("@")[0] ||
+                    "User"}
                 </div>
-                <div className="text-xs text-gray-400 capitalize">{user?.plan || 'Free'} Plan</div>
+                <div className="text-xs text-gray-400 capitalize">
+                  {user?.plan || "Free"} Plan
+                </div>
               </div>
-              {supabaseUser?.user_metadata?.avatar_url || supabaseUser?.user_metadata?.picture ? (
-                <img 
-                  src={supabaseUser.user_metadata.avatar_url || supabaseUser.user_metadata.picture} 
-                  alt={supabaseUser?.user_metadata?.full_name || supabaseUser?.user_metadata?.name || 'User'}
+              {supabaseUser?.user_metadata?.avatar_url ||
+              supabaseUser?.user_metadata?.picture ? (
+                <img
+                  src={
+                    supabaseUser.user_metadata.avatar_url ||
+                    supabaseUser.user_metadata.picture
+                  }
+                  alt={
+                    supabaseUser?.user_metadata?.full_name ||
+                    supabaseUser?.user_metadata?.name ||
+                    "User"
+                  }
                   className="w-10 h-10 rounded-full border-2 border-primary-500 object-cover"
                 />
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user?.email?.[0]?.toUpperCase() || 'U'}
+                  {user?.email?.[0]?.toUpperCase() || "U"}
                 </div>
               )}
             </div>
@@ -172,7 +223,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <button
                   key={item.path}
                   onClick={() => router.push(item.path)}
-                  className={isActive ? 'sidebar-item-active w-full' : 'sidebar-item w-full'}
+                  className={
+                    isActive
+                      ? "sidebar-item-active w-full"
+                      : "sidebar-item w-full"
+                  }
                 >
                   <span className="text-lg">{item.icon}</span>
                   <span className="text-sm font-medium">{item.label}</span>

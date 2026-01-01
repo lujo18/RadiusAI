@@ -1,16 +1,8 @@
 // React Query hooks for Profiles
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  getUserProfiles,
-  getProfile,
-  createProfile,
-  updateBrandSettings,
-  deleteProfile,
-  addIntegration,
-  removeIntegration,
-} from '@/lib/supabase/db/profiles';
-import type { BrandSettings, PlatformIntegration, Json } from '@/types';
+import { ProfileRepository } from '@/lib/supabase/repos/ProfileRepository';
+import { requireUserId } from '@/lib/supabase/auth';
 
 // Query Keys
 export const profileKeys = {
@@ -23,28 +15,26 @@ export const profileKeys = {
 export function useProfiles() {
   return useQuery({
     queryKey: profileKeys.all,
-    queryFn: getUserProfiles,
+    queryFn: async () => {
+      const userId = await requireUserId();
+      return ProfileRepository.getProfiles(userId);
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 
-export function useProfile(profileId: string) {
-  return useQuery({
-    queryKey: profileKeys.detail(profileId),
-    queryFn: () => getProfile(profileId),
-    enabled: !!profileId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-  });
-}
-
+ 
 // ==================== MUTATIONS ====================
+// (You should update the mutation functions below to use ProfileRepository as well)
 
 export function useCreateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (brandSettings: BrandSettings) => 
-      createProfile(brandSettings as unknown as Json),
+    mutationFn: async (profileData: any) => {
+      // No userId needed for creation, profileData should include user_id
+      return ProfileRepository.createProfile(profileData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
@@ -55,10 +45,10 @@ export function useUpdateBrandSettings() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ profileId, brandSettings }: { 
-      profileId: string; 
-      brandSettings: BrandSettings 
-    }) => updateBrandSettings(profileId, brandSettings as unknown as Json),
+    mutationFn: async ({ profileId, brandSettings }: { profileId: string; brandSettings: any }) => {
+      const userId = await requireUserId();
+      return ProfileRepository.updateBrandSettings(profileId, userId, brandSettings);
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
       queryClient.invalidateQueries({ queryKey: profileKeys.detail(variables.profileId) });
@@ -70,7 +60,10 @@ export function useDeleteProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: deleteProfile,
+    mutationFn: async (profileId: string) => {
+      const userId = await requireUserId();
+      return ProfileRepository.deleteProfile(profileId, userId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },
@@ -81,10 +74,10 @@ export function useAddIntegration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ profileId, integration }: {
-      profileId: string;
-      integration: PlatformIntegration;
-    }) => addIntegration(profileId, integration),
+    mutationFn: async ({ profileId, integration }: { profileId: string; integration: any }) => {
+      const userId = await requireUserId();
+      return ProfileRepository.createProfileIntegration(profileId, userId, integration);
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
       queryClient.invalidateQueries({ queryKey: profileKeys.detail(variables.profileId) });
@@ -96,9 +89,10 @@ export function useRemoveIntegration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ integrationId }: {
-      integrationId: string;
-    }) => removeIntegration(integrationId),
+    mutationFn: async ({ integrationId }: { integrationId: string }) => {
+      const userId = await requireUserId();
+      return ProfileRepository.deleteProfileIntegration(integrationId, userId);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });
     },

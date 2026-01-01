@@ -1,4 +1,3 @@
-"use client";
 
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,7 +15,29 @@ import {
   ImageIcon
 } from "lucide-react";
 import { useTemplate, useUpdateTemplate, useDeleteTemplate } from "@/lib/api/hooks";
-import type { Template, StyleConfig } from "@/types";
+import type { Template } from "@/components/TemplateCreator/contentTypes";
+import type { StyleConfig } from "@/components/TemplateCreator/styleConfigTypes";
+"use client";
+
+import React from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { 
+  ArrowLeft, 
+  Edit2, 
+  Trash2, 
+  Star, 
+  TrendingUp,
+  Eye,
+  Heart,
+  Share2,
+  Bookmark,
+  Calendar,
+  ImageIcon
+} from "lucide-react";
+import { useTemplate, useUpdateTemplate, useDeleteTemplate } from "@/lib/api/hooks";
+import type { Template } from "@/components/TemplateCreator/contentTypes";
+import type { StyleConfig } from "@/components/TemplateCreator/styleConfigTypes";
 
 /** Helper to safely extract style config from template */
 function getStyleConfig(template: Template): StyleConfig | null {
@@ -59,7 +80,7 @@ export default function TemplateDetailPage() {
           <p className="text-red-400 mb-4">Failed to load template</p>
           <button
             onClick={() => router.push("/dashboard/templates")}
-            className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition"
+            className="px-4 py-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg transition"
           >
             Back to Templates
           </button>
@@ -118,7 +139,7 @@ export default function TemplateDetailPage() {
                   <button
                     onClick={handleSaveName}
                     disabled={updateTemplateMutation.isPending}
-                    className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition disabled:opacity-50"
+                    className="px-4 py-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg transition disabled:opacity-50"
                   >
                     {updateTemplateMutation.isPending ? 'Saving...' : 'Save'}
                   </button>
@@ -242,11 +263,11 @@ export default function TemplateDetailPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Slide Count:</span>
-                      <span className="text-white">{styleConfig.layout?.slideCount ?? 'N/A'}</span>
+                      <span className="text-white">{styleConfig.layout?.slide_count ?? 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Aspect Ratio:</span>
-                      <span className="text-white">{styleConfig.layout?.aspectRatio ?? 'N/A'}</span>
+                      <span className="text-white">{styleConfig.layout?.aspect_ratio ?? 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Status:</span>
@@ -266,15 +287,15 @@ export default function TemplateDetailPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Format:</span>
-                      <span className="text-white">{styleConfig.contentRules?.format ?? 'N/A'}</span>
+                      <span className="text-white">{styleConfig.content_rules?.format ?? 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Perspective:</span>
-                      <span className="text-white">{styleConfig.contentRules?.perspective ?? 'N/A'}</span>
+                      <span className="text-white">{styleConfig.content_rules?.perspective ?? 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Hook Style:</span>
-                      <span className="text-white">{styleConfig.contentRules?.hookStyle ?? 'N/A'}</span>
+                      <span className="text-white">{styleConfig.content_rules?.hook_style ?? 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -297,7 +318,7 @@ export default function TemplateDetailPage() {
             <p className="text-gray-400 mb-4">No posts created yet</p>
             <button
               onClick={() => router.push("/dashboard/generate")}
-              className="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition"
+              className="px-4 py-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg transition"
             >
               Generate Your First Post
             </button>

@@ -1,5 +1,25 @@
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { FiZap } from 'react-icons/fi';
+import { FcGoogle } from 'react-icons/fc';
+import { useAuthStore } from '@/store';
+import { signInWithEmail, signInWithGoogle } from '@/lib/supabase/auth';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const login = useAuthStore((state) => state.login);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 'use client';
 
+import React from "react";
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -120,7 +140,7 @@ export default function LoginPage() {
               {/* Email Button */}
               <button
                 onClick={handleContinueWithEmail}
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary-500/50"
+                className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-kinetic-mint/50"
               >
                 Continue with Email
               </button>
@@ -164,7 +184,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary-500/50"
+                  className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 disabled:bg-gray-700 disabled:cursor-not-allowed text-obsidian py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-kinetic-mint/50"
                 >
                   {isLoading ? 'Logging in...' : 'Log In'}
                 </button>

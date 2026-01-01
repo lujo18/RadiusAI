@@ -1,5 +1,25 @@
+
+import { useState, useEffect } from 'react';
+import { useDashboardStore, useAuthStore } from '@/store';
+import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiUsers, FiActivity, FiArrowRight, FiPlus, FiCheckCircle, FiX } from 'react-icons/fi';
+import { useRouter, useSearchParams } from 'next/navigation';
+import OnboardingModal from '@/components/OnboardingModal';
+import { supabase } from '@/lib/supabase/client';
+
+export default function DashboardPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isGenerating = useDashboardStore((state) => state.isGenerating);
+  const stats = useDashboardStore((state) => state.stats);
+  const login = useAuthStore((state) => state.login);
+  const user = useAuthStore((state) => state.user);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+
+  useEffect(() => {
 'use client';
 
+import React from "react";
 import { useState, useEffect } from 'react';
 import { useDashboardStore, useAuthStore } from '@/store';
 import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiUsers, FiActivity, FiArrowRight, FiPlus, FiCheckCircle, FiX } from 'react-icons/fi';
@@ -28,7 +48,6 @@ export default function DashboardPage() {
         
         if (session && !error) {
           const restoredUser = {
-            id: session.user.id,
             name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
             email: session.user.email || '',
             plan: 'growth' as const,
@@ -68,6 +87,7 @@ export default function DashboardPage() {
     balanceChange: 12.83,
     monthlyRevenue: 34502.19,
     postsScheduled: 98,
+
     totalEngagement: 34567,
     avgEngagementRate: 8.4,
   };
@@ -156,7 +176,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <h1 className="text-3xl font-bold font-main text-white mb-2">Dashboard</h1>
           <p className="text-gray-400">Welcome back! Here's what's happening today.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -370,7 +390,7 @@ export default function DashboardPage() {
       {/* Popular Campaigns Table */}
       <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Popular Campaigns</h2>
+          <h2 className="text-xl font-bold font-main text-white">Popular Campaigns</h2>
           <div className="flex items-center gap-3">
             <div className="badge-blue">as List</div>
             <button className="btn-ghost text-sm">

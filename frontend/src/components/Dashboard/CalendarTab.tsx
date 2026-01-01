@@ -1,3 +1,4 @@
+import React from "react";
 import { FiClock } from 'react-icons/fi';
 
 interface CalendarTabProps {

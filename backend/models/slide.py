@@ -23,18 +23,18 @@ class BackgroundType(str, Enum):
 class BackgroundConfig(BaseModel):
     type: BackgroundType
     color: Optional[str] = None
-    imageUrl: Optional[str] = None
-    gradientColors: Optional[Tuple[str, str]] = None
-    gradientAngle: Optional[float] = None
+    image_url: Optional[str] = None
+    gradient_colors: Optional[Tuple[str, str]] = None
+    gradient_angle: Optional[float] = None
 
 class TextElement(BaseModel):
     id: str
     type: Literal["text"] = "text"
     content: str
     role: Optional[str] = None  # e.g., "header", "body", "cta"
-    fontSize: int
-    fontFamily: str
-    fontStyle: FontStyle = FontStyle.NORMAL
+    font_size: int
+    font_family: str
+    font_style: FontStyle = FontStyle.NORMAL
     color: str
     x: float
     y: float
@@ -50,21 +50,21 @@ class SlideDesign(BaseModel):
     dynamic: bool = False
     
 class SlideSequence(BaseModel):
-    slideNumber: int
-    designId: str
+    slide_number: int
+    design_id: str
 
 class LayoutConfig(BaseModel):
-    aspectRatio: str = "1:1"
+    aspect_ratio: str = "1:1"
     width: int = 1080
     height: int = 1080
 
 class PostSlide(BaseModel):
-    slideNumber: int
-    designId: str
+    slide_number: int
+    design_id: str
     background: BackgroundConfig
     dynamic: bool
     elements: List[TextElement]
-    imagePrompt: Optional[str] = None
+    image_prompt: Optional[str] = None
 
 class PostContent(BaseModel):
     slides: List[PostSlide]

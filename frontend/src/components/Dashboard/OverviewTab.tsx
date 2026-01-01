@@ -1,3 +1,4 @@
+import React from "react";
 import { FiZap, FiRefreshCw, FiCalendar, FiHeart, FiTrendingUp, FiCheckCircle, FiInstagram, FiPlay, FiSettings } from 'react-icons/fi';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import StatCard from './StatCard';
@@ -38,7 +39,7 @@ export default function OverviewTab({
         <button 
           onClick={handleGenerate}
           disabled={isGenerating}
-          className="bg-primary-500 hover:bg-primary-600 disabled:bg-gray-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
+          className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian disabled:bg-gray-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
         >
           {isGenerating ? (
             <>

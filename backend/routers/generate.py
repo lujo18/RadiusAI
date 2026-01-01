@@ -6,7 +6,7 @@ from backend.models.user import BrandSettings
 
 class GeneratePostRequest(BaseModel):
     template: Template
-    brandSettings: BrandSettings  # Match frontend camelCase
+    brand_settings: BrandSettings
     count: int = 1
 
 router = APIRouter(prefix="/api/generate", tags=["generate"])
@@ -21,7 +21,7 @@ async def generate_post_content(
     try:
         post_content = generate_content_with_gemini(
             request.template,
-            request.brandSettings,
+            request.brand_settings,
             request.count
         )
         return {"postContent": post_content, "message": "Content generated successfully"}

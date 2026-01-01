@@ -30,9 +30,9 @@ class User(BaseModel):
     name: str
     plan: str = "free"  # free, pro, enterprise
     default_template_id: Optional[str] = None
-    brand_settings: BrandSettings
-    created_at: datetime
-    updated_at: datetime
+    brand_settings: dict  # Supabase: JSON
+    created_at: str  # Supabase: string (ISO)
+    updated_at: str  # Supabase: string (ISO)
 class UpdateProfileRequest(BaseModel):
     """Request to update user profile"""
     name: Optional[str] = None

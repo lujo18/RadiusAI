@@ -1,8 +1,29 @@
-'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FiZap, FiCheck, FiArrowRight, FiPlay, FiStar } from 'react-icons/fi';
+import { FiCheck, FiArrowRight, FiPlay, FiStar } from 'react-icons/fi';
+import Image from 'next/image';
+import { landingContent, DynamicMetrics } from '@/content/landing';
+import PublicNavbar from '@/components/PublicNavbar';
+
+interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  company: string | null;
+  quote: string;
+  avatar_url: string | null;
+  rating: number;
+}
+
+export default function LandingPage() {
+'use client';
+
+import React from "react";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { FiCheck, FiArrowRight, FiPlay, FiStar } from 'react-icons/fi';
+import Image from 'next/image';
 import { landingContent, DynamicMetrics } from '@/content/landing';
 import PublicNavbar from '@/components/PublicNavbar';
 
@@ -50,7 +71,7 @@ export default function LandingPage() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-main font-extrabold text-white mb-6 leading-tight">
             {landingContent.hero.headline}
           </h1>
 
@@ -118,7 +139,7 @@ export default function LandingPage() {
       <section id="benefits" className="py-20 px-6 bg-dark-500">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-4">
               {landingContent.benefits.headline}
             </h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -143,7 +164,7 @@ export default function LandingPage() {
           ========================================== */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-white text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold font-main text-white text-center mb-16">
             {landingContent.howItWorks.headline}
           </h2>
 
@@ -167,7 +188,7 @@ export default function LandingPage() {
       <section id="pricing" className="py-20 px-6 bg-dark-500">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-4">
               {landingContent.pricing.headline}
             </h2>
             <p className="text-xl text-gray-400">{landingContent.pricing.subheadline}</p>
@@ -190,7 +211,7 @@ export default function LandingPage() {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-4">
               {landingContent.testimonials.headline}
             </h2>
             <p className="text-xl text-gray-400">{landingContent.testimonials.subheadline}</p>
@@ -258,7 +279,7 @@ export default function LandingPage() {
           ========================================== */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center glass-card p-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-6">
             {landingContent.cta.headline}
           </h2>
           <p className="text-xl text-gray-400 mb-8">
@@ -285,8 +306,8 @@ export default function LandingPage() {
             {/* Logo + Tagline */}
             <div>
               <Link href="/" className="flex items-center space-x-2 mb-4">
-                <FiZap className="text-primary-500 text-2xl" />
-                <span className="text-xl font-bold text-white">ViralStack</span>
+                <Image src="/images/icon-primary.png" alt="Radius Logo" width={28} height={28} />
+                <span className="text-xl font-bold text-white">Radius</span>
               </Link>
               <p className="text-gray-400 text-sm">{landingContent.footer.tagline}</p>
             </div>

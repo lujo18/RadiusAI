@@ -1,3 +1,5 @@
+
+import React from "react";
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -179,7 +181,7 @@ export default function PricingPage() {
             {pricingContent.hero.badge}
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold font-main text-white mb-6">
             {pricingContent.hero.headline}
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -361,7 +363,7 @@ export default function PricingPage() {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">
+            <h2 className="text-4xl font-bold font-main text-white mb-4">
               {pricingContent.comparison.headline}
             </h2>
             <p className="text-xl text-gray-400">{pricingContent.comparison.subheadline}</p>
@@ -443,7 +445,7 @@ export default function PricingPage() {
       {/* TESTIMONIALS */}
       <section className="py-20 px-6 bg-dark-500">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-white text-center mb-4">
+          <h2 className="text-4xl font-bold font-main text-white text-center mb-4">
             Loved by people worldwide
           </h2>
           <p className="text-xl text-gray-400 text-center mb-12">
@@ -479,7 +481,7 @@ export default function PricingPage() {
       {/* FAQ */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold text-white text-center mb-12">
+          <h2 className="text-4xl font-bold font-main text-white text-center mb-12">
             {pricingContent.faq.headline}
           </h2>
 
@@ -500,7 +502,7 @@ export default function PricingPage() {
       {/* FINAL CTA */}
       <section className="py-20 px-6 bg-dark-500">
         <div className="max-w-4xl mx-auto text-center glass-card p-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-6">
             {pricingContent.cta.headline}
           </h2>
           <p className="text-xl text-gray-400 mb-8">

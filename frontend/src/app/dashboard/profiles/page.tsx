@@ -1,5 +1,25 @@
+
+import { useState } from 'react';
+import { FiPlus } from 'react-icons/fi';
+import { useProfiles } from '@/lib/api/hooks';
+import CreateProfileDialog from '@/components/Profiles/CreateProfileDialog';
+import EditProfileDialog from '@/components/Profiles/EditProfileDialog';
+import ProfileCard from '@/components/Profiles/ProfileCard';
+
+export default function ProfilesPage() {
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
+  
+  const { data: profiles, isLoading } = useProfiles();
+
+  const editingProfile = profiles?.find(p => p.id === editingProfileId);
+
+  return (
+    <div className="h-full p-8">
+      <div className="max-w-7xl mx-auto">
 'use client';
 
+import React from "react";
 import { useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { useProfiles } from '@/lib/api/hooks';
@@ -28,7 +48,7 @@ export default function ProfilesPage() {
           </div>
           <button
             onClick={() => setShowCreateDialog(true)}
-            className="flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition"
+            className="flex items-center gap-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-medium transition"
           >
             <FiPlus className="text-xl" />
             Create Profile
@@ -62,7 +82,6 @@ export default function ProfilesPage() {
         <CreateProfileDialog onClose={() => setShowCreateDialog(false)} />
       )}
       
-      {editingProfile && (
         <EditProfileDialog
           profile={editingProfile}
           onClose={() => setEditingProfileId(null)}
@@ -102,6 +121,7 @@ function ProfileCardSkeleton() {
         <div className="flex-1">
           <div className="h-3 bg-gray-700 rounded w-16 mb-1"></div>
           <div className="h-5 bg-gray-700 rounded w-8"></div>
+
         </div>
       </div>
     </div>
@@ -120,7 +140,7 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
       </p>
       <button
         onClick={onCreateClick}
-        className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-lg font-medium transition"
+        className="inline-flex items-center gap-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-medium transition"
       >
         <FiPlus className="text-xl" />
         Create Your First Profile

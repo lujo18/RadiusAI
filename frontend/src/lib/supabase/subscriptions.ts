@@ -11,8 +11,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-console.log("ADMIN", supabaseAdmin)
-
 export interface SubscriptionStatus {
   isActive: boolean;
   status: string | null;

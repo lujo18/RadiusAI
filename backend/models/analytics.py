@@ -21,13 +21,13 @@ class PostMetrics(BaseModel):
 
 class Analytics(BaseModel):
     id: str
-    postId: str
-    templateId: str
-    userId: str
-    platform: Literal["instagram", "tiktok"]
-    date: datetime
-    metrics: PostMetrics
-    variantSetId: str | None = None
+    post_id: str
+    template_id: str
+    user_id: str
+    platform: str  # Supabase: string
+    date: str  # Supabase: string (ISO)
+    metrics: dict  # Supabase: JSON
+    variant_set_id: Optional[str] = None
 
 class TrackAnalyticsRequest(BaseModel):
     postId: str

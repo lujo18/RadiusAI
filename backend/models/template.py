@@ -59,13 +59,16 @@ class Template(BaseModel):
     id: str
     name: str
     is_default: bool = False
-    category: TemplateCategory
-    status: TemplateStatus = TemplateStatus.ACTIVE
-    created_at: datetime
-    updated_at: datetime
-    style_config: StyleConfig
+    category: str  # Supabase: string
+    status: str  # Supabase: string
+    created_at: str  # Supabase: string (ISO)
+    updated_at: str  # Supabase: string (ISO)
+    style_config: dict  # Supabase: JSON
     gemini_prompt: Optional[str] = None
-    performance: TemplatePerformance = TemplatePerformance()
+    profile_id: Optional[str] = None
+    user_id: Optional[str] = None
+    tags: Optional[List[str]] = None
+    favorite: Optional[bool] = None
     parent_template_id: Optional[str] = None
 
 class CreateTemplateRequest(BaseModel):
