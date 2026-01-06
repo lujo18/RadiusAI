@@ -1,5 +1,6 @@
-import React from "react";
+import React, { ReactEventHandler } from "react";
 import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   FiPlus,
   FiTrash2,
@@ -12,7 +13,7 @@ import {
   FiLayers,
 } from "react-icons/fi";
 import Image from "next/image";
-import { Stage, Layer, Rect, Text as KonvaText, Line } from "react-konva";
+import { Stage, Layer, Rect, Text as KonvaText, Line, Group } from "react-konva";
 import type { Tables } from "@/types/database";
 import { TextElement, TextElementsArraySchema } from "@/types/parseTextElement";
 import { BackgroundSchema } from "@/types/parseBackground";
@@ -29,7 +30,9 @@ const ASPECT_RATIOS = {
   "9:16": { width: 1080, height: 1920 },
 } as const;
 
-import Toggle from "./Toggle";
+import { Switch } from "../animate-ui/components/radix/switch";
+import { IconButton } from "../animate-ui/components/buttons/icon";
+import { TIKTOK_STYLES, STYLE_CATEGORIES, getTiktokStyle, applyTiktokStyleToKonva } from "@/lib/konva/tiktokTextStyles";
 
 interface Step2VisualEditorProps {
   aspectRatio: AspectRatio;
@@ -267,18 +270,36 @@ export default function Step2VisualEditor({
     (el: TextElement) => el.id === selectedElementId
   );
 
+  const applyPreset = (presetName: string) => {
+    const preset = getTiktokStyle(presetName);
+    if (!preset || !selectedElement) return;
+
+    updateElement(selectedElement.id, {
+      font_family: preset.fontFamily,
+      font_size: preset.fontSize,
+      color: preset.fill,
+      font_style: preset.fontStyle || 'normal',
+      stroke: preset.stroke,
+      stroke_width: preset.strokeWidth,
+      shadow_color: preset.shadowColor,
+      shadow_blur: preset.shadowBlur,
+      shadow_offset_x: preset.shadowOffset?.x,
+      shadow_offset_y: preset.shadowOffset?.y,
+      shadow_opacity: preset.shadowOpacity,
+      letter_spacing: preset.letterSpacing,
+      line_height: preset.lineHeight,
+    });
+  };
+
   return (
     <div className="h-full flex">
       {/* Left Sidebar - Design List */}
-      <div className="w-64 border-r border-gray-700 flex flex-col">
-        <div className="p-4 border-b border-gray-700">
+      <div className="w-64 border-r border flex flex-col">
+        <div className="p-4 border-b border">
           <h3 className="font-semibold mb-2">Slide Designs</h3>
-          <button
-            onClick={addNewDesign}
-            className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
-          >
+          <Button onClick={addNewDesign} className="w-full">
             <FiPlus /> New Design
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-2">
@@ -288,8 +309,8 @@ export default function Step2VisualEditor({
               onClick={() => setSelectedDesignId(design.id)}
               className={`p-3 rounded-lg cursor-pointer border-2 transition ${
                 selectedDesignId === design.id
-                  ? "border-primary-500 bg-primary-500/10"
-                  : "border-gray-700 bg-gray-800/50 hover:border-gray-600"
+                  ? "border-primary bg-primary/10"
+                  : "border bg-muted/50 hover:border/50"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
@@ -303,30 +324,30 @@ export default function Step2VisualEditor({
                   {design.id}
                 </span>
                 <div className="flex gap-1">
-                  <button
+                  <IconButton
                     onClick={(e) => {
                       e.stopPropagation();
                       duplicateDesign(design.id);
                     }}
-                    className="p-1 hover:bg-gray-700 rounded"
                   >
-                    <FiCopy size={14} />
-                  </button>
+                    <FiCopy />
+                  </IconButton>
+
                   {slideDesigns.length > 1 && (
-                    <button
+                    <IconButton
+                      variant={"destructive"}
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteDesign(design.id);
                       }}
-                      className="p-1 hover:bg-red-500/20 text-red-400 rounded"
                     >
-                      <FiTrash2 size={14} />
-                    </button>
+                      <FiTrash2 />
+                    </IconButton>
                   )}
                 </div>
               </div>
-              <p className="text-xs text-gray-400">{design.name}</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground">{design.name}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
                 {(design.text_elements || []).length} elements
               </p>
             </div>
@@ -336,56 +357,44 @@ export default function Step2VisualEditor({
       {/* Center Canvas */}
       <div
         ref={containerRef}
-        className="flex-1 flex flex-col items-center bg-gray-800/30 p-4 overflow-auto"
+        className="flex-1 flex flex-col items-center bg-muted/30 p-4 overflow-auto"
       >
         <div className="mb-2 flex items-center gap-3 flex-shrink-0">
           {/* Aspect Ratio Selector */}
           <div className="flex gap-2">
             {Object.entries(ASPECT_RATIOS).map(([ratio, dims]) => (
-              <button
+              <Button
                 key={ratio}
                 onClick={() => setAspectRatio(ratio as AspectRatio)}
-                className={`px-3 py-1.5 rounded text-xs font-semibold transition ${
+                className={
                   aspectRatio === ratio
-                    ? "bg-primary-500"
-                    : "bg-gray-700 hover:bg-gray-600"
-                }`}
+                    ? "bg-primary"
+                    : "bg-muted hover:bg-muted/80"
+                }
               >
                 {ratio}
-              </button>
+              </Button>
             ))}
           </div>
 
           {/* Zoom Controls */}
           <div className="flex items-center gap-2 ml-4 border-l border-gray-600 pl-4">
-            <button
-              onClick={handleZoomOut}
-              className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded transition"
-              title="Zoom Out"
-            >
+            <Button onClick={handleZoomOut} title="Zoom Out">
               <FiZoomOut size={16} />
-            </button>
-            <button
-              onClick={handleResetZoom}
-              className="px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs font-semibold transition"
-              title="Fit to Screen"
-            >
+            </Button>
+            <Button onClick={handleResetZoom} title="Fit to Screen">
               {Math.round(zoom * 100)}%
-            </button>
-            <button
-              onClick={handleZoomIn}
-              className="p-1.5 bg-gray-700 hover:bg-gray-600 rounded transition"
-              title="Zoom In"
-            >
+            </Button>
+            <Button onClick={handleZoomIn} title="Zoom In">
               <FiZoomIn size={16} />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Scrollable Canvas Container */}
         <div className="flex-1 w-full flex items-center justify-center">
           <div
-            className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden m-4"
+            className="bg-muted rounded-lg shadow-2xl overflow-hidden m-4"
             style={{
               width: canvasDimensions.width * zoom,
               height: canvasDimensions.height * zoom,
@@ -475,51 +484,102 @@ export default function Step2VisualEditor({
                     const centerX = canvasDimensions.width / 2;
                     const centerY = canvasDimensions.height / 2;
 
+                    const baseProps = {
+                      text: element.content,
+                      x: 0, // Relative to group
+                      y: 0, // Relative to group
+                      width: element.width,
+                      fontSize: element.font_size,
+                      fontFamily: element.font_family,
+                      fontStyle: element.font_style,
+                      align: element.align,
+                      letterSpacing: element.letter_spacing,
+                      lineHeight: element.line_height,
+                      perfectDrawEnabled: false,
+                    };
+
+                    const handleDragMove = (e: any) => {
+                      const node = e.target;
+                      const elementCenterX = node.x() + node.width() / 2;
+                      const elementCenterY = node.y() + node.height() / 2;
+
+                      let newX = node.x();
+                      let newY = node.y();
+
+                      // Snap to vertical center
+                      if (Math.abs(elementCenterX - centerX) < SNAP_THRESHOLD) {
+                        newX = centerX - node.width() / 2;
+                      }
+
+                      // Snap to horizontal center
+                      if (Math.abs(elementCenterY - centerY) < SNAP_THRESHOLD) {
+                        newY = centerY - node.height() / 2;
+                      }
+
+                      node.x(newX);
+                      node.y(newY);
+                    };
+
+                    const handleDragEnd = (e: any) => {
+                      const node = e.target;
+                      updateElement(element.id, {
+                        x: node.x(),
+                        y: node.y(),
+                      });
+                    };
+
+                    // If stroke exists, render with double-layer technique for clean outline
+                    if (element.stroke && element.stroke_width) {
+                      return (
+                        <Group
+                          key={element.id}
+                          x={element.x}
+                          y={element.y}
+                          draggable
+                          onClick={() => setSelectedElementId(element.id)}
+                          onTap={() => setSelectedElementId(element.id)}
+                          onDragMove={handleDragMove}
+                          onDragEnd={handleDragEnd}
+                        >
+                          {/* Stroke layer (outline) */}
+                          <KonvaText
+                            {...baseProps}
+                            fill={element.stroke}
+                            stroke={element.stroke}
+                            strokeWidth={element.stroke_width}
+                            shadowColor={element.shadow_color}
+                            shadowBlur={element.shadow_blur}
+                            shadowOffsetX={element.shadow_offset_x}
+                            shadowOffsetY={element.shadow_offset_y}
+                            shadowOpacity={element.shadow_opacity}
+                          />
+                          {/* Fill layer (on top) */}
+                          <KonvaText
+                            {...baseProps}
+                            fill={element.color}
+                          />
+                        </Group>
+                      );
+                    }
+
+                    // No stroke: simple single-layer text
                     return (
                       <KonvaText
                         key={element.id}
-                        text={element.content}
+                        {...baseProps}
                         x={element.x}
                         y={element.y}
-                        width={element.width}
-                        fontSize={element.font_size}
-                        fontFamily={element.font_family}
-                        fontStyle={element.font_style}
                         fill={element.color}
-                        align={element.align}
-                        perfectDrawEnabled={false}
+                        shadowColor={element.shadow_color}
+                        shadowBlur={element.shadow_blur}
+                        shadowOffsetX={element.shadow_offset_x}
+                        shadowOffsetY={element.shadow_offset_y}
+                        shadowOpacity={element.shadow_opacity}
                         draggable
                         onClick={() => setSelectedElementId(element.id)}
                         onTap={() => setSelectedElementId(element.id)}
-                        onDragMove={(e) => {
-                          const node = e.target;
-                          const elementCenterX = node.x() + node.width() / 2;
-                          const elementCenterY = node.y() + node.height() / 2;
-
-                          let newX = node.x();
-                          let newY = node.y();
-                          let showVerticalGuide = false;
-                          let showHorizontalGuide = false;
-
-                          // Snap to vertical center
-                          if (
-                            Math.abs(elementCenterX - centerX) < SNAP_THRESHOLD
-                          ) {
-                            newX = centerX - node.width() / 2;
-                            showVerticalGuide = true;
-                          }
-
-                          // Snap to horizontal center
-                          if (
-                            Math.abs(elementCenterY - centerY) < SNAP_THRESHOLD
-                          ) {
-                            newY = centerY - node.height() / 2;
-                            showHorizontalGuide = true;
-                          }
-
-                          node.x(newX);
-                          node.y(newY);
-                        }}
+                        onDragMove={handleDragMove}
+                        onDragEnd={handleDragEnd}
                       />
                     );
                   }
@@ -530,323 +590,522 @@ export default function Step2VisualEditor({
         </div>
 
         {/* Right Sidebar - Properties Panel */}
-        <div className="w-80 border-l border-gray-700 flex flex-col overflow-y-auto">
-          {/* Design Name */}
-          <div className="p-4 border-b border-gray-700">
-            <label className="block text-xs font-semibold mb-2 text-gray-400">
-              Design Name
-            </label>
-            <input
-              type="text"
-              value={selectedDesign?.name || ""}
-              onChange={(e) => {
-                setSlideDesigns(
-                  slideDesigns.map((d: SlideDesign) =>
-                    d.id === selectedDesignId
-                      ? { ...d, name: e.target.value }
-                      : d
-                  )
-                );
-              }}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
+      </div>
+      <div className="w-80 border-l border-gray-700 flex flex-col overflow-y-auto">
+        {/* Design Name */}
+        <div className="p-4 border-b border-gray-700">
+          <label className="block text-xs font-semibold mb-2 text-gray-400">
+            Design Name
+          </label>
+          <input
+            type="text"
+            value={selectedDesign?.name || ""}
+            onChange={(e) => {
+              setSlideDesigns(
+                slideDesigns.map((d: SlideDesign) =>
+                  d.id === selectedDesignId ? { ...d, name: e.target.value } : d
+                )
+              );
+            }}
+            className="w-full bg-muted border border-muted/80 rounded px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div className="p-4 border-b border-muted/80">
+          <div className="flex flex-row flex-1 justify-between items-center mb-2">
+            <h3 className="font-semibold text-sm flex gap-2">
+              Dynamic Content
+            </h3>
+            <Switch
+              checked={selectedDesign?.dynamic || false}
+              onCheckedChange={(checked) => toggleDynmaic(checked)}
             />
           </div>
+          <label className="block text-xs font-semibold mb-2 text-muted">
+            Text elements on this page will be autofilled when generating
+            content.
+          </label>
+        </div>
 
-          <div className="p-4 border-b border-gray-700">
-            <div className="flex flex-row flex-1 justify-between items-center mb-2">
-              <h3 className="font-semibold text-sm flex gap-2">
-                Dynamic Content
-              </h3>
-              <Toggle
-                checked={selectedDesign?.dynamic || false}
-                onChange={() => toggleDynmaic(!selectedDesign?.dynamic)}
-              />
-            </div>
-            <label className="block text-xs font-semibold mb-2 text-gray-400">
-              Text elements on this page will be autofilled when generating
-              content.
-            </label>
+        {/* Add Elements */}
+        <div className="p-4 border-b border-muted/80">
+          <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
+            <FiPlus /> Add Element
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => addTextElement("header")}>Header</Button>
+            <Button onClick={() => addTextElement("subheader")}>
+              Subheader
+            </Button>
+            <Button onClick={() => addTextElement("body")}>Body</Button>
+            <Button onClick={() => addTextElement("caption")}>Caption</Button>
           </div>
+        </div>
 
-          {/* Add Elements */}
-          <div className="p-4 border-b border-gray-700">
-            <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-              <FiPlus /> Add Element
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => addTextElement("header")}
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-              >
-                <FiType /> Header
-              </button>
-              <button
-                onClick={() => addTextElement("subheader")}
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-              >
-                <FiType /> Subheader
-              </button>
-              <button
-                onClick={() => addTextElement("body")}
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-              >
-                <FiType /> Body
-              </button>
-              <button
-                onClick={() => addTextElement("caption")}
-                className="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-3 py-2 rounded text-xs font-semibold flex items-center justify-center gap-2"
-              >
-                <FiType /> Caption
-              </button>
+        {/* Background Settings */}
+        <div className="p-4 border-b border-gray-700">
+          <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
+            <FiImage /> Background
+          </h3>
+
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-semibold mb-2 text-gray-400">
+                Type
+              </label>
+              <div className="flex gap-2">
+                {["solid", "gradient", "image"].map((type) => (
+                  <Button
+                    key={type}
+                    onClick={() =>
+                      updateBackground({
+                        type: type as "solid" | "gradient" | "image",
+                      })
+                    }
+                  >
+                    {type}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Background Settings */}
-          <div className="p-4 border-b border-gray-700">
-            <h3 className="font-semibold mb-3 text-sm flex items-center gap-2">
-              <FiImage /> Background
-            </h3>
-
-            <div className="space-y-3">
+            {selectedDesign?.background?.type === "solid" && (
               <div>
                 <label className="block text-xs font-semibold mb-2 text-gray-400">
-                  Type
+                  Color
                 </label>
-                <div className="flex gap-2">
-                  {["solid", "gradient", "image"].map((type) => (
-                    <button
-                      key={type}
-                      onClick={() =>
-                        updateBackground({
-                          type: type as "solid" | "gradient" | "image",
-                        })
-                      }
-                      className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
-                        selectedDesign?.background?.type === type
-                          ? "bg-primary-500"
-                          : "bg-gray-700 hover:bg-gray-600"
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
+                <input
+                  type="color"
+                  value={selectedDesign.background.color || "#000000"}
+                  onChange={(e) => updateBackground({ color: e.target.value })}
+                  className="w-full h-10 rounded cursor-pointer"
+                />
+              </div>
+            )}
+
+            {selectedDesign?.background?.type === "gradient" && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold mb-2 text-gray-400">
+                    Color 1
+                  </label>
+                  <input
+                    type="color"
+                    value={
+                      selectedDesign.background.gradient_colors?.[0] ||
+                      "#667eea"
+                    }
+                    onChange={(e) =>
+                      updateBackground({
+                        gradient_colors: [
+                          e.target.value,
+                          selectedDesign.background.gradient_colors?.[1] ||
+                            "#764ba2",
+                        ],
+                      })
+                    }
+                    className="w-full h-10 rounded cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold mb-2 text-gray-400">
+                    Color 2
+                  </label>
+                  <input
+                    type="color"
+                    value={
+                      selectedDesign.background.gradient_colors?.[1] ||
+                      "#764ba2"
+                    }
+                    onChange={(e) =>
+                      updateBackground({
+                        gradient_colors: [
+                          selectedDesign.background.gradient_colors?.[0] ||
+                            "#667eea",
+                          e.target.value,
+                        ],
+                      })
+                    }
+                    className="w-full h-10 rounded cursor-pointer"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Element Properties */}
+        {selectedElement && (
+          <div className="p-4 border-b border-gray-700">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <FiLayers /> Text Properties
+              </h3>
+              <Button onClick={() => deleteElement(selectedElement.id)}>
+                <FiTrash2 size={16} />
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {/* TikTok Text Presets */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  TikTok Presets
+                </label>
+                <div className="space-y-2">
+                  {/* Classic */}
+                  <div>
+                    <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Classic</p>
+                    <div className="grid grid-cols-1 gap-1">
+                      {STYLE_CATEGORIES.classic.map((styleName) => (
+                        <Button
+                          key={styleName}
+                          onClick={() => applyPreset(styleName)}
+                          className="text-xs py-1 h-7 capitalize bg-muted hover:bg-primary/20"
+                        >
+                          {styleName}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Bold */}
+                  <div>
+                    <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Bold & Impactful</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {STYLE_CATEGORIES.bold.map((styleName) => (
+                        <Button
+                          key={styleName}
+                          onClick={() => applyPreset(styleName)}
+                          className="text-xs py-1 h-7 capitalize bg-muted hover:bg-primary/20"
+                        >
+                          {styleName.replace(/([A-Z])/g, ' $1').trim()}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Vibrant */}
+                  <div>
+                    <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Vibrant</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {STYLE_CATEGORIES.vibrant.map((styleName) => (
+                        <Button
+                          key={styleName}
+                          onClick={() => applyPreset(styleName)}
+                          className="text-xs py-1 h-7 capitalize bg-muted hover:bg-primary/20"
+                        >
+                          {styleName.replace(/([A-Z])/g, ' $1').trim()}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Clean */}
+                  <div>
+                    <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Clean & Minimal</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {STYLE_CATEGORIES.clean.map((styleName) => (
+                        <Button
+                          key={styleName}
+                          onClick={() => applyPreset(styleName)}
+                          className="text-xs py-1 h-7 capitalize bg-muted hover:bg-primary/20"
+                        >
+                          {styleName.replace(/([A-Z])/g, ' $1').trim()}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Soft */}
+                  <div>
+                    <p className="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Soft & Friendly</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {STYLE_CATEGORIES.soft.map((styleName) => (
+                        <Button
+                          key={styleName}
+                          onClick={() => applyPreset(styleName)}
+                          className="text-xs py-1 h-7 capitalize bg-muted hover:bg-primary/20"
+                        >
+                          {styleName.replace(/([A-Z])/g, ' $1').trim()}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {selectedDesign?.background?.type === "solid" && (
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  Content
+                </label>
+                <textarea
+                  value={
+                    selectedDesign?.dynamic
+                      ? selectedElement.content
+                      : "Content will be generated by AI"
+                  }
+                  onChange={(e) =>
+                    updateElement(selectedElement.id, {
+                      content: e.target.value,
+                    })
+                  }
+                  className="w-full bg-muted border border-muted/80 rounded px-3 py-2 text-sm resize-none"
+                  rows={3}
+                  disabled={!selectedDesign?.dynamic}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold mb-2 text-gray-400">
+                    Font Size
+                  </label>
+                  <input
+                    type="number"
+                    value={selectedElement.font_size}
+                    onChange={(e) =>
+                      updateElement(selectedElement.id, {
+                        font_size: parseInt(e.target.value),
+                      })
+                    }
+                    className="w-full bg-muted border border-muted/80 rounded px-3 py-2 text-sm"
+                    min={12}
+                    max={120}
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-semibold mb-2 text-gray-400">
                     Color
                   </label>
                   <input
                     type="color"
-                    value={selectedDesign.background.color || "#000000"}
-                    onChange={(e) =>
-                      updateBackground({ color: e.target.value })
-                    }
-                    className="w-full h-10 rounded cursor-pointer"
-                  />
-                </div>
-              )}
-
-              {selectedDesign?.background?.type === "gradient" && (
-                <>
-                  <div>
-                    <label className="block text-xs font-semibold mb-2 text-gray-400">
-                      Color 1
-                    </label>
-                    <input
-                      type="color"
-                      value={
-                        selectedDesign.background.gradient_colors?.[0] ||
-                        "#667eea"
-                      }
-                      onChange={(e) =>
-                        updateBackground({
-                          gradient_colors: [
-                            e.target.value,
-                            selectedDesign.background.gradient_colors?.[1] ||
-                              "#764ba2",
-                          ],
-                        })
-                      }
-                      className="w-full h-10 rounded cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold mb-2 text-gray-400">
-                      Color 2
-                    </label>
-                    <input
-                      type="color"
-                      value={
-                        selectedDesign.background.gradient_colors?.[1] ||
-                        "#764ba2"
-                      }
-                      onChange={(e) =>
-                        updateBackground({
-                          gradient_colors: [
-                            selectedDesign.background.gradient_colors?.[0] ||
-                              "#667eea",
-                            e.target.value,
-                          ],
-                        })
-                      }
-                      className="w-full h-10 rounded cursor-pointer"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Element Properties */}
-          {selectedElement && (
-            <div className="p-4 border-b border-gray-700">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <FiLayers /> Text Properties
-                </h3>
-                <button
-                  onClick={() => deleteElement(selectedElement.id)}
-                  className="text-red-400 hover:text-red-300"
-                >
-                  <FiTrash2 size={16} />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-2 text-gray-400">
-                    Content
-                  </label>
-                  <textarea
-                    value={
-                      selectedDesign?.dynamic
-                        ? selectedElement.content
-                        : "Content will be generated by AI"
-                    }
+                    value={selectedElement.color}
                     onChange={(e) =>
                       updateElement(selectedElement.id, {
-                        content: e.target.value,
+                        color: e.target.value,
                       })
                     }
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm resize-none"
-                    rows={3}
-                    disabled={!selectedDesign?.dynamic}
+                    className="w-full h-9 rounded cursor-pointer"
                   />
                 </div>
+              </div>
 
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  Font Family
+                </label>
+                <select
+                  value={selectedElement.font_family}
+                  onChange={(e) =>
+                    updateElement(selectedElement.id, {
+                      font_family: e.target.value,
+                    })
+                  }
+                  className="w-full bg-muted border border-muted/80 rounded px-3 py-2 text-sm"
+                >
+                  <option>Inter</option>
+                  <option>Montserrat</option>
+                  <option>Poppins</option>
+                  <option>Georgia</option>
+                  <option>Arial</option>
+                  <option>Helvetica</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  Font Style
+                </label>
+                <div className="flex gap-2">
+                  {["normal", "bold", "italic"].map((style) => (
+                    <Button
+                      key={style}
+                      onClick={() =>
+                        updateElement(selectedElement.id, {
+                          font_style: style as any,
+                        })
+                      }
+                      className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
+                        selectedElement.font_style === style
+                          ? "bg-primary"
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
+                    >
+                      {style}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  Alignment
+                </label>
+                <div className="flex gap-2">
+                  {["left", "center", "right"].map((align) => (
+                    <Button
+                      key={align}
+                      onClick={() =>
+                        updateElement(selectedElement.id, {
+                          align: align as any,
+                        })
+                      }
+                      className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
+                        selectedElement.align === align
+                          ? "bg-primary"
+                          : "bg-muted hover:bg-muted/80"
+                      }`}
+                    >
+                      {align}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stroke/Outline */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  Outline (Stroke)
+                </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold mb-2 text-gray-400">
-                      Font Size
-                    </label>
+                    <label className="block text-[10px] text-gray-500 mb-1">Color</label>
                     <input
-                      type="number"
-                      value={selectedElement.font_size}
+                      type="color"
+                      value={selectedElement.stroke || "#000000"}
                       onChange={(e) =>
                         updateElement(selectedElement.id, {
-                          font_size: parseInt(e.target.value),
+                          stroke: e.target.value,
                         })
                       }
-                      className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
-                      min={12}
-                      max={120}
+                      className="w-full h-8 rounded cursor-pointer"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold mb-2 text-gray-400">
-                      Color
-                    </label>
+                    <label className="block text-[10px] text-gray-500 mb-1">Width</label>
                     <input
-                      type="color"
-                      value={selectedElement.color}
+                      type="number"
+                      value={selectedElement.stroke_width || 0}
                       onChange={(e) =>
                         updateElement(selectedElement.id, {
-                          color: e.target.value,
+                          stroke_width: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="w-full h-9 rounded cursor-pointer"
+                      className="w-full bg-muted border border-muted/80 rounded px-2 py-1 text-sm"
+                      min={0}
+                      max={20}
                     />
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-semibold mb-2 text-gray-400">
-                    Font Family
-                  </label>
-                  <select
-                    value={selectedElement.font_family}
-                    onChange={(e) =>
-                      updateElement(selectedElement.id, {
-                        font_family: e.target.value,
-                      })
-                    }
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm"
-                  >
-                    <option>Inter</option>
-                    <option>Montserrat</option>
-                    <option>Poppins</option>
-                    <option>Georgia</option>
-                    <option>Arial</option>
-                    <option>Helvetica</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold mb-2 text-gray-400">
-                    Font Style
-                  </label>
-                  <div className="flex gap-2">
-                    {["normal", "bold", "italic"].map((style) => (
-                      <button
-                        key={style}
-                        onClick={() =>
-                          updateElement(selectedElement.id, {
-                            font_style: style as any,
-                          })
-                        }
-                        className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
-                          selectedElement.font_style === style
-                            ? "bg-primary-500"
-                            : "bg-gray-700 hover:bg-gray-600"
-                        }`}
-                      >
-                        {style}
-                      </button>
-                    ))}
+              {/* Shadow */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  Shadow
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1">Color</label>
+                    <input
+                      type="color"
+                      value={selectedElement.shadow_color || "#000000"}
+                      onChange={(e) =>
+                        updateElement(selectedElement.id, {
+                          shadow_color: e.target.value,
+                        })
+                      }
+                      className="w-full h-8 rounded cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1">Blur</label>
+                    <input
+                      type="number"
+                      value={selectedElement.shadow_blur || 0}
+                      onChange={(e) =>
+                        updateElement(selectedElement.id, {
+                          shadow_blur: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full bg-muted border border-muted/80 rounded px-2 py-1 text-sm"
+                      min={0}
+                      max={50}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1">Offset X</label>
+                    <input
+                      type="number"
+                      value={selectedElement.shadow_offset_x || 0}
+                      onChange={(e) =>
+                        updateElement(selectedElement.id, {
+                          shadow_offset_x: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full bg-muted border border-muted/80 rounded px-2 py-1 text-sm"
+                      min={-20}
+                      max={20}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1">Offset Y</label>
+                    <input
+                      type="number"
+                      value={selectedElement.shadow_offset_y || 0}
+                      onChange={(e) =>
+                        updateElement(selectedElement.id, {
+                          shadow_offset_y: parseInt(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full bg-muted border border-muted/80 rounded px-2 py-1 text-sm"
+                      min={-20}
+                      max={20}
+                    />
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-semibold mb-2 text-gray-400">
-                    Alignment
-                  </label>
-                  <div className="flex gap-2">
-                    {["left", "center", "right"].map((align) => (
-                      <button
-                        key={align}
-                        onClick={() =>
-                          updateElement(selectedElement.id, {
-                            align: align as any,
-                          })
-                        }
-                        className={`flex-1 px-3 py-2 rounded text-xs font-semibold capitalize ${
-                          selectedElement.align === align
-                            ? "bg-primary-500"
-                            : "bg-gray-700 hover:bg-gray-600"
-                        }`}
-                      >
-                        {align}
-                      </button>
-                    ))}
+              {/* Advanced Typography */}
+              <div>
+                <label className="block text-xs font-semibold mb-2 text-gray-400">
+                  Advanced Typography
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1">Letter Spacing</label>
+                    <input
+                      type="number"
+                      value={selectedElement.letter_spacing || 0}
+                      onChange={(e) =>
+                        updateElement(selectedElement.id, {
+                          letter_spacing: parseFloat(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full bg-muted border border-muted/80 rounded px-2 py-1 text-sm"
+                      min={-10}
+                      max={20}
+                      step={0.5}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-gray-500 mb-1">Line Height</label>
+                    <input
+                      type="number"
+                      value={selectedElement.line_height || 1}
+                      onChange={(e) =>
+                        updateElement(selectedElement.id, {
+                          line_height: parseFloat(e.target.value) || 1,
+                        })
+                      }
+                      className="w-full bg-muted border border-muted/80 rounded px-2 py-1 text-sm"
+                      min={0.5}
+                      max={3}
+                      step={0.1}
+                    />
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

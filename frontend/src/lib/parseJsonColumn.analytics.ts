@@ -23,7 +23,7 @@ export const VariantSetResultsSchema = z.object({
   winningTemplateId: z.string(),
   confidenceScore: z.number(),
   insights: z.array(z.string()),
-  stats: z.record(z.any()).optional(), // You may want to refine this type
+  stats: z.record(z.string(), z.any()).optional(), // You may want to refine this type
   completedAt: z.string().optional(),
 });
 export type VariantSetResults = z.infer<typeof VariantSetResultsSchema>;

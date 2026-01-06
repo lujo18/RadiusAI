@@ -6,7 +6,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  plan: 'starter' | 'growth' | 'unlimited' | null;
+  plan?: string; // Added optional plan property
 }
 
 interface AuthState {
@@ -41,7 +41,12 @@ export const useAuthStore = create<AuthState>()(
       setSession: (session) => set({ session }),
       
       login: (user, supabaseUser, session) => set({ 
-        user, 
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          plan: user.plan || undefined, // Ensure plan is set if available
+        }, 
         supabaseUser,
         session,
         isAuthenticated: true 
@@ -67,3 +72,4 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+

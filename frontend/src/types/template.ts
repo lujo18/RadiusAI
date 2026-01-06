@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const TemplateSchema = z.object({
   id: z.string(),
   user_id: z.string(),
-  profile_id: z.string().nullable().optional(),
+  brand_id: z.string().nullable().optional(),
   name: z.string(),
   category: z.string(),
   status: z.string(),
@@ -14,6 +14,8 @@ export const TemplateSchema = z.object({
   tags: z.array(z.string()).nullable().optional(),
   created_at: z.string(),
   updated_at: z.string(),
+  parent_id: z.string().nullable(),
+  content_rules: z.string().nullable()
 });
 
 export type Template = z.infer<typeof TemplateSchema>;

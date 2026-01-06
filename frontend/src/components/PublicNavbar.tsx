@@ -1,5 +1,5 @@
+"use client";
 import React from "react";
-'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -47,40 +47,40 @@ export default function PublicNavbar() {
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-dark-600/80 backdrop-blur-lg border-b border-gray-800">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
           <Image src="/images/icon-primary.png" alt="Radius Logo" width={48} height={48} />
-          <span className="text-2xl font-display font-bold text-white">Radius</span>
+          <span className="text-2xl font-display font-bold text-foreground">Radius</span>
         </Link>
 
         <div className="hidden md:flex items-center space-x-8">
-          <a href="/#benefits" className="text-gray-300 hover:text-white transition">Features</a>
+          <a href="/#benefits" className="text-muted-foreground hover:text-foreground transition">Features</a>
           <Link 
             href="/pricing" 
-            className={`transition ${pathname === '/pricing' ? 'text-white font-semibold' : 'text-gray-300 hover:text-white'}`}
+            className={`transition ${pathname === '/pricing' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
           >
             Pricing
           </Link>
-          <a href="/#faq" className="text-gray-300 hover:text-white transition">FAQ</a>
+          <a href="/#faq" className="text-muted-foreground hover:text-foreground transition">FAQ</a>
           
           {!loading && (
             <>
               {user ? (
                 <>
-                  <Link href="/dashboard" className="btn-primary">
+                  <Link href="/brand" className="btn-primary">
                     Go to Dashboard
                   </Link>
-                  <Link href="/dashboard" className="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                  <Link href="/brand" className="flex items-center space-x-2 text-foreground/80 hover:text-foreground transition">
                     {avatarUrl ? (
                       <img 
                         src={avatarUrl} 
                         alt={userName}
-                        className="w-8 h-8 rounded-full border-2 border-primary-500"
+                        className="w-8 h-8 rounded-full border-2 border-accent"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary-500/20 border-2 border-primary-500 flex items-center justify-center">
-                        <FiUser className="text-primary-500" />
+                      <div className="w-8 h-8 rounded-full bg-accent/20 border-2 border-accent flex items-center justify-center">
+                        <FiUser className="text-accent" />
                       </div>
                     )}
                     <span className="text-sm">{userName}</span>
@@ -88,7 +88,7 @@ export default function PublicNavbar() {
                 </>
               ) : (
                 <>
-                  <Link href="/login" className="text-gray-300 hover:text-white transition">Login</Link>
+                  <Link href="/login" className="text-foreground/80 hover:text-foreground transition">Login</Link>
                   <Link href="/signup" className="btn-primary">
                     Get Started
                   </Link>
@@ -101,16 +101,16 @@ export default function PublicNavbar() {
         {/* Mobile Menu (simplified for now) */}
         <div className="md:hidden">
           {!loading && user ? (
-            <Link href="/dashboard">
+            <Link href="/brand">
               {avatarUrl ? (
                 <img 
                   src={avatarUrl} 
                   alt={userName}
-                  className="w-8 h-8 rounded-full border-2 border-primary-500"
+                  className="w-8 h-8 rounded-full border-2 border-accent"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-primary-500/20 border-2 border-primary-500 flex items-center justify-center">
-                  <FiUser className="text-primary-500" />
+                <div className="w-8 h-8 rounded-full bg-accent/20 border-2 border-accent flex items-center justify-center">
+                  <FiUser className="text-accent" />
                 </div>
               )}
             </Link>

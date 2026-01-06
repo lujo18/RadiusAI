@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}&onboarding=true`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/brand?session_id={CHECKOUT_SESSION_ID}&onboarding=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing`,
       client_reference_id: userId,
       metadata: {

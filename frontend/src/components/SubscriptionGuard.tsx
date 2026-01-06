@@ -28,7 +28,7 @@ export function SubscriptionGuard({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -43,14 +43,14 @@ export function SubscriptionGuard({
         <div className="max-w-2xl mx-auto p-8">
           <div className="glass-card p-8 text-center">
             <FiAlertCircle className="text-yellow-500 text-5xl mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               {status === 'past_due' 
                 ? 'Payment Issue' 
                 : status === 'canceled'
                 ? 'Subscription Canceled'
                 : 'Active Subscription Required'}
             </h2>
-            <p className="text-gray-400 mb-6">
+            <p className="text-muted-foreground mb-6">
               {status === 'past_due'
                 ? 'Your payment failed. Please update your payment method to restore access.'
                 : status === 'canceled'

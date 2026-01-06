@@ -85,11 +85,11 @@ export function createBackgroundLayer(
 }
 
 /**
- * Creates a text element as a Konva Text node
+ * Creates a text element as a Konva Text node or Group
+ * If stroke is present, creates a group with two text layers for clean outline
  */
-export function createTextNode(element: TextElement): Konva.Text {
-  return new Konva.Text({
-    id: element.id,
+export function createTextNode(element: TextElement): Konva.Text | Konva.Group {
+  const baseConfig = {
     text: element.content,
     x: element.x,
     y: element.y,
@@ -97,9 +97,54 @@ export function createTextNode(element: TextElement): Konva.Text {
     fontSize: element.font_size,
     fontFamily: element.font_family,
     fontStyle: element.font_style,
-    fill: element.color,
     align: element.align,
-    listening: false, // Optimize for static rendering
+    letterSpacing: element.letter_spacing,
+    lineHeight: element.line_height,
+    listening: false,
+  };
+
+  // If there's a stroke, create a group with two text layers for clean outline
+  if (element.stroke && element.stroke_width) {
+    const group = new Konva.Group({
+      id: element.id,
+      x: 0,
+      y: 0,
+    });
+
+    // First layer: stroke only (outline)
+    const strokeText = new Konva.Text({
+      ...baseConfig,
+      fill: element.stroke,
+      stroke: element.stroke,
+      strokeWidth: element.stroke_width,
+      shadowColor: element.shadow_color,
+      shadowBlur: element.shadow_blur,
+      shadowOffsetX: element.shadow_offset_x,
+      shadowOffsetY: element.shadow_offset_y,
+      shadowOpacity: element.shadow_opacity,
+    });
+    group.add(strokeText);
+
+    // Second layer: fill only (on top, no stroke)
+    const fillText = new Konva.Text({
+      ...baseConfig,
+      fill: element.color,
+    });
+    group.add(fillText);
+
+    return group;
+  }
+
+  // No stroke: return simple text node
+  return new Konva.Text({
+    ...baseConfig,
+    id: element.id,
+    fill: element.color,
+    shadowColor: element.shadow_color,
+    shadowBlur: element.shadow_blur,
+    shadowOffsetX: element.shadow_offset_x,
+    shadowOffsetY: element.shadow_offset_y,
+    shadowOpacity: element.shadow_opacity,
   });
 }
 

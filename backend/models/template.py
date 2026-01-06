@@ -65,7 +65,7 @@ class Template(BaseModel):
     updated_at: str  # Supabase: string (ISO)
     style_config: dict  # Supabase: JSON
     gemini_prompt: Optional[str] = None
-    profile_id: Optional[str] = None
+    brand_id: Optional[str] = None
     user_id: Optional[str] = None
     tags: Optional[List[str]] = None
     favorite: Optional[bool] = None

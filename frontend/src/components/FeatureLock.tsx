@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from './ui/button';
 'use client';
 
 import { ReactNode } from 'react';
@@ -46,17 +47,17 @@ export default function FeatureLock({
             <div className="w-16 h-16 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <FiLock className="w-8 h-8 text-primary-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">Unlock {feature}</h3>
+            <h3 className="text-xl font-bold text-foreground mb-2">Unlock {feature}</h3>
             <p className="text-gray-400 mb-4">
               Subscribe to access this feature and unlock the full power of ViralStack.
             </p>
-            <button
+            <Button
               onClick={() => router.push('/pricing')}
               className="btn-primary flex items-center gap-2 mx-auto"
             >
               <FiZap className="w-5 h-5" />
               View Plans
-            </button>
+            </Button>
           </div>
         </div>
       </div>

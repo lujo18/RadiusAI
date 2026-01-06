@@ -1,15 +1,21 @@
 import React from "react";
-import { FiX } from 'react-icons/fi';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/animate-ui/components/radix/dialog';
 import BrandSettingsForm from './BrandSettingsForm';
-import type { BrandSettings } from '@/types';
-import { useCreateProfile } from '@/lib/api/hooks';
+import type { BrandSettings } from '../TemplateCreator/contentTypes';
+import { useCreateBrand } from '@/lib/api/hooks';
 
 interface CreateProfileDialogProps {
   onClose: () => void;
 }
 
 export default function CreateProfileDialog({ onClose }: CreateProfileDialogProps) {
-  const createProfileMutation = useCreateProfile();
+  const createProfileMutation = useCreateBrand();
 
   const handleSubmit = async (brandSettings: BrandSettings) => {
     try {
@@ -22,13 +28,12 @@ export default function CreateProfileDialog({ onClose }: CreateProfileDialogProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <DialogHeader title="Create Brand Profile" onClose={onClose} />
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>Create Brand Profile</DialogTitle>
+        </DialogHeader>
+        <div className="overflow-y-auto">
           <BrandSettingsForm
             onSubmit={handleSubmit}
             onCancel={onClose}
@@ -36,21 +41,7 @@ export default function CreateProfileDialog({ onClose }: CreateProfileDialogProp
             submitLabel="Create Profile"
           />
         </div>
-      </div>
-    </div>
-  );
-}
-
-function DialogHeader({ title, onClose }: { title: string; onClose: () => void }) {
-  return (
-    <div className="flex justify-between items-center p-6 border-b border-gray-700">
-      <h2 className="text-2xl font-bold">{title}</h2>
-      <button
-        onClick={onClose}
-        className="p-2 hover:bg-gray-800 rounded-lg transition"
-      >
-        <FiX className="text-2xl" />
-      </button>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

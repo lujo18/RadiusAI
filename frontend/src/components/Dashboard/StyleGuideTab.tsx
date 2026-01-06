@@ -17,7 +17,7 @@ export default function StyleGuideTab() {
     <div>
       <h1 className="text-4xl font-bold mb-8">Master Style Guide</h1>
 
-      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-6">
+      <div className="bg-muted/50 border border rounded-xl p-6 mb-6">
         <h2 className="text-2xl font-bold mb-4">Your Brand Guidelines</h2>
         <p className="text-gray-400 mb-6">
           This style guide controls how all your carousels are generated. Edit it to match your brand voice and visual identity.
@@ -27,19 +27,19 @@ export default function StyleGuideTab() {
         <textarea
           value={styleGuide}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full bg-gray-900 border border-gray-700 rounded-lg p-4 min-h-[300px] focus:outline-none focus:border-primary-500 font-mono text-sm"
+          className="w-full bg-muted border border rounded-lg p-4 min-h-[300px] focus:outline-none focus:border-primary font-mono text-sm"
         />
         
         <div className="flex gap-4 mt-4">
           <button 
             onClick={handleSave}
-            className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-semibold"
+            className="bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-3 rounded-lg font-semibold"
           >
             Save Changes
           </button>
           <button 
             onClick={resetToDefault}
-            className="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold"
+            className="bg-muted hover:bg-muted/80 px-6 py-3 rounded-lg font-semibold"
           >
             Reset to Default
           </button>
@@ -47,7 +47,7 @@ export default function StyleGuideTab() {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+        <div className="bg-muted/50 border border-muted/80 rounded-xl p-6">
           <h3 className="text-xl font-bold mb-4">Quick Settings</h3>
           <div className="space-y-4">
             <Setting label="Carousel Length" value="8-10 slides" />
@@ -57,7 +57,7 @@ export default function StyleGuideTab() {
           </div>
         </div>
 
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+        <div className="bg-muted/50 border border-muted/80 rounded-xl p-6">
           <h3 className="text-xl font-bold mb-4">Connected Accounts</h3>
           <div className="space-y-4">
             <ConnectedAccount platform="Instagram" username="@yourhandle" status="Connected" />
@@ -72,7 +72,7 @@ export default function StyleGuideTab() {
 function Setting({ label, value }: any) {
   return (
     <div className="flex justify-between items-center">
-      <span className="text-sm text-gray-400">{label}</span>
+      <span className="text-sm text-muted">{label}</span>
       <span className="text-sm font-semibold">{value}</span>
     </div>
   );

@@ -6,7 +6,7 @@ export class ProfileRepository {
   // Get a single profile by id and user
   static async getProfile(profileId: string, userId: string) {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('brand')
       .select('*')
       .eq('id', profileId)
       .eq('user_id', userId)
@@ -21,7 +21,7 @@ export class ProfileRepository {
   // Get all profiles for a user
   static async getProfiles(userId: string) {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('brand')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -32,7 +32,7 @@ export class ProfileRepository {
   // Get a profile with integrations
   static async getProfileWithIntegrations(profileId: string, userId: string) {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('brand')
       .select('*, platform_integrations(*)')
       .eq('id', profileId)
       .eq('user_id', userId)
@@ -45,9 +45,9 @@ export class ProfileRepository {
   }
 
   // Create a new profile
-  static async createProfile(profile: Database['public']['Tables']['profiles']['Insert']) {
+  static async createProfile(profile: Database['public']['Tables']['brand']['Insert']) {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('brand')
       .insert([profile])
       .select()
       .single();
@@ -56,9 +56,9 @@ export class ProfileRepository {
   }
 
   // Update a profile
-  static async updateProfile(profileId: string, updates: Partial<Database['public']['Tables']['profiles']['Update']>, userId?: string) {
+  static async updateProfile(profileId: string, updates: Partial<Database['public']['Tables']['brand']['Update']>, userId?: string) {
     let query = supabase
-      .from('profiles')
+      .from('brand')
       .update(updates)
       .eq('id', profileId);
     if (userId) query = query.eq('user_id', userId);
@@ -70,7 +70,7 @@ export class ProfileRepository {
   // Update brand settings for a profile
   static async updateBrandSettings(profileId: string, userId: string, brandSettings: any) {
     const { error } = await supabase
-      .from('profiles')
+      .from('brand')
       .update({ brand_settings: brandSettings })
       .eq('id', profileId)
       .eq('user_id', userId);
@@ -81,7 +81,7 @@ export class ProfileRepository {
   // Delete a profile
   static async deleteProfile(profileId: string, userId: string) {
     const { error } = await supabase
-      .from('profiles')
+      .from('brand')
       .delete()
       .eq('id', profileId)
       .eq('user_id', userId);
@@ -94,7 +94,7 @@ export class ProfileRepository {
     const { data, error } = await supabase
       .from('platform_integrations')
       .select('*')
-      .eq('profile_id', profileId)
+      .eq('brand_id', profileId)
       .eq('user_id', userId);
     if (error) throw new Error(error.message);
     return data;
@@ -106,7 +106,7 @@ export class ProfileRepository {
       .insert({
         ...integration,
         user_id: userId,
-        profile_id: profileId,
+        brand_id: profileId,
       })
       .select()
       .single();

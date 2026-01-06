@@ -45,7 +45,7 @@ interface GenerationError {
 
 type AspectRatio = '4:5' | '1:1' | '9:16';
 type Template = Tables<'templates'>;
-type Profile = Tables<'profiles'>;
+type Brand = Tables<'brand'>;
 type BrandSettings = Tables<'brand_settings'>;
 type PostContent = Tables<'posts'>['content'];
 type PostSlide = {
@@ -56,17 +56,15 @@ type PostSlide = {
 
 export async function createPostsFromTemplate(
   template: Template,
-  profile: Profile,
+  brand: Brand,
   count: number = 1
 ): Promise<Blob[]> {
-  // Extract brand settings from profile (stored as Json)
+  // Extract brand settings from brand (stored as Json)
   // Parse brandSettings JSONB if you have a Zod schema (add to parseJsonColumn.ts if needed)
-  // const brandSettings = parseBrandSettings(profile.brand_settings);
+  // const brandSettings = parseBrandSettings(brand.brand_settings);
   // For now, fallback to direct cast
-  // 
-  const uploadSlideImage = StorageRepository.uploadSlideImage()
 
-  const brandSettings = profile.brand_settings as unknown as BrandSettings;
+  const brandSettings = brand.brand_settings as unknown as BrandSettings;
 
   console.log("Generating posts");
   const response = await contentApi.generatePosts(
@@ -227,12 +225,12 @@ export async function createPostAndUploadSlides(
 
   // 3. Upload slides to Supabase Storage
   const uploadPromises = results.map(({ slideIndex, blob }) =>
-    uploadSlideImage(postId, slideIndex, blob)
+    StorageRepository.uploadSlideImage(postId, slideIndex, blob)
   );
   const slideUrls = await Promise.all(uploadPromises);
 
   // 4. Optionally update post with storage URLs
-  await PostRepository.updatePostStorageUrls(postId, slideUrls);
+  await PostRepository.updatePostStorageUrls(postId, postData.profile.id, slideUrls);
 
   return { postId, slideUrls };
 }
@@ -243,14 +241,14 @@ export async function createPostAndUploadSlides(
  * Generates a single slide image (useful for previews)
  *
  * @param template - The template to use
- * @param profile - The user profile
+ * @param brand - The brand/profile
  * @returns Promise resolving to Blob
  */
 export async function generateSingleSlide(
   template: Template,
-  profile: Profile
+  brand: Brand
 ): Promise<Blob> {
-  const brandSettings = profile.brand_settings as unknown as BrandSettings;
+  const brandSettings = brand.brand_settings as unknown as BrandSettings;
   const slideSet = await contentApi.generatePosts(
     template,
     brandSettings,
@@ -279,7 +277,7 @@ export async function generateAndUploadSlides(
 
   // Upload to Supabase Storage
   const uploadPromises = results.map(({ slideIndex, blob }) =>
-    uploadSlideImage(postId, slideIndex, blob)
+    StorageRepository.uploadSlideImage(postId, slideIndex, blob)
   );
 
   return Promise.all(uploadPromises);

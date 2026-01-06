@@ -1,20 +1,29 @@
 import React from "react";
 import { useState } from 'react';
-import { FiX } from 'react-icons/fi';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/animate-ui/components/radix/dialog';
 import BrandSettingsForm from './BrandSettingsForm';
 import IntegrationsList from './IntegrationsList';
-import type { Profile, BrandSettings } from '@/types';
+import type { BrandSettings } from '../TemplateCreator/contentTypes';
+import type { Database } from '@/types/database';
 import { useUpdateBrandSettings } from '@/lib/api/hooks';
 
+type Brand = Database['public']['Tables']['brand']['Row'];
+
 interface EditProfileDialogProps {
-  profile: Profile;
+  profile: Brand;
   onClose: () => void;
 }
 
-/** Helper to safely extract brand settings from profile */
-function getBrandSettings(profile: Profile): BrandSettings | null {
-  if (!profile.brand_settings) return null;
-  return profile.brand_settings as unknown as BrandSettings;
+/** Helper to safely extract brand settings from brand */
+function getBrandSettings(brand: Brand): BrandSettings | null {
+  if (!brand.brand_settings) return null;
+  return brand.brand_settings as unknown as BrandSettings;
 }
 
 export default function EditProfileDialog({ profile, onClose }: EditProfileDialogProps) {
@@ -25,56 +34,51 @@ export default function EditProfileDialog({ profile, onClose }: EditProfileDialo
   const handleSubmit = async (newBrandSettings: BrandSettings) => {
     try {
       await updateBrandSettingsMutation.mutateAsync({
-        profileId: profile.id,
+        brandId: profile.id,
         brandSettings: newBrandSettings,
       });
       onClose();
     } catch (error) {
-      console.error('Failed to update profile:', error);
-      alert('Failed to update profile');
+      console.error('Failed to update brand:', error);
+      alert('Failed to update brand');
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
-          <h2 className="text-2xl font-bold">Edit Profile</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition"
-          >
-            <FiX className="text-2xl" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+        </DialogHeader>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-700">
-          <button
+        <div className="flex border-b border">
+          <Button
+            variant="ghost"
             onClick={() => setActiveTab('settings')}
-            className={`px-6 py-4 font-medium transition $\{
+            className={`rounded-none border-b-2 ${
               activeTab === 'settings'
-                ? 'text-primary-400 border-b-2 border-primary-400'
-                : 'text-gray-400 hover:text-gray-300'
+                ? 'border-primary text-primary'
+                : 'border-transparent'
             }`}
           >
             Brand Settings
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => setActiveTab('integrations')}
-            className={`px-6 py-4 font-medium transition $\{
+            className={`rounded-none border-b-2 ${
               activeTab === 'integrations'
-                ? 'text-primary-400 border-b-2 border-primary-400'
-                : 'text-gray-400 hover:text-gray-300'
+                ? 'border-primary text-primary'
+                : 'border-transparent'
             }`}
           >
             Integrations
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="overflow-y-auto">
           {activeTab === 'settings' ? (
             <BrandSettingsForm
               initialValues={brandSettings || undefined}
@@ -90,7 +94,7 @@ export default function EditProfileDialog({ profile, onClose }: EditProfileDialo
             />
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

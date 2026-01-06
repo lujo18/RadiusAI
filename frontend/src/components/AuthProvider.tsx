@@ -1,6 +1,5 @@
+"use client";
 import React from "react";
-'use client';
-
 import { useEffect } from 'react';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/lib/supabase/client';
@@ -55,9 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === 'SIGNED_IN' && session?.user) {
         const user = {
           id: session.user.id,
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-          email: session.user.email || '',
-          plan: null, // Will be fetched from database/set by webhook
+          name: session.user.user_metadata?.name || 'User',
+          email: session.user.email || '', // Ensure email is always a string
+          plan: undefined, // Changed from null to undefined
         };
         
         console.log('[AuthProvider] User signed in:', user.id);

@@ -1,201 +1,264 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Skeleton } from "../ui/skeleton";
 // NOTE: All template objects from the backend use snake_case keys (e.g., is_default, performance.total_posts)
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useTemplates, useCreateTemplate, useDeleteTemplate } from '@/lib/api/hooks';
-import TemplateCreator from '@/components/TemplateCreator/index';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+  useTemplates,
+  useCreateTemplate,
+  useDeleteTemplate,
+} from "@/lib/api/hooks";
+import TemplateCreator from "@/components/TemplateCreator/index";
 
+const TemplatesTab = ({ brandId }: { brandId: string }) => {
+  const {
+    data: templates,
+    isLoading: templatesLoading,
+  } = useTemplates(brandId);
 
-export default function TemplatesTab() {
+  const handleSaveTemplate = (templateData: any) => {
+    console.log("Client Create Template", { ...templateData, brandId: brandId })
+
+    createTemplateMutation.mutate(
+      { ...templateData, brandId: brandId },
+      {
+        onSuccess: () => {
+          setShowCreateModal(false);
+        },
+      }
+    );
+  };
+  const handleDeleteTemplate = (templateId: string) => {
+    deleteTemplateMutation.mutate(templateId);
+  };
+
   const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-
-  // Fetch templates from API
-  const { data: templates, isLoading: templatesLoading } = useTemplates();
   const createTemplateMutation = useCreateTemplate();
   const deleteTemplateMutation = useDeleteTemplate();
-
-  const handleSaveTemplate = async (template: any) => {
-    try {
-      console.log('Creating template:', template);
-      await createTemplateMutation.mutateAsync(template);
-      console.log('Template created successfully');
-      setShowCreateModal(false);
-    } catch (error) {
-      console.error('Failed to create template:', error);
-      alert('Failed to create template. Please check the console for details.');
-    }
-  };
-
-  const handleDeleteTemplate = async (templateId: string) => {
-    if (window.confirm('Are you sure you want to delete this template?')) {
-      try {
-        await deleteTemplateMutation.mutateAsync(templateId);
-      } catch (error) {
-        console.error('Failed to delete template:', error);
-      }
-    }
-  };
 
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-bold font-main mb-2">Templates</h1>
-          <p className="text-gray-400">Create and manage slide templates for A/B testing</p>
+          <p className="text-muted-foreground">
+            Create and manage slide templates for A/B testing
+          </p>
         </div>
-        <button 
+        <Button
           onClick={() => setShowCreateModal(true)}
-          className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
+          className="bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
         >
-          <Image src="/images/icon-primary.png" alt="Radius Logo" width={24} height={24} />
+          <Image
+            src="/images/icon-primary.png"
+            alt="Radius Logo"
+            width={24}
+            height={24}
+          />
           Create Template
-        </button>
+        </Button>
       </div>
 
-      {/* Templates Grid */}
-      <div className="grid grid-cols-3 gap-6">
+      {/* Template List */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {templatesLoading ? (
-          // Loading skeletons
           [...Array(3)].map((_, i) => (
-            <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 animate-pulse">
-              <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-4 bg-gray-700 rounded w-full"></div>
-                <div className="h-4 bg-gray-700 rounded w-5/6"></div>
-                <div className="h-4 bg-gray-700 rounded w-4/6"></div>
-              </div>
-            </div>
+            <Card key={i} className="bg-card border">
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-4/6" />
+              </CardContent>
+            </Card>
           ))
         ) : templates && templates.length > 0 ? (
           templates.map((template: any) => (
-          <div 
-            key={template.id}
-            className={`bg-gray-800/50 border rounded-xl p-6 cursor-pointer transition hover:border-primary-500 ${
-              template.is_default ? 'border-primary-500' : 'border-gray-700'
-            }`}
-            onClick={() => setSelectedTemplate(template.id)}
-          >
-            {/* Header */}
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-bold mb-1">{template.name}</h3>
-                <span className="text-xs text-gray-400 uppercase">{template.category}</span>
-              </div>
-              {template.is_default && (
-                <span className="text-xs bg-primary-500/20 text-primary-400 px-3 py-1 rounded-full">
-                  Default
-                </span>
-              )}
-              {template.status === 'testing' && (
-                <span className="text-xs bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full">
-                  Testing
-                </span>
-              )}
-            </div>
-
-            {/* Performance Stats */}
-            <div className="space-y-3 mb-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Total Posts</span>
-                <span className="font-semibold">{template.performance?.total_posts || 0}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Avg Engagement</span>
-                <span className="font-semibold text-green-400">{template.performance?.avg_engagement_rate || 0}%</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Avg Saves</span>
-                <span className="font-semibold">{template.performance?.avg_saves || 0}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-4 border-t border-gray-700">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(`/dashboard/template/${template.id}`);
-                }}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm transition"
-              >
-                Edit
-              </button>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteTemplate(template.id);
-                }}
-                className="flex-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg text-sm transition"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))
-        ) : (
-          // Empty state
-          <div className="col-span-3 text-center py-12">
-            <Image src="/images/icon-primary.png" alt="Radius Logo" width={48} height={48} className="mx-auto mb-4" />
-            <p className="text-gray-400 mb-4">No templates yet</p>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg transition"
+            <Card
+              key={template.id}
+              className={`cursor-pointer transition hover:border-primary ${
+                template.is_default ? "border-primary" : ""
+              }`}
+              onClick={() => setSelectedTemplate(template.id)}
             >
-              Create Your First Template
-            </button>
-          </div>
-        )}
+              {/* Header */}
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl mb-1">
+                      {template.name}
+                    </CardTitle>
+                    <Badge variant="secondary" className="text-xs uppercase">
+                      {template.category}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {template.is_default && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-primary/20 text-primary"
+                      >
+                        Default
+                      </Badge>
+                    )}
+                    {template.status === "testing" && (
+                      <Badge
+                        variant="secondary"
+                        className="bg-chart-1/20 text-chart-1"
+                      >
+                        Testing
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
 
-        {/* Create New Card */}
-        <div 
-          onClick={() => setShowCreateModal(true)}
-          className="bg-gray-800/30 border border-dashed border-gray-600 rounded-xl p-6 cursor-pointer transition hover:border-primary-500 flex flex-col items-center justify-center min-h-[300px]"
-        >
-          <Image src="/images/icon-primary.png" alt="Radius Logo" width={48} height={48} className="mb-4" />
-          <p className="text-gray-400 font-semibold">Create New Template</p>
-        </div>
+              {/* Performance Stats */}
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Total Posts</span>
+                  <span className="font-semibold">
+                    {template.performance?.total_posts || 0}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Avg Engagement</span>
+                  <span className="font-semibold text-chart-4">
+                    {template.performance?.avg_engagement_rate || 0}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Avg Saves</span>
+                  <span className="font-semibold">
+                    {template.performance?.avg_saves || 0}
+                  </span>
+                </div>
+              </CardContent>
+
+              {/* Actions */}
+              <CardContent className="flex gap-2 pt-4 border-t border">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/brand/template/${template.id}`);
+                  }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTemplate(template.id);
+                  }}
+                >
+                  Delete
+                </Button>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card className="col-span-3">
+            <CardContent className="text-center py-12">
+              <Image
+                src="/images/icon-primary.png"
+                alt="Radius Logo"
+                width={48}
+                height={48}
+                className="mx-auto mb-4"
+              />
+              <p className="text-muted-foreground mb-4">No templates yet</p>
+              <Button onClick={() => setShowCreateModal(true)}>
+                Create Your First Template
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Quick Stats */}
       <div className="mt-8 grid grid-cols-4 gap-6">
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-          <div className="text-3xl font-bold text-primary-400 mb-2">
-            {templates?.filter((t: any) => t.status === 'active').length || 0}
-          </div>
-          <div className="text-sm text-gray-400">Active Templates</div>
-        </div>
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-          <div className="text-3xl font-bold text-green-400 mb-2">
-            {templates && templates.length > 0
-              ? (templates.reduce((sum: number, t: any) => sum + (t.performance?.avg_engagement_rate || 0), 0) / templates.length).toFixed(1)
-              : '0.0'}%
-          </div>
-          <div className="text-sm text-gray-400">Avg Engagement Rate</div>
-        </div>
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-          <div className="text-3xl font-bold text-blue-400 mb-2">
-            {templates?.reduce((sum: number, t: any) => sum + (t.performance?.total_posts || 0), 0) || 0}
-          </div>
-          <div className="text-sm text-gray-400">Total Posts Generated</div>
-        </div>
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-          <div className="text-3xl font-bold text-yellow-400 mb-2">
-            {templates?.filter((t: any) => t.status === 'testing').length || 0}
-          </div>
-          <div className="text-sm text-gray-400">A/B Tests Running</div>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-3xl font-bold text-primary mb-2">
+              {templates?.filter((t: any) => t.status === "active").length || 0}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Active Templates
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-3xl font-bold text-green-400 mb-2">
+              {templates && templates.length > 0
+                ? (
+                    templates.reduce(
+                      (sum: number, t: any) =>
+                        sum + (t.performance?.avg_engagement_rate || 0),
+                      0
+                    ) / templates.length
+                  ).toFixed(1)
+                : "0.0"}
+              %
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Avg Engagement Rate
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-3xl font-bold text-blue-400 mb-2">
+              {templates?.reduce(
+                (sum: number, t: any) =>
+                  sum + (t.performance?.total_posts || 0),
+                0
+              ) || 0}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Total Posts Generated
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-3xl font-bold text-yellow-400 mb-2">
+              {templates?.filter((t: any) => t.status === "testing").length ||
+                0}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              A/B Tests Running
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Template Creator Modal */}
       {showCreateModal && (
-        <TemplateCreator 
+        <TemplateCreator
           onClose={() => setShowCreateModal(false)}
           onSave={handleSaveTemplate}
         />
       )}
     </div>
   );
-}
+};
+
+export default TemplatesTab;

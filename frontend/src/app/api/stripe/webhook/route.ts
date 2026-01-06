@@ -129,9 +129,10 @@ export async function POST(req: NextRequest) {
         );
 
         console.log('[Webhook] DEBUG - Subscription keys:', Object.keys(subscription));
-        console.log('[Webhook] DEBUG - current_period_end:', (subscription as any).current_period_end);
-        
+        const sub = subscription as Stripe.Subscription;
+
         const periodEnd = (subscription as any).current_period_end;
+        console.log('[Webhook] DEBUG - current_period_end:', periodEnd);
         const currentPeriodEnd = periodEnd
           ? new Date(periodEnd * 1000).toISOString()
           : null;
@@ -170,7 +171,8 @@ export async function POST(req: NextRequest) {
           `[Webhook] Updating subscription for user ${userId}, status: ${subscription.status}`
         );
 
-        const periodEnd = (subscription as any).current_period_end;
+        const sub = subscription as Stripe.Subscription;
+        const periodEnd = (sub as any).current_period_end;
         const currentPeriodEnd = periodEnd
           ? new Date(periodEnd * 1000).toISOString()
           : null;
@@ -230,19 +232,19 @@ export async function POST(req: NextRequest) {
       }
 
       case "invoice.payment_succeeded": {
-        const invoice = event.data.object as any;
+        const invoice = event.data.object as Stripe.Invoice;
 
         console.log("[Webhook] invoice.payment_succeeded received");
 
         const subscriptionId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : invoice.subscription?.id;
+          typeof (invoice as any).subscription === "string"
+            ? (invoice as any).subscription
+            : (invoice as any).subscription?.id;
 
         const customerId =
           typeof invoice.customer === "string"
             ? invoice.customer
-            : invoice.customer?.id;
+            : (invoice.customer as Stripe.Customer)?.id;
 
         if (!subscriptionId) {
           console.log("[Webhook] No subscription ID in invoice, skipping");
@@ -280,7 +282,8 @@ export async function POST(req: NextRequest) {
 
         console.log("[Webhook] Updating user:", userId, "with plan:", plan);
 
-        const periodEnd = (subscription as any).current_period_end;
+        const sub = subscription as Stripe.Subscription;
+        const periodEnd = (sub as any).current_period_end;
         const currentPeriodEnd = periodEnd
           ? new Date(periodEnd * 1000).toISOString()
           : null;
@@ -298,17 +301,17 @@ export async function POST(req: NextRequest) {
       }
 
       case "invoice.payment_failed": {
-        const invoice = event.data.object as any;
+        const invoice = event.data.object as Stripe.Invoice;
 
         const subscriptionId =
-          typeof invoice.subscription === "string"
-            ? invoice.subscription
-            : invoice.subscription?.id;
+          typeof (invoice as any).subscription === "string"
+            ? (invoice as any).subscription
+            : (invoice as any).subscription?.id;
 
         const customerId =
           typeof invoice.customer === "string"
             ? invoice.customer
-            : invoice.customer?.id;
+            : (invoice.customer as Stripe.Customer)?.id;
 
         if (!subscriptionId) break;
 
@@ -349,7 +352,8 @@ export async function POST(req: NextRequest) {
           );
         } else {
 
-          const periodEnd = (subscription as any).current_period_end;
+          const sub = subscription as Stripe.Subscription;
+          const periodEnd = (sub as any).current_period_end;
           const currentPeriodEnd = periodEnd
             ? new Date(periodEnd * 1000).toISOString()
             : null;
@@ -364,8 +368,10 @@ export async function POST(req: NextRequest) {
           break;
         }
       }
+      break;
       default:
         console.log(`[Webhook] Unhandled event type: ${event.type}`);
+        break;
     }
 
     return NextResponse.json({ received: true });

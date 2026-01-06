@@ -1,32 +1,34 @@
-// React Query hooks for Style Guide
+// This file is no longer in use and should be removed or archived.
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { styleGuideApi } from '@/lib/api/client';
+// // React Query hooks for Style Guide
 
-// Query Keys
-export const styleGuideKeys = {
-  all: ['styleGuide'] as const,
-};
+// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// import { styleGuideApi } from '@/lib/api/client';
 
-// ==================== QUERIES ====================
+// // Query Keys
+// export const styleGuideKeys = {
+//   all: ['styleGuide'] as const,
+// };
 
-export function useStyleGuide() {
-  return useQuery({
-    queryKey: styleGuideKeys.all,
-    queryFn: styleGuideApi.getStyleGuide,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-  });
-}
+// // ==================== QUERIES ====================
 
-// ==================== MUTATIONS ====================
+// export function useStyleGuide() {
+//   return useQuery({
+//     queryKey: styleGuideKeys.all,
+//     queryFn: styleGuideApi.getStyleGuide,
+//     staleTime: 10 * 60 * 1000, // 10 minutes
+//   });
+// }
 
-export function useUpdateStyleGuide() {
-  const queryClient = useQueryClient();
+// // ==================== MUTATIONS ====================
 
-  return useMutation({
-    mutationFn: styleGuideApi.updateStyleGuide,
-    onSuccess: (data) => {
-      queryClient.setQueryData(styleGuideKeys.all, data);
-    },
-  });
-}
+// export function useUpdateStyleGuide() {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: styleGuideApi.updateStyleGuide,
+//     onSuccess: (data) => {
+//       queryClient.setQueryData(styleGuideKeys.all, data);
+//     },
+//   });
+// }

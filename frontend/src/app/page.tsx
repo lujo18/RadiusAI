@@ -1,28 +1,10 @@
-
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { FiCheck, FiArrowRight, FiPlay, FiStar } from 'react-icons/fi';
-import Image from 'next/image';
-import { landingContent, DynamicMetrics } from '@/content/landing';
-import PublicNavbar from '@/components/PublicNavbar';
-
-interface Testimonial {
-  id: string;
-  name: string;
-  role: string;
-  company: string | null;
-  quote: string;
-  avatar_url: string | null;
-  rating: number;
-}
-
-export default function LandingPage() {
-'use client';
+"use client";
 
 import React from "react";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FiCheck, FiArrowRight, FiPlay, FiStar } from 'react-icons/fi';
+import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { landingContent, DynamicMetrics } from '@/content/landing';
 import PublicNavbar from '@/components/PublicNavbar';
@@ -56,7 +38,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-dark-600">
+    <div className="min-h-screen bg-background">
       {/* Navbar */}
       <PublicNavbar />
 
@@ -66,17 +48,17 @@ export default function LandingPage() {
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary-500/10 border border-primary-500/20 text-primary-400 text-sm mb-8">
+          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm mb-8">
             {landingContent.hero.badge}
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl md:text-7xl font-main font-extrabold text-white mb-6 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-main font-extrabold text-foreground mb-6 leading-tight">
             {landingContent.hero.headline}
           </h1>
 
           {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-gray-400 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             {landingContent.hero.subheadline}
           </p>
 
@@ -86,14 +68,14 @@ export default function LandingPage() {
               {landingContent.hero.ctaPrimary}
               <FiArrowRight className="ml-2" />
             </Link>
-            <button className="btn-secondary text-lg px-8 py-4">
+            <Button className="btn-secondary text-lg px-8 py-4">
               <FiPlay className="mr-2" />
               {landingContent.hero.ctaSecondary}
-            </button>
+            </Button>
           </div>
 
           {/* Features */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
             {landingContent.hero.features.map((feature, i) => (
               <span key={i}>{feature}</span>
             ))}
@@ -101,10 +83,10 @@ export default function LandingPage() {
 
           {/* Product Screenshot/Video Placeholder */}
           <div className="mt-16 glass-card p-4 max-w-5xl mx-auto">
-            <div className="aspect-video bg-dark-500 rounded-lg flex items-center justify-center">
+            <div className="aspect-video bg-background rounded-lg flex items-center justify-center">
               <div className="text-center">
-                <FiPlay className="text-6xl text-primary-500 mx-auto mb-4" />
-                <p className="text-gray-400">Product Demo Video</p>
+                <FiPlay className="text-6xl text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Product Demo Video</p>
               </div>
             </div>
           </div>
@@ -113,20 +95,20 @@ export default function LandingPage() {
           {metrics && (
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
               <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-2">{metrics.totalUsers.toLocaleString()}+</div>
-                <div className="text-gray-400">Active Users</div>
+                <div className="text-4xl font-bold text-foreground mb-2">{metrics.totalUsers.toLocaleString()}+</div>
+                <div className="text-muted-foreground">Active Users</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-2">{metrics.postsGenerated.toLocaleString()}+</div>
-                <div className="text-gray-400">Posts Generated</div>
+                <div className="text-4xl font-bold text-foreground mb-2">{metrics.postsGenerated.toLocaleString()}+</div>
+                <div className="text-muted-foreground">Posts Generated</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-2">{metrics.templatesAvailable}+</div>
-                <div className="text-gray-400">Templates</div>
+                <div className="text-4xl font-bold text-foreground mb-2">{metrics.templatesAvailable}+</div>
+                <div className="text-muted-foreground">Templates</div>
               </div>
               <div className="text-center">
-                <div className="text-4xl font-bold text-primary-500 mb-2">{metrics.avgEngagementIncrease}</div>
-                <div className="text-gray-400">Avg. Engagement ↑</div>
+                <div className="text-4xl font-bold text-primary mb-2">{metrics.avgEngagementIncrease}</div>
+                <div className="text-muted-foreground">Avg. Engagement ↑</div>
               </div>
             </div>
           )}
@@ -136,13 +118,13 @@ export default function LandingPage() {
       {/* ==========================================
           BENEFITS SECTION
           ========================================== */}
-      <section id="benefits" className="py-20 px-6 bg-dark-500">
+      <section id="benefits" className="py-20 px-6 bg-background">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4">
               {landingContent.benefits.headline}
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               {landingContent.benefits.subheadline}
             </p>
           </div>
@@ -151,8 +133,8 @@ export default function LandingPage() {
             {landingContent.benefits.items.map((benefit, i) => (
               <div key={i} className="glass-card p-8 hover:scale-105 transition-transform">
                 <div className="text-5xl mb-4">{benefit.icon}</div>
-                <h3 className="text-xl font-bold text-white mb-3">{benefit.title}</h3>
-                <p className="text-gray-400">{benefit.description}</p>
+                <h3 className="text-xl font-bold text-foreground mb-3">{benefit.title}</h3>
+                <p className="text-muted-foreground">{benefit.description}</p>
               </div>
             ))}
           </div>
@@ -164,18 +146,18 @@ export default function LandingPage() {
           ========================================== */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold font-main text-white text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground text-center mb-16">
             {landingContent.howItWorks.headline}
           </h2>
 
           <div className="grid md:grid-cols-3 gap-12">
             {landingContent.howItWorks.steps.map((step) => (
               <div key={step.number} className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary-500/20 border-2 border-primary-500 flex items-center justify-center text-2xl font-bold text-primary-500 mx-auto mb-6">
+                <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center text-2xl font-bold text-primary mx-auto mb-6">
                   {step.number}
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
-                <p className="text-gray-400">{step.description}</p>
+                <h3 className="text-2xl font-bold text-foreground mb-4">{step.title}</h3>
+                <p className="text-muted-foreground">{step.description}</p>
               </div>
             ))}
           </div>
@@ -185,13 +167,13 @@ export default function LandingPage() {
       {/* ==========================================
           PRICING SECTION
           ========================================== */}
-      <section id="pricing" className="py-20 px-6 bg-dark-500">
+      <section id="pricing" className="py-20 px-6 bg-background">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4">
               {landingContent.pricing.headline}
             </h2>
-            <p className="text-xl text-gray-400">{landingContent.pricing.subheadline}</p>
+            <p className="text-xl text-muted-foreground">{landingContent.pricing.subheadline}</p>
           </div>
 
           {/* Pricing cards - Import your existing Paywall component */}
@@ -200,7 +182,7 @@ export default function LandingPage() {
               View All Plans
               <FiArrowRight className="ml-2" />
             </Link>
-            <p className="text-sm text-gray-400 mt-4">{landingContent.pricing.ctaNote}</p>
+            <p className="text-sm text-muted-foreground mt-4">{landingContent.pricing.ctaNote}</p>
           </div>
         </div>
       </section>
@@ -211,10 +193,10 @@ export default function LandingPage() {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4">
               {landingContent.testimonials.headline}
             </h2>
-            <p className="text-xl text-gray-400">{landingContent.testimonials.subheadline}</p>
+            <p className="text-xl text-muted-foreground">{landingContent.testimonials.subheadline}</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -223,21 +205,21 @@ export default function LandingPage() {
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <FiStar key={i} className="text-yellow-500 fill-current" />
+                    <FiStar key={i} className="text-chart-1 fill-current" />
                   ))}
                 </div>
 
                 {/* Quote */}
-                <p className="text-gray-300 mb-6 italic">"{testimonial.quote}"</p>
+                <p className="text-foreground/80 mb-6 italic">"{testimonial.quote}"</p>
 
                 {/* Author */}
                 <div className="flex items-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-pink-500 flex items-center justify-center text-white font-bold mr-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground font-bold mr-3">
                     {testimonial.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="text-white font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-gray-400">
+                    <div className="text-foreground font-semibold">{testimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">
                       {testimonial.role}{testimonial.company && ` · ${testimonial.company}`}
                     </div>
                   </div>
@@ -251,23 +233,23 @@ export default function LandingPage() {
       {/* ==========================================
           FAQ SECTION
           ========================================== */}
-      <section id="faq" className="py-20 px-6 bg-dark-500">
+      <section id="faq" className="py-20 px-6 bg-background">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-white text-center mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground text-center mb-4">
             {landingContent.faq.headline}
           </h2>
-          <p className="text-xl text-gray-400 text-center mb-16">
+          <p className="text-xl text-muted-foreground text-center mb-16">
             {landingContent.faq.subheadline}
           </p>
 
           <div className="space-y-4">
             {landingContent.faq.items.map((item, i) => (
               <details key={i} className="glass-card p-6 cursor-pointer group">
-                <summary className="text-xl font-semibold text-white flex items-center justify-between">
+                <summary className="text-xl font-semibold text-foreground flex items-center justify-between">
                   {item.question}
-                  <FiArrowRight className="text-primary-500 transform group-open:rotate-90 transition-transform" />
+                  <FiArrowRight className="text-primary transform group-open:rotate-90 transition-transform" />
                 </summary>
-                <p className="text-gray-400 mt-4 leading-relaxed">{item.answer}</p>
+                <p className="text-muted-foreground mt-4 leading-relaxed">{item.answer}</p>
               </details>
             ))}
           </div>
@@ -279,10 +261,10 @@ export default function LandingPage() {
           ========================================== */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center glass-card p-12">
-          <h2 className="text-4xl md:text-5xl font-bold font-main text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-6">
             {landingContent.cta.headline}
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="text-xl text-muted-foreground mb-8">
             {landingContent.cta.subheadline}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -290,9 +272,9 @@ export default function LandingPage() {
               {landingContent.cta.ctaPrimary}
               <FiArrowRight className="ml-2" />
             </Link>
-            <button className="btn-secondary text-lg px-8 py-4">
+            <Button className="btn-secondary text-lg px-8 py-4">
               {landingContent.cta.ctaSecondary}
-            </button>
+            </Button>
           </div>
         </div>
       </section>
@@ -300,26 +282,26 @@ export default function LandingPage() {
       {/* ==========================================
           FOOTER
           ========================================== */}
-      <footer className="bg-dark-500 border-t border-gray-800 py-12 px-6">
+      <footer className="bg-background border-t border py-12 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             {/* Logo + Tagline */}
             <div>
               <Link href="/" className="flex items-center space-x-2 mb-4">
                 <Image src="/images/icon-primary.png" alt="Radius Logo" width={28} height={28} />
-                <span className="text-xl font-bold text-white">Radius</span>
+                <span className="text-xl font-bold text-foreground">Radius</span>
               </Link>
-              <p className="text-gray-400 text-sm">{landingContent.footer.tagline}</p>
+              <p className="text-muted-foreground text-sm">{landingContent.footer.tagline}</p>
             </div>
 
             {/* Footer Columns */}
             {landingContent.footer.columns.map((column, i) => (
               <div key={i}>
-                <h3 className="text-white font-semibold mb-4">{column.title}</h3>
+                <h3 className="text-foreground font-semibold mb-4">{column.title}</h3>
                 <ul className="space-y-2">
                   {column.links.map((link, j) => (
                     <li key={j}>
-                      <Link href={link.href} className="text-gray-400 hover:text-white text-sm transition">
+                      <Link href={link.href} className="text-muted-foreground hover:text-foreground text-sm transition">
                         {link.label}
                       </Link>
                     </li>
@@ -330,11 +312,11 @@ export default function LandingPage() {
           </div>
 
           {/* Copyright */}
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
+          <div className="border-t border pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground">
             <p>{landingContent.footer.copyright}</p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
               {landingContent.footer.social.map((social, i) => (
-                <a key={i} href={social.url} className="hover:text-white transition">
+                <a key={i} href={social.url} className="hover:text-foreground transition">
                   {social.platform}
                 </a>
               ))}

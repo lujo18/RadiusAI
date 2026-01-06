@@ -1,27 +1,10 @@
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { FiZap } from 'react-icons/fi';
-import { FcGoogle } from 'react-icons/fc';
-import { useAuthStore } from '@/store';
-import { signInWithEmail, signInWithGoogle } from '@/lib/supabase/auth';
-
-export default function LoginPage() {
-  const router = useRouter();
-  const login = useAuthStore((state) => state.login);
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-'use client';
+"use client";
 
 import React from "react";
 import { useState } from 'react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { FiZap } from 'react-icons/fi';
 import { FcGoogle } from 'react-icons/fc';
@@ -62,7 +45,7 @@ export default function LoginPage() {
       login(user, supabaseUser, session);
       
       // Use window.location for full page reload to ensure middleware picks up session
-      window.location.href = '/dashboard';
+      window.location.href = '/brand';
     } catch (err: any) {
       setError(err.message || 'Invalid credentials');
       setIsLoading(false);
@@ -87,24 +70,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-dark-600">
+    <div className="min-h-screen flex bg-background">
       {/* Left Side - Login Form */}
       <div className="flex-1 flex items-center justify-center px-8 py-12">
         <div className="max-w-md w-full">
           {/* Logo */}
           <Link href="/" className="flex items-center mb-12">
-            <FiZap className="text-primary-500 text-3xl mr-2" />
-            <span className="text-2xl font-bold text-white">
+            <FiZap className="text-primary text-3xl mr-2" />
+            <span className="text-2xl font-bold text-foreground">
               ViralStack
             </span>
           </Link>
 
           {/* Welcome Text */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-bold text-foreground mb-2">
               Welcome Back
             </h1>
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Log in to continue automating your content
             </p>
           </div>
@@ -118,32 +101,32 @@ export default function LoginPage() {
           {!showEmailForm ? (
             <>
               {/* Google Sign In Button */}
-              <button
+              <Button
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 bg-dark-400 border border-gray-700 hover:border-gray-600 hover:bg-dark-300 disabled:border-gray-800 disabled:cursor-not-allowed disabled:bg-dark-500 py-3 px-4 rounded-lg font-medium text-white transition-all shadow-lg"
+                className="w-full flex items-center justify-center gap-3 bg-muted border border hover:border/50 hover:bg-muted/80 disabled:border disabled:cursor-not-allowed disabled:bg-muted py-3 px-4 rounded-lg font-medium text-foreground transition-all shadow-lg"
               >
                 <FcGoogle className="text-2xl" />
                 Continue with Google
-              </button>
+              </Button>
 
               {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-700"></div>
+                  <div className="w-full border-t border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-dark-600 text-gray-400">Or</span>
+                  <span className="px-4 bg-background text-muted-foreground">Or</span>
                 </div>
               </div>
 
               {/* Email Button */}
-              <button
+              <Button
                 onClick={handleContinueWithEmail}
-                className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-kinetic-mint/50"
+                className="w-full bg-primary hover:bg-primary/80 text-primary-foreground py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary/50"
               >
                 Continue with Email
-              </button>
+              </Button>
             </>
           ) : (
             <>
@@ -155,7 +138,7 @@ export default function LoginPage() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-dark-400 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition text-white placeholder-gray-500"
+                    className="w-full bg-muted border border rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition text-foreground placeholder-muted-foreground"
                     placeholder="name@company.com"
                   />
                 </div>
@@ -166,37 +149,37 @@ export default function LoginPage() {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full bg-dark-400 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition text-white placeholder-gray-500"
+                    className="w-full bg-muted border border rounded-lg px-4 py-3 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition text-foreground placeholder-muted-foreground"
                     placeholder="Password"
                   />
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <label className="flex items-center text-gray-400">
-                    <input type="checkbox" className="mr-2 rounded border-gray-600 bg-dark-400" />
+                  <label className="flex items-center text-muted-foreground">
+                    <input type="checkbox" className="mr-2 rounded border bg-muted" />
                     <span>Remember me</span>
                   </label>
-                  <a href="#" className="text-primary-400 hover:text-primary-300 transition">
+                  <a href="#" className="text-primary hover:text-primary/80 transition">
                     Forgot password?
                   </a>
                 </div>
 
-                <button
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-kinetic-mint hover:bg-kinetic-mint/80 disabled:bg-gray-700 disabled:cursor-not-allowed text-obsidian py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-kinetic-mint/50"
+                  className="w-full bg-primary hover:bg-primary/80 disabled:bg-muted disabled:cursor-not-allowed text-primary-foreground py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary/50"
                 >
                   {isLoading ? 'Logging in...' : 'Log In'}
-                </button>
+                </Button>
               </form>
 
               {/* Back to Options */}
-              <button
+              <Button
                 onClick={() => setShowEmailForm(false)}
                 className="w-full mt-4 text-primary-400 hover:text-primary-300 text-sm font-medium transition"
               >
                 ← Back to sign-in options
-              </button>
+              </Button>
             </>
           )}
 

@@ -1,6 +1,10 @@
 import React from "react";
 import { useState } from 'react';
 import { FiTrendingUp, FiRefreshCw, FiZap } from 'react-icons/fi';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface AnalyticsTabProps {
@@ -45,10 +49,10 @@ export default function AnalyticsTab({ variantPerformance, performanceData }: An
           <h1 className="text-4xl font-bold mb-2">A/B Testing</h1>
           <p className="text-gray-400">Compare template performance and optimize</p>
         </div>
-        <button className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+        <Button>
           <FiTrendingUp />
           Create A/B Test
-        </button>
+        </Button>
       </div>
 
       {/* Active Tests */}
@@ -56,47 +60,44 @@ export default function AnalyticsTab({ variantPerformance, performanceData }: An
         <h2 className="text-2xl font-bold mb-4">Active Tests</h2>
         <div className="space-y-4">
           {mockTests.filter(t => t.status === 'running').map((test) => (
-            <div key={test.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-1">{test.name}</h3>
-                  <p className="text-sm text-gray-400">{test.startDate} - {test.endDate}</p>
-                </div>
-                <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs">
-                  Running
-                </span>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">Progress</span>
-                  <span className="font-semibold">{test.progress}%</span>
-                </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary-500 transition-all duration-500"
-                    style={{ width: `${test.progress}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                {test.templates.map((template, idx) => (
-                  <div 
-                    key={idx}
-                    className={`bg-gray-900/50 border rounded-lg p-4 ${
-                      template === test.currentLeader ? 'border-primary-500' : 'border-gray-700'
-                    }`}
-                  >
-                    <div className="text-sm font-semibold mb-2">{template}</div>
-                    <div className="text-xs text-gray-400">{test.postsPerTemplate} posts</div>
-                    {template === test.currentLeader && (
-                      <div className="text-xs text-primary-400 mt-2">🏆 Current Leader</div>
-                    )}
+            <Card key={test.id}>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">{test.name}</h3>
+                    <p className="text-sm text-muted-foreground">{test.startDate} - {test.endDate}</p>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <Badge variant="secondary" className="bg-green-500/20 text-green-400 hover:bg-green-500/30">
+                    Running
+                  </Badge>
+                </div>
+
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-muted-foreground">Progress</span>
+                    <span className="font-semibold">{test.progress}%</span>
+                  </div>
+                  <Progress value={test.progress} className="h-2" />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  {test.templates.map((template, idx) => (
+                    <Card 
+                      key={idx}
+                      className={template === test.currentLeader ? 'border-primary' : ''}
+                    >
+                      <CardContent className="pt-4">
+                        <div className="text-sm font-semibold mb-2">{template}</div>
+                        <div className="text-xs text-muted-foreground">{test.postsPerTemplate} posts</div>
+                        {template === test.currentLeader && (
+                          <div className="text-xs text-primary mt-2">🏆 Current Leader</div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -106,47 +107,52 @@ export default function AnalyticsTab({ variantPerformance, performanceData }: An
         <h2 className="text-2xl font-bold mb-4">Completed Tests</h2>
         <div className="space-y-4">
           {mockTests.filter(t => t.status === 'completed').map((test) => (
-            <div key={test.id} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-1">{test.name}</h3>
-                  <p className="text-sm text-gray-400">{test.startDate} - {test.endDate}</p>
-                </div>
-                <span className="bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs">
-                  Completed
-                </span>
-              </div>
-
-              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                <div className="flex items-center justify-between">
+            <Card key={test.id}>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <div className="text-sm text-gray-400 mb-1">Winner</div>
-                    <div className="text-2xl font-bold text-green-400">{test.winner}</div>
-                    <div className="text-sm text-gray-400 mt-1">
-                      Confidence: {(test.confidenceScore! * 100).toFixed(0)}% • {test.improvement}
-                    </div>
+                    <h3 className="text-xl font-bold mb-1">{test.name}</h3>
+                    <p className="text-sm text-muted-foreground">{test.startDate} - {test.endDate}</p>
                   </div>
-                  <button className="bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 px-4 py-2 rounded-lg text-sm transition">
-                    Apply Winner
-                  </button>
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30">
+                    Completed
+                  </Badge>
                 </div>
-              </div>
-            </div>
+
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-sm text-muted-foreground mb-1">Winner</div>
+                      <div className="text-2xl font-bold text-green-400">{test.winner}</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Confidence: {(test.confidenceScore! * 100).toFixed(0)}% • {test.improvement}
+                      </div>
+                    </div>
+                    <Button variant="secondary">
+                      Apply Winner
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
 
       {/* Variant Performance Chart */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Historical Performance</h2>
-          <button className="px-4 py-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg flex items-center gap-2">
-            <FiRefreshCw />
-            Refresh Data
-          </button>
-        </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={variantPerformance}>
+      <Card className="mb-8">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl">Historical Performance</CardTitle>
+            <Button variant="default">
+              <FiRefreshCw className="mr-2" />
+              Refresh Data
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={variantPerformance}>
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis dataKey="variant" stroke="#9CA3AF" />
             <YAxis stroke="#9CA3AF" />
@@ -158,29 +164,34 @@ export default function AnalyticsTab({ variantPerformance, performanceData }: An
             <Bar dataKey="avgShares" fill="#60A5FA" />
           </BarChart>
         </ResponsiveContainer>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* AI Insights */}
-      <div className="bg-gradient-to-r from-primary-500/20 to-purple-500/20 border border-primary-500/50 rounded-xl p-6 mb-8">
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <FiZap className="text-primary-500" />
-          AI Insights
-        </h2>
-        <ul className="space-y-3">
-          <li className="flex items-start gap-3">
-            <FiTrendingUp className="text-green-500 mt-1" />
-            <span>Variant B (5-slide quotes) is performing 340% better than baseline. Increasing allocation to 60%.</span>
-          </li>
-          <li className="flex items-start gap-3">
-            <FiTrendingUp className="text-green-500 mt-1" />
-            <span>Posts with question hooks get 2.3× more saves. Updated style guide to prioritize questions.</span>
-          </li>
-          <li className="flex items-start gap-3">
-            <FiTrendingUp className="text-green-500 mt-1" />
-            <span>Best posting times: 8 AM, 12 PM, 8 PM. Schedule optimized for next week.</span>
-          </li>
-        </ul>
-      </div>
+      <Card className="bg-gradient-to-r from-primary/20 to-purple-500/20 border-primary/50 mb-8">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <FiZap className="text-primary" />
+            AI Insights
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-3">
+            <li className="flex items-start gap-3">
+              <FiTrendingUp className="text-green-500 mt-1" />
+              <span>Variant B (5-slide quotes) is performing 340% better than baseline. Increasing allocation to 60%.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <FiTrendingUp className="text-green-500 mt-1" />
+              <span>Posts with question hooks get 2.3× more saves. Updated style guide to prioritize questions.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <FiTrendingUp className="text-green-500 mt-1" />
+              <span>Best posting times: 8 AM, 12 PM, 8 PM. Schedule optimized for next week.</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
       {/* Detailed Metrics */}
       <div className="grid grid-cols-2 gap-6">
@@ -200,18 +211,20 @@ export default function AnalyticsTab({ variantPerformance, performanceData }: An
 
 function MetricCard({ title, data }: any) {
   return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-      <h3 className="text-xl font-bold mb-4">{title}</h3>
-      <div className="space-y-3">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {data.map((item: any, index: number) => (
           <div key={index} className="flex justify-between items-center">
             <span className="text-sm">{item.title || item.platform}</span>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-muted-foreground">
               {item.saves ? `${item.saves} saves` : `${item.posts} posts`} • {item.avgEngagement || item.engagement}%
             </span>
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

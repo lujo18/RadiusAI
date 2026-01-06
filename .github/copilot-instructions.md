@@ -186,6 +186,6 @@ npm run dev
 
 ## Nonnegotiables after each edit
 
-- Always run `cd .\frontend\` if not in \frontend, then `npm run lint` after each edit made
+- Always run `cd .\frontend\; npm run build` after every change
 - Fix all errors if there are any
 - Repeat until you get no errors returned

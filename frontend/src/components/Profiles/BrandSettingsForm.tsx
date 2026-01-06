@@ -1,7 +1,9 @@
 import React from "react";
+
 import { useState } from 'react';
 import { FiPlus, FiX } from 'react-icons/fi';
-import type { BrandSettings } from '@/types';
+import { Button } from '@/components/ui/button';
+import type { BrandSettings } from '../TemplateCreator/contentTypes';
 
 interface BrandSettingsFormProps {
   initialValues?: BrandSettings;
@@ -14,17 +16,21 @@ interface BrandSettingsFormProps {
 const defaultSettings: BrandSettings = {
   name: '',
   niche: '',
-  aesthetic: '',
-  target_audience: '',
-  brand_voice: '',
-  content_pillars: [],
-  tone_of_voice: 'casual',
-  emoji_usage: 'moderate',
-  forbidden_words: [],
-  preferred_words: [],
-  hashtag_style: 'mixed',
-  hashtag_count: 10,
-  hashtags: [],
+    aesthetic: '',
+    target_audience: '',
+    brand_voice: '',
+    content_pillars: [],
+    tone_of_voice: 'casual',
+    emoji_usage: 'moderate',
+    forbidden_words: [],
+    preferred_words: [],
+    hashtag_style: 'mixed',
+    hashtag_count: 10,
+    hashtags: [],
+    created_at: '',
+    id: '',
+    brand_id: '',
+    updated_at: '',
 };
 
 export default function BrandSettingsForm({
@@ -213,7 +219,7 @@ function InputField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary-500 transition"
+        className="w-full bg-muted border border rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary transition"
       />
     </div>
   );
@@ -236,7 +242,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary-500 transition"
+        className="w-full bg-muted border border-muted/80 rounded-lg px-4 py-2.5 focus:outline-none focus:border-accent transition"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -270,7 +276,7 @@ function NumberField({
         onChange={(e) => onChange(parseInt(e.target.value))}
         min={min}
         max={max}
-        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-primary-500 transition"
+        className="w-full bg-muted border border-muted/80 rounded-lg px-4 py-2.5 focus:outline-none focus:border-accent transition"
       />
     </div>
   );
@@ -311,27 +317,27 @@ function TagInput({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
           placeholder={placeholder}
-          className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:border-primary-500 transition"
+          className="flex-1 bg-muted border border rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition"
         />
-        <button
+        <Button
           type="button"
           onClick={addTag}
-          className="px-4 py-2 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg transition"
+          className="px-4 py-2 bg-primary hover:bg-primary/80 text-primary-foreground rounded-lg transition"
         >
           <FiPlus />
-        </button>
+        </Button>
       </div>
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {tags.map((tag, i) => (
             <span
               key={i}
-              className="px-3 py-1 bg-gray-700 rounded-full text-sm flex items-center gap-2"
+              className="px-3 py-1 bg-muted rounded-full text-sm flex items-center gap-2"
             >
               {tag}
-              <button type="button" onClick={() => removeTag(i)}>
-                <FiX className="text-gray-400 hover:text-white" />
-              </button>
+              <Button type="button" onClick={() => removeTag(i)}>
+                <FiX className="text-muted-foreground hover:text-foreground" />
+              </Button>
             </span>
           ))}
         </div>
@@ -350,21 +356,21 @@ function FormActions({
   isSubmitting: boolean;
 }) {
   return (
-    <div className="flex justify-end gap-4 pt-6 border-t border-gray-700">
-      <button
+    <div className="flex justify-end gap-4 pt-6 border-t border-muted/80">
+      <Button
         type="button"
         onClick={onCancel}
-        className="px-6 py-2.5 border border-gray-700 rounded-lg hover:bg-gray-800 transition"
+        className="px-6 py-2.5 border border-muted/80 rounded-lg hover:bg-muted transition"
       >
         Cancel
-      </button>
-      <button
+      </Button>
+      <Button
         type="submit"
         disabled={isSubmitting}
-        className="px-6 py-2.5 bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian rounded-lg font-semibold transition disabled:opacity-50"
+        className="px-6 py-2.5 bg-accent hover:bg-accent/80 text-accent-foreground rounded-lg font-semibold transition disabled:opacity-50"
       >
         {isSubmitting ? 'Saving...' : submitLabel}
-      </button>
+      </Button>
     </div>
   );
 }

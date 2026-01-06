@@ -1,5 +1,6 @@
 import React from "react";
 import { FiClock } from 'react-icons/fi';
+import { Button } from '@/components/ui/button';
 
 interface CalendarTabProps {
   upcomingPosts: any[];
@@ -14,8 +15,8 @@ export default function CalendarTab({ upcomingPosts }: CalendarTabProps) {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">November 2025</h2>
           <div className="flex gap-2">
-            <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Previous</button>
-            <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Next</button>
+            <Button variant="secondary">Previous</Button>
+            <Button variant="secondary">Next</Button>
           </div>
         </div>
         
@@ -59,8 +60,8 @@ function PostRow({ post }: any) {
         <span className="text-sm">{post.title}</span>
       </div>
       <div className="flex gap-2">
-        <button className="text-sm text-blue-400 hover:text-blue-300">Edit</button>
-        <button className="text-sm text-red-400 hover:text-red-300">Delete</button>
+        <Button variant="ghost" size="sm">Edit</Button>
+        <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
       </div>
     </div>
   );

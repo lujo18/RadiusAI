@@ -9,6 +9,7 @@ import React from "react";
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
 import { Check, Zap, Sparkles, Building2 } from 'lucide-react';
 
@@ -184,7 +185,7 @@ export default function Paywall() {
   if (pricesLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading pricing...</div>
+        <div className="text-foreground text-xl">Loading pricing...</div>
       </div>
     );
   }
@@ -194,10 +195,10 @@ export default function Paywall() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-white mb-4">
+          <h1 className="text-5xl font-bold text-foreground mb-4">
             Choose Your Plan
           </h1>
-          <p className="text-xl text-gray-300">
+          <p className="text-xl text-muted-foreground">
             Scale your social media content creation
           </p>
         </div>
@@ -205,8 +206,8 @@ export default function Paywall() {
         {/* Current Plan Badge */}
         {user && (
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-white">
-              <span className="text-white/70">Current Plan:</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-foreground">
+              <span className="text-foreground/70">Current Plan:</span>
               <span className="font-bold capitalize">{user.plan}</span>
             </div>
           </div>
@@ -223,13 +224,13 @@ export default function Paywall() {
                 className={`relative rounded-2xl p-8 ${
                   tier.popular
                     ? 'bg-gradient-to-br from-purple-600 to-pink-600 transform scale-105'
-                    : 'bg-white/10 backdrop-blur-lg'
+                    : 'bg-card/10 backdrop-blur-lg'
                 } ${isCurrentPlan ? 'ring-4 ring-green-500' : ''}`}
               >
                 {/* Popular Badge */}
                 {tier.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="px-4 py-1 bg-yellow-400 text-gray-900 text-sm font-bold rounded-full">
+                    <span className="px-4 py-1 bg-chart-1 text-primary-foreground text-sm font-bold rounded-full">
                       MOST POPULAR
                     </span>
                   </div>
@@ -238,37 +239,37 @@ export default function Paywall() {
                 {/* Current Plan Badge */}
                 {isCurrentPlan && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="px-4 py-1 bg-green-500 text-white text-sm font-bold rounded-full">
+                    <span className="px-4 py-1 bg-chart-4 text-primary-foreground text-sm font-bold rounded-full">
                       CURRENT PLAN
                     </span>
                   </div>
                 )}
 
                 {/* Icon */}
-                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-lg mb-4">
+                <div className="flex items-center justify-center w-12 h-12 bg-primary/20 rounded-lg mb-4">
                   {tier.icon}
                 </div>
 
                 {/* Plan Name */}
-                <h3 className="text-2xl font-bold text-white mb-2">
+                <h3 className="text-2xl font-bold text-foreground mb-2">
                   {tier.name}
                 </h3>
 
                 {/* Description */}
-                <p className="text-gray-300 mb-6">{tier.description}</p>
+                <p className="text-muted-foreground mb-6">{tier.description}</p>
 
                 {/* Price */}
                 <div className="mb-6">
-                  <span className="text-5xl font-bold text-white">
+                  <span className="text-5xl font-bold text-foreground">
                     ${tier.price}
                   </span>
                   {tier.price > 0 && (
-                    <span className="text-gray-300 ml-2">/month</span>
+                    <span className="text-muted-foreground ml-2">/month</span>
                   )}
                 </div>
 
                 {/* CTA Button */}
-                <button
+                <Button
                   onClick={() =>
                     isCurrentPlan && tier.price > 0
                       ? handleManageSubscription()
@@ -277,8 +278,8 @@ export default function Paywall() {
                   disabled={loading !== null}
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
                     tier.popular
-                      ? 'bg-white text-purple-600 hover:bg-gray-100'
-                      : 'bg-white/20 text-white hover:bg-white/30'
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/80'
+                      : 'bg-card/20 text-foreground hover:bg-card/30'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {loading === tier.id
@@ -286,7 +287,7 @@ export default function Paywall() {
                     : isCurrentPlan
                     ? 'Manage Subscription'
                     : 'Subscribe Now'}
-                </button>
+                </Button>
 
                 {/* Features List */}
                 <ul className="mt-8 space-y-3">

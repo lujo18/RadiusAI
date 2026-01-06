@@ -1,4 +1,5 @@
 import React from "react";
+import { Button } from '../ui/button';
 interface ToggleProps {
   checked: boolean;
   onChange: () => void;
@@ -13,18 +14,18 @@ export default function Toggle({ checked, onChange, label }: ToggleProps) {
           {label}
         </label>
       )}
-      <button
+      <Button
         onClick={onChange}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          checked ? 'bg-primary-500' : 'bg-gray-700'
+          checked ? 'bg-primary' : 'bg-muted'
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-foreground transition-transform ${
             checked ? 'translate-x-6' : 'translate-x-1'
           }`}
         />
-      </button>
+      </Button>
     </div>
   );
 }

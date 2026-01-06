@@ -13,6 +13,18 @@ export const TextElementSchema = z.object({
   y: z.number(),
   width: z.number(),
   align: z.enum(['left', 'center', 'right']),
+  // Stroke properties
+  stroke: z.string().optional(),
+  stroke_width: z.number().optional(),
+  // Shadow properties
+  shadow_color: z.string().optional(),
+  shadow_blur: z.number().optional(),
+  shadow_offset_x: z.number().optional(),
+  shadow_offset_y: z.number().optional(),
+  shadow_opacity: z.number().optional(),
+  // Additional text properties
+  letter_spacing: z.number().optional(),
+  line_height: z.number().optional(),
 });
 
 // TypeScript type for a text element

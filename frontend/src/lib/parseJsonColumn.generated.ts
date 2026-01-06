@@ -15,7 +15,7 @@ export const BrandSettingsSchema = z.object({
   name: z.string(),
   niche: z.string(),
   preferred_words: z.array(z.string()),
-  profile_id: z.string(),
+  brand_id: z.string(),
   target_audience: z.string(),
   tone_of_voice: z.string(),
   updated_at: z.string(),

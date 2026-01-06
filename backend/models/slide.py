@@ -31,16 +31,26 @@ class TextElement(BaseModel):
     id: str
     type: Literal["text"] = "text"
     content: str
-    role: Optional[str] = None  # e.g., "header", "body", "cta"
     font_size: int
     font_family: str
     font_style: FontStyle = FontStyle.NORMAL
     color: str
     x: float
     y: float
-    width: Optional[float] = None
+    width: float
     align: TextAlign = TextAlign.LEFT
-    #rotation: float # TODO: Text rotation could be a potential quality of life feature but isn't worth implementing yet
+    # Stroke properties
+    stroke: Optional[str] = None
+    stroke_width: Optional[float] = None
+    # Shadow properties
+    shadow_color: Optional[str] = None
+    shadow_blur: Optional[float] = None
+    shadow_offset_x: Optional[float] = None
+    shadow_offset_y: Optional[float] = None
+    shadow_opacity: Optional[float] = None
+    # Additional text properties
+    letter_spacing: Optional[float] = None
+    line_height: Optional[float] = None
    
 class SlideDesign(BaseModel):
     id: str

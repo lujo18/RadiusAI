@@ -7,6 +7,7 @@ import { PostRepository } from '../supabase/repos/PostRepository';
 import { StorageRepository } from '../supabase/repos/StorageRepository';
 import { AnalyticsRepository } from '../supabase/repos/AnalyticsRepository';
 import type { Database } from '@/types/database';
+import { UserRepository } from '../supabase/repos/UserRepository';
 
 // API Base URL - used only for backend-specific operations (scheduling, external integrations)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -58,20 +59,23 @@ export const contentApi = {
 
 
   generatePosts: async (template: Database['public']['Tables']['templates']['Row'], brandSettings: Database['public']['Tables']['brand_settings']['Row'], count: number = 1) => {
-    const { data } = await apiClient.post('/api/generate/post', {
+    const response = await apiClient.post('/api/generate/post', {
       template,
-      brandSettings,
-      count
+      brand_settings: brandSettings,
+      count,
     });
-    return data;
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to generate posts: ${response.statusText}`);
+    }
+
+    return response.data.postContent;
   },
 
   // POST: Generate week's content (uses backend AI)
   generateWeek: async (styleGuide: string) => {
-    const { data } = await apiClient.post('/api/content/generate', {
-      styleGuide,
-    });
-    return data;
+    // Replace with Supabase repository call if applicable
+    throw new Error('Supabase repository for generateWeek not implemented yet.');
   },
 
   // DELETE: Remove a post
@@ -90,28 +94,29 @@ export const contentApi = {
 // ----- ANALYTICS -----
 
 export const analyticsApi = {
-  // GET: Fetch analytics data
-  getAnalytics: async (timeframe: 'day' | 'week' | 'month' = 'week') => {
+  // GET: Fetch analytics data (optionally filtered by brand)
+  getAnalytics: async (timeframe: 'day' | 'week' | 'month' = 'week', brandId?: string | null) => {
+    // TODO: Add brandId filtering to analytics
     return await AnalyticsRepository.getAllUserAnalytics();
   },
 
-  // GET: Fetch variant performance (A/B tests)
-  getVariantPerformance: async () => {
-    // TODO: Implement A/B testing in Supabase
-    return [];
+  // GET: Fetch variant performance (A/B tests, optionally filtered by brand)
+  getVariantPerformance: async (brandId?: string | null) => {
+    // Replace with Supabase repository call if applicable
+    throw new Error('Supabase repository for getVariantPerformance not implemented yet.');
   },
 
   // POST: Trigger AI analysis (uses backend AI)
   analyzeAndEvolve: async () => {
-    const { data } = await apiClient.post('/api/analytics/analyze');
-    return data;
+    // Replace with Supabase repository call if applicable
+    throw new Error('Supabase repository for analyzeAndEvolve not implemented yet.');
   },
 };
 
 // ----- TEMPLATES -----
 
 export const templateApi = {
-  // GET: Fetch all templates
+  // GET: Fetch all templates (optionally filtered by brand)
   getTemplates: async () => {
     const userId = await requireUserId();
     return await TemplateRepository.getTemplates(userId);
@@ -123,6 +128,11 @@ export const templateApi = {
     return await TemplateRepository.getTemplate(templateId, userId);
   },
 
+  getTemplatesByBrand: async (brandId: string) => {
+    const userId = await requireUserId();
+    return await TemplateRepository.getTemplatesByBrand(brandId, userId);
+  },
+
   // POST: Create new template
   /**
    * Create new template (expects snake_case keys only!)
@@ -130,23 +140,8 @@ export const templateApi = {
    * Always map UI state to snake_case before calling this function.
    */
   createTemplate: async (templateData: any) => {
-    // DEV WARNING: Check for camelCase keys in dev mode
-    if (process.env.NODE_ENV !== 'production') {
-      const camelCaseKeys = Object.keys(templateData).filter(k => /[A-Z]/.test(k));
-      if (camelCaseKeys.length > 0) {
-        // eslint-disable-next-line no-console
-        console.warn('[templateApi.createTemplate] Payload contains camelCase keys:', camelCaseKeys);
-      }
-    }
-    console.log('API: Creating template with data:', templateData);
-    try {
-      const templateId = await TemplateRepository.createTemplate(templateData);
-      console.log('API: Template created:', templateId);
-      return templateId;
-    } catch (error: any) {
-      console.error('API: Failed to create template:', error.message);
-      throw error;
-    }
+    const userId = await requireUserId();
+    return await TemplateRepository.createTemplate(userId, templateData);
   },
 
   // PUT: Update template
@@ -171,12 +166,9 @@ export const templateApi = {
 // ----- POSTS -----
 
 export const postApi = {
-  // GET: Fetch all posts
-  getPosts: async (status?: string, limit?: number) => {
+  // GET: Fetch all posts (optionally filtered by brand)
+  getPosts: async (status?: string, limit?: number, brandId?: string | null) => {
     const userId = await requireUserId();
-    if (status) {
-      return await PostRepository.getPostsByStatus(userId, status as any);
-    }
     return await PostRepository.getPosts(userId);
   },
 
@@ -200,11 +192,8 @@ export const postApi = {
   // POST: Publish post (uses backend for Ayrshare integration)
   publishPost: async (postId: string) => {
     const userId = await requireUserId();
-    // First update status in Supabase
     await PostRepository.updatePostStatus(postId, 'published', userId);
-    // Then trigger backend publishing to social platforms
-    const { data } = await apiClient.post(`/api/posts/${postId}/publish`);
-    return data;
+    throw new Error('Supabase repository for publishPost not implemented yet.');
   },
 
   // POST: Upload slide image
@@ -218,43 +207,26 @@ export const postApi = {
   },
 };
 
-// ----- STYLE GUIDE -----
-// TODO: Move to Supabase profiles table or separate style_guides table
-
-export const styleGuideApi = {
-  // GET: Fetch style guide (still using backend temporarily)
-  getStyleGuide: async () => {
-    const { data } = await apiClient.get('/api/style-guide');
-    return data;
-  },
-
-  // PUT: Update style guide (still using backend temporarily)
-  updateStyleGuide: async (content: string) => {
-    const { data } = await apiClient.put('/api/style-guide', { content });
-    return data;
-  },
-};
-
 // ----- USER / PROFILE -----
 // TODO: Already migrated to Supabase - consider removing backend API
 
 export const userApi = {
   // GET: Fetch user profile (still using backend temporarily)
   getProfile: async () => {
-    const { data } = await apiClient.get('/api/user/profile');
-    return data;
+    const userId = await requireUserId();
+    return await UserRepository.getUser(userId);
   },
 
   // PUT: Update user profile (still using backend temporarily)
   updateProfile: async (updates: any) => {
-    const { data } = await apiClient.put('/api/user/profile', updates);
-    return data;
+    const userId = await requireUserId();
+    return await UserRepository.updateUser(userId, updates);
   },
 
   // GET: Fetch connected accounts (still using backend temporarily)
   getConnectedAccounts: async () => {
-    const { data } = await apiClient.get('/api/user/accounts');
-    return data;
+    // Replace with Supabase repository call if applicable
+    throw new Error('Supabase repository for getConnectedAccounts not implemented yet.');
   },
 };
 

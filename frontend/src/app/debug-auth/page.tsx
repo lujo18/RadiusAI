@@ -1,26 +1,8 @@
-
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import { useAuthStore } from '@/store';
-import { useRouter } from 'next/navigation';
-
-export default function DebugAuthPage() {
-  const router = useRouter();
-  const authStore = useAuthStore();
-  const [supabaseAuth, setSupabaseAuth] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      setSupabaseAuth({ session, user });
-      setLoading(false);
-'use client';
+"use client";
 
 import React from "react";
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store';
 import { useRouter } from 'next/navigation';
@@ -99,24 +81,24 @@ export default function DebugAuthPage() {
 
         {/* Actions */}
         <div className="space-x-4">
-          <button
+          <Button
             onClick={handleClearAuth}
             className="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-lg font-semibold"
           >
             Clear All Auth & Reload
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => router.push('/pricing')}
             className="bg-primary-500 hover:bg-primary-600 px-6 py-3 rounded-lg font-semibold"
           >
             Go to Pricing
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => router.push('/signup?plan=growth')}
             className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-lg font-semibold"
           >
             Go to Signup
-          </button>
+          </Button>
         </div>
       </div>
     </div>

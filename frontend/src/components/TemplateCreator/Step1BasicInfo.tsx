@@ -28,7 +28,7 @@ export default function Step1BasicInfo({
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="e.g., Bold Questions, Minimal Quotes"
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 focus:outline-none focus:border-primary-500 transition"
+          className="w-full bg-muted border border rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition"
         />
       </div>
 
@@ -38,11 +38,11 @@ export default function Step1BasicInfo({
             type="checkbox"
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}
-            className="w-5 h-5 accent-primary-500"
+            className="w-5 h-5 accent-primary"
           />
           <span className="text-sm font-semibold">Set as default template</span>
         </label>
-        <p className="text-xs text-gray-400 mt-1 ml-7">
+        <p className="text-xs text-muted-foreground mt-1 ml-7">
           This template will be used for new posts unless specified
         </p>
       </div>

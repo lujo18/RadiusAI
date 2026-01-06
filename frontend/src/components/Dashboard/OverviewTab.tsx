@@ -1,5 +1,8 @@
 import React from "react";
 import { FiZap, FiRefreshCw, FiCalendar, FiHeart, FiTrendingUp, FiCheckCircle, FiInstagram, FiPlay, FiSettings } from 'react-icons/fi';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import StatCard from './StatCard';
 
@@ -34,12 +37,12 @@ export default function OverviewTab({
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-400">Manage your automated content pipeline</p>
+          <p className="text-muted-foreground">Manage your automated content pipeline</p>
         </div>
-        <button 
+        <Button 
           onClick={handleGenerate}
           disabled={isGenerating}
-          className="bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian disabled:bg-gray-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
+          className="bg-primary hover:bg-primary/80 text-primary-foreground disabled:bg-muted px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
         >
           {isGenerating ? (
             <>
@@ -52,7 +55,7 @@ export default function OverviewTab({
               Generate Week's Content
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       {/* Stats Grid */}
@@ -84,56 +87,62 @@ export default function OverviewTab({
       </div>
 
       {/* Chart */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-8">
-        <h2 className="text-2xl font-bold mb-6">Weekly Performance</h2>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={performanceData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis dataKey="day" stroke="#9CA3AF" />
-            <YAxis stroke="#9CA3AF" />
-            <Tooltip 
-              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
-              labelStyle={{ color: '#F3F4F6' }}
-            />
-            <Legend />
-            <Line type="monotone" dataKey="impressions" stroke="#FF4F8B" strokeWidth={2} />
-            <Line type="monotone" dataKey="engagement" stroke="#60A5FA" strokeWidth={2} />
-            <Line type="monotone" dataKey="saves" stroke="#34D399" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-2xl">Weekly Performance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={performanceData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+              <XAxis dataKey="day" stroke="#9CA3AF" />
+              <YAxis stroke="#9CA3AF" />
+              <Tooltip 
+                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151' }}
+                labelStyle={{ color: '#F3F4F6' }}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="impressions" stroke="#FF4F8B" strokeWidth={2} />
+              <Line type="monotone" dataKey="engagement" stroke="#60A5FA" strokeWidth={2} />
+              <Line type="monotone" dataKey="saves" stroke="#34D399" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       {/* Upcoming Posts */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-        <h2 className="text-2xl font-bold mb-6">Upcoming Posts</h2>
-        <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">Upcoming Posts</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {upcomingPosts.map((post: any) => (
-            <div key={post.id} className="flex items-center justify-between bg-gray-900/50 p-4 rounded-lg">
+            <div key={post.id} className="flex items-center justify-between bg-muted/50 p-4 rounded-lg">
               <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-lg ${post.platform === 'Instagram' ? 'bg-pink-500/20' : 'bg-blue-500/20'}`}>
+                <div className={`p-3 rounded-lg ${post.platform === 'Instagram' ? 'bg-chart-5/20' : 'bg-chart-2/20'}`}>
                   {post.platform === 'Instagram' ? (
-                    <FiInstagram className="text-pink-500" />
+                    <FiInstagram className="text-chart-5" />
                   ) : (
-                    <FiPlay className="text-blue-500" />
+                    <FiPlay className="text-chart-2" />
                   )}
                 </div>
                 <div>
                   <h3 className="font-semibold">{post.title}</h3>
-                  <p className="text-sm text-gray-400">{post.platform} • {post.date} at {post.time}</p>
+                  <p className="text-sm text-muted-foreground">{post.platform} • {post.date} at {post.time}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">
+                <Badge variant="secondary" className="bg-chart-4/20 text-chart-4 hover:bg-chart-4/30">
                   {post.status}
-                </span>
-                <button className="text-gray-400 hover:text-white">
+                </Badge>
+                <Button variant="ghost" size="icon">
                   <FiSettings />
-                </button>
+                </Button>
               </div>
             </div>
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

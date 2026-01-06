@@ -1,5 +1,7 @@
+
 'use client';
 
+import React from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
@@ -55,7 +57,7 @@ export default function AuthCallbackPage() {
         }
         
         // Default: redirect to dashboard
-        router.push('/dashboard');
+        router.push('/brand');
       } else {
         router.push('/login');
       }

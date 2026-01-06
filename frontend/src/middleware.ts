@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
   });
 
   // Protected routes
-  const protectedRoutes = ['/dashboard'];
+  const protectedRoutes = ['/brand'];
   const isProtectedRoute = protectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   );
@@ -128,6 +128,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
+    '/brand/:path*',
   ],
 };

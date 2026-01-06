@@ -42,3 +42,8 @@ export function useUpdateUserProfile() {
     },
   });
 }
+
+export function isAdminUser() {
+  const { data: profile } = useUserProfile();
+  return profile?.is_admin || false;
+}

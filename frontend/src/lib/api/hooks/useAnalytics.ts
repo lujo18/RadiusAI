@@ -6,25 +6,25 @@ import { analyticsApi } from '@/lib/api/client';
 // Query Keys
 export const analyticsKeys = {
   all: ['analytics'] as const,
-  byTimeframe: (timeframe: string) => ['analytics', timeframe] as const,
-  variants: ['analytics', 'variants'] as const,
+  byTimeframe: (timeframe: string, brandId?: string | null) => ['analytics', timeframe, brandId] as const,
+  variants: (brandId?: string | null) => ['analytics', 'variants', brandId] as const,
 };
 
 // ==================== QUERIES ====================
 
-export function useAnalytics(timeframe: 'day' | 'week' | 'month' = 'week') {
+export function useAnalytics(timeframe: 'day' | 'week' | 'month' = 'week', brandId?: string | null) {
   return useQuery({
-    queryKey: analyticsKeys.byTimeframe(timeframe),
-    queryFn: () => analyticsApi.getAnalytics(timeframe),
+    queryKey: analyticsKeys.byTimeframe(timeframe, brandId),
+    queryFn: () => analyticsApi.getAnalytics(timeframe, brandId),
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchInterval: 5 * 60 * 1000, // Auto-refresh every 5 minutes
   });
 }
 
-export function useVariantPerformance() {
+export function useVariantPerformance(brandId?: string | null) {
   return useQuery({
-    queryKey: analyticsKeys.variants,
-    queryFn: analyticsApi.getVariantPerformance,
+    queryKey: analyticsKeys.variants(brandId),
+    queryFn: () => analyticsApi.getVariantPerformance(brandId),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

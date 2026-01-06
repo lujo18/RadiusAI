@@ -6,15 +6,21 @@ import { templateApi } from '@/lib/api/client';
 // Query Keys
 export const templateKeys = {
   all: ['templates'] as const,
+  byBrand: (brandId: string | null) => ['templates', 'brand', brandId] as const,
   detail: (id: string) => ['templates', id] as const,
 };
 
 // ==================== QUERIES ====================
 
-export function useTemplates() {
+export function useTemplates(brandId?: string | null) {
   return useQuery({
-    queryKey: templateKeys.all,
-    queryFn: templateApi.getTemplates,
+    queryKey: brandId !== undefined ? templateKeys.byBrand(brandId) : templateKeys.all,
+    queryFn: async () => {
+      if (brandId) {
+        return await templateApi.getTemplatesByBrand(brandId); 
+      }
+      return await templateApi.getTemplates();
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
@@ -32,6 +38,8 @@ export function useTemplate(templateId: string) {
 
 export function useCreateTemplate() {
   const queryClient = useQueryClient();
+
+  console.log("Tanstack Create Template", queryClient)
 
   return useMutation({
     mutationFn: templateApi.createTemplate,

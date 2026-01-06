@@ -51,10 +51,12 @@ export class TemplateRepository {
     return (data || []).map((t) => TemplateSchema.parse(t));
   }
 
-  static async createTemplate(template: z.infer<typeof TemplateSchema>) {
+  static async createTemplate(userId: string, template: z.infer<typeof TemplateSchema>) {
+    console.log("Supabase Creating Template", template);
+
     const { data, error } = await supabase
       .from('templates')
-      .insert([template])
+      .insert([{ ...template, user_id: userId }])
       .select()
       .single();
     if (error) throw new Error(error.message);
@@ -129,5 +131,19 @@ export class TemplateRepository {
       throw new Error(error.message);
     }
     return data;
+  }
+
+  static async getTemplatesByBrand(brandId: string, userId: string) {
+    const { data, error } = await supabase
+      .from('templates')
+      .select('*')
+      .eq('brand_id', brandId)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    console.log("gtbb out", data, error);
+
+    if (error) throw new Error(error.message);
+    return (data || []).map((t) => TemplateSchema.parse(t));
   }
 }

@@ -1,6 +1,8 @@
 import React from "react";
 import { FiCheck } from 'react-icons/fi';
-import type { TemplateCategory } from '@/types/database';
+import { Button } from '../ui/button';
+
+type TemplateCategory = 'listicle' | 'quote' | 'story' | 'educational' | 'comparison';
 
 interface CategoryCardProps {
   categoryKey: TemplateCategory;
@@ -17,7 +19,7 @@ interface CategoryCardProps {
 
 export default function CategoryCard({ categoryKey, info, selected, onSelect }: CategoryCardProps) {
   return (
-    <button
+    <Button
       onClick={onSelect}
       className={`text-left p-4 rounded-lg border-2 transition ${
         selected 
@@ -41,8 +43,8 @@ export default function CategoryCard({ categoryKey, info, selected, onSelect }: 
             {info.structure.length} slides • {info.hookStyles.join(', ')} hooks
           </div>
         </div>
-        {selected && <FiCheck className="text-primary-400" />}
+        {selected && <FiCheck className="text-primary" />}
       </div>
-    </button>
+    </Button>
   );
 }

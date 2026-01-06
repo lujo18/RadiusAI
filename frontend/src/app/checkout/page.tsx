@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from '@/components/ui/button';
 import { supabase } from "@/lib/supabase/client";
 import { FiLoader, FiAlertCircle } from "react-icons/fi";
 
@@ -47,7 +48,7 @@ function CheckoutContent() {
 
         if (userData?.subscription_status === 'active' && userData?.stripe_subscription_id) {
           console.log('[Checkout] User already has active subscription - redirecting to dashboard');
-          router.push('/dashboard/settings?message=already_subscribed');
+          router.push('/brand/settings?message=already_subscribed');
           return;
         }
 
@@ -110,14 +111,14 @@ function CheckoutContent() {
       <div className="min-h-screen bg-dark-600 flex items-center justify-center p-4">
         <div className="glass-card p-8 max-w-md w-full text-center">
           <FiAlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold font-main text-white mb-2">Checkout Error</h1>
+          <h1 className="text-2xl font-bold font-main text-foreground mb-2">Checkout Error</h1>
           <p className="text-gray-400 mb-6">{error}</p>
-          <button
+          <Button
             onClick={() => router.push("/pricing")}
             className="btn-primary w-full"
           >
             Back to Pricing
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -127,7 +128,7 @@ function CheckoutContent() {
     <div className="min-h-screen bg-dark-600 flex items-center justify-center">
       <div className="text-center">
         <FiLoader className="w-12 h-12 text-primary-400 animate-spin mx-auto mb-4" />
-        <h2 className="text-xl font-semibold font-main text-white mb-2">
+        <h2 className="text-xl font-semibold font-main text-foreground mb-2">
           Creating your checkout session...
         </h2>
         <p className="text-gray-400">
@@ -144,7 +145,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-dark-600 flex items-center justify-center">
         <div className="text-center">
           <FiLoader className="w-12 h-12 text-primary-400 animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold font-main text-white mb-2">
+          <h2 className="text-xl font-semibold font-main text-foreground mb-2">
             Loading checkout...
           </h2>
         </div>

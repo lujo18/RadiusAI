@@ -1,8 +1,9 @@
-import React from "react";
 "use client";
+import React from "react";
 
 import { useState } from "react";
 import { FiX, FiCheck } from "react-icons/fi";
+import { Button } from '@/components/ui/button';
 import { StyleConfig } from "./styleConfigTypes";
 import type { Tables } from '@/types/database';
 import { TextElementsArraySchema } from '@/types/parseTextElement';
@@ -223,9 +224,9 @@ export default function TemplateCreator({
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-2">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl max-w-7xl w-full h-full flex flex-col">
+      <div className="bg-card border border rounded-xl max-w-7xl w-full h-full flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center px-6 py-3 border-b border-gray-700">
+        <div className="flex justify-between items-center px-6 py-3 border-b border">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-bold font-main">
               {existingTemplate ? "Edit Template" : "Create New Template"}
@@ -236,16 +237,16 @@ export default function TemplateCreator({
                 <div
                   key={s}
                   className={`h-1.5 w-12 rounded-full ${
-                    s <= step ? "bg-primary-500" : "bg-gray-700"
+                    s <= step ? "bg-primary" : "bg-muted"
                   }`}
                 />
               ))}
             </div>
-            <span className="text-xs text-gray-400">Step {step} of 3</span>
+            <span className="text-xs text-muted-foreground">Step {step} of 3</span>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition"
+            className="text-muted-foreground hover:text-foreground transition"
           >
             <FiX size={20} />
           </button>
@@ -304,30 +305,30 @@ export default function TemplateCreator({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center px-6 py-3 border-t border-gray-700 bg-gray-900">
-          <button
+        <div className="flex justify-between items-center px-6 py-3 border-t border bg-muted">
+          <Button
             onClick={() => (step > 1 ? setStep(step - 1) : onClose())}
-            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition"
+            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
           >
             {step > 1 ? "Back" : "Cancel"}
-          </button>
+          </Button>
           <div className="flex gap-2">
             {step < 3 ? (
-              <button
+              <Button
                 onClick={() => setStep(step + 1)}
                 disabled={step === 1 && !name}
-                className="bg-kinetic-mint hover:bg-kinetic-mint/80 disabled:bg-gray-700 disabled:cursor-not-allowed text-obsidian px-5 py-2 rounded-lg text-sm font-semibold transition"
+                className="bg-primary hover:bg-primary/80 disabled:bg-muted disabled:cursor-not-allowed text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold transition"
               >
                 Next
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 onClick={handleSave}
-                className="bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2"
+                className="bg-chart-4 hover:bg-chart-4/80 text-primary-foreground px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2"
               >
                 <FiCheck size={16} />
                 Save Template
-              </button>
+              </Button>
             )}
           </div>
         </div>

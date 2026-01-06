@@ -6,6 +6,7 @@ import { postApi, contentApi } from '@/lib/api/client';
 // Query Keys
 export const postKeys = {
   all: ['posts'] as const,
+  byBrand: (brandId: string | null) => ['posts', 'brand', brandId] as const,
   scheduled: ['posts', 'scheduled'] as const,
   detail: (id: string) => ['posts', id] as const,
   byStatus: (status: string) => ['posts', 'status', status] as const,
@@ -14,10 +15,10 @@ export const postKeys = {
 
 // ==================== QUERIES ====================
 
-export function usePosts(status?: string, limit?: number) {
+export function usePosts(status?: string, limit?: number, brandId?: string | null) {
   return useQuery({
-    queryKey: [...postKeys.all, status, limit] as const,
-    queryFn: () => postApi.getPosts(status, limit),
+    queryKey: [...postKeys.all, status, limit, brandId] as const,
+    queryFn: () => postApi.getPosts(status, limit, brandId),
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 }

@@ -13,14 +13,11 @@ export * from './hooks/useTemplates';
 // Posts
 export * from './hooks/usePosts';
 
-// Profiles
-export * from './hooks/useProfiles';
+// Brands (formerly Profiles)
+export * from './hooks/useBrands';
 
 // Analytics
 export * from './hooks/useAnalytics';
 
 // User Profile - renamed to avoid conflict with useProfile from useProfiles
 export { useUser } from './hooks/useUser';
-
-// Style Guide
-export * from './hooks/useStyleGuide';
