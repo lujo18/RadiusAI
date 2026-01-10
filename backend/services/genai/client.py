@@ -1,5 +1,6 @@
 from backend.config import Config
 
+
 class GeminiClient:
     """Lazy-loading Gemini client to avoid import issues"""
     def __init__(self):

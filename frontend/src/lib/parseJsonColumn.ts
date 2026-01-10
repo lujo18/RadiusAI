@@ -1,11 +1,9 @@
 import { z } from "zod";
+import { PostContentSchema, PostSlideSchema } from "./parseJsonColumn.supabase";
+import { BackgroundSchema } from "@/types/parseBackground";
 
-// Background schema for styleConfig.visual.background
-export const BackgroundSchema = z.object({
-  type: z.string(),
-  colors: z.array(z.string()),
-  opacity: z.number().optional(),
-});
+
+// Background type and parser
 export type Background = z.infer<typeof BackgroundSchema>;
 export function parseBackground(json: unknown): Background | null {
   const result = BackgroundSchema.safeParse(json);
@@ -13,15 +11,14 @@ export function parseBackground(json: unknown): Background | null {
 }
 
 // Slide schema for post.content.slides
-export const SlideSchema = z.object({
-  slideNumber: z.number(),
-  text: z.string(),
-  imagePrompt: z.string().optional(),
-  imageUrl: z.string().optional(),
-});
-export type Slide = z.infer<typeof SlideSchema>;
+export type Slide = z.infer<typeof PostSlideSchema>;
+
 export function parseSlides(json: unknown): Slide[] | null {
-  const result = z.array(SlideSchema).safeParse(json);
+  const result = z.array(PostSlideSchema).safeParse(json);
+  if (!result.success) {
+    console.error("Failed to parse slides:", result.error);
+    return null;
+  }
   return result.success ? result.data : null;
 }
 

@@ -1,5 +1,6 @@
 # backend/main.py
 import sys
+import logging
 from pathlib import Path
 
 from backend.routers import generate
@@ -29,6 +30,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 # Initialize Supabase

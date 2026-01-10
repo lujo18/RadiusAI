@@ -43,10 +43,10 @@ def build_generation_prompt(requestData: Dict[str, Any], count: int) -> str:
 BRAND CONTEXT:
 - Niche: {brand['niche']}
 - Aesthetic: {brand['aesthetic']}
-- Tone: {brand['tone']}
-- Emoji Usage: {brand['emojiUsage']}
-- NEVER use: {', '.join(brand['forbidden'])}
-- Prefer using: {', '.join(brand['preferred'])}
+- Tone: {brand['tone_of_voice']}
+- Emoji Usage: {brand['emoji_usage']}
+- NEVER use: {', '.join(brand['forbidden_words'])}
+- Prefer using: {', '.join(brand['preferred_words'])}
 
 TEXT ELEMENTS TO FILL:
 {''.join(element_instructions)}
@@ -70,7 +70,7 @@ REQUIRED OUTPUT FORMAT (strict JSON array with {count} different variations):
         }}
       }}
     ],
-    "caption": "Instagram caption (engaging, {brand['tone']}, includes topic keywords)",
+    "caption": "Instagram caption (engaging, {brand['tone_of_voice']}, includes topic keywords)",
     "hashtags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
   }},
   ... (repeat {count} times with DIFFERENT content each time)

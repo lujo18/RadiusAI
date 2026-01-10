@@ -14,17 +14,17 @@ export const TextElementSchema = z.object({
   width: z.number(),
   align: z.enum(['left', 'center', 'right']),
   // Stroke properties
-  stroke: z.string().optional(),
-  stroke_width: z.number().optional(),
+  stroke: z.string().nullish(),
+  stroke_width: z.number().nullish(),
   // Shadow properties
-  shadow_color: z.string().optional(),
-  shadow_blur: z.number().optional(),
-  shadow_offset_x: z.number().optional(),
-  shadow_offset_y: z.number().optional(),
-  shadow_opacity: z.number().optional(),
+  shadow_color: z.string().nullish(),
+  shadow_blur: z.number().nullish(),
+  shadow_offset_x: z.number().nullish(),
+  shadow_offset_y: z.number().nullish(),
+  shadow_opacity: z.number().nullish(),
   // Additional text properties
-  letter_spacing: z.number().optional(),
-  line_height: z.number().optional(),
+  letter_spacing: z.number().nullish(),
+  line_height: z.number().nullish(),
 });
 
 // TypeScript type for a text element

@@ -1,28 +1,33 @@
+import { TextElementsArraySchema } from "@/types/parseTextElement";
 import { z } from "zod";
+import { BackgroundSchema } from "@/types/parseBackground";
 
 // SlideDesign background (from slide_designs)
-export const SlideBackgroundSchema = z.object({
-  type: z.string(),
-  colors: z.array(z.string()),
-  opacity: z.number().optional(),
-});
-export type SlideBackground = z.infer<typeof SlideBackgroundSchema>;
+
+export type SlideBackground = z.infer<typeof BackgroundSchema>;
 export function parseSlideBackground(json: unknown): SlideBackground | null {
-  const result = SlideBackgroundSchema.safeParse(json);
+  const result = BackgroundSchema.safeParse(json);
   return result.success ? result.data : null;
 }
+
+
+export const PostSlideSchema = z.object({
+  slide_number: z.number(),
+  elements: TextElementsArraySchema,
+  background: BackgroundSchema,
+  dynamic: z.boolean().optional(),
+  design_id: z.string().optional(),
+  template_id: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+});
 
 // PostContent (from posts.content)
 export const PostContentSchema = z.object({
   title: z.string(),
   caption: z.string(),
   hashtags: z.array(z.string()),
-  slides: z.array(z.object({
-    slideNumber: z.number(),
-    text: z.string(),
-    imageUrl: z.string().optional(),
-    imagePrompt: z.string().optional(),
-  })),
+  slides: z.array(PostSlideSchema),
 });
 export type PostContent = z.infer<typeof PostContentSchema>;
 export function parsePostContent(json: unknown): PostContent | null {
@@ -38,7 +43,7 @@ export const StyleConfigSchema = z.object({
     structure: z.array(z.string()),
   }),
   visual: z.object({
-    background: SlideBackgroundSchema,
+    background: BackgroundSchema,
     font: z.object({
       family: z.string(),
       size: z.number(),

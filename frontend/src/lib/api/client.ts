@@ -72,6 +72,20 @@ export const contentApi = {
     return response.data.postContent;
   },
 
+  generatePostsFromPrompt: async (prompt: string, brandSettings: Database['public']['Tables']['brand_settings']['Row'], count: number = 1) => {
+    const response = await apiClient.post('/api/generate/post/auto', {
+      brand_settings: brandSettings,
+      prompt,
+      count,
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to generate posts: ${response.statusText}`);
+    }
+    
+    return response.data.postContent;
+  },
+
   // POST: Generate week's content (uses backend AI)
   generateWeek: async (styleGuide: string) => {
     // Replace with Supabase repository call if applicable

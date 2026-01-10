@@ -493,8 +493,8 @@ export default function Step2VisualEditor({
                       fontFamily: element.font_family,
                       fontStyle: element.font_style,
                       align: element.align,
-                      letterSpacing: element.letter_spacing,
-                      lineHeight: element.line_height,
+                      letterSpacing: element.letter_spacing ?? undefined,
+                      lineHeight: element.line_height ?? undefined,
                       perfectDrawEnabled: false,
                     };
 
@@ -547,11 +547,11 @@ export default function Step2VisualEditor({
                             fill={element.stroke}
                             stroke={element.stroke}
                             strokeWidth={element.stroke_width}
-                            shadowColor={element.shadow_color}
-                            shadowBlur={element.shadow_blur}
-                            shadowOffsetX={element.shadow_offset_x}
-                            shadowOffsetY={element.shadow_offset_y}
-                            shadowOpacity={element.shadow_opacity}
+                            shadowColor={element.shadow_color ?? undefined}
+                            shadowBlur={element.shadow_blur ?? undefined}
+                            shadowOffsetX={element.shadow_offset_x ?? undefined}
+                            shadowOffsetY={element.shadow_offset_y ?? undefined}
+                            shadowOpacity={element.shadow_opacity ?? undefined}
                           />
                           {/* Fill layer (on top) */}
                           <KonvaText
@@ -570,11 +570,11 @@ export default function Step2VisualEditor({
                         x={element.x}
                         y={element.y}
                         fill={element.color}
-                        shadowColor={element.shadow_color}
-                        shadowBlur={element.shadow_blur}
-                        shadowOffsetX={element.shadow_offset_x}
-                        shadowOffsetY={element.shadow_offset_y}
-                        shadowOpacity={element.shadow_opacity}
+                        shadowColor={element.shadow_color ?? undefined}
+                        shadowBlur={element.shadow_blur ?? undefined}
+                        shadowOffsetX={element.shadow_offset_x ?? undefined}
+                        shadowOffsetY={element.shadow_offset_y ?? undefined}
+                        shadowOpacity={element.shadow_opacity ?? undefined}
                         draggable
                         onClick={() => setSelectedElementId(element.id)}
                         onTap={() => setSelectedElementId(element.id)}

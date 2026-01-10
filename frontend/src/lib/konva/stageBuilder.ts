@@ -28,12 +28,13 @@ const ASPECT_RATIOS: Record<AspectRatio, { width: number; height: number }> = {
 /**
  * Creates a background layer for a slide
  * Handles solid colors, gradients, and images
+ * Returns a Promise for async image loading
  */
-export function createBackgroundLayer(
+export async function createBackgroundLayer(
   background: Background,
   width: number,
   height: number
-): Konva.Layer {
+): Promise<Konva.Layer> {
   const layer = new Konva.Layer();
 
   if (background.type === "solid" && background.color) {
@@ -69,16 +70,52 @@ export function createBackgroundLayer(
     });
     layer.add(rect);
   } else if (background.type === "image" && background.image_url) {
-    // For worker: images need to be pre-loaded or use data URLs
-    // For now, create a placeholder or skip
-    const rect = new Konva.Rect({
-      x: 0,
-      y: 0,
-      width,
-      height,
-      fill: "#333333", // Fallback color
+    // Load image and wait for it
+    await new Promise<void>((resolve, reject) => {
+      const imageObj = new Image();
+      imageObj.crossOrigin = "anonymous"; // Enable CORS
+      
+      imageObj.onload = () => {
+        const konvaImage = new Konva.Image({
+          x: 0,
+          y: 0,
+          width,
+          height,
+          image: imageObj,
+        });
+        layer.add(konvaImage);
+        
+        // TODO: Consider making this togglable
+        // Add subtle black overlay for better text readability
+        const overlay = new Konva.Rect({
+          x: 0,
+          y: 0,
+          width,
+          height,
+          fill: "#000000",
+          opacity: 0.3, // 30% opacity - adjust as needed
+        });
+        layer.add(overlay);
+        
+        resolve();
+      };
+      
+      imageObj.onerror = () => {
+        console.error("Failed to load image:", background.image_url);
+        // Show gray fallback
+        const rect = new Konva.Rect({
+          x: 0,
+          y: 0,
+          width,
+          height,
+          fill: "#333333",
+        });
+        layer.add(rect);
+        resolve(); // Still resolve to continue
+      };
+      
+      imageObj.src = background.image_url!; // Type guard above ensures this exists
     });
-    layer.add(rect);
   }
 
   return layer;
@@ -98,8 +135,8 @@ export function createTextNode(element: TextElement): Konva.Text | Konva.Group {
     fontFamily: element.font_family,
     fontStyle: element.font_style,
     align: element.align,
-    letterSpacing: element.letter_spacing,
-    lineHeight: element.line_height,
+    letterSpacing: element.letter_spacing ?? undefined,
+    lineHeight: element.line_height ?? undefined,
     listening: false,
   };
 
@@ -117,11 +154,11 @@ export function createTextNode(element: TextElement): Konva.Text | Konva.Group {
       fill: element.stroke,
       stroke: element.stroke,
       strokeWidth: element.stroke_width,
-      shadowColor: element.shadow_color,
-      shadowBlur: element.shadow_blur,
-      shadowOffsetX: element.shadow_offset_x,
-      shadowOffsetY: element.shadow_offset_y,
-      shadowOpacity: element.shadow_opacity,
+      shadowColor: element.shadow_color ?? undefined,
+      shadowBlur: element.shadow_blur ?? undefined,
+      shadowOffsetX: element.shadow_offset_x ?? undefined,
+      shadowOffsetY: element.shadow_offset_y ?? undefined,
+      shadowOpacity: element.shadow_opacity ?? undefined,
     });
     group.add(strokeText);
 
@@ -140,11 +177,11 @@ export function createTextNode(element: TextElement): Konva.Text | Konva.Group {
     ...baseConfig,
     id: element.id,
     fill: element.color,
-    shadowColor: element.shadow_color,
-    shadowBlur: element.shadow_blur,
-    shadowOffsetX: element.shadow_offset_x,
-    shadowOffsetY: element.shadow_offset_y,
-    shadowOpacity: element.shadow_opacity,
+    shadowColor: element.shadow_color ?? undefined,
+    shadowBlur: element.shadow_blur ?? undefined,
+    shadowOffsetX: element.shadow_offset_x ?? undefined,
+    shadowOffsetY: element.shadow_offset_y ?? undefined,
+    shadowOpacity: element.shadow_opacity ?? undefined,
   });
 }
 
@@ -171,11 +208,11 @@ export function createContentLayer(elements: TextElement[]): Konva.Layer {
  * @param canvas - Optional canvas element (DOM or OffscreenCanvas)
  * @returns Configured Konva Stage
  */
-export function buildStageFromSlide(
+export async function buildStageFromSlide(
   slideDesign: SlideDesign,
   aspectRatio: AspectRatio,
   canvas?: HTMLCanvasElement | OffscreenCanvas
-): Konva.Stage {
+): Promise<Konva.Stage> {
   const dimensions = ASPECT_RATIOS[aspectRatio];
 
   // Konva expects a string (container id) or HTMLDivElement, but for export we use a canvas (for OffscreenCanvas/DOM export)
@@ -200,7 +237,7 @@ export function buildStageFromSlide(
   const background: Background = result.success
     ? result.data
     : { type: 'solid', color: '#000' };
-  const backgroundLayer = createBackgroundLayer(
+  const backgroundLayer = await createBackgroundLayer(
     background,
     dimensions.width,
     dimensions.height
@@ -221,11 +258,11 @@ export function buildStageFromSlide(
  * Builds a Stage with high DPI for export
  * Used in worker for generating high-quality images
  */
-export function buildStageForExport(
+export async function buildStageForExport(
   slideDesign: PostSlide,
   aspectRatio: AspectRatio,
   pixelRatio: number = 2
-): Konva.Stage {
+): Promise<Konva.Stage> {
   const dimensions = ASPECT_RATIOS[aspectRatio];
 
   // Create a temporary canvas element for the stage
@@ -254,7 +291,7 @@ export function buildStageForExport(
   });
 
   // Add layers
-  const backgroundLayer = createBackgroundLayer(
+  const backgroundLayer = await createBackgroundLayer(
     slideDesign.background,
     dimensions.width,
     dimensions.height
