@@ -3,6 +3,8 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 from datetime import datetime
+
+from backend.models.slide import PostContent
 from .gemini import GeminiCarouselResponse
 
 # ==================== POST SUB-MODELS ====================
@@ -36,7 +38,7 @@ class Post(BaseModel):
     updated_at: Optional[str] = None
     scheduled_time: Optional[str] = None
     published_time: Optional[str] = None
-    content: dict  # Supabase: JSON
+    content: PostContent  # Supabase: JSON
     storage_urls: dict = {}
     metadata: dict = {}
 

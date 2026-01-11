@@ -64,10 +64,6 @@ def generate_slideshow_auto(
     if not isinstance(generated_data, list):
         raise ValueError("Gemini response must be an array of post variations")
 
-
-    
-
-
     post_contents = [
         _convert_to_post_content(generated_post)
         for generated_post in generated_data

@@ -76,13 +76,13 @@ class SlideRenderer:
 		Konva uses pixels, Pillow uses points. Scale factor ~1.33 to match.
 		"""
 		font_map = {
-      'Tiktok Sans': 'TikTokSans-Regular.ttf',
+      'Tiktok Sans': 'TikTokSans-Medium.ttf',
 			'Inter Bold': 'Inter-Bold.ttf',
 			'Inter': 'Inter-Regular.ttf',
 			'Plus Jakarta Sans': 'PlusJakartaSans-Bold.ttf',
 			'Montserrat': 'Montserrat-Bold.ttf',
 		}
-		font_file = font_map.get(family, 'TikTokSans-Regular.ttf')  # Default to TikTok Sans
+		font_file = font_map.get(family, 'TikTokSans-Medium.ttf')  # Default to TikTok Sans
 		
 		# Scale font size to match Konva's pixel-based rendering
 		# Konva fontSize is in pixels, Pillow uses points at 72 DPI
@@ -176,6 +176,11 @@ class SlideRenderer:
 		lines = self._get_wrapped_lines(el.content, font, max_width)
 		line_height = font.size * (el.line_height if hasattr(el, 'line_height') and el.line_height else 1.2)
 		
+		# Get alignment
+		align = 'center'
+		if hasattr(el, 'align') and el.align:
+			align = el.align if isinstance(el.align, str) else el.align.value
+		
 		# Create shadow layer if needed
 		if el.shadow_color and el.shadow_blur:
 			shadow_layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
@@ -187,7 +192,17 @@ class SlideRenderer:
 			
 			y = el.y + (el.shadow_offset_y or 0)
 			for line in lines:
-				x = el.x + (el.shadow_offset_x or 0)
+				# Calculate x based on alignment
+				bbox = shadow_draw.textbbox((0, 0), line, font=font)
+				line_width = bbox[2] - bbox[0]
+				
+				if align == 'center':
+					x = el.x + (max_width - line_width) / 2 + (el.shadow_offset_x or 0)
+				elif align == 'right':
+					x = el.x + max_width - line_width + (el.shadow_offset_x or 0)
+				else:
+					x = el.x + (el.shadow_offset_x or 0)
+				
 				shadow_draw.text((x, y), line, font=font, fill=shadow_fill)
 				y += line_height
 			
@@ -203,10 +218,21 @@ class SlideRenderer:
 			
 			y = el.y
 			for line in lines:
+				# Calculate x based on alignment
+				bbox = stroke_draw.textbbox((0, 0), line, font=font)
+				line_width = bbox[2] - bbox[0]
+				
+				if align == 'center':
+					x = el.x + (max_width - line_width) / 2
+				elif align == 'right':
+					x = el.x + max_width - line_width
+				else:
+					x = el.x
+				
 				for dx in range(-stroke_width, stroke_width + 1):
 					for dy in range(-stroke_width, stroke_width + 1):
 						if dx != 0 or dy != 0:
-							stroke_draw.text((el.x + dx, y + dy), line, font=font, fill=stroke_rgb)
+							stroke_draw.text((x + dx, y + dy), line, font=font, fill=stroke_rgb)
 				y += line_height
 			
 			img = Image.alpha_composite(img, stroke_layer)
@@ -218,7 +244,18 @@ class SlideRenderer:
 		
 		y = el.y
 		for line in lines:
-			main_draw.text((el.x, y), line, font=font, fill=color_rgb)
+			# Calculate x based on alignment
+			bbox = main_draw.textbbox((0, 0), line, font=font)
+			line_width = bbox[2] - bbox[0]
+			
+			if align == 'center':
+				x = el.x + (max_width - line_width) / 2
+			elif align == 'right':
+				x = el.x + max_width - line_width
+			else:
+				x = el.x
+			
+			main_draw.text((x, y), line, font=font, fill=color_rgb)
 			y += line_height
 		
 		img = Image.alpha_composite(img, main_layer)

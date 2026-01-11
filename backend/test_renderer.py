@@ -10,30 +10,59 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from backend.models.slide import PostSlide, TextElement, BackgroundConfig, TextAlign, FontStyle, BackgroundType
 from backend.services.pillow.renderSlides import SlideRenderer
 
-# Create a test slide
+# Create a test slide with header_and_body layout (matching slide_layouts.py)
 test_slide = PostSlide(
     slide_number=1,
     design_id="test-1",
     background=BackgroundConfig(
-        type=BackgroundType.GRADIENT,
-        gradient_colors=("#0B0B0C", "#1a1a1a"),
-        gradient_angle=0
+        type=BackgroundType.IMAGE,
+        image_url="https://images.unsplash.com/photo-1700393879677-663e8475bf70?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     ),
     dynamic=False,
     elements=[
+        # Header text
         TextElement(
-            id="text-1",
+            id="text-1767736354031",
             type="text",
-            content="Hello from Pillow!\nThis is a test slide with auto-wrapping text that should look identical to Konva.",
-            font_size=48,
-            font_family="Tiktok Sans",  # Using TikTok Sans
+            content="1) 21-Day No-Complaint Experiment",
+            font_size=55,
+            font_family="Tiktok Sans",
             font_style=FontStyle.BOLD,
-            color="#F8FAFC",
-            x=80,
-            y=860,  # Centered vertically around 960 (1920/2)
-            width=920,  # 1080 - 160 padding
+            color="#ffffff",
+            x=100,
+            y=190,
+            width=880,
             align=TextAlign.CENTER,
-            line_height=1.5
+            stroke="#000000",
+            stroke_width=4,
+            shadow_color="#000000",
+            shadow_blur=6,
+            shadow_offset_x=0,
+            shadow_offset_y=2,
+            shadow_opacity=0.5,
+            line_height=1.3,
+        ),
+        # Body text
+        TextElement(
+            id="text-1767738943620",
+            type="text",
+            content="Try going 21 days without complaining, gossiping, or criticizing. If you slip, you start overe It helps you stay more positive and mindfulevery day.",
+            font_size=48,
+            font_family="Tiktok Sans",
+            font_style=FontStyle.NORMAL,
+            color="#ffffff",
+            x=100,
+            y=500,
+            width=880,
+            align=TextAlign.CENTER,
+            stroke="#000000",
+            stroke_width=4,
+            shadow_color="#000000",
+            shadow_blur=6,
+            shadow_offset_x=0,
+            shadow_offset_y=2,
+            shadow_opacity=0.5,
+            line_height=1.3,
         )
     ],
     image_prompt=None

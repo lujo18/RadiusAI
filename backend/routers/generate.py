@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 import logging
 from pydantic import BaseModel
+from backend.auth import get_current_user
 from backend.services.genai.gemini_service import generate_content_with_gemini
 from backend.services.genai.generate_slideshow import generate_slideshow_auto
 from backend.models import Template
@@ -37,11 +38,12 @@ async def generate_post_content_from_prompt(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/post", response_model=dict)
-async def generate_post_content(
-    request: GeneratePostRequest
+async def create_post(
+    request: GeneratePostRequest,
+    user_id: str = Depends(get_current_user)
 ):
     """Generate post content using Gemini AI based on a predefined template."""
-    print("Request ", request)
+    
     try:
         post_content = generate_content_with_gemini(
             request.template,
