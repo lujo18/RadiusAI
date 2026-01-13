@@ -29,25 +29,26 @@ Radius (formerly ViralStack) is an AI-powered carousel content automation platfo
 - Smooth, spring-based animations (not just flashing on screen)
 - High contrast, premium feel (no SaaS blue)
 
+
 ### UI Component Standards
 **CRITICAL**: ALL new UI components must follow these patterns from [app/page.tsx](frontend/src/app/page.tsx):
 
 1. **Background Colors**:
-   - Main pages: `bg-obsidian`
-   - Sections: Alternate between `bg-obsidian` and `bg-background`
-   - Cards: `glass-card` class (glassmorphism with `bg-white/5 backdrop-blur-md border border-white/10`)
-   - Inputs: `bg-obsidian border border-ghost-white/10` with `focus:border-kinetic-mint focus:ring-2 focus:ring-kinetic-mint/20`
+   - Main pages: `bg-background`
+   - Sections: Alternate between `bg-background` and `bg-secondary`
+   - Cards: `glass-card` class (glassmorphism with `bg-card/50 backdrop-blur-md border border-border`)
+   - Inputs: `bg-background border border-border` with `focus:border-primary focus:ring-2 focus:ring-primary/20`
 
 2. **Text Colors**:
-   - Headings: `text-ghost-white`
-   - Body text: `text-ghost-white/80`
-   - Links: `text-kinetic-mint hover:text-kinetic-mint/80`
-   - Muted text: `text-ghost-white/50`
+   - Headings: `text-foreground`
+   - Body text: `text-foreground/80`
+   - Links: `text-primary hover:text-primary/80`
+   - Muted text: `text-foreground/50`
 
 3. **Buttons**:
-   - Primary: `btn-primary` or `bg-kinetic-mint hover:bg-kinetic-mint/80 text-obsidian shadow-lg hover:shadow-kinetic-mint/50`
-   - Secondary: `btn-secondary` or `bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md`
-   - Ghost: `btn-ghost` or `bg-transparent hover:bg-white/5 text-ghost-white/80 hover:text-ghost-white`
+   - Primary: `btn-primary` or `bg-primary hover:bg-primary/80 text-background shadow-lg hover:shadow-primary/50`
+   - Secondary: `btn-secondary` or `bg-secondary hover:bg-secondary/80 border border-border backdrop-blur-md`
+   - Ghost: `btn-ghost` or `bg-transparent hover:bg-foreground/5 text-foreground/80 hover:text-foreground`
 
 4. **Layout Patterns**:
    - Max width containers: `max-w-6xl mx-auto` or `max-w-7xl mx-auto`
@@ -56,15 +57,15 @@ Radius (formerly ViralStack) is an AI-powered carousel content automation platfo
    - Spacing: Use `space-y-4`, `space-y-8`, `gap-4`, `gap-8` consistently
 
 5. **Split-Screen Auth Pages**:
-   - Left side: Form content with `bg-obsidian` or dark background
-   - Right side: Gradient illustration `bg-gradient-to-br from-kinetic-mint via-electric-violet to-ghost-white`
+   - Left side: Form content with `bg-background` or dark background
+   - Right side: Gradient illustration `bg-gradient-to-br from-primary via-blue-500 to-foreground`
    - Hidden on mobile: `hidden lg:flex` for right side
-   - White text with dark inputs throughout
+   - Foreground text with dark inputs throughout
 
 6. **Glassmorphism Effects**:
    - Use `glass-card` class for cards: adds backdrop blur, subtle border, and shadow
-   - Hover states: `hover:bg-white/10 hover:border-white/20 transition-all duration-300`
-   - Forms: Obsidian inputs (`bg-obsidian`) with subtle borders
+   - Hover states: `hover:bg-foreground/10 hover:border-border/80 transition-all duration-300`
+   - Forms: Inputs with `bg-background` and subtle borders
 
 7. **Animations**:
    - Available: `animate-pulse`, `animate-bounce`, `animate-spin-slow`, `animate-fade-in`
@@ -72,12 +73,9 @@ Radius (formerly ViralStack) is an AI-powered carousel content automation platfo
    - Transitions: `transition-all duration-300` for smooth hover effects
 
 ### When Creating New Pages/Components:
-1. Start with `bg-dark-600` or `bg-dark-500` background
-2. Use `text-white` for headings, `text-gray-400` for body
-3. Apply `glass-card` or `dark-card` classes for containers
-4. Use `btn-primary`, `btn-secondary`, `btn-ghost` for buttons
-5. Match the aesthetic of [app/page.tsx](frontend/src/app/page.tsx) hero section
-6. Never use pure white backgrounds - always dark theme
+1. Use standard shadcn coloring (`background`, `foreground`, `primary`, `secondary`, `card`, `border`, etc)
+2. Match the aesthetic of [app/page.tsx](frontend/src/app/page.tsx) hero section
+3. Never use pure white backgrounds - always dark theme
 
 ## Critical Development Workflows
 

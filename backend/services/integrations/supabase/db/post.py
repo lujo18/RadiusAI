@@ -149,14 +149,14 @@ def get_posts_by_variant_set(user_id: str, variant_set_id: str) -> List[Dict[str
 
 def create_post(
     user_id: str,
-    template_id: str,
-    platform: str,
-    content: PostContent,
+    template_id: str = "",
+    platform: str = "tiktok",
+    content: Dict[str, Any] = None, 
     status: str = "draft",
     scheduled_time: Optional[str] = None,
     variant_set_id: Optional[str] = None,
     metadata: Optional[Dict[str, Any]] = None
-) -> Post:
+) -> Dict[str, Any]:
     """
     Create a new post.
     
@@ -177,7 +177,6 @@ def create_post(
     
     post_data = {
         'user_id': user_id,
-        'template_id': template_id,
         'platform': platform,
         'status': status,
         'content': content,
@@ -185,6 +184,9 @@ def create_post(
         'storage_urls': {'slides': [], 'thumbnail': None},
         'metadata': metadata or {}
     }
+    
+    if template_id:
+        post_data['template_id'] = template_id
     
     if scheduled_time:
         post_data['scheduled_time'] = scheduled_time

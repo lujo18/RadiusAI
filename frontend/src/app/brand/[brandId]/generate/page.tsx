@@ -24,8 +24,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PostContent } from "@/lib/parseJsonColumn.supabase";
+import { contentApi } from "@/lib/api/client";
+import { Post } from "@/types/types";
 
 type Brand = Database["public"]["Tables"]["brand"]["Row"];
+
 
 function getBrandSettings(brand: Brand): BrandSettings | null {
   if (!brand.brand_settings) return null;
@@ -36,10 +40,11 @@ export default function GeneratePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [selectedProfile, setSelectedProfile] = useState<string>("");
   const [selectedGenType, setSelectedGenType] = useState<string>("");
-  const [genertationPrompt, setGenertationPrompt] = useState<string>("Create a '5 tips for better sleep' slideshow");
+  const [genertationPrompt, setGenertationPrompt] = useState<string>("Create a '4 habits that put you in the 1%' slideshow");
+  
+  // Generation states
   const [generating, setGenerating] = useState(false);
-  const [posts, setPosts] = useState({});
-  const [generatedBlobs, setGeneratedBlobs] = useState<Blob[]>([]);
+  const [generatedPosts, setGeneratedPosts] = useState<Post[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const createPost = useCreatePost();
   const { data: templates, isLoading: templatesLoading } = useTemplates();
@@ -66,42 +71,53 @@ export default function GeneratePage() {
     const brand = brands?.find((b) => b.id === selectedProfile);
     const prompt = genertationPrompt;
 
-    let blobs;
-
-    if (brand && selectedGenType === "template" && rawTemplate) {
-      // Patch template.brand_id to always be string|null
-      const template = {
-        ...rawTemplate,
-        brand_id:
-          typeof rawTemplate.brand_id === "undefined"
-            ? null
-            : rawTemplate.brand_id,
-        tags: typeof rawTemplate.tags === "undefined" ? null : rawTemplate.tags,
-        content_rules: {},
-      };
-
-      console.log("Generating with template")
-      blobs = await createPostsFromTemplate(template, brand, 1);
-    } else if (brand && selectedGenType === "prompt" && prompt) {
-
-      console.log("Auto generating with prompt")
-      blobs = await createPostsFromPrompt(prompt, brand, 1);
-    } else {
-      setGenerating(false);
-      return;
-    }
-
     try {
-      console.log("Blobs", blobs)
-      setGeneratedBlobs(blobs);
-      const images = blobs.map((blob) => URL.createObjectURL(blob));
-      setImageUrls(images);
-      alert("Post generated successfully!");
+      if (brand && selectedGenType === "template" && rawTemplate) {
+        // Patch template.brand_id to always be string|null
+        const template = {
+          ...rawTemplate,
+          brand_id:
+            typeof rawTemplate.brand_id === "undefined"
+              ? null
+              : rawTemplate.brand_id,
+          tags: typeof rawTemplate.tags === "undefined" ? null : rawTemplate.tags,
+          content_rules: {},
+        };
+
+        console.log("Generating with template")
+        // createPostsFromTemplate returns Blob[] - not what we need for display
+        await createPostsFromTemplate(template, brand, 1);
+        alert("Post generated successfully! (Note: Template generation returns blobs, not posts)");
+      } else if (brand && selectedGenType === "prompt" && prompt) {
+        console.log("Auto generating with prompt")
+        const posts = await contentApi.generatePostsFromPrompt(
+          prompt, 
+          brand.brand_settings as BrandSettings, 
+          1
+        );
+        
+        console.log("Posts", posts)
+        setGeneratedPosts(posts);
+        alert("Post generated successfully!");
+      } else {
+        setGenerating(false);
+        return;
+      }
+      
       setSelectedTemplate("");
       setSelectedProfile("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to generate post:", error);
-      alert("Failed to generate post");
+      
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        alert("Your session has expired. Please sign in again.");
+        // Don't manually redirect - interceptor handles it
+      } else if (error.code === 'ERR_NETWORK') {
+        alert("Network error. Please check your connection and try again.");
+      } else {
+        alert(error.response?.data?.detail || "Failed to generate post. Please try again.");
+      }
     }
 
     setGenerating(false);
@@ -230,25 +246,73 @@ export default function GeneratePage() {
           </CardContent>
         </Card>
 
-        {imageUrls.length > 0 && (
-          <Card className="mt-6 mb-40">
-            <CardHeader>
-              <CardTitle>Slide Output</CardTitle>
-            </CardHeader>
-            <CardContent className="w-full overflow-x-auto pb-4">
-              <div className="flex flex-row flex-nowrap gap-4">
-                {imageUrls.map((url, i) => (
-                  <div key={i} className="flex-shrink-0">
-                    <img
-                      src={url}
-                      alt={`Slide ${i + 1}`}
-                      className="rounded-lg w-80 h-auto shadow-lg"
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+        {generatedPosts.length > 0 && (
+          <div className="space-y-6 mt-6 mb-40">
+            {generatedPosts.map((post) => {
+              const content = post.content as PostContent;
+              const storageUrls = post.storage_urls as { urls?: string[] };
+              const slideUrls = storageUrls?.urls || [];
+
+              return (
+                <Card key={post.id}>
+                  <CardHeader>
+                    <CardTitle>Generated Post</CardTitle>
+                    <CardDescription>
+                      Platform: {post.platform} • Status: {post.status}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Slide Images */}
+                    {slideUrls.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold mb-3">Slides</h3>
+                        <div className="w-full overflow-x-auto pb-4">
+                          <div className="flex flex-row flex-nowrap gap-4">
+                            {slideUrls.map((url, i) => (
+                              <div key={i} className="flex-shrink-0">
+                                <img
+                                  src={url}
+                                  alt={`Slide ${i + 1}`}
+                                  className="rounded-lg w-80 h-auto shadow-lg"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Caption */}
+                    {content?.caption && (
+                      <div>
+                        <h3 className="text-sm font-semibold mb-2">Caption</h3>
+                        <p className="text-sm text-muted-foreground bg-muted p-4 rounded-lg whitespace-pre-wrap">
+                          {content.caption}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Hashtags */}
+                    {content?.hashtags && content.hashtags.length > 0 && (
+                      <div>
+                        <h3 className="text-sm font-semibold mb-2">Hashtags</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {content.hashtags.map((tag, i) => (
+                            <span
+                              key={i}
+                              className="px-3 py-1 bg-kinetic-mint/10 text-kinetic-mint rounded-full text-sm"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
 
         {/* <div>

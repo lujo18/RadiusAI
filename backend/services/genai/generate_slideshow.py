@@ -48,6 +48,9 @@ def generate_slideshow_auto(
             temperature=0.85,
             max_output_tokens=2048,
             response_mime_type="application/json",
+            thinking_config=types.ThinkingConfig(
+                thinking_budget=0
+            )
         ),
     )
 
@@ -124,16 +127,15 @@ OUTPUT FORMAT - Return array of {count} variation(s):
     ],
     "caption": "Caption matching {brand.tone_of_voice} tone with keywords",
     "hashtags": ["relevant", "hashtags", "5-7tags"],
-    "background_query": "2-3 simple keywords for Unsplash (aesthetic/mood, not literal content). Examples: 'minimal dark gradient', 'urban architecture', 'nature mountains', 'abstract colorful'"
+    "background_query": 2-3 simple keywords for Unsplash
   }}
 ]
 
 CRITICAL - background_query RULES:
 - Keep it SHORT: 2-3 words maximum (no full sentences)
-- Focus on the environment/setting that matches the content 70% and brand 30%
+- Focus on **where** the content is happening
+- Balance the query by 70% content based, 30% brand rule based
 - Think cohesive mood across all slides
-- Good: "dark gradient", "urban minimal", "nature landscape", "abstract geometric"
-- Bad: "person working on laptop in modern office", "detailed tech illustration"
 
 RULES:
 - Fill ALL text element IDs for chosen layout
@@ -173,8 +175,26 @@ def _convert_to_post_content(generated: dict) -> PostContent:
         filled_elements = []
         for element in design["text_elements"]:
             # Fill element with Gemini's content
+            # Handle both dash and underscore formats (Gemini is inconsistent)
+            element_id = element["id"]
+            content = gen_slide["text_elements"].get(element_id)
+            
+            # Fallback: try with underscore if dash version not found
+            if content is None:
+                fallback_id = element_id.replace("-", "_")
+                content = gen_slide["text_elements"].get(fallback_id)
+            
+            # Fallback: try with dash if underscore version not found
+            if content is None:
+                fallback_id = element_id.replace("_", "-")
+                content = gen_slide["text_elements"].get(fallback_id)
+            
+            if content is None:
+                logger.warning(f"Missing content for element {element_id} in slide {slide_num}")
+                content = ""  # Use empty string as fallback
+            
             filled_elements.append(
-                {**element, "content": gen_slide["text_elements"][element["id"]]}
+                {**element, "content": content}
             )
 
         logger.info(f"Filling slide {slide_num} with layout {backgroundUrls[int(slide_num) - 1]}")

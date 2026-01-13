@@ -3,8 +3,6 @@ import sys
 import logging
 from pathlib import Path
 
-from backend.routers import generate
-
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
@@ -16,17 +14,20 @@ from services.genai.client import client
 from services.integrations.supabase.client import get_supabase
 from auth import get_current_user
 from dotenv import load_dotenv
-from backend.config import Config
+from config import Config
 
 # Import routers
-from routers import generate, profile
+from routers import brand, generate, social_connect
 
 app = FastAPI(title="ViralStack API", version="1.0.0")
 
-# CORS middleware
+# CORS middleware - Allow both localhost and 127.0.0.1
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,8 +48,9 @@ except Exception as e:
     print("   Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env")
 
 # Include routers
-app.include_router(profile.router)
+app.include_router(brand.router)
 app.include_router(generate.router)
+app.include_router(social_connect.router)
 
 security = HTTPBearer()
 

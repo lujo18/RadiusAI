@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { getAccessToken, requireUserId } from '@/lib/supabase/auth';
+import { supabase } from '@/lib/supabase/client';
 
 // Import all Supabase CRUD operations
 import { TemplateRepository } from '../supabase/repos/TemplateRepository';
@@ -8,6 +8,8 @@ import { StorageRepository } from '../supabase/repos/StorageRepository';
 import { AnalyticsRepository } from '../supabase/repos/AnalyticsRepository';
 import type { Database } from '@/types/database';
 import { UserRepository } from '../supabase/repos/UserRepository';
+import { Post } from '@/types/types';
+import { requireUserId } from '@/lib/supabase/auth';
 
 // API Base URL - used only for backend-specific operations (scheduling, external integrations)
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -20,26 +22,53 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor - add Supabase auth token
+// Request interceptor - add Supabase auth token with auto-refresh
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await getAccessToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Get fresh session (Supabase auto-refreshes if needed)
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle errors
+// Response interceptor - handle 401 with retry after refresh
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid - handled by AuthProvider
-      console.error('Unauthorized - token may be expired');
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any;
+    
+    // If 401 and we haven't retried yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        // Force refresh the session
+        const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !session) {
+          // Refresh failed - redirect to login
+          console.error('Session refresh failed - redirecting to login');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+        
+        // Update the Authorization header with new token
+        originalRequest.headers.Authorization = `Bearer ${session.access_token}`;
+        
+        // Retry the original request
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
     }
+    
     return Promise.reject(error);
   }
 );
@@ -72,10 +101,10 @@ export const contentApi = {
     return response.data.postContent;
   },
 
-  generatePostsFromPrompt: async (prompt: string, brandSettings: Database['public']['Tables']['brand_settings']['Row'], count: number = 1) => {
+  generatePostsFromPrompt: async (prompt: string, brandSettings: Database['public']['Tables']['brand_settings']['Row'], count: number = 1): Promise<Post[]> => {
     const response = await apiClient.post('/api/generate/post/auto', {
-      brand_settings: brandSettings,
       prompt,
+      brand_settings: brandSettings,
       count,
     });
 
@@ -83,7 +112,7 @@ export const contentApi = {
       throw new Error(`Failed to generate posts: ${response.statusText}`);
     }
     
-    return response.data.postContent;
+    return response.data.posts;
   },
 
   // POST: Generate week's content (uses backend AI)
@@ -220,6 +249,41 @@ export const postApi = {
     return await AnalyticsRepository.updatePostAnalytics(postId, analyticsData);
   },
 };
+
+
+export const brandApi = {
+  getAuthUrl: async ({late_profile_id, social_platform}: {late_profile_id: string; social_platform: string}): Promise<string> => {
+    const response = await apiClient.post('/api/brand/social-auth-url', {
+      late_profile_id,
+      social_platform
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to generate posts: ${response.statusText}`);
+    }
+    
+    return response.data.auth_url;
+  },
+
+  // New OAuth flow endpoints
+  startSocialConnect: async ({ platform, user_id }: { platform: string; user_id?: string }) => {
+    const response = await apiClient.post('/connect-social/start', {
+      platform,
+      user_id,
+    });
+    return response.data as { authUrl: string; platform: string; message: string };
+  },
+
+  checkConnectionStatus: async (connectToken: string) => {
+    const response = await apiClient.get(`/connect-social/status/${connectToken}`);
+    return response.data;
+  },
+
+  cancelConnection: async (connectToken: string) => {
+    const response = await apiClient.delete(`/connect-social/cancel/${connectToken}`);
+    return response.data;
+  },
+}
 
 // ----- USER / PROFILE -----
 // TODO: Already migrated to Supabase - consider removing backend API

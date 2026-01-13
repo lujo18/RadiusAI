@@ -3,12 +3,13 @@ from pydantic import BaseModel
 from typing import Optional
 
 from backend.models.user import BrandSettings
+from backend.services.profile.connect_account import connect_social
 from backend.services.profile.create_profile import create_profile
-from services.integrations.late.profile import create_late_profile
+from backend.services.integrations.late.profile import create_late_profile
 
 from backend.auth import get_current_user  # Assuming auth is set up in backend/auth.py
 
-router = APIRouter()
+router = APIRouter(prefix="/api/brand", tags=["brand"])
 
 class CreateProfileRequest(BaseModel):
   user_id: str
@@ -32,4 +33,26 @@ async def create_profile_api(
     )
     return {"profile": profile}
   except Exception as e:
+    raise HTTPException(status_code=400, detail=str(e))
+  
+
+class ConnectSocialRequest(BaseModel):
+  late_profile_id: str
+  social_platform: str
+  
+@router.post("/social-auth-url")
+async def get_social_auth_url(
+  request: ConnectSocialRequest,
+):
+  try:
+    print("[DEBUG] Incoming social-auth-url request:", request)
+    auth_url = connect_social(
+      request.late_profile_id,
+      request.social_platform
+    )
+    if not auth_url:
+      raise HTTPException(status_code=500, detail="Failed to get authorization URL")
+    return {"auth_url": auth_url}
+  except Exception as e:
+    print("[ERROR] social-auth-url exception:", e)
     raise HTTPException(status_code=400, detail=str(e))

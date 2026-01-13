@@ -143,6 +143,12 @@ export default function DashboardSidebar({
       href: activeBrandId ? basePath : '/overview',
     },
     {
+      title: "Posts",
+      icon: GalleryVerticalEnd,
+      key: "posts" as const,
+      href: activeBrandId ? `${basePath}/posts` : '/brand',
+    },
+    {
       title: "Generate",
       icon: Sparkles,
       key: "generate" as const,
@@ -161,16 +167,16 @@ export default function DashboardSidebar({
       href: activeBrandId ? `${basePath}/templates` : '/brand',
     },
     {
-      title: "Brands",
-      icon: Users,
-      key: "brands" as const,
-      href: "/overview", // Always go to overview for brands management
-    },
-    {
       title: "Analytics",
       icon: BarChart3,
       key: "analytics" as const,
       href: activeBrandId ? `${basePath}/analytics` : '/brand',
+    },
+    {
+      title: "Settings",
+      icon: Settings,
+      key: "settings" as const,
+      href: activeBrandId ? `${basePath}/settings` : '/brand',
     },
   ];
 

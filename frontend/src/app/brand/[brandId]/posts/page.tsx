@@ -1,0 +1,371 @@
+"use client";
+
+import * as React from "react";
+import { usePosts } from '@/lib/api/hooks/usePosts';
+import { useParams, useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
+} from "@tanstack/react-table";
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Post } from "@/types/types";
+
+export default function BrandPostsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const brandId = params?.brandId as string;
+
+  const { data, isLoading, error } = usePosts(undefined, undefined, brandId);
+
+  const columns: ColumnDef<Post>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "thumbnail",
+      header: "Thumbnail",
+      cell: ({ row }) => {
+        const post = row.original;
+        const storageUrls = post.storage_urls as any;
+        const thumbnail = storageUrls?.thumbnail;
+        
+        return (
+          <div className="w-20 h-24 rounded-lg overflow-hidden bg-background border border-white/10">
+            {thumbnail ? (
+              <Image
+                src={thumbnail}
+                alt="Post thumbnail"
+                width={80}
+                height={96}
+                className="object-cover w-full h-full"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full bg-foreground/5 flex items-center justify-center text-xs text-foreground/50">
+                No image
+              </div>
+            )}
+          </div>
+        );
+      },
+      enableSorting: false,
+    },
+    {
+      accessorKey: "content",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Description / Caption
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const post = row.original;
+        const content = post.content as any;
+        
+        return (
+          <div className="max-w-md">
+            <div className="font-medium text-foreground mb-1">
+              {content?.title || 'Untitled Post'}
+            </div>
+            <div className="text-sm text-foreground/60 line-clamp-2">
+              {content?.caption || 'No caption'}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Status
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string || "draft";
+        const statusColors = {
+          draft: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+          published: "bg-primary/10 text-primary border-primary/20",
+          scheduled: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+          failed: "bg-red-500/10 text-red-400 border-red-500/20",
+        };
+        return (
+          <div className={`capitalize px-3 py-1 rounded-full text-xs font-medium border inline-block ${statusColors[status as keyof typeof statusColors] || statusColors.draft}`}>
+            {status}
+          </div>
+        );
+      },
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const post = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => router.push(`/brand/${brandId}/posts/${post.id}`)}
+              >
+                View post
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(post.id)}
+              >
+                Copy post ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive">
+                Delete post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = React.useState({});
+
+  const table = useReactTable({
+    data: data || [],
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <Skeleton className="h-10 w-48 mb-8" />
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
+          Error loading posts.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-12">
+      <h1 className="text-3xl font-bold text-foreground mb-8">Posts</h1>
+      
+      <div className="w-full space-y-4">
+        <div className="flex items-center gap-4">
+          <Input
+            placeholder="Filter by caption..."
+            value={(table.getColumn("content")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("content")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm bg-background border-foreground/10 text-foreground"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="overflow-hidden rounded-md border border-foreground/10">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-foreground/10 hover:bg-foreground/5">
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} className="text-foreground">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="border-foreground/10 hover:bg-foreground/5 cursor-pointer"
+                    onClick={() => router.push(`/brand/${brandId}/posts/${row.original.id}`)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} onClick={(e) => {
+                        // Prevent navigation when clicking checkboxes/actions
+                        if (cell.column.id === 'select' || cell.column.id === 'actions') {
+                          e.stopPropagation();
+                        }
+                      }}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center text-foreground/60"
+                  >
+                    No posts found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="text-foreground/60 flex-1 text-sm">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

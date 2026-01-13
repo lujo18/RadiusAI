@@ -13,7 +13,12 @@ class Config:
     ENV = os.getenv("ENV", "development")
     SUPABASE_URL = os.getenv("SUPABASE_URL")
     SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
     UNSPLASH_APP_ID = os.getenv("UNSPLASH_APP_ID")
     UNSPLASH_SECRET_KEY = os.getenv("UNSPLASH_SECRET_KEY")
     UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
-    
+
+
+def get_settings():
+    """Get application settings singleton"""
+    return Config

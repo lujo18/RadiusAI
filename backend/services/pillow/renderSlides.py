@@ -1,6 +1,9 @@
+
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from typing import List
 import io
+from pathlib import Path
+
 from backend.models.slide import PostSlide, TextElement, BackgroundConfig
 # --- Text Layout Helper ---
 class TextLayout:
@@ -82,16 +85,31 @@ class SlideRenderer:
 			'Plus Jakarta Sans': 'PlusJakartaSans-Bold.ttf',
 			'Montserrat': 'Montserrat-Bold.ttf',
 		}
+  
 		font_file = font_map.get(family, 'TikTokSans-Medium.ttf')  # Default to TikTok Sans
-		
-		# Scale font size to match Konva's pixel-based rendering
-		# Konva fontSize is in pixels, Pillow uses points at 72 DPI
-		# For 1080x1920 output, use direct pixel size (no scaling needed)
+
+		# Improved font loading with diagnostics
+		project_root = Path(__file__).parent.parent.parent
+		local_font_path = project_root / 'assets' / 'fonts' / font_file
+		docker_font_path = Path('/app/backend/assets/fonts') / font_file
+
+		print(f"[FontLoader] Attempting local font path: {local_font_path} exists={local_font_path.exists()}")
+		print(f"[FontLoader] Attempting docker font path: {docker_font_path} exists={docker_font_path.exists()}")
+
+		font_path = None
+		if local_font_path.exists():
+			font_path = local_font_path
+		elif docker_font_path.exists():
+			font_path = docker_font_path
+		else:
+			font_path = local_font_path  # Try anyway for error message
+
 		scaled_size = size
-		
 		try:
-			return ImageFont.truetype(f"fonts/{font_file}", scaled_size)
-		except Exception:
+			print(f"[FontLoader] Loading font: {font_path} size={scaled_size}")
+			return ImageFont.truetype(str(font_path), scaled_size)
+		except Exception as e:
+			print(f"[FontLoader] Failed to load font '{font_path}' for family '{family}': {e}. Using default font.")
 			return ImageFont.load_default()
 
 	def _apply_background(self, img: Image.Image, bg_config: BackgroundConfig) -> None:

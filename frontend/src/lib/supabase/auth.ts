@@ -213,10 +213,3 @@ export const requireUserId = async (): Promise<string> => {
   return user.id;
 };
 
-/**
- * Get current access token
- */
-export const getAccessToken = async (): Promise<string | null> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token || null;
-};
