@@ -134,7 +134,7 @@ function IntegrationIcons({ integrations }: { integrations: any[] }) {
     Facebook: SiFacebook,
   };
 
-  if (integrations.length === 0) {
+  if (integrations?.length === 0) {
     return (
       <div className="text-xs text-muted-foreground py-2">
         No integrations connected
@@ -144,7 +144,7 @@ function IntegrationIcons({ integrations }: { integrations: any[] }) {
 
   return (
     <div className="flex gap-2 py-2">
-      {integrations.map((integration) => {
+      {integrations?.map((integration) => {
         const Icon = platformIcons[integration.platform as keyof typeof platformIcons];
         return (
           <div

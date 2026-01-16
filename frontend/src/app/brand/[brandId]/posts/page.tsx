@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { usePosts } from '@/lib/api/hooks/usePosts';
-import { useParams, useRouter } from 'next/navigation';
-import { Skeleton } from '@/components/ui/skeleton';
-import Image from 'next/image';
+import { usePosts, useDeletePostWithSlides } from "@/lib/api/hooks/usePosts";
+import { useParams, useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+import Image from "next/image";
 import {
   flexRender,
   getCoreRowModel,
@@ -17,7 +17,8 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, ChevronDown, Icon, MoreHorizontal, Rocket, Download } from "lucide-react";
+
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -39,14 +40,62 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 import { Post } from "@/types/types";
+import { postApi } from "@/lib/api/client";
+import {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+  DialogFooter,
+} from "@/components/animate-ui/primitives/radix/dialog";
+import { useBrandIntegrations } from "@/lib/api/hooks/useBrands";
+import { Switch } from "@/components/animate-ui/components/radix/switch";
+import { SocialItem } from "@/components/platform-integrations/SocialItem";
+import { platform } from "os";
+import { platforms } from "@/constants/platforms";
+import { downloadSlides } from "@/util/downloadSlides";
 
 export default function BrandPostsPage() {
+      // Bulk delete handler
+      const handleBulkDelete = async () => {
+        const selectedRows = table.getFilteredSelectedRowModel().rows;
+        if (selectedRows.length === 0) return;
+        if (!window.confirm(`Delete ${selectedRows.length} selected post(s) and all their slides? This cannot be undone.`)) return;
+        for (const row of selectedRows) {
+          await deletePostMutation.mutateAsync(row.original.id);
+        }
+      };
+    const deletePostMutation = useDeletePostWithSlides();
   const params = useParams();
   const router = useRouter();
   const brandId = params?.brandId as string;
 
   const { data, isLoading, error } = usePosts(undefined, undefined, brandId);
+
+  const [postModalOpen, setPostModalOpen] = React.useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = React.useState<string[]>(
+    []
+  );
+
+  // Fetch platform integrations for this brand
+  const { data: integrations, isLoading: integrationsLoading } =
+    useBrandIntegrations(brandId);
+  // Handler for toggling platform selection
+  const handleTogglePlatform = (platform: string) => {
+    setSelectedPlatforms((prev) =>
+      prev.includes(platform)
+        ? prev.filter((p) => p !== platform)
+        : [...prev, platform]
+    );
+  };
+
+  const handlePost = () => {};
 
   const columns: ColumnDef<Post>[] = [
     {
@@ -78,7 +127,7 @@ export default function BrandPostsPage() {
         const post = row.original;
         const storageUrls = post.storage_urls as any;
         const thumbnail = storageUrls?.thumbnail;
-        
+
         return (
           <div className="w-20 h-24 rounded-lg overflow-hidden bg-background border border-white/10">
             {thumbnail ? (
@@ -116,14 +165,14 @@ export default function BrandPostsPage() {
       cell: ({ row }) => {
         const post = row.original;
         const content = post.content as any;
-        
+
         return (
           <div className="max-w-md">
             <div className="font-medium text-foreground mb-1">
-              {content?.title || 'Untitled Post'}
+              {content?.title || "Untitled Post"}
             </div>
             <div className="text-sm text-foreground/60 line-clamp-2">
-              {content?.caption || 'No caption'}
+              {content?.caption || "No caption"}
             </div>
           </div>
         );
@@ -143,7 +192,7 @@ export default function BrandPostsPage() {
         );
       },
       cell: ({ row }) => {
-        const status = row.getValue("status") as string || "draft";
+        const status = (row.getValue("status") as string) || "draft";
         const statusColors = {
           draft: "bg-gray-500/10 text-gray-400 border-gray-500/20",
           published: "bg-primary/10 text-primary border-primary/20",
@@ -151,7 +200,12 @@ export default function BrandPostsPage() {
           failed: "bg-red-500/10 text-red-400 border-red-500/20",
         };
         return (
-          <div className={`capitalize px-3 py-1 rounded-full text-xs font-medium border inline-block ${statusColors[status as keyof typeof statusColors] || statusColors.draft}`}>
+          <div
+            className={`capitalize px-3 py-1 rounded-full text-xs font-medium border inline-block ${
+              statusColors[status as keyof typeof statusColors] ||
+              statusColors.draft
+            }`}
+          >
             {status}
           </div>
         );
@@ -173,8 +227,16 @@ export default function BrandPostsPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setPostModalOpen(true)}>
+                Publish <Rocket />
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => downloadSlides(post)}>
+                Download slides <Download className="ml-2 h-4 w-4" />
+              </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => router.push(`/brand/${brandId}/posts/${post.id}`)}
+                onClick={() =>
+                  router.push(`/brand/${brandId}/posts/${post.id}`)
+                }
               >
                 View post
               </DropdownMenuItem>
@@ -184,8 +246,17 @@ export default function BrandPostsPage() {
                 Copy post ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                Delete post
+              <DropdownMenuItem
+                className="text-destructive"
+                disabled={deletePostMutation.isPending}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (window.confirm("Are you sure you want to delete this post and all its slides? This cannot be undone.")) {
+                    await deletePostMutation.mutateAsync(post.id);
+                  }
+                }}
+              >
+                {deletePostMutation.isPending ? "Deleting..." : "Delete post"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -195,8 +266,11 @@ export default function BrandPostsPage() {
   ];
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
@@ -242,130 +316,211 @@ export default function BrandPostsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold text-foreground mb-8">Posts</h1>
-      
-      <div className="w-full space-y-4">
-        <div className="flex items-center gap-4">
-          <Input
-            placeholder="Filter by caption..."
-            value={(table.getColumn("content")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("content")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm bg-background border-foreground/10 text-foreground"
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <>
+      <Dialog open={postModalOpen} onOpenChange={setPostModalOpen}>
+        <DialogPortal>
+          <DialogOverlay className="z-50 fixed inset-0 bg-black/40 backdrop-blur-sm" />
 
-        <div className="overflow-hidden rounded-md border border-foreground/10">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-foreground/10 hover:bg-foreground/5">
-                  {headerGroup.headers.map((header) => {
+          <div className="z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 fixed">
+            <DialogContent className=" w-full max-w-md bg-background rounded-xl shadow-2xl p-8 border">
+              <DialogHeader>
+                <DialogTitle>Select Platforms to Post</DialogTitle>
+                <DialogDescription>
+                  Choose which connected platforms to post to for this brand.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 my-6">
+                {integrationsLoading ? (
+                  <div className="text-foreground/60">
+                    Loading integrations...
+                  </div>
+                ) : integrations && integrations.length > 0 ? (
+                  integrations.map((integration: any) => (
+                    <div
+                      key={integration.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border"
+                    >
+                      <SocialItem platform={platforms.find(i => i.id === integration.platform)!} integration={integration}/>
+
+                      <Switch
+                        checked={selectedPlatforms.includes(
+                          integration.platform
+                        )}
+                        onCheckedChange={() =>
+                          handleTogglePlatform(integration.platform)
+                        }
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-foreground/60">
+                    No integrations found.
+                  </div>
+                )}
+              </div>
+              <DialogFooter className="flex justify-end gap-4">
+                <DialogClose>Close</DialogClose>
+                <Button
+                  disabled={selectedPlatforms.length === 0}
+                  onClick={() => {}}
+                  variant="default"
+                >
+                  Post
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </div>
+        </DialogPortal>
+      </Dialog>
+
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <h1 className="text-3xl font-bold text-foreground mb-8">Posts</h1>
+
+        <div className="w-full space-y-4">
+          <div className="flex items-center gap-4">
+            {table.getFilteredSelectedRowModel().rows.length !== 0 && <Button
+              variant="destructive"
+              size="sm"
+              disabled={table.getFilteredSelectedRowModel().rows.length === 0 || deletePostMutation.isPending}
+              onClick={handleBulkDelete}
+            >
+              {deletePostMutation.isPending ? "Deleting..." : `Delete Selected (${table.getFilteredSelectedRowModel().rows.length})`}
+            </Button>}
+            <Input
+              placeholder="Filter by caption..."
+              value={
+                (table.getColumn("content")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("content")?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm bg-background border-foreground/10 text-foreground"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  Columns <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => {
                     return (
-                      <TableHead key={header.id} className="text-foreground">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
                     );
                   })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="border-foreground/10 hover:bg-foreground/5 cursor-pointer"
-                    onClick={() => router.push(`/brand/${brandId}/posts/${row.original.id}`)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} onClick={(e) => {
-                        // Prevent navigation when clicking checkboxes/actions
-                        if (cell.column.id === 'select' || cell.column.id === 'actions') {
-                          e.stopPropagation();
-                        }
-                      }}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center text-foreground/60"
-                  >
-                    No posts found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="text-foreground/60 flex-1 text-sm">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
+
+          <div className="overflow-hidden rounded-md border border-foreground/10">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow
+                    key={headerGroup.id}
+                    className="border-foreground/10 hover:bg-foreground/5"
+                  >
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id} className="text-foreground">
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                      className="border-foreground/10 hover:bg-foreground/5 cursor-pointer"
+                      onClick={() =>
+                        router.push(
+                          `/brand/${brandId}/posts/${row.original.id}`
+                        )
+                      }
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          onClick={(e) => {
+                            // Prevent navigation when clicking checkboxes/actions
+                            if (
+                              cell.column.id === "select" ||
+                              cell.column.id === "actions"
+                            ) {
+                              e.stopPropagation();
+                            }
+                          }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center text-foreground/60"
+                    >
+                      No posts found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="flex items-center justify-end space-x-2 py-4">
+            <div className="text-foreground/60 flex-1 text-sm">
+              {table.getFilteredSelectedRowModel().rows.length} of{" "}
+              {table.getFilteredRowModel().rows.length} row(s) selected.
+            </div>
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

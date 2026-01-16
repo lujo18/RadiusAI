@@ -1,8 +1,8 @@
-from backend.models.user import BrandSettings
-from backend.services.integrations.supabase.db.profile import create_supabase_profile
-from backend.services.integrations.late.profile import create_late_profile
+# from backend.models.user import BrandSettings
+# from backend.services.integrations.supabase.db.brand import create_supabase_brand
+# from backend.services.integrations.late.profile import create_late_profile
 
-async def create_profile(user_id: str, profile_name: str, profile_description: str, brand_settings: BrandSettings) -> str:
-  late_profile_id = await create_late_profile(profile_name, profile_description)
-  profile = await create_supabase_profile(user_id, late_profile_id, profile_name, profile_description, brand_settings)
-  return profile
+# async def create_profile(user_id: str, profile_name: str, profile_description: str, brand_settings: BrandSettings) -> str:
+#   late_profile_id = await create_late_profile(profile_name, profile_description)
+#   profile = await create_supabase_brand(user_id, late_profile_id, profile_name, profile_description, brand_settings)
+#   return profile

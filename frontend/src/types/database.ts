@@ -270,7 +270,10 @@ export type Database = {
           full_name: string | null
           id: string
           is_business_account: boolean | null
-          late_platform_id: string
+          late_access_token: string | null
+          late_account_id: string
+          late_expires_in: string | null
+          late_refresh_token: string | null
           platform: string
           profile_picture_url: string | null
           updated_at: string
@@ -287,7 +290,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_business_account?: boolean | null
-          late_platform_id: string
+          late_access_token?: string | null
+          late_account_id: string
+          late_expires_in?: string | null
+          late_refresh_token?: string | null
           platform: string
           profile_picture_url?: string | null
           updated_at?: string
@@ -304,7 +310,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_business_account?: boolean | null
-          late_platform_id?: string
+          late_access_token?: string | null
+          late_account_id?: string
+          late_expires_in?: string | null
+          late_refresh_token?: string | null
           platform?: string
           profile_picture_url?: string | null
           updated_at?: string

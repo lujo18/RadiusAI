@@ -68,11 +68,11 @@ export function useUpdatePost() {
   });
 }
 
-export function useDeletePost() {
+export function useDeletePostWithSlides() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: contentApi.deletePost,
+    mutationFn: contentApi.deletePostWithSlides,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
@@ -84,7 +84,8 @@ export function usePublishPost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: postApi.publishPost,
+    mutationFn: ({ postId, lateAccountId }: { postId: string; lateAccountId: string }) =>
+      postApi.publishPost(postId, lateAccountId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       queryClient.invalidateQueries({ queryKey: postKeys.scheduled });

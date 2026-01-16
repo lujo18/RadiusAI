@@ -121,8 +121,11 @@ export const contentApi = {
     throw new Error('Supabase repository for generateWeek not implemented yet.');
   },
 
-  // DELETE: Remove a post
-  deletePost: async (postId: string) => {
+  // DELETE: Remove a post and its slide images
+  deletePostWithSlides: async (postId: string) => {
+    // Delete slide images first
+    await StorageRepository.deleteSlideImages(postId);
+    // Then delete the post object
     const userId = await requireUserId();
     return await PostRepository.deletePost(postId, userId);
   },
@@ -232,9 +235,20 @@ export const postApi = {
     return await PostRepository.updatePost(postId, updates, userId);
   },
 
-  // POST: Publish post (uses backend for Ayrshare integration)
-  publishPost: async (postId: string) => {
+  // POST: Publish post
+  publishPost: async (postId: string, lateAccountId: string) => {
     const userId = await requireUserId();
+
+    const response = await apiClient.post('/api/post/slideshow', {
+      post_id: postId,
+      late_account_id: lateAccountId,
+      publish_now: false
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to publish post: ${response.statusText}`);
+    }
+
     await PostRepository.updatePostStatus(postId, 'published', userId);
     throw new Error('Supabase repository for publishPost not implemented yet.');
   },
@@ -266,10 +280,10 @@ export const brandApi = {
   },
 
   // New OAuth flow endpoints
-  startSocialConnect: async ({ platform, user_id }: { platform: string; user_id?: string }) => {
-    const response = await apiClient.post('/connect-social/start', {
-      platform,
-      user_id,
+  startSocialConnect: async ({ late_profile_id, brand_id, platform }: { late_profile_id: string, brand_id: string, platform: string }) => {
+    const response = await apiClient.post(`/social/connect/${platform}`, {
+      existing_profile_id: late_profile_id,
+      brand_id,
     });
     return response.data as { authUrl: string; platform: string; message: string };
   },

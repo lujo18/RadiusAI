@@ -24,6 +24,19 @@ export function useBrands() {
   });
 }
 
+// ==================== INTEGRATIONS ====================
+
+export function useBrandIntegrations(brandId: string) {
+  return useQuery({
+    queryKey: ["brand-integrations", brandId],
+    queryFn: async () => {
+      const userId = await requireUserId();
+      return BrandRepository.getBrandIntegrations(brandId, userId);
+    },
+    enabled: !!brandId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
  
 // ==================== MUTATIONS ====================
 

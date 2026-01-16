@@ -3,7 +3,7 @@ import requests
 
 from backend.models.post import Post
 
-def send_post(post: Post, accountId: str) -> bool:
+def send_post(post: Post, lateAccountId: str, publishNow: bool) -> bool:
   api_key = Config.LATE_API_KEY
 
   post_content = post.content
@@ -18,7 +18,7 @@ def send_post(post: Post, accountId: str) -> bool:
       ],
       'platforms': [{
         'platform': 'tiktok',
-        'accountId': accountId
+        'accountId': lateAccountId
       }],
       'tiktokSettings': {
         'privacy_level': 'PUBLIC_TO_EVERYONE',
@@ -31,7 +31,7 @@ def send_post(post: Post, accountId: str) -> bool:
         'video_made_with_ai': True,
         'draft': True
       },
-      'publishNow': False
+      'publishNow': publishNow
     }
   )
   

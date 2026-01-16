@@ -10,6 +10,7 @@ if not os.getenv("GEMINI_API_KEY"):
 class Config:
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     LATE_API_KEY = os.getenv("LATE_API_KEY")
+    POST_FOR_ME_API_KEY = os.getenv("POST_FOR_ME_API_KEY")
     ENV = os.getenv("ENV", "development")
     SUPABASE_URL = os.getenv("SUPABASE_URL")
     SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
@@ -17,6 +18,9 @@ class Config:
     UNSPLASH_APP_ID = os.getenv("UNSPLASH_APP_ID")
     UNSPLASH_SECRET_KEY = os.getenv("UNSPLASH_SECRET_KEY")
     UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+    BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    STATE_SECRET_KEY = os.getenv("STATE_SECRET_KEY")
 
 
 def get_settings():

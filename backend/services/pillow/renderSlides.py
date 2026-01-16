@@ -138,20 +138,30 @@ class SlideRenderer:
 				b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
 				ImageDraw.Draw(img).line([(0, y), (self.width, y)], fill=(r, g, b))
 		elif bg_config.type == 'image' and bg_config.image_url:
-			# Load and paste background image
+			# Load and paste background image (scale to fit, preserve aspect ratio, no stretch)
 			try:
 				from PIL import Image as PILImage
 				import requests
 				from io import BytesIO
-				
+
 				response = requests.get(bg_config.image_url)
-				bg_img = PILImage.open(BytesIO(response.content))
-				bg_img = bg_img.resize((self.width, self.height), PILImage.LANCZOS)
-				img.paste(bg_img, (0, 0))
-				
+				bg_img = PILImage.open(BytesIO(response.content)).convert('RGBA')
+				# Calculate scale to fit
+				bg_w, bg_h = bg_img.size
+				target_w, target_h = self.width, self.height
+				scale = min(target_w / bg_w, target_h / bg_h)
+				new_w = int(bg_w * scale)
+				new_h = int(bg_h * scale)
+				bg_img = bg_img.resize((new_w, new_h), PILImage.LANCZOS)
+				# Center the image
+				paste_x = (target_w - new_w) // 2
+				paste_y = (target_h - new_h) // 2
+				temp_bg = Image.new('RGBA', (target_w, target_h), (0, 0, 0, 255))
+				temp_bg.paste(bg_img, (paste_x, paste_y), bg_img)
 				# Add subtle overlay for text readability (matching Konva's 0.3 opacity)
-				overlay = Image.new('RGBA', (self.width, self.height), (0, 0, 0, 77))  # 77 = 30% of 255
-				img.paste(overlay, (0, 0), overlay)
+				overlay = Image.new('RGBA', (target_w, target_h), (0, 0, 0, 77))  # 77 = 30% of 255
+				temp_bg.paste(overlay, (0, 0), overlay)
+				img.paste(temp_bg.convert('RGB'), (0, 0))
 			except Exception as e:
 				print(f"Failed to load background image: {e}")
 				# Fallback to gray

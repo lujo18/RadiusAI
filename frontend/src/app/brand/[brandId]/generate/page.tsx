@@ -30,7 +30,6 @@ import { Post } from "@/types/types";
 
 type Brand = Database["public"]["Tables"]["brand"]["Row"];
 
-
 function getBrandSettings(brand: Brand): BrandSettings | null {
   if (!brand.brand_settings) return null;
   return brand.brand_settings as unknown as BrandSettings;
@@ -40,8 +39,10 @@ export default function GeneratePage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [selectedProfile, setSelectedProfile] = useState<string>("");
   const [selectedGenType, setSelectedGenType] = useState<string>("");
-  const [genertationPrompt, setGenertationPrompt] = useState<string>("Create a '4 habits that put you in the 1%' slideshow");
-  
+  const [genertationPrompt, setGenertationPrompt] = useState<string>(
+    "Create a '4 habits that put you in the 1%' slideshow"
+  );
+
   // Generation states
   const [generating, setGenerating] = useState(false);
   const [generatedPosts, setGeneratedPosts] = useState<Post[]>([]);
@@ -80,43 +81,49 @@ export default function GeneratePage() {
             typeof rawTemplate.brand_id === "undefined"
               ? null
               : rawTemplate.brand_id,
-          tags: typeof rawTemplate.tags === "undefined" ? null : rawTemplate.tags,
+          tags:
+            typeof rawTemplate.tags === "undefined" ? null : rawTemplate.tags,
           content_rules: {},
         };
 
-        console.log("Generating with template")
+        console.log("Generating with template");
         // createPostsFromTemplate returns Blob[] - not what we need for display
         await createPostsFromTemplate(template, brand, 1);
-        alert("Post generated successfully! (Note: Template generation returns blobs, not posts)");
+        alert(
+          "Post generated successfully! (Note: Template generation returns blobs, not posts)"
+        );
       } else if (brand && selectedGenType === "prompt" && prompt) {
-        console.log("Auto generating with prompt")
+        console.log("Auto generating with prompt");
         const posts = await contentApi.generatePostsFromPrompt(
-          prompt, 
-          brand.brand_settings as BrandSettings, 
+          prompt,
+          brand.brand_settings as BrandSettings,
           1
         );
-        
-        console.log("Posts", posts)
+
+        console.log("Posts", posts);
         setGeneratedPosts(posts);
         alert("Post generated successfully!");
       } else {
         setGenerating(false);
         return;
       }
-      
+
       setSelectedTemplate("");
       setSelectedProfile("");
     } catch (error: any) {
       console.error("Failed to generate post:", error);
-      
+
       // Handle specific error cases
       if (error.response?.status === 401) {
         alert("Your session has expired. Please sign in again.");
         // Don't manually redirect - interceptor handles it
-      } else if (error.code === 'ERR_NETWORK') {
+      } else if (error.code === "ERR_NETWORK") {
         alert("Network error. Please check your connection and try again.");
       } else {
-        alert(error.response?.data?.detail || "Failed to generate post. Please try again.");
+        alert(
+          error.response?.data?.detail ||
+            "Failed to generate post. Please try again."
+        );
       }
     }
 
@@ -176,6 +183,54 @@ export default function GeneratePage() {
                 ></textarea>
               </div>
             )}
+
+            {/* Presets for testing */}
+            <div>
+              <Button
+                onClick={() =>
+                  setGenertationPrompt(`Slideshow hook: "7 challenges that'll actually change you in 2026" (use this hook as is don't change it)
+background_query: "sunrise mountain aura" (use this hook as is don't change it)
+
+Slide show focus should be on self improvement and life improvement advice. Even though the brand is tech related, focus on specifically self improvement that will result in being well rounded (not just tech focused)`)
+                }
+              >
+                Pinglo Preset
+              </Button>
+              <Button
+                onClick={() =>
+                  setGenertationPrompt(`Role: You are a Behavioral Psychologist and Communication Strategist specializing in minimalist, high-trust TikTok slideshows.
+
+Objective: Convert viewers into followers and leads using the "Script & Secret" methodology: Provide a specific social script and explain the psychological "why" behind it.
+
+Content Structure (7 Slides):
+
+Slide 1 (The Hook): A polarizing or relatable social "gap"
+Slide 2 (The Secret): 1-2 sentences on the underlying psychology (e.g., Status Signaling).
+Slides 3-5 (The Scripts): Situation A + Exact words to say / action to do.
+Slide 6 (The Authority): A brief, "clinical" insight or proof of why this works.
+Slide 7 (Dual CTA): Soft nudge with "Follow for more". No link in bio
+
+Create a hook based on one of these examples (choose a random hook 1-10, or create a variation of one. Focus on "how to x", "x ways to y". Don't use a question for hook):
+1. "3 ways to join a group conversation without it feeling awkward"
+2. "The simple shift that makes people feel deeply understood when you speak"
+3. "How to keep a conversation flowing naturally without ever forcing it"
+4. "A 5 minute framework for turning an acquaintance into a real connection" 
+5. "How to project high authority in a room without saying a word"
+6. "How to say no in a way that actually makes people respect you more"
+7. "A mindset shift for speaking to high authority people with total ease"
+8. "3 ways to introduce yourself that make people want to hear more"
+9. "How to move a stale conversation toward a topic everyone enjoys"
+10."How to leave a lasting positive impression in the first 60 seconds"
+
+background_query: "rich lifestyle city people" (use this as is don't change it)
+
+Slide show focus should be on self improvement and life improvement advice. Even though the brand is tech related, focus on specifically self improvement that will result in being well rounded (not just tech focused).`)
+                }
+              >
+                Social/Convo Preset
+              </Button>
+            </div>
+
             {/* Brand Selection */}
             <div className="space-y-2">
               <Label htmlFor="brand-select">Select Brand</Label>

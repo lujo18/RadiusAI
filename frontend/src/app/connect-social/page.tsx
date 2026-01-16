@@ -25,10 +25,11 @@ export default function ConnectSocialPage() {
     setError(null);
 
     try {
-      // Call backend to start OAuth flow
+      // TODO: Replace with real late_profile_id and brand_id if available in this page context
       const { authUrl } = await brandApi.startSocialConnect({
+        late_profile_id: '',
+        brand_id: '',
         platform,
-        // user_id will be extracted from JWT token in backend
       });
 
       // Redirect user to social platform for authorization

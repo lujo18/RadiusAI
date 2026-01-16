@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BrandSettingsForm from '@/components/Profiles/BrandSettingsForm';
 import IntegrationsList from '@/components/Profiles/IntegrationsList';
-import { useBrands, useUpdateBrandSettings } from '@/lib/api/hooks/useBrands';
+import { useBrandIntegrations, useBrands, useUpdateBrandSettings } from '@/lib/api/hooks/useBrands';
 import type { BrandSettings } from '@/components/TemplateCreator/contentTypes';
 import type { Database } from '@/types/database';
 
@@ -24,9 +24,11 @@ export default function BrandSettingsPage() {
   const brandId = params?.brandId as string;
   const [activeTab, setActiveTab] = useState<'settings' | 'integrations'>('settings');
   const updateBrandSettingsMutation = useUpdateBrandSettings();
+  
 
   // Fetch all brands and find the current one
   const { data: brands, isLoading, error } = useBrands();
+  const { data: brandIntegrations, isLoading: isIntegrationLoading, error: integrationError} = useBrandIntegrations(brandId)
   const brand = brands?.find((b: Brand) => b.id === brandId);
 
   const handleSubmit = async (newBrandSettings: BrandSettings) => {
@@ -60,6 +62,7 @@ export default function BrandSettingsPage() {
 
   const brandSettings = getBrandSettings(brand);
 
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="mb-8">
@@ -69,49 +72,47 @@ export default function BrandSettingsPage() {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
-          <TabsTrigger value="settings">Brand Settings</TabsTrigger>
-          <TabsTrigger value="integrations">Integrations</TabsTrigger>
-        </TabsList>
+     
 
-        <TabsContent value="settings" className="space-y-6">
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="text-ghost-white">Brand Identity & Voice</CardTitle>
-              <CardDescription className="text-ghost-white/60">
-                Define your brand's personality, aesthetic, and content rules
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BrandSettingsForm
-                initialValues={brandSettings || undefined}
-                onSubmit={handleSubmit}
-                onCancel={() => {}}
-                isSubmitting={updateBrandSettingsMutation.isPending}
-                submitLabel="Save Changes"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
+       
+          <div className='flex flex-col gap-4'>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-ghost-white">Social Media Integrations</CardTitle>
+                <CardDescription className="text-ghost-white/60">
+                  Connect your social media accounts to enable posting
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <IntegrationsList
+                  lateProfileId={brand.late_profile_id}
+                  brandId={brand.id}
+                  integrations={brandIntegrations}
+                />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-ghost-white">Brand Identity & Voice</CardTitle>
+                <CardDescription className="text-ghost-white/60">
+                  Define your brand's personality, aesthetic, and content rules
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BrandSettingsForm
+                  initialValues={brandSettings || undefined}
+                  onSubmit={handleSubmit}
+                  onCancel={() => {}}
+                  isSubmitting={updateBrandSettingsMutation.isPending}
+                  submitLabel="Save Changes"
+                />
+              </CardContent>
+            </Card>
+          </div>
+        
 
-        <TabsContent value="integrations" className="space-y-6">
-          <Card className="glass-card">
-            <CardHeader>
-              <CardTitle className="text-ghost-white">Social Media Integrations</CardTitle>
-              <CardDescription className="text-ghost-white/60">
-                Connect your social media accounts to enable posting
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <IntegrationsList
-                profileId={brand.late_profile_id}
-                integrations={[]}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        
+      
     </div>
   );
 }

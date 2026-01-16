@@ -42,7 +42,7 @@ def generate_slideshow_auto(
 
 # FIXME: Switch back to "gemini-2.5-flash" when protobuf issues are resolved
     response = client.models.generate_content(
-        model="gemini-2.5-flash-lite",
+        model="gemini-3-flash-preview",
         contents=prompt,
         config=types.GenerateContentConfig(
             temperature=0.85,

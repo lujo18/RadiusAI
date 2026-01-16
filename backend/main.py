@@ -3,6 +3,8 @@ import sys
 import logging
 from pathlib import Path
 
+from backend.routers import account, post
+
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
@@ -17,7 +19,7 @@ from dotenv import load_dotenv
 from config import Config
 
 # Import routers
-from routers import brand, generate, social_connect
+from routers import brand, generate
 
 app = FastAPI(title="ViralStack API", version="1.0.0")
 
@@ -50,7 +52,8 @@ except Exception as e:
 # Include routers
 app.include_router(brand.router)
 app.include_router(generate.router)
-app.include_router(social_connect.router)
+app.include_router(account.router)
+app.include_router(post.router)
 
 security = HTTPBearer()
 

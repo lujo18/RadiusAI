@@ -26,15 +26,15 @@ function getBrandSettings(brand: Brand): BrandSettings | null {
   return brand.brand_settings as unknown as BrandSettings;
 }
 
-export default function EditProfileDialog({ profile, onClose }: EditProfileDialogProps) {
+export default function EditProfileDialog({ profile: brand, onClose }: EditProfileDialogProps) {
   const [activeTab, setActiveTab] = useState<'settings' | 'integrations'>('settings');
   const updateBrandSettingsMutation = useUpdateBrandSettings();
-  const brandSettings = getBrandSettings(profile);
+  const brandSettings = getBrandSettings(brand);
 
   const handleSubmit = async (newBrandSettings: BrandSettings) => {
     try {
       await updateBrandSettingsMutation.mutateAsync({
-        brandId: profile.id,
+        brandId: brand.id,
         brandSettings: newBrandSettings,
       });
       onClose();
@@ -89,7 +89,8 @@ export default function EditProfileDialog({ profile, onClose }: EditProfileDialo
             />
           ) : (
             <IntegrationsList
-              profileId={profile.id}
+              lateProfileId={brand.id}
+              brandId={brand.id}
               integrations={[]}
             />
           )}
