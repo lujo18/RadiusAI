@@ -80,41 +80,36 @@ const TIER_CONFIG: Omit<PricingTier, 'price' | 'priceId'>[] = [
 export default function Paywall() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState<string | null>(null);
+
+  // Use TanStack Query hook to fetch Stripe products (with joined price info)
+  const { data: products, isLoading: pricesLoading } = require('@/lib/api/hooks/useStripeProducts').useStripeProducts();
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
-  const [pricesLoading, setPricesLoading] = useState(true);
 
-  // Fetch prices from Stripe on mount
+  // Map products to pricing tiers when products change
   useEffect(() => {
-    async function fetchPrices() {
-      try {
-        const response = await fetch('/api/stripe/prices');
-        const data = await response.json();
-
-        // Merge Stripe prices with tier config
-        const tiers: PricingTier[] = TIER_CONFIG.map((config) => {
-          const stripePlan = data.plans[config.id];
-          return {
-            ...config,
-            price: stripePlan?.amount || 0,
-            priceId: stripePlan?.id || '',
-          };
-        });
-
-        setPricingTiers(tiers);
-      } catch (error) {
-        console.error('Error fetching prices:', error);
-        // Fallback to default prices if API fails
-        setPricingTiers([
-          { ...TIER_CONFIG[0], price: 29, priceId: '' },
-          { ...TIER_CONFIG[1], price: 99, priceId: '' },
-        ]);
-      } finally {
-        setPricesLoading(false);
-      }
-    }
-
-    fetchPrices();
-  }, []);
+    if (!products) return;
+    // Find products for Pro and Agency tiers
+    // Assume each product has: id, name, description, default_price, price (joined), etc.
+    // See types/stripe for field names
+    const tiers: PricingTier[] = TIER_CONFIG.map((config) => {
+      // Find product by name or id (case-insensitive)
+      const product = products.find((p: any) => {
+        // Prefer id match, fallback to name
+        return (
+          p.id === config.id ||
+          (p.name && p.name.toLowerCase().includes(config.name.toLowerCase()))
+        );
+      });
+      // Price info from joined price
+      const priceObj = product?.price || product?.default_price_obj || {};
+      return {
+        ...config,
+        price: priceObj.unit_amount ? priceObj.unit_amount / 100 : 0,
+        priceId: priceObj.id || '',
+      };
+    });
+    setPricingTiers(tiers);
+  }, [products]);
 
   const handleSubscribe = async (priceId: string, plan: string) => {
     // Always verify authentication with Supabase before proceeding

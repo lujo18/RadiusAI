@@ -3,7 +3,7 @@ import sys
 import logging
 from pathlib import Path
 
-from backend.routers import account, post
+from backend.routers import account, post, stripe
 
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent
@@ -54,6 +54,7 @@ app.include_router(brand.router)
 app.include_router(generate.router)
 app.include_router(account.router)
 app.include_router(post.router)
+app.include_router(stripe.router)  # Register the new router
 
 security = HTTPBearer()
 

@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
 import { useBrands } from "@/lib/api/hooks/useBrands";
 import { useBrandFilter } from "@/hooks/useBrandFilter";
+import BrandSetupWizard from "@/components/Profiles/BrandSetupWizard";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -113,6 +115,7 @@ export default function DashboardSidebar({
   const user = useAuthStore((state) => state.user);
   const supabaseUser = useAuthStore((state) => state.supabaseUser);
   const { activeBrandId } = useBrandFilter();
+  const [showWizard, setShowWizard] = useState(false);
   
   // Fetch user brands
   const { data: brands, isLoading: brandsLoading } = useBrands();
@@ -291,16 +294,14 @@ export default function DashboardSidebar({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     className="gap-2 p-2"
-                    asChild
+                    onClick={() => setShowWizard(true)}
                   >
-                    <Link href="/brand/profiles">
-                      <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                        <Plus className="size-4" />
-                      </div>
-                      <div className="font-medium text-muted-foreground">
-                        Create Brand
-                      </div>
-                    </Link>
+                    <div className="flex size-6 items-center justify-center rounded-md border bg-background">
+                      <Plus className="size-4" />
+                    </div>
+                    <div className="font-medium text-muted-foreground">
+                      Create Brand
+                    </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -425,6 +426,8 @@ export default function DashboardSidebar({
         {header}
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
       </SidebarInset>
+
+      <BrandSetupWizard isOpen={showWizard} onClose={() => setShowWizard(false)} />
     </>
   );
 }

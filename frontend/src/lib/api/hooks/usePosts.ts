@@ -2,25 +2,40 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { postApi, contentApi } from '@/lib/api/client';
+import { Database } from '@/types/database';
 
 // Query Keys
 export const postKeys = {
   all: ['posts'] as const,
+  filtered: (filters: { status?: Database["public"]["Enums"]["post_status"]; brandId?: string; templateId?: string; limit?: number }) => 
+    ['posts', filters] as const,
   byBrand: (brandId: string | null) => ['posts', 'brand', brandId] as const,
+  byTemplate: (templateId: string) => ['posts', 'template', templateId] as const,
   scheduled: ['posts', 'scheduled'] as const,
   detail: (id: string) => ['posts', id] as const,
-  byStatus: (status: string) => ['posts', 'status', status] as const,
-  withLimit: (limit: number) => ['posts', 'limit', limit] as const,
 };
 
 // ==================== QUERIES ====================
 
-export function usePosts(status?: string, limit?: number, brandId?: string | null) {
+export function usePosts(filters?: {status?: Database["public"]["Enums"]["post_status"], limit?: number, brandId?: string, templateId?: string}) {
   return useQuery({
-    queryKey: [...postKeys.all, status, limit, brandId] as const,
-    queryFn: () => postApi.getPosts(status, limit, brandId),
+    queryKey: postKeys.filtered(filters || {}),
+    queryFn: () => postApi.getPosts(filters),
     staleTime: 1 * 60 * 1000, // 1 minute
   });
+}
+
+// Convenience hooks for specific use cases
+export function usePostsByBrand(brandId: string) {
+  return usePosts({ brandId });
+}
+
+export function usePostsByTemplate(templateId: string) {
+  return usePosts({ templateId });
+}
+
+export function usePostsByStatus(status: Database["public"]["Enums"]["post_status"]) {
+  return usePosts({ status });
 }
 
 export function usePost(postId: string) {
@@ -35,7 +50,7 @@ export function usePost(postId: string) {
 export function useScheduledPosts() {
   return useQuery({
     queryKey: postKeys.scheduled,
-    queryFn: contentApi.getScheduledPosts,
+    queryFn: () => contentApi.getPosts({ status: 'scheduled' }),
     staleTime: 30 * 1000, // 30 seconds
   });
 }
@@ -46,10 +61,25 @@ export function useCreatePost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: postApi.createPost,
-    onSuccess: () => {
+    mutationFn: (postData: any) => postApi.createPost(postData),
+    onSuccess: (_, postData) => {
+      // Invalidate all generic queries
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+
+      // Invalidate brand-specific queries if brandId is provided
+      if (postData?.brand_id) {
+        queryClient.invalidateQueries({
+          queryKey: postKeys.filtered({ brandId: postData.brand_id }),
+        });
+      }
+
+      // Invalidate template-specific queries if templateId is provided
+      if (postData?.template_id) {
+        queryClient.invalidateQueries({
+          queryKey: postKeys.filtered({ templateId: postData.template_id }),
+        });
+      }
     },
   });
 }

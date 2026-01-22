@@ -1,7 +1,10 @@
 "use client";
 
+import { differenceInSeconds } from "date-fns";
 import React, { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { useTemplates, useBrands, useCreatePost } from "@/lib/api/hooks";
+import { useGenerationStore } from "@/store/generationStore";
 import type { BrandSettings } from "@/components/TemplateCreator/contentTypes";
 import type { Database } from "@/types/database";
 import {
@@ -36,15 +39,37 @@ function getBrandSettings(brand: Brand): BrandSettings | null {
 }
 
 export default function GeneratePage() {
+  const params = useParams();
+  const brandId = params?.brandId as string;
+
+  // Store
+  const { queue, addToQueue, updateQueueItem } = useGenerationStore();
+
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
-  const [selectedProfile, setSelectedProfile] = useState<string>("");
+  const [selectedProfile, setSelectedProfile] = useState<string>(brandId || "");
   const [selectedGenType, setSelectedGenType] = useState<string>("");
   const [genertationPrompt, setGenertationPrompt] = useState<string>(
-    "Create a '4 habits that put you in the 1%' slideshow"
+    "Create a '4 habits that put you in the 1%' slideshow",
   );
 
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, []);
+
+  // Auto-set selectedProfile when brandId changes
+  useEffect(() => {
+    if (brandId) {
+      setSelectedProfile(brandId);
+    }
+  }, [brandId]);
+
   // Generation states
-  const [generating, setGenerating] = useState(false);
   const [generatedPosts, setGeneratedPosts] = useState<Post[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const createPost = useCreatePost();
@@ -63,71 +88,108 @@ export default function GeneratePage() {
       (selectedGenType === "prompt" && !genertationPrompt) ||
       !selectedProfile
     ) {
-      alert("Please select both a template and brand");
+      alert("Please fill in required fields");
       return;
     }
 
-    setGenerating(true);
-    const rawTemplate = templates?.find((t) => t.id === selectedTemplate);
-    const brand = brands?.find((b) => b.id === selectedProfile);
-    const prompt = genertationPrompt;
+    // Add to queue and get request ID
+    const requestId = addToQueue({
+      prompt: selectedGenType === "prompt" ? genertationPrompt : undefined,
+      templateId: selectedGenType === "template" ? selectedTemplate : undefined,
+    });
 
-    try {
-      if (brand && selectedGenType === "template" && rawTemplate) {
-        // Patch template.brand_id to always be string|null
-        const template = {
-          ...rawTemplate,
-          brand_id:
-            typeof rawTemplate.brand_id === "undefined"
-              ? null
-              : rawTemplate.brand_id,
-          tags:
-            typeof rawTemplate.tags === "undefined" ? null : rawTemplate.tags,
-          content_rules: {},
-        };
+    // Update status to generating
+    updateQueueItem(requestId, { status: "generating" });
 
-        console.log("Generating with template");
-        // createPostsFromTemplate returns Blob[] - not what we need for display
-        await createPostsFromTemplate(template, brand, 1);
-        alert(
-          "Post generated successfully! (Note: Template generation returns blobs, not posts)"
-        );
-      } else if (brand && selectedGenType === "prompt" && prompt) {
-        console.log("Auto generating with prompt");
-        const posts = await contentApi.generatePostsFromPrompt(
-          prompt,
-          brand.brand_settings as BrandSettings,
-          1
-        );
+    // Fire async request without blocking
+    (async () => {
+      try {
+        const rawTemplate = templates?.find((t) => t.id === selectedTemplate);
+        const brand = brands?.find((b) => b.id === selectedProfile);
+        const prompt = genertationPrompt;
 
-        console.log("Posts", posts);
-        setGeneratedPosts(posts);
-        alert("Post generated successfully!");
-      } else {
-        setGenerating(false);
-        return;
+        if (brand && selectedGenType === "template" && rawTemplate) {
+          // Patch template.brand_id to always be string|null
+          const template = {
+            ...rawTemplate,
+            brand_id:
+              typeof rawTemplate.brand_id === "undefined"
+                ? null
+                : rawTemplate.brand_id,
+            tags:
+              typeof rawTemplate.tags === "undefined" ? null : rawTemplate.tags,
+            content_rules: {},
+          };
+
+          console.log("Generating with template");
+          await createPostsFromTemplate(template, brand, 1);
+
+          updateQueueItem(requestId, {
+            status: "completed",
+            result: [],
+          });
+        } else if (brand && selectedGenType === "prompt" && prompt) {
+          console.log("Auto generating with prompt");
+          const posts = await contentApi.generatePostsFromPrompt(
+            prompt,
+            brand.brand_settings as BrandSettings,
+            selectedProfile,
+            1,
+          );
+
+          console.log("Posts", posts);
+
+          // Save posts to database with brand_id
+          const savedPosts: typeof posts = [];
+          for (const post of posts) {
+            try {
+              const postDataWithBrand = {
+                ...post,
+                brand_id: selectedProfile, // Ensure brand_id is set
+                platform: post.platform || "tiktok",
+                status: post.status || "draft",
+                content: post.content,
+              };
+
+              await createPost.mutateAsync(postDataWithBrand);
+              savedPosts.push(post);
+            } catch (error) {
+              console.error("Failed to save post:", error);
+            }
+          }
+
+          setGeneratedPosts((prev) => [...prev, ...savedPosts]);
+
+          updateQueueItem(requestId, {
+            status: "completed",
+            result: savedPosts,
+            completedAt: Date.now(),
+          });
+        } else {
+          throw new Error("Invalid generation parameters");
+        }
+      } catch (error: any) {
+        console.error("Failed to generate post:", error);
+
+        // Handle specific error cases
+        let errorMessage = "Failed to generate post. Please try again.";
+        if (error.response?.status === 401) {
+          errorMessage = "Your session has expired. Please sign in again.";
+        } else if (error.code === "ERR_NETWORK") {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
+        } else {
+          errorMessage =
+            error.response?.data?.detail || error.message || errorMessage;
+        }
+
+        updateQueueItem(requestId, {
+          status: "failed",
+          error: errorMessage,
+          completedAt: Date.now(),
+        });
       }
-
-      setSelectedTemplate("");
-      setSelectedProfile("");
-    } catch (error: any) {
-      console.error("Failed to generate post:", error);
-
-      // Handle specific error cases
-      if (error.response?.status === 401) {
-        alert("Your session has expired. Please sign in again.");
-        // Don't manually redirect - interceptor handles it
-      } else if (error.code === "ERR_NETWORK") {
-        alert("Network error. Please check your connection and try again.");
-      } else {
-        alert(
-          error.response?.data?.detail ||
-            "Failed to generate post. Please try again."
-        );
-      }
-    }
-
-    setGenerating(false);
+    })();
   };
 
   if (templatesLoading || brandsLoading) {
@@ -198,72 +260,128 @@ Slide show focus should be on self improvement and life improvement advice. Even
               </Button>
               <Button
                 onClick={() =>
-                  setGenertationPrompt(`Role: You are a Behavioral Psychologist and Communication Strategist specializing in minimalist, high-trust TikTok slideshows.
+                  setGenertationPrompt(`
+ROLE: You are a Behavioral Neuroscientist and High-Stakes Communication Strategist. Your brand is "The Grounded Script." You specialize in the intersection of Evolutionary Psychology and Modern Social Dynamics. Your tone is minimalist, clinical, and high-trust.
 
-Objective: Convert viewers into followers and leads using the "Script & Secret" methodology: Provide a specific social script and explain the psychological "why" behind it.
+THEOLOGY OF CONTENT: We do not provide "tips." We provide Mechanisms. Every post must expose a "Hidden Social Architecture" that the viewer didn't realize was controlling their life.
 
-Content Structure (7 Slides):
+CONTENT GENERATION PROTOCOL (7 SLIDES):
 
-Slide 1 (The Hook): A polarizing or relatable social "gap"
-Slide 2 (The Secret): 1-2 sentences on the underlying psychology (e.g., Status Signaling).
-Slides 3-5 (The Scripts): Situation A + Exact words to say / action to do.
-Slide 6 (The Authority): A brief, "clinical" insight or proof of why this works.
-Slide 7 (Dual CTA): Soft nudge with "Follow for more". No link in bio
 
-Create a hook based on one of these examples (choose a random hook 1-10, or create a variation of one. Focus on "how to x", "x ways to y". Don't use a question for hook):
-1. "3 ways to join a group conversation without it feeling awkward"
-2. "The simple shift that makes people feel deeply understood when you speak"
-3. "How to keep a conversation flowing naturally without ever forcing it"
-4. "A 5 minute framework for turning an acquaintance into a real connection" 
-5. "How to project high authority in a room without saying a word"
-6. "How to say no in a way that actually makes people respect you more"
-7. "A mindset shift for speaking to high authority people with total ease"
-8. "3 ways to introduce yourself that make people want to hear more"
-9. "How to move a stale conversation toward a topic everyone enjoys"
-10."How to leave a lasting positive impression in the first 60 seconds"
+Slide 1 (The Hook): Apply the Variety Protocol (below). It must be a definitive statement that disrupts the viewer’s current logic.
 
-background_query: "rich lifestyle city people" (use this as is don't change it)
+Slide 2 (The Information Bomb): Name a specific psychological phenomenon (e.g., "The Pratfall Effect," "Signaling Theory," or "The Ben Franklin Effect"). Explain the Evolutionary Why in one punchy sentence.
 
-Slide show focus should be on self improvement and life improvement advice. Even though the brand is tech related, focus on specifically self improvement that will result in being well rounded (not just tech focused).`)
+Slide 3-5 (The Protocol): Provide three distinct social "Scripts."
+
+Requirement: One script must be for a High-Pressure situation; one for a Low-Pressure/Social situation; one for Boundary Setting.
+
+Translate the psychological 'why' into 3rd-grade English. Use short, punchy sentences that hit like a realization, not a lecture
+
+Slide 6 (The Neuro-Insight): A "Clinical" deep-dive. Mention a specific brain region or hormone involved (e.g., "This triggers a release of Oxytocin by lowering the listener's Amygdala response"). This is the "Saveable" slide.
+
+Slide 7 (The Minimalist CTA): "This is a practice, not a hack.
+At 1,000 followers, I'm releasing the 'Communication Vault'
+(100+ Scripts & Protocols) for free via the link in bio.
+Follow to join the waitlist."
+
+HOOK GENERATION PROTOCOL:
+
+Step 1: Selection Seed. Pick a random number 1-10 to select a Core Topic:
+
+Negotiating boundaries | 2. Silent authority | 3. Breaking rapport | 4. Deep connection | 5. Dealing with ego | 6. Charismatic listening | 7. Public perception | 8. Energy conservation | 9. Conflict resolution | 10. Social magnetism.
+
+Step 2: The Variety Filter (Pick a random number 1-3 to select the variety filter):
+
+1. The Shadow: Focus on what they are currently losing (e.g., "The subtle way you’re accidentally leaking authority in group chats.")
+
+2. The Benefit: Focus on the "Unfair Advantage" (e.g., "The journaling method that makes people feel deeply understood when you speak.")
+
+3. The Mechanism: Focus on the 'How' (e.g., "Using the '3-Second Pause' to shift the power dynamic in any room.")
+
+Step 3: The Syntax Check:
+
+Start with a Number, "How to", or "The [Noun]".
+
+NO QUESTIONS. No clickbait words (Secrets/Hacks/Insane).
+
+VISUAL ASSETS (Randomize): background_query: [1. "dark academia library" | 2. "minimalist stone architecture" | 3. "sunrise over foggy city" | 4. "macro linen texture" | 5. "luxury watch/pen detail"]`)
                 }
               >
                 Social/Convo Preset
               </Button>
+              <Button
+                onClick={() =>
+                  setGenertationPrompt(`ROLE: You are a Systems Architect for Human Behavior. You specialize in creating "SOPs" (Standard Operating Procedures) for the mind and social interactions. Your brand is high-trust, clinical, and data-backed.
+
+OBJECTIVE: Create "Reference Grade" content. The viewer should feel that if they don't save this, they are losing a valuable tool they will need in the future.
+
+CONTENT STRUCTURE (7 SLIDES):
+
+Slide 1 (The Hook): Focus on a Universal Friction Point (e.g., "The 3-part audit for when you feel socially drained").
+
+Slide 2 (The Logic): Introduce a high-level psychological concept like "Cognitive Load Theory" or "Social Exchange Theory." Explain the "Battery" or "System" currently being drained.
+
+Slide 3 (The Diagnostic): A checklist of 3-4 "Symptoms" the user is feeling. (This builds "Micro-Agreements" where the user says "That's me," forcing a save).
+
+Slide 4-5 (The Protocol): A step-by-step Decision Tree.
+
+Format: "If [Scenario A] → Do [Action A]. If [Scenario B] → Do [Action B]."
+
+Slide 6 (The Journaling Anchor): Provide two "Deep-Tissue" journaling prompts that require the user to stop and think. (They save this to do later tonight).
+
+Slide 7 (The Save CTA): "This is a reference tool. Save it for the next time you feel [Problem]."
+
+The Diagnostic and Decision Tree must be so simple that someone in a state of high panic could read and follow them instantly. No complex words. Only clear actions.
+
+HOOK GENERATION PROTOCOL (Reference Focus):
+
+Step 1: Selection Seed. Pick a random number 1-8 for the Tool Category:
+
+Social Battery Audit | 2. Conflict Resolution Tree | 3. The "Respect" Diagnostic | 4. Pre-Meeting Scripting Protocol | 5. Post-Social Anxiety Reset | 6. Boundary Setting Framework | 7. The "High-Authority" Body Language Checklist | 8. Subconscious Money-Block Audit.
+
+Step 2: The Variety Filter:
+
+The "System" Filter: Focus on the tool name (e.g., "The 4-Step Protocol for...").
+
+The "Diagnostic" Filter: Focus on the problem (e.g., "How to identify exactly why...").
+
+The "Manual" Filter: Focus on the reference nature (e.g., "The complete guide to...").
+
+Step 3: Syntax Check:
+
+Start with a Number or a Definitive Noun (e.g., "The 3-minute reset...").
+
+NO QUESTIONS.
+
+BANNED: Hack, Secret, Unlock, Life-changing, Viral.
+
+ALLOWED: Protocol, Framework, Audit, Diagnostic, Architecture, Logic.
+
+VISUAL ASSETS: background_query: [1. "minimalist blueprint" | 2. "clean architectural lines" | 3. "overhead view of open journal" | 4. "muted grey concrete texture" | 5. "desert minimalist landscape"]`)
+                }
+              >
+                High Save: Protocol Prompt
+              </Button>
             </div>
 
-            {/* Brand Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="brand-select">Select Brand</Label>
-              <Select
-                value={selectedProfile}
-                onValueChange={setSelectedProfile}
-              >
-                <SelectTrigger id="brand-select">
-                  <SelectValue placeholder="Choose a brand..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {brands?.map((brand) => {
-                    const settings = getBrandSettings(brand);
-                    return (
-                      <SelectItem key={brand.id} value={brand.id}>
-                        {settings?.name || "Unnamed Brand"}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-              {selectedProfile &&
-                brands &&
-                (() => {
-                  const brand = brands.find((b) => b.id === selectedProfile);
-                  const settings = brand ? getBrandSettings(brand) : null;
-                  return settings ? (
-                    <p className="text-sm text-muted-foreground">
+            {/* Brand Selection - Auto-populated from route */}
+            {brands &&
+              (() => {
+                const brand = brands.find((b) => b.id === selectedProfile);
+                const settings = brand ? getBrandSettings(brand) : null;
+                return settings ? (
+                  <div className="space-y-2 p-4 bg-foreground/5 rounded-lg border border-foreground/10">
+                    <Label className="text-sm font-semibold">
+                      Active Brand
+                    </Label>
+                    <p className="text-base font-medium">{settings.name}</p>
+                    <p className="text-sm text-foreground/60">
                       Niche: {settings.niche}
                     </p>
-                  ) : null;
-                })()}
-            </div>
+                  </div>
+                ) : null;
+              })()}
 
             <div>
               <Select
@@ -286,20 +404,85 @@ Slide show focus should be on self improvement and life improvement advice. Even
             <Button
               onClick={handleGenerate}
               disabled={
-                (selectedGenType === "template" && !selectedTemplate) ||
-                (selectedGenType === "prompt" && !genertationPrompt) ||
                 !selectedProfile ||
-                createPost.isPending ||
-                generating
+                (selectedGenType === "template" && !selectedTemplate) ||
+                (selectedGenType === "prompt" && !genertationPrompt)
               }
               size="lg"
             >
-              {createPost.isPending || generating
-                ? "Generating..."
-                : "Generate Post"}
+              Generate Post
             </Button>
           </CardContent>
         </Card>
+
+        {queue.length > 0 && (
+          <Card className="mt-6 bg-foreground/5 border-foreground/10">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                Generation Queue ({queue.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {queue.map((request) => {
+                  let sec;
+
+                  if (request.status === "generating" || !request.completedAt) {
+                    sec = differenceInSeconds(now, new Date(request.createdAt))
+                  }
+                  else {
+                    sec = differenceInSeconds(new Date(request.completedAt), new Date(request.createdAt))
+                  }
+
+                  return (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-background border border-foreground/10"
+                    >
+                      <div className="flex-1">
+                        <div className="gap-4">
+                          <p className="text-sm font-medium">
+                            {request.templateId
+                              ? "Template-based"
+                              : "Prompt-based"}{" "}
+                            generation
+                          </p>
+                          <span className={`text-xs text-primary ${request.status === "generating" && "animate-pulse"}`}>
+                            {sec} seconds
+                          </span>
+                        </div>
+                        <p className="text-xs text-foreground/60">
+                          {request.prompt?.slice(0, 50) || request.templateId}
+                          ...
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {request.status === "pending" && (
+                          <span className="text-xs text-foreground/50">
+                            Queued
+                          </span>
+                        )}
+                        {request.status === "generating" && (
+                          <span className="text-xs text-primary animate-pulse">
+                            Generating...
+                          </span>
+                        )}
+                        {request.status === "completed" && (
+                          <span className="text-xs text-green-500">✓ Done</span>
+                        )}
+                        {request.status === "failed" && (
+                          <span className="text-xs text-destructive">
+                            ✗ Failed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {generatedPosts.length > 0 && (
           <div className="space-y-6 mt-6 mb-40">

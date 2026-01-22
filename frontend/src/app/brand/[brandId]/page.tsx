@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
-import OverviewPage from '../../overview/page';
+import React from 'react';
+import { redirect } from 'next/navigation';
 
-// This is the brand-specific dashboard page
-// It reuses the main OverviewPage component
-
-export default function BrandDashboardPage() {
-  return <OverviewPage />;
+export default function BrandIdPage({ params }: { params: Promise<{ brandId: string }> }) {
+  const resolvedParams = React.use(params);
+  // Validate brandId is not undefined or invalid before redirecting
+  if (!resolvedParams.brandId || resolvedParams.brandId === 'undefined' || resolvedParams.brandId.trim() === '') {
+    redirect('/overview');
+  }
+  // Redirect to brand overview page
+  redirect(`/brand/${resolvedParams.brandId}/overview`);
 }

@@ -35,8 +35,6 @@ Late:
 independant social connections -> late profile <-> my brand
 """
 
-
-
 # @router.post("/create-profile")
 # async def create_profile_api(
 #   request: CreateProfileRequest,

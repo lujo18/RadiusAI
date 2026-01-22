@@ -13,11 +13,13 @@ from backend.services.slides.slide_generation import generate_slideshows
 class GeneratePostRequest(BaseModel):
     template: Template
     brand_settings: BrandSettings
+    brand_id: str
     count: int = 1
     
 class GeneratePostAutoRequest(BaseModel):
     prompt: str
     brand_settings: BrandSettings
+    brand_id: str
     count: int = 1
 
 router = APIRouter(prefix="/api/generate", tags=["generate"])
@@ -32,6 +34,7 @@ async def generate_post_content_from_prompt(
     try:
         posts = generate_slideshows(
             user_id=user_id,
+            brand_id=request.brand_id,
             prompt=request.prompt,
             brand_settings=request.brand_settings,
             count=request.count

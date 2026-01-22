@@ -1,4 +1,8 @@
+import math
+import random
 from .client import api
+
+BACKUP_PHOTO_MULTIPLIER = 1.7
 
 def queryUnsplash(query: str, count: int):
   """Search for photos on Unsplash based on a query string."""
@@ -20,7 +24,7 @@ def queryUnsplash(query: str, count: int):
 
 def queryUnsplashUrls(query: str, count: int):
   """Get only photo URLs from Unsplash based on a query string."""
-  photos = queryUnsplash(query, count)
+  photos = queryUnsplash(query, math.ceil(count * BACKUP_PHOTO_MULTIPLIER))
   if not photos:
     return None
   # If fallback URLs (strings), just return them
@@ -28,4 +32,12 @@ def queryUnsplashUrls(query: str, count: int):
     return photos
   # Unsplash returns Photo objects, not dicts - use dot notation
   photoUrls = [photo.urls.regular for photo in photos]
+  
+  # Shuffle and select unique random indices
+  if len(photoUrls) < count:
+    # Not enough unique photos, allow repeats
+    backupUrls = random.choices(photoUrls, k=count)
+  else:
+    backupUrls = random.sample(photoUrls, count)
+  
   return photoUrls

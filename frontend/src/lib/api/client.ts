@@ -80,10 +80,16 @@ apiClient.interceptors.response.use(
 // ----- CONTENT / POSTS -----
 
 export const contentApi = {
-  // GET: Fetch all scheduled posts
-  getScheduledPosts: async () => {
+  // GET: Fetch all posts for a user with optional filters
+  getPosts: async (filters?: { status?: string; brandId?: string; templateId?: string; limit?: number }) => {
     const userId = await requireUserId();
-    return await PostRepository.getScheduledPosts(userId);
+    return await PostRepository.getPosts(
+      userId,
+      filters?.status as any,
+      filters?.limit,
+      filters?.brandId,
+      filters?.templateId
+    );
   },
 
 
@@ -101,10 +107,11 @@ export const contentApi = {
     return response.data.postContent;
   },
 
-  generatePostsFromPrompt: async (prompt: string, brandSettings: Database['public']['Tables']['brand_settings']['Row'], count: number = 1): Promise<Post[]> => {
+  generatePostsFromPrompt: async (prompt: string, brandSettings: Database['public']['Tables']['brand_settings']['Row'], brandId: string, count: number = 1): Promise<Post[]> => {
     const response = await apiClient.post('/api/generate/post/auto', {
       prompt,
       brand_settings: brandSettings,
+      brand_id: brandId,
       count,
     });
 
@@ -213,9 +220,11 @@ export const templateApi = {
 
 export const postApi = {
   // GET: Fetch all posts (optionally filtered by brand)
-  getPosts: async (status?: string, limit?: number, brandId?: string | null) => {
+  getPosts: async (filters?: {status?: Database["public"]["Enums"]["post_status"], limit?: number, brandId?: string, templateId?: string}) => {
     const userId = await requireUserId();
-    return await PostRepository.getPosts(userId);
+    const { status, limit, brandId, templateId } = filters || {};
+
+    return await PostRepository.getPosts(userId, status, limit, brandId, templateId);
   },
 
   // GET: Fetch single post with details
@@ -224,9 +233,15 @@ export const postApi = {
     return await PostRepository.getPost(postId, userId);
   },
 
-  // POST: Create new post
+  // POST: Create new post (with brandId support)
   createPost: async (postData: any) => {
-    return await PostRepository.createPost(postData);
+    const userId = await requireUserId();
+    // Ensure postData includes user_id and brand_id
+    const postWithUserId = {
+      ...postData,
+      user_id: userId,
+    };
+    return await PostRepository.createPost(postWithUserId);
   },
 
   // PUT: Update post

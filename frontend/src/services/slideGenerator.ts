@@ -100,6 +100,7 @@ export async function createPostsFromPrompt(
   const response = await contentApi.generatePostsFromPrompt(
     prompt,
     brandSettings,
+    brand.id, // brandId
     count
   );
 

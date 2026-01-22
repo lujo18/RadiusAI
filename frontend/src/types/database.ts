@@ -260,6 +260,33 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          max_brands: number | null
+          max_posts_per_month: number | null
+          max_slides_per_month: number | null
+          name: string
+          plan_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          max_brands?: number | null
+          max_posts_per_month?: number | null
+          max_slides_per_month?: number | null
+          name: string
+          plan_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          max_brands?: number | null
+          max_posts_per_month?: number | null
+          max_slides_per_month?: number | null
+          name?: string
+          plan_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       platform_integrations: {
         Row: {
           bio: string | null
@@ -413,15 +440,22 @@ export type Database = {
       }
       posts: {
         Row: {
+          analytics_last_sync: string | null
           brand_id: string | null
           content: Json
           created_at: string
+          error_message: string | null
+          external_account_id: string | null
+          external_permalink: string | null
+          external_post_id: string | null
+          generation_prompt: string | null
           id: string
+          is_automated: boolean | null
           metadata: Json | null
           platform: string
           published_time: string | null
           scheduled_time: string | null
-          status: string
+          status: Database["public"]["Enums"]["post_status"] | null
           storage_urls: Json
           template_id: string | null
           updated_at: string | null
@@ -429,15 +463,22 @@ export type Database = {
           variant_set_id: string | null
         }
         Insert: {
+          analytics_last_sync?: string | null
           brand_id?: string | null
           content: Json
           created_at?: string
+          error_message?: string | null
+          external_account_id?: string | null
+          external_permalink?: string | null
+          external_post_id?: string | null
+          generation_prompt?: string | null
           id?: string
+          is_automated?: boolean | null
           metadata?: Json | null
           platform: string
           published_time?: string | null
           scheduled_time?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["post_status"] | null
           storage_urls?: Json
           template_id?: string | null
           updated_at?: string | null
@@ -445,15 +486,22 @@ export type Database = {
           variant_set_id?: string | null
         }
         Update: {
+          analytics_last_sync?: string | null
           brand_id?: string | null
           content?: Json
           created_at?: string
+          error_message?: string | null
+          external_account_id?: string | null
+          external_permalink?: string | null
+          external_post_id?: string | null
+          generation_prompt?: string | null
           id?: string
+          is_automated?: boolean | null
           metadata?: Json | null
           platform?: string
           published_time?: string | null
           scheduled_time?: string | null
-          status?: string
+          status?: Database["public"]["Enums"]["post_status"] | null
           storage_urls?: Json
           template_id?: string | null
           updated_at?: string | null
@@ -996,7 +1044,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      post_status:
+        | "draft"
+        | "ready_to_review"
+        | "scheduled"
+        | "posting"
+        | "posted"
+        | "failed"
+        | "deleted"
+        | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1126,6 +1182,17 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      post_status: [
+        "draft",
+        "ready_to_review",
+        "scheduled",
+        "posting",
+        "posted",
+        "failed",
+        "deleted",
+        "archived",
+      ],
+    },
   },
 } as const

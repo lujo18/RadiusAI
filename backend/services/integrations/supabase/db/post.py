@@ -149,6 +149,7 @@ def get_posts_by_variant_set(user_id: str, variant_set_id: str) -> List[Dict[str
 
 def create_post(
     user_id: str,
+    brand_id: str,
     template_id: str = "",
     platform: str = "tiktok",
     content: Dict[str, Any] = None, 
@@ -162,6 +163,7 @@ def create_post(
     
     Args:
         user_id: User UUID
+        brand_id: Brand UUID (required)
         template_id: Template UUID
         platform: Platform name (instagram, tiktok)
         content: PostContent dict (title, caption, hashtags, slides)
@@ -177,6 +179,7 @@ def create_post(
     
     post_data = {
         'user_id': user_id,
+        'brand_id': brand_id,
         'platform': platform,
         'status': status,
         'content': content,

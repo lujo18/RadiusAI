@@ -17,50 +17,37 @@ export class PostRepository {
     return data;
   }
 
-  static async getPosts(userId: string) {
-    const { data, error } = await supabase
+  static async getPosts(userId: string, status?: Database["public"]["Enums"]["post_status"], limit?: number, brandId?: string, templateId?: string) {
+    let query = supabase
       .from('posts')
       .select('*')
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data;
-  }
 
-  static async getPostsByStatus(userId: string, status: string) {
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', status)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data;
-  }
+      if (status) {
+        query = query.eq('status', status);
+      }
+      if (brandId) {
+        query = query.eq('brand_id', brandId);
+      }
+      if (templateId) {
+        query = query.eq('template_id', templateId);
+      }
 
-  static async getPostsByTemplate(userId: string, templateId: string) {
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('template_id', templateId)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return data;
-  }
+      query = query.order('created_at', { ascending: false });
+      if (limit) {
+        query = query.limit(limit);
+      }
 
-  static async getScheduledPosts(userId: string) {
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'scheduled')
-      .order('scheduled_time', { ascending: true });
+    const { data, error } = await query;
     if (error) throw new Error(error.message);
     return data;
   }
 
   static async createPost(post: Database['public']['Tables']['posts']['Insert']) {
+    // Ensure required fields are present
+    if (!post.user_id) throw new Error('user_id is required to create a post');
+    if (!post.brand_id) throw new Error('brand_id is required to create a post');
+    
     const { data, error } = await supabase
       .from('posts')
       .insert([post])

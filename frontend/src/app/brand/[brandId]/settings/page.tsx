@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,12 +25,25 @@ export default function BrandSettingsPage() {
   const brandId = params?.brandId as string;
   const [activeTab, setActiveTab] = useState<'settings' | 'integrations'>('settings');
   const updateBrandSettingsMutation = useUpdateBrandSettings();
-  
-
   // Fetch all brands and find the current one
   const { data: brands, isLoading, error } = useBrands();
   const { data: brandIntegrations, isLoading: isIntegrationLoading, error: integrationError} = useBrandIntegrations(brandId)
   const brand = brands?.find((b: Brand) => b.id === brandId);
+  
+  // Redirect to /overview if:
+  // A. brandId doesn't exist in Supabase (not in user's brands list after loading)
+  // B. User doesn't own the brand (brand.user_id !== user.id)
+  React.useEffect(() => {
+    if (isLoading) return; // Wait for brands to load
+    if (!Array.isArray(brands)) return; // No brands or not an array
+    if (brands.length === 0) return; // No brands yet - could still be loading or user has no brands
+    
+    const found = brands.find((b: Brand) => b.id === brandId);
+    // Only redirect if brand explicitly doesn't exist AND we have successfully loaded brands
+    if (!found) {
+      window.location.replace('/overview');
+    }
+  }, [brands, isLoading, brandId]);
 
   const handleSubmit = async (newBrandSettings: BrandSettings) => {
     try {
