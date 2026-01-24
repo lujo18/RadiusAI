@@ -61,11 +61,11 @@ def generate_slideshow_auto(
     # meta-llama/llama-4-maverick-17b-128e-instruct (preview model)
 
     response = groq.chat.completions.create(
-        model="openai/gpt-oss-120b",
+        model="meta-llama/llama-4-maverick-17b-128e-instruct",
         messages=[
             {
                 "role": "system",
-                "content": "You are a JSON-generating content creator. Always output valid JSON only. Do not include explanations or markdown. Follow the schema exactly."
+                "content": SYSTEM_PROMPT
             },
             {
                 "role": "user",
@@ -77,7 +77,8 @@ def generate_slideshow_auto(
         presence_penalty=0.1,
         frequency_penalty=0.1,
         max_completion_tokens=2048,
-        reasoning_effort="medium",
+        # reasoning_effort="medium",
+        
         response_format={
             "type": "json_schema",
             "json_schema": {
@@ -132,6 +133,8 @@ def generate_slideshow_auto(
     # generated_data = json.loads(response_text)
 
     response_text = response.choices[0].message.content
+    
+    print("Gemini response 1:", response_text)
 
     if not response_text:
         raise ValueError("No response_text received from Gemini/Groq API.")
@@ -145,12 +148,14 @@ def generate_slideshow_auto(
         if "slides" in generated_data:
             # Single carousel object, wrap it
             generated_data = [generated_data]
+        if "items" in generated_data:
+            generated_data = generated_data["items"]
         else:
             raise ValueError(f"Groq response structure unexpected: {list(generated_data.keys())}")
     elif not isinstance(generated_data, list):
         raise ValueError(f"Groq response must be an array or object, got: {type(generated_data)}")
 
-    print("Gemini response:", generated_data)
+    print("Gemini response 2:", generated_data)
 
     # generated_data = [{'slides': [{'slide_number': 1, 'layout_type': 'hook', 'text_elements': {'text-1767736354031': 'Level Up Your Bench Press: The 5-Step Roadmap to 225 lbs'}}, {'slide_number': 2, 'layout_type': 'header_and_body', 'text_elements': {'text-1767736354031': 'Step 1: Master the Fundamentals', 'text-1767738943620': 'Proper form is non-negotiable. Focus on your bench press technique, shoulder stability, and thoracic extension. Watch tutorials, record yourself, and consider a coach for initial feedback.'}}, {'slide_number': 3, 'layout_type': 'header_and_body', 'text_elements': {'text-1767736354031': 'Step 2: Implement Progressive Overload', 'text-1767738943620': 'To get stronger, you need to consistently challenge your muscles. This means gradually increasing the weight, reps, or sets over time. Track your workouts meticulously.'}}, {'slide_number': 4, 'layout_type': 'header_and_body', 'text_elements': {'text-1767736354031': 'Step 3: Build Supporting Muscle Groups', 'text-1767738943620': "Your bench press isn't just about your chest. Strengthen your triceps, shoulders, and upper back with accessory exercises like overhead presses, dips, and rows."}}, {'slide_number': 5, 'layout_type': 'header_and_body', 'text_elements': {'text-1767736354031': 'Step 4: Prioritize Recovery and Nutrition', 'text-1767738943620': "Muscle growth happens when you rest. Ensure you're getting enough sleep and fueling your body with adequate protein and calories. Recovery is just as important as the workout itself."}}, {'slide_number': 6, 'layout_type': 'header_and_body', 'text_elements': {'text-1767736354031': 'Step 5: Train Smart, Not Just Hard', 'text-1767738943620': 'Incorporate periodization into your training. Plan phases of strength building, hypertrophy, and deload weeks. Listen to your body and adjust as needed to avoid burnout.'}}, {'slide_number': 7, 'layout_type': 'header', 'text_elements': {'text-1767736354031': 'Ready to hit 225? Start your journey today.'}}], 'caption': "Here's your actionable 5-step plan to boost your bench press and reach that 225 lb milestone. Track your progress and stay consistent!", 'hashtags': ['#BenchPress', '#StrengthTraining', '#FitnessGoals', '#WorkoutPlan', '#GymTips'], 'background_query': 'Modern tech-themed background with subtle weightlifting elements'}]
 
@@ -189,7 +194,8 @@ YOU MUST:
 """
 
     return f""" 
-TOPIC: {slideshowGoals}
+SLIDESHOW STRUCTURE:
+{slideshowGoals}
 
 {template_section}
 
@@ -223,9 +229,9 @@ OUTPUT FORMAT - Return array of {count} variation(s):
         }}
       }}
     ],
-    "caption": "Authentic caption",
+    "caption": "Authentic caption related to content",
     "hashtags": ["hashtag1", "hashtag2"],
-    "background_query": "2-3 words"
+    "background_query": "2-3 words describing an image related to content"
   }}
 ]
 

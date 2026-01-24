@@ -306,7 +306,6 @@ function TooltipOverlay() {
                   open: rendered.open,
                 }}
               >
-                {/* @ts-expect-error - refs.setFloating type mismatch with motion component */}
                 <Component
                   {...{
                     ref: refs.setFloating

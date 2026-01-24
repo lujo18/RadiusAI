@@ -93,6 +93,15 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
     }
   };
 
+  // Bulk download handler
+  const handleBulkDownload = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    for (const row of selectedRows) {
+      downloadSlides(row.original);
+    }
+  };
+
   const { data, isLoading, error } = usePostsByBrand(brandId);
 
   const [postModalOpen, setPostModalOpen] = React.useState(false);
@@ -410,14 +419,24 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
               <div className="w-full space-y-4">
                 <div className="flex items-center gap-4">
                   {table.getFilteredSelectedRowModel().rows.length !== 0 && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={table.getFilteredSelectedRowModel().rows.length === 0 || deletePostMutation.isPending}
-                      onClick={handleBulkDelete}
-                    >
-                      {deletePostMutation.isPending ? "Deleting..." : `Delete Selected (${table.getFilteredSelectedRowModel().rows.length})`}
-                    </Button>
+                    <>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={table.getFilteredSelectedRowModel().rows.length === 0 || deletePostMutation.isPending}
+                        onClick={handleBulkDelete}
+                      >
+                        {deletePostMutation.isPending ? "Deleting..." : `Delete Selected (${table.getFilteredSelectedRowModel().rows.length})`}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={table.getFilteredSelectedRowModel().rows.length === 0}
+                        onClick={handleBulkDownload}
+                      >
+                        Download Selected ({table.getFilteredSelectedRowModel().rows.length})
+                      </Button>
+                    </>
                   )}
                   <Input
                     placeholder="Filter by caption..."

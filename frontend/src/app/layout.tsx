@@ -1,10 +1,13 @@
+import './tw-animate.css';
+import '@/app/globals.css';
 import React from "react";
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
-import "./globals.css";
+
 import { AuthProvider } from "@/components/AuthProvider";
 import { QueryProvider } from "@/components/QueryProvider";
 import { ThemeProvider } from "@/components/provider/theme-provider";
+
 
 const inter = Inter({ subsets: ["latin"] });
 const main = Plus_Jakarta_Sans({
@@ -28,8 +31,8 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/images/favicon.png" type="image/png" />
       </head>
-      <body className={`${inter.className} ${main.variable}`}>
-        {" "}
+      <body className={`${inter.className} ${main.variable} antialiased`}>
+      
         {/* App name is Radius everywhere */}
         <QueryProvider>
           <AuthProvider>
