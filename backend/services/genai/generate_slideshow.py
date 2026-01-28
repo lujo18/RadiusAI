@@ -72,7 +72,7 @@ def generate_slideshow_auto(
                 "content": prompt,
             },
         ],
-        temperature=0.7,
+        temperature=0.4,
         top_p=0.9,
         presence_penalty=0.1,
         frequency_penalty=0.1,
@@ -145,11 +145,12 @@ def generate_slideshow_auto(
     # Ensure response is an array
     if isinstance(generated_data, dict):
         # Check if it has a wrapping key with array data
-        if "slides" in generated_data:
-            # Single carousel object, wrap it
-            generated_data = [generated_data]
         if "items" in generated_data:
+            # Extract array from "items" wrapper
             generated_data = generated_data["items"]
+        elif "slides" in generated_data:
+            # Single carousel object, wrap it in array
+            generated_data = [generated_data]
         else:
             raise ValueError(f"Groq response structure unexpected: {list(generated_data.keys())}")
     elif not isinstance(generated_data, list):

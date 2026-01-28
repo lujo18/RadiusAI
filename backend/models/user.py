@@ -8,13 +8,15 @@ from datetime import datetime
 
 class BrandSettings(BaseModel):
     """Account-level brand settings for AI content generation"""
+    # Match frontend BrandSettingsData which includes an optional human-friendly name
+    name: Optional[str] = None
     niche: str
     aesthetic: str
     target_audience: str
     brand_voice: str
     content_pillars: List[str]
 
-    tone_of_voice: Optional[Literal["professional", "casual", "humorous", "edgy", "inspirational"]] = None
+    tone_of_voice: Optional[str] = None
     emoji_usage: Optional[Literal["none", "minimal", "moderate", "heavy"]] = None
     forbidden_words: Optional[List[str]] = None
     preferred_words: Optional[List[str]] = None

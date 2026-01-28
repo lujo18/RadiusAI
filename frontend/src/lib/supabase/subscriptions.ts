@@ -4,6 +4,8 @@
  * Helper functions to check subscription status and enforce paywall
  */
 
+// DELEGATE: Cache results to reduce DB calls
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createClient(

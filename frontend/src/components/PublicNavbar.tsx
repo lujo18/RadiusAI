@@ -68,10 +68,10 @@ export default function PublicNavbar() {
             <>
               {user ? (
                 <>
-                  <Link href="/brand" className="btn-primary">
+                  <Link href="/overview" className="btn-primary">
                     Go to Dashboard
                   </Link>
-                  <Link href="/brand" className="flex items-center space-x-2 text-foreground/80 hover:text-foreground transition">
+                  <Link href="/overview" className="flex items-center space-x-2 text-foreground/80 hover:text-foreground transition">
                     {avatarUrl ? (
                       <img 
                         src={avatarUrl} 
@@ -101,7 +101,7 @@ export default function PublicNavbar() {
         {/* Mobile Menu (simplified for now) */}
         <div className="md:hidden">
           {!loading && user ? (
-            <Link href="/brand">
+            <Link href="/overview">
               {avatarUrl ? (
                 <img 
                   src={avatarUrl} 

@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
   });
 
   // Protected routes
-  const protectedRoutes = ['/brand'];
+  const protectedRoutes = ['/overview', '/brand', '/templates', '/slides', '/checkout', '/account'];
   const isProtectedRoute = protectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   );

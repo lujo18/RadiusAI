@@ -75,7 +75,7 @@ function Slot<T extends HTMLElement = HTMLElement>({
         ? (children.type as React.ElementType)
         : motion.create(children.type as React.ElementType),
     [isAlreadyMotion, children.type],
-  );
+  ) as React.ForwardRefExoticComponent<any>;
 
   if (!React.isValidElement(children)) return null;
 

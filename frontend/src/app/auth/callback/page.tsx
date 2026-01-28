@@ -57,7 +57,7 @@ export default function AuthCallbackPage() {
         }
         
         // Default: redirect to dashboard
-        router.push('/brand');
+        router.push('/overview');
       } else {
         router.push('/login');
       }

@@ -1,12 +1,14 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from backend.models.slide import PostContent
+from backend.models.template import Template
 from backend.models.user import BrandSettings
 from backend.services.genai.generate_slideshow import generate_slideshow_auto
 from backend.services.integrations.supabase.db.post import create_post, update_post_storage_urls
 from backend.services.integrations.supabase.storage import upload_post_images_optimized
 from backend.services.pillow.renderSlides import SlideRenderer
 from backend.util.system_prompt import SYSTEM_PROMPT
+import json
 
 
 logger = logging.getLogger(__name__)
@@ -14,7 +16,7 @@ logger = logging.getLogger(__name__)
 def generate_slideshows(
   user_id: str,
   brand_id: str,
-  prompt: str,
+  template: Template,
   brand_settings: BrandSettings,
   count: int = 1
 ):
@@ -25,20 +27,21 @@ def generate_slideshows(
     
     print("Generating slideshows with Gemini...")
     
-    systemizedPrompt = SYSTEM_PROMPT + '\n' + prompt
+    # Convert content_rules dict to string for prompt
+    prompt = json.dumps(template.content_rules)
     
-
+    logger.info("Prompt from template", prompt)
     
     # 1. Generate full JSON for a post
     post_content_list = generate_slideshow_auto(
-        slideshowGoals=systemizedPrompt,
+        slideshowGoals=prompt,
         brandSettings=brand_settings,
         count=count
     )
     
     # 2. Save all posts to Supabase (serialize PostContent to dict)
     posts = [  # Returns dicts from Supabase, not Post models
-      create_post(user_id=user_id, brand_id=brand_id, content=post_content.model_dump() if hasattr(post_content, 'model_dump') else post_content.dict()) # TODO: currently no template, default to instagram
+      create_post(user_id=user_id, brand_id=brand_id, template_id=template.id, content=post_content.model_dump() if hasattr(post_content, 'model_dump') else post_content.dict()) # TODO: currently no template, default to instagram
       for post_content in post_content_list
     ]
     
@@ -65,7 +68,7 @@ def generate_slideshows(
                 optimize=True
             )
             
-            # Update post with storage URLs
+            # Update post with storage URLs and get the updated post back
             updated_post = update_post_storage_urls(
                 post_id=post['id'],
                 user_id=post.get('user_id'),

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 from datetime import datetime
 
-from backend.models.slide import SlideDesign, SlideSequence
+from .slide import SlideDesign, SlideSequence
 from .enums import (
     TemplateCategory,
     TemplateStatus,
@@ -40,8 +40,7 @@ class ContentRules(BaseModel):
 
 class StyleConfig(BaseModel):
     layout: LayoutConfig
-    content_rules: Optional[ContentRules] = None # TODO: update the typescript/frontend functionality (see comment there), then fix this
-    slide_designs: List[SlideDesign] 
+    slide_designs: List[SlideDesign]
     slide_sequence: List[SlideSequence] 
 
 
@@ -63,23 +62,33 @@ class Template(BaseModel):
     status: str  # Supabase: string
     created_at: str  # Supabase: string (ISO)
     updated_at: str  # Supabase: string (ISO)
-    style_config: dict  # Supabase: JSON
-    gemini_prompt: Optional[str] = None
-    brand_id: Optional[str] = None
-    user_id: Optional[str] = None
-    tags: Optional[List[str]] = None
-    favorite: Optional[bool] = None
-    parent_template_id: Optional[str] = None
+    style_config: Optional[dict] = None  # Supabase: JSON | null
+    content_rules: dict  # Supabase: JSON
+    brand_id: Optional[str] = None  # Supabase: string | null
+    user_id: str  # Supabase: string
+    tags: Optional[List[str]] = None  # Supabase: string[] | null
+    favorite: bool = False  # Supabase: boolean
+    parent_id: Optional[str] = None  # Supabase: string | null
 
 class CreateTemplateRequest(BaseModel):
     name: str
-    category: TemplateCategory
-    style_config: StyleConfig
+    category: str  # Changed from TemplateCategory to str to match Supabase
+    style_config: Optional[StyleConfig] = None
+    content_rules: dict  # Required for Supabase
     is_default: bool = False
+    brand_id: Optional[str] = None
+    tags: Optional[List[str]] = None
+    favorite: bool = False
+    parent_id: Optional[str] = None
 
 class UpdateTemplateRequest(BaseModel):
     name: Optional[str] = None
-    category: Optional[TemplateCategory] = None
-    status: Optional[TemplateStatus] = None
+    category: Optional[str] = None  # Changed from TemplateCategory to str
+    status: Optional[str] = None  # Changed from TemplateStatus to str
     style_config: Optional[StyleConfig] = None
+    content_rules: Optional[dict] = None
     is_default: Optional[bool] = None
+    brand_id: Optional[str] = None
+    tags: Optional[List[str]] = None
+    favorite: Optional[bool] = None
+    parent_id: Optional[str] = None

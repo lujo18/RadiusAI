@@ -143,7 +143,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
 
   const handleSkip = () => {
     onClose();
-    router.push('/brand');
+    router.push('/overview');
   };
 
   if (!isOpen) return null;

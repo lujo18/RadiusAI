@@ -7,7 +7,11 @@ from backend.services.genai.gemini_service import generate_content_with_gemini
 from backend.services.genai.generate_slideshow import generate_slideshow_auto
 from backend.models import Template
 from backend.models.user import BrandSettings
+from backend.services.integrations.groq.util.GenerateBrand import generate_brand
 from backend.services.slides.slide_generation import generate_slideshows
+from backend.services.genai.client import client
+from google.genai import types
+import json
 
 
 class GeneratePostRequest(BaseModel):
@@ -17,7 +21,7 @@ class GeneratePostRequest(BaseModel):
     count: int = 1
     
 class GeneratePostAutoRequest(BaseModel):
-    prompt: str
+    template: Template
     brand_settings: BrandSettings
     brand_id: str
     count: int = 1
@@ -35,7 +39,7 @@ async def generate_post_content_from_prompt(
         posts = generate_slideshows(
             user_id=user_id,
             brand_id=request.brand_id,
-            prompt=request.prompt,
+            template=request.template,
             brand_settings=request.brand_settings,
             count=request.count
         )
@@ -64,3 +68,4 @@ async def create_post(
         return {"postContent": post_content, "message": "Content generated successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

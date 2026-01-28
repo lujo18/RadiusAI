@@ -1,94 +1,83 @@
 
 "use client";
-import { motion } from "motion/react";
+import { Check } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { ShiftCard } from "../ui/shift-card";
-import { Card } from "../ui/card";
-
+import { useState } from "react";
+import { LoadingButton } from "../ui/loading-button";
 
 interface TemplateCardProps {
   template: any;
-  onSelect?: () => void;
-  isActive?: boolean;
-  expanded?: boolean;
+  onSelect: () => Promise<void>;
 }
 
-export function TemplateCard({ template, onSelect, isActive = false, expanded = false }: TemplateCardProps) {
-  // --- Content Creators ---
+export function TemplateCard({ template, onSelect }: TemplateCardProps) {
+
+  const [templateSelected, setTemplateSelected] = useState(false)
+  
+
+  const addTemplate = async () => {
+    const response = await onSelect()
+    console.log("CARD TEMPLATE", response)
+
+    setTemplateSelected(response!!)
+
+  }
+
+  // Content for the top part of the card (always visible)
   const topContent = (
-    <Card
-      className={`rounded-t-lg p-4 shadow-none border-b border-border transition-all duration-300 ${isActive ? 'bg-background text-foreground border-primary' : 'bg-card text-card-foreground'} ${expanded ? 'ring-2 ring-primary' : ''}`}
-    >
-      <div className="flex flex-col gap-2">
-        <Badge variant="outline" className="w-fit border-muted text-muted-foreground font-medium tracking-tight">
-          {template.primary_goal}
+    <div className="bg-accent/90 rounded-md text-primary shadow-[0px_1px_1px_0px_rgba(0,0,0,0.05),0px_1px_1px_0px_rgba(255,252,240,0.5)_inset,0px_0px_0px_1px_hsla(0,0%,100%,0.1)_inset,0px_0px_1px_0px_rgba(28,27,26,0.5)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.03)_inset,0_0_0_1px_rgba(255,255,255,0.03)_inset,0_0_0_1px_rgba(0,0,0,0.1),0_2px_2px_0_rgba(0,0,0,0.1),0_4px_4px_0_rgba(0,0,0,0.1),0_8px_8px_0_rgba(0,0,0,0.1)]">
+      <div className="p-4">
+        <Badge variant={"outline"} className="w-fit text-xs mb-2">
+          {template.content_rules.goal}
         </Badge>
-        <h3 className="text-lg font-semibold text-foreground leading-tight">{template.name}</h3>
-        {template.subtitle && (
-          <div className="text-xs text-muted-foreground/80 font-medium truncate max-w-full">{template.subtitle}</div>
-        )}
-        <div className="flex items-center text-xs text-muted-foreground/80">
-          <span className="font-medium">{template.hook_style}</span>
-        </div>
-      </div>
-    </Card>
-  );
-
-  // No topAnimateContent for this style
-  const topAnimateContent = null;
-
-  const middleContent = (
-    <div className={`flex flex-col items-center justify-center py-8 px-4 transition-all duration-300 ${isActive ? 'bg-background/80 text-foreground' : 'bg-card/80 text-card-foreground'}` }>
-      <div className="text-center">
-        <div className="text-3xl font-bold text-foreground/80 mb-1 tracking-tight">
-          {template.slide_count || 5} Slides
-        </div>
-        <p className="text-xs text-muted-foreground/80 font-medium">
-          {template.category || "Template Preview"}
-        </p>
+        <h3 className="text-lg font-semibold max-w-full overflow-hidden">
+          {template.name}
+        </h3>
       </div>
     </div>
   );
 
-  const bottomContent = (
-    <Card
-      className={`rounded-b-lg border-t-0 shadow-none px-4 pb-4 pt-2 transition-all duration-300 ${isActive ? 'bg-background text-foreground border-primary' : 'bg-card text-card-foreground'}`}
-    >
-      <div className="flex flex-col gap-2">
-        <div className="text-sm text-muted-foreground/90 font-medium">
-          <span className="font-semibold">Content Density:</span> {template.text_density}
-        </div>
-        {template.psychology && (
-          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{template.psychology}</p>
-        )}
-        <div>
-          <h4 className="font-semibold text-xs text-foreground mb-1 mt-2">Slide Structure:</h4>
-          <div className="space-y-1">
-            {Object.entries(template?.structure || []).map(([key, value], idx) => (
-              <div key={key} className="text-xs text-muted-foreground/80">
-                <span className="font-semibold">Slide {idx + 1}:</span> {String(value)}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-2 pt-2">
-          <Button onClick={onSelect} variant="secondary" className="flex-1">
-            Select Template
-          </Button>
-          <Button variant="ghost" className="flex-1">
-            Preview
-          </Button>
-        </div>
+  // Content that animates into top from the middle (can be empty)
+  const topAnimateContent = null;
+
+  // Content that animates from the top to the middle (main content)
+  const middleContent = (
+    <div className="text-center">
+      <div className="text-3xl font-bold text-foreground/80 mb-1 tracking-tight">
+        {template.slide_count || 5} Slides
       </div>
-    </Card>
+      <p className="text-xs text-muted-foreground/80 font-medium">
+        {template.category || "Template Preview"}
+      </p>
+    </div>
   );
 
-  // --- Render ---
+  // Content for the bottom part that shows on hover
+  const bottomContent = (
+    <div className="pb-4">
+      <div className="flex w-full flex-col gap-1 bg-primary/90 border-t border-t-black/10 rounded-t-lg px-4 pb-4">
+        <div className=" text-[14px] font-medium text-white dark:text-[#171717] flex gap-1 pt-2.5 items-center">
+          <Check/>
+          <p className="font-bold">Use this template</p>
+        </div>
+        <div className="w-full text-pretty font-sans text-[13px] leading-4 text-neutral-200 dark:text-[#171717] pb-2">
+          {template.psychology ? template.psychology : "Create engaging carousel content with this template."}
+        </div>
+
+        <div className="bg-accent/80 dark:bg-accent px-1 py-1 rounded-xl flex flex-col gap-3">
+          <LoadingButton onClick={addTemplate} variant="default" className="w-full text-xs">
+            {templateSelected ? "Template Saved" : "Select Template" }
+          </LoadingButton>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <ShiftCard
-      key={template.template_id}
-      className="bg-transparent shadow-none"
+      className="bg-card h-62 dark:bg-[#1A1A1A] w-full"
       topContent={topContent}
       topAnimateContent={topAnimateContent}
       middleContent={middleContent}
@@ -96,4 +85,3 @@ export function TemplateCard({ template, onSelect, isActive = false, expanded = 
     />
   );
 }
-

@@ -1,217 +1,586 @@
 export const SYSTEM_TEMPLATES = {
-  "template_library": [
+  template_library: [
     {
-      "template_id": "T-SAVE-01",
-      "name": "The Deep Protocol",
-      "primary_goal": "Saves / Reference Value",
-      "hook_style": "Mechanism-based (The X-Y-Z Method)",
-      "structure": {
-        "slide_1": "The Pattern Interrupt (Declarative Hook)",
-        "slide_2": "The Science (The 'Information Bomb' - Why it works)",
-        "slide_3": "The Protocol (Step-by-step instructions)",
-        "slide_4": "The Visual Recap (The 'Take a Screenshot' slide)"
+      template_id: "T-TRANSFORM-01",
+      name: "The Bold Transformation",
+      category: "transformation",
+      content_rules: {
+        goal: "Reach / Deep Engagement / Saves",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 7,
+        avg_performance: {
+          estimated_engagement_lift: "+45%",
+          swipe_through_rate: "42%",
+          save_rate: "higher",
+          benchmark: "Before-and-afters consistently top viral charts",
+        },
+        hook_style: "Visual Contrast + Transformation Logic",
+        text_density: "Light (5-10 words per slide) / Visual-First",
+        structure: {
+          slide_1:
+            "The Shocking Before: Raw, unfiltered before image with hook text",
+          slide_2:
+            "The Breakdown: Brief explanation of what changed (the method/system/habit).",
+          slide_3:
+            "The Progression: Midpoint visual showing early changes (week 2-3 benchmark).",
+          slide_4:
+            "The Proof Point: Tangible metric or visible progress (numbers work best: '15lbs down,' '3-month change').",
+          slide_5:
+            "The Comparison: Side-by-side 'then vs now' contrasting slides for maximum visual impact.",
+          slide_6:
+            "The Mindset Shift: Single powerful statement about the mental/emotional change alongside results.",
+          slide_7:
+            "The Actionable CTA: 'Start today. Save this post. DM me for the guide.'",
+        },
+        key_success_factors: [
+          "High-contrast visuals (bright/warm before, confident/polished after)",
+          "Authentic imagery > overly edited",
+          "Specific timeframe clearly stated (30/60/90 days)",
+          "Include one emotional moment in the narrative",
+          "Numbers always drive saves",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Bold color contrast between slides (warm/cool tones work)",
+          tone_compatibility: "Inspirational / Motivational works best",
+          text_formatting: "Large, readable fonts on non-white backgrounds",
+          suggested_brand_addition:
+            "add 'transformation_claim' field (specific transformation type: 'fitness', 'business', 'lifestyle')",
+        },
       },
-      "text_density": "High (Detailed)",
-      "psychology": "The user saves because the info is too dense to memorize but too valuable to lose."
+      best_for: [
+        "Fitness transformations",
+        "Skincare/beauty results",
+        "Business growth metrics",
+        "Home renovations",
+        "Productivity system overhauls",
+      ],
     },
+
     {
-      "template_id": "T-FOLLOW-02",
-      "name": "The Identity Manifesto",
-      "primary_goal": "Followers / Community Growth",
-      "hook_style": "Belief-based (Us vs. Them)",
-      "structure": {
-        "slide_1": "The Radical Shift (Challenging a common myth)",
-        "slide_2": "The New Reality (Defining the 'Grounded' way of living)",
-        "slide_3": "The Call to Action (Invite them into the tribe)",
-        "slide_4": "The Signature (Your brand philosophy)"
+      template_id: "T-EDUCATE-02",
+      name: "The Step-By-Step Authority",
+      category: "educational",
+      content_rules: {
+        goal: "Saves / Community Trust / Evergreen Value",
+        platform_optimized: ["Instagram", "TikTok", "LinkedIn"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+38%",
+          save_rate: "Very High (114% vs single posts)",
+          completion_rate: "78%",
+          benchmark: "Educational carousels are highest-saving content type",
+        },
+        hook_style: "Solution Promise (e.g., 'The 5-step system to achieve X')",
+        text_density: "Medium (10-15 words per slide) / Scannable Numbered List",
+        structure: {
+          slide_1:
+            "The Promise Hook: 'The [number]-step [outcome] system I wish I knew earlier.' Include a numbered visual (1 → N).",
+          slide_2:
+            "Step 1: Core action with brief context. Visual = icon, diagram, or simplified screenshot.",
+          slide_3:
+            "Step 2: Build on Step 1. Add specificity or common mistake to avoid here.",
+          slide_4:
+            "Step 3: The often-overlooked detail that separates good from great.",
+          slide_5:
+            "Step 4 & 5: Compressed into one slide if <5 steps; separate if more complex.",
+          slide_6:
+            "The Takeaway + CTA: 'Start with Step 1 today. Screenshot this. Follow for part 2.'",
+        },
+        key_success_factors: [
+          "Numbers = credibility (5-step, 3-part, etc.)",
+          "One idea per slide rule is NON-NEGOTIABLE",
+          "Use consistent numbering/icons across all slides",
+          "Include at least one contrarian or surprising sub-point",
+          "Specific, actionable language (avoid 'consider' or 'think about')",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Consistent icon set or design system across all steps",
+          tone_compatibility: "Professional + Accessible (avoid overly academic)",
+          emoji_usage:
+            "Minimal (1-2 per slide max for readability on step slides)",
+          suggested_brand_addition:
+            "add 'step_icon_style' field (e.g., 'minimalist', 'emoji', 'detailed')",
+        },
       },
-      "text_density": "Low (Punchy, bold statements)",
-      "psychology": "The user follows because you have articulated their worldview better than they could."
+      best_for: [
+        "How-to guides / tutorials",
+        "Business systems (client onboarding, lead gen)",
+        "Health/wellness protocols",
+        "Skill-building sequences",
+        "Financial advice / budgeting",
+      ],
     },
+
     {
-      "template_id": "T-LIKE-03",
-      "name": "The Relatability POV",
-      "primary_goal": "Likes / Reach / Engagement",
-      "hook_style": "Context-based (POV / Scenario)",
-      "structure": {
-        "slide_1": "The POV (A common struggle or desired moment)",
-        "slide_2": "The Emotional Release (Validation of the struggle)",
-        "slide_3": "The 'Soft' Solution (A quick journaling prompt)",
-        "slide_4": "The 'Double Tap' (Relatable ending)"
+      template_id: "T-MYTH-03",
+      name: "The Myth-Busting Provocateur",
+      category: "myth-busting",
+      content_rules: {
+        goal: "Comments / Reach / Social Proof",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+52%",
+          comment_rate: "Very High (sparks debate)",
+          share_rate: "High (contrarian content spreads)",
+          benchmark: "@thebirdspapaya myth format went 5M+ reach multiple times",
+        },
+        hook_style: "Contrarian Statement / Belief Challenge",
+        text_density:
+          "Heavy on Slide 1, Light after (8-12 words per reveal slide)",
+        structure: {
+          slide_1:
+            "The Provocative Hook: 'MYTH: [common false belief]. Here's why this is destroying your [outcome].'",
+          slide_2:
+            "The Why It's Believed: 'Everyone says this because...' (show the cultural or social proof that perpetuates the myth).",
+          slide_3:
+            "The Hidden Truth: 'The real science/data says...' Bold, contrarian statement with 1-2 proof points.",
+          slide_4:
+            "The Alternative: 'Do THIS instead.' Specific, actionable replacement for the myth.",
+          slide_5:
+            "The Meta-Insight: 'Why do smart people still believe the myth?' (adds depth and relatability).",
+          slide_6:
+            "The Call-to-Arms: 'Comment the myth you want me to bust next. Save this post.'",
+        },
+        key_success_factors: [
+          "Myth must be ACTUALLY widely believed (research first)",
+          "Bold font + high contrast on reveal slide (slide 3)",
+          "Include at least one emoji or visual that signals 'surprise' (🤯, ❌, 🚫)",
+          "Don't just say 'myth.' Explain WHY people believe it (social credibility).",
+          "End with a question to drive comments",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Use contrasting colors (red/green or bold/muted) for myth vs truth",
+          tone_compatibility: "Edgy / Opinionated / Authoritative works best",
+          emoji_usage: "Moderate to Heavy (myth-busting relies on visual 'pop')",
+          forbidden_words_note:
+            "Avoid 'maybe,' 'possibly,' 'could' — be definitive",
+          suggested_brand_addition:
+            "add 'myth_credibility_source' field (academic study, personal experience, industry research)",
+        },
       },
-      "text_density": "Very Low (Atmospheric)",
-      "psychology": "The user likes because they feel 'seen' and understood."
+      best_for: [
+        "Health/nutrition misinformation",
+        "Career/money myths",
+        "Fitness/training false beliefs",
+        "Marketing/business conventions",
+        "Parenting/relationship advice",
+        "Tech adoption rumors",
+      ],
     },
+
     {
-      "template_id": "T-LIST-04",
-      "name": "The Curated Toolkit",
-      "primary_goal": "Shares / Rapid Value",
-      "hook_style": "Quantity-based (3-5-7 Ways)",
-      "structure": {
-        "slide_1": "The Curated Promise (e.g., '5 Prompts for X')",
-        "slide_2": "Item 1-2 (The 'Easy' wins)",
-        "slide_3": "Item 3-4 (The 'Advanced' insights)",
-        "slide_4": "Item 5 (The 'Hidden' gem)",
-        "slide_5": "The Share Trigger ('Send this to someone who needs to hear it')"
+      template_id: "T-COMPARE-04",
+      name: "The Strategic Comparison",
+      category: "comparison",
+      content_rules: {
+        goal: "Reach / Decision Clarity / Engagement",
+        platform_optimized: ["Instagram", "TikTok", "LinkedIn"],
+        slide_count: 7,
+        avg_performance: {
+          estimated_engagement_lift: "+40%",
+          save_rate: "High (users save for decision-making)",
+          completion_rate: "82%",
+          benchmark: "Comparisons are bookmarked for future reference",
+        },
+        hook_style: "Binary Choice / Side-by-Side Contrast",
+        text_density:
+          "Medium (10-15 words per comparison slide) / Balanced Layout",
+        structure: {
+          slide_1:
+            "The Headline Hook: 'The difference between [Option A] and [Option B] nobody talks about.' Include visual split.",
+          slide_2:
+            "Comparison #1 - Cost: Side-by-side cost analysis. Which is 'cheaper'? Be clear.",
+          slide_3:
+            "Comparison #2 - Results: Specific outcome metric for each option (speed, quality, durability).",
+          slide_4:
+            "Comparison #3 - Hidden Factor: The thing most people overlook (time, maintenance, skill required).",
+          slide_5:
+            "Comparison #4 - Real Example: Show actual result/case study for each option.",
+          slide_6:
+            "The Verdict Slide: 'Choose [A] if you want X. Choose [B] if you want Y.'",
+          slide_7:
+            "The CTA: 'Comment which you'd choose. I'll validate your pick in the DMs.'",
+        },
+        key_success_factors: [
+          "Use consistent left/right layout for all comparisons (reduces cognitive load)",
+          "Include at least 1 metric where 'traditional choice' loses",
+          "Avoid being obviously biased (even if you prefer one)",
+          "Use color coding (green for winner, gray for trade-off)",
+          "Include a 'hidden factor' that reframes the choice",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Left vs Right visual split (use brand colors to differentiate A/B)",
+          tone_compatibility: "Neutral / Analytical / Authoritative",
+          table_format_note:
+            "Comparisons work best as visual charts, not text lists",
+          suggested_brand_addition:
+            "add 'comparison_bias' field (declare any financial interest in outcome)",
+        },
       },
-      "text_density": "Medium (Clear lists)",
-      "psychology": "The user shares because the value is easily digestible and 'giftable' to others."
+      best_for: [
+        "Product comparisons (Shopify vs WooCommerce)",
+        "Career path comparisons (employee vs freelancer)",
+        "Approach comparisons (paid ads vs organic)",
+        "Subscription/tool comparisons",
+        "Strategy comparisons (short-term vs long-term growth)",
+      ],
     },
+
     {
-      "template_id": "T-VOID-05",
-      "name": "The Pattern Break (Loss Aversion)",
-      "primary_goal": "High Saves / Anxiety Relief",
-      "hook_style": "Negative Constraint (Why X isn't working)",
-      "structure": {
-        "slide_1": "The Friction Point (e.g., 'Why your morning routine is draining you')",
-        "slide_2": "The Misconception (The common advice that's actually a trap)",
-        "slide_3": "The Inverse Solution (A counter-intuitive 'Information Bomb')",
-        "slide_4": "The Subtraction Protocol (What to stop doing today)",
-        "slide_5": "The Result (The mental peace of the 'void')"
+      template_id: "T-CURIOSITY-05",
+      name: "The Cliffhanger Reveal",
+      category: "curiosity",
+      content_rules: {
+        goal: "Reach / Completion Rate / Viral Potential",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 5,
+        avg_performance: {
+          estimated_engagement_lift: "+48%",
+          completion_rate: "94% (highest format)",
+          replay_rate: "High",
+          benchmark: "Cliffhangers drive highest completion rates",
+        },
+        hook_style: "Information Gap / Promise of Surprise",
+        text_density: "Very Light (3-8 words per slide) / Suspense-Driven",
+        structure: {
+          slide_1:
+            "The Setup: 'I made [outcome]. Here's what almost nobody knows about how I did it.' Visual = teaser image.",
+          slide_2:
+            "The Build-Up: Visual change or cryptic hint. Text: 'But first, here's where most people go wrong...'",
+          slide_3:
+            "The Complication: A relatable problem or unexpected twist. Text: 'Most people would [common approach]. That's the mistake.'",
+          slide_4:
+            "The Payoff: The surprising answer or method revealed. Text: 'Here's what actually worked.' (Big visual impact slide.)",
+          slide_5:
+            "The Proof + CTA: Quick social proof or result. 'Comment 'REVEAL' and I'll send the full breakdown in DMs.'",
+        },
+        key_success_factors: [
+          "Slide 2 is CRITICAL: Visual must change or look different (teaser effect)",
+          "Payoff (slide 4) must be genuinely surprising or novel",
+          "Don't reveal the secret in the hook caption; let the carousel tell the story",
+          "Use text overlays sparingly to maximize visual impact",
+          "Include at least one emoji or arrow directing attention forward",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Visual continuity across teaser → reveal (same setting, progressive change)",
+          tone_compatibility: "Humorous / Self-aware / Cheeky works well",
+          pacing_note:
+            "Each slide should feel distinct (color, tone, composition change)",
+          suggested_brand_addition:
+            "add 'reveal_impact_visual' field (e.g., 'before_after', 'zoomed_detail', 'transformation')",
+        },
       },
-      "text_density": "Medium (Punchy logic)",
-      "psychology": "Users save this because it promises to solve a pain point by removing effort rather than adding it."
+      best_for: [
+        "Success stories with unexpected turns",
+        "Productivity/efficiency hacks",
+        "Growth reversals or 'failed then succeeded' narratives",
+        "Product launch reveals",
+        "Personal finance breakthroughs",
+      ],
     },
+
     {
-      "template_id": "T-CURIOUS-06",
-      "name": "The Linguistic Shift",
-      "primary_goal": "High Engagement / Shares",
-      "hook_style": "Specific Vocabulary (The 'Power Word')",
-      "structure": {
-        "slide_1": "The Power Word (e.g., 'Stop saying 'I hope'')",
-        "slide_2": "The Frequency (How this word affects your nervous system)",
-        "slide_3": "The Replacement (The 'High-Trust' alternative word)",
-        "slide_4": "The 24-Hour Challenge (A specific linguistic experiment)",
-        "slide_5": "Share Trigger ('Tag someone who uses this word too much')"
+      template_id: "T-EXPERT-06",
+      name: "The Expert Authority Block",
+      category: "expert",
+      content_rules: {
+        goal: "Reach / Trust / Lead Generation",
+        platform_optimized: ["Instagram", "LinkedIn", "TikTok"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+35%",
+          save_rate: "High",
+          profile_click_rate: "Higher than average",
+          benchmark: "Authority-driven carousels build long-term trust",
+        },
+        hook_style: "Expert Insight / Research-Backed Claim",
+        text_density: "Medium (12-15 words per slide) / Data-Heavy",
+        structure: {
+          slide_1:
+            "The Credibility Hook: '[Your credentials/proof] taught me [counterintuitive insight].' Include stat or research reference.",
+          slide_2:
+            "The Foundational Idea: Explain the principle underpinning your insight.",
+          slide_3:
+            "The Data Point: Include a statistic, research finding, or case metric. Use a visual chart/infographic.",
+          slide_4:
+            "The Application: How this insight applies to the audience's specific situation.",
+          slide_5:
+            "The Actionable Insight: One specific behavior or metric they should track starting today.",
+          slide_6:
+            "The Authority CTA: 'I've written a detailed breakdown of this. Link in bio. Save this for reference.'",
+        },
+        key_success_factors: [
+          "Lead with specific credential or research source (not vague authority)",
+          "Data/stat should feel recent or surprising",
+          "Use consistent typography for numerical data (large, bold, readable)",
+          "Avoid jargon unless audience is native to the field",
+          "Include at least one counter-intuitive sub-point (breaks expectations)",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Professional, clean design; use muted colors + 1-2 accent colors",
+          tone_compatibility: "Professional / Authoritative / Accessible",
+          citation_format:
+            "Always cite research source (URL, author, publication)",
+          suggested_brand_addition:
+            "add 'expertise_category' field (e.g., 'research', 'experience', 'data') and 'credential_mention' (whether to lead with creds)",
+        },
       },
-      "text_density": "Low (Focus on single words/short phrases)",
-      "psychology": "Language is a high-leverage 'easy win' that people love to share with friends."
+      best_for: [
+        "Industry insights / research breakdowns",
+        "Finance / investment advice",
+        "Health / medical information",
+        "Business strategy insights",
+        "Career advancement guidance",
+      ],
     },
+
     {
-      "template_id": "T-RECAP-07",
-      "name": "The Narrative Bridge (Before/After)",
-      "primary_goal": "Followers / Deep Trust",
-      "hook_style": "Transformation Logic (I used to X, now I Y)",
-      "structure": {
-        "slide_1": "The Relatable 'Before' (The frantic, unaligned state)",
-        "slide_2": "The Catalyst (The moment the mindset shifted)",
-        "slide_3": "The 'After' (The calm, grounded social authority)",
-        "slide_4": "The Replicable Framework (How they can do the same)",
-        "slide_5": "Identity CTA ('Join the 1% who prioritize alignment')"
+      template_id: "T-FLIPBOOK-07",
+      name: "The Stop-Motion Flipbook",
+      category: "flipbook",
+      content_rules: {
+        goal: "Reach / Engagement / Viral Novelty",
+        platform_optimized: ["Instagram"],
+        slide_count: 8,
+        avg_performance: {
+          estimated_engagement_lift: "+55%",
+          dwell_time: "Highest (viewers replay/scrub through)",
+          share_rate: "Very High (novel format)",
+          benchmark: "Emerging format with exponential engagement potential",
+        },
+        hook_style: "Visual Animation / Progressive Change",
+        text_density: "Minimal (0-5 words per slide) / Visual-Driven",
+        structure: {
+          slide_1:
+            "The Initial State: Clear, bright visual of [object/person/setting] at starting position.",
+          slide_2:
+            "The Subtle Shift #1: Barely perceptible change (hair moves, outfit changes slightly, background element shifts).",
+          slide_3:
+            "The Build #2: More noticeable progression (hands move, product rotates, expression changes).",
+          slide_4:
+            "The Momentum #3: Change becomes obvious (full rotation, significant visual shift, major transformation begins).",
+          slide_5:
+            "The Peak #4: Dramatic change point (character in new pose, product fully revealed, setting completely transformed).",
+          slide_6:
+            "The Continuation #5: Follow-through of the motion (movement completes, new state becomes clear).",
+          slide_7:
+            "The Hold #6: Final state, paused moment for viewer appreciation.",
+          slide_8:
+            "The Call-to-Action: 'Hold and scrub through the carousel for the full animation 🎬 Follow for more.'",
+        },
+        key_success_factors: [
+          "CRITICAL: Consistent lighting, background, camera angle across all 8 slides",
+          "Changes must be visible but not jarring (frame-by-frame smoothness matters)",
+          "Optimal motion: 8-12 degree angle change per slide for smooth animation",
+          "Use high-contrast elements (avoid monochrome backgrounds)",
+          "Recommend starting with 5-6 frames, expand to 8 if motion is smooth",
+        ],
+        production_notes: {
+          photography_requirement:
+            "Use tripod for consistency; identical lighting/white balance across shots",
+          editing_tip:
+            "Use CapCut or similar to sequence images in order, review at 2x speed for smoothness",
+          design_note:
+            "Slight zoom or pan between frames adds fluidity without requiring object movement",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "High production value; consistent visual brand color/style throughout",
+          tone_compatibility: "Creative / Playful / Modern",
+          suggested_brand_addition:
+            "add 'animation_motion_type' field (e.g., 'rotation', 'transformation', 'reveal')",
+        },
       },
-      "text_density": "Medium (Story-driven)",
-      "psychology": "Storytelling builds the highest trust; it proves the 'Mechanism' works in the real world."
+      best_for: [
+        "Product reveals (packaging, usage, transformation)",
+        "Fashion/styling transformations",
+        "Room makeovers / renovations",
+        "Character/meme content",
+        "Brand storytelling with visual metaphor",
+      ],
     },
+
     {
-      "template_id": "T-MICRO-08",
-      "name": "The 60-Second Audit",
-      "primary_goal": "Saves / Comments",
-      "hook_style": "Diagnostic (Check your X)",
-      "structure": {
-        "slide_1": "The Diagnostic Hook (e.g., 'Is your energy being leaked?')",
-        "slide_2": "Question 1-3 (Internal Check-ins)",
-        "slide_3": "Question 4-6 (External/Social Check-ins)",
-        "slide_4": "The Scoring Key (What their answers mean)",
-        "slide_5": "Comment Trigger ('Comment your score for a personalized prompt')"
+      template_id: "T-NARRATIVE-08",
+      name: "The Vulnerable Narrative Bridge",
+      category: "narrative",
+      content_rules: {
+        goal: "Followers / Deep Trust / Community Connection",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 7,
+        avg_performance: {
+          estimated_engagement_lift: "+42%",
+          save_rate: "High",
+          comment_depth: "Very High (personal, meaningful comments)",
+          benchmark: "Authenticity-driven content generates loyal followers",
+        },
+        hook_style: "Vulnerability + Relatable Problem + Transformation",
+        text_density:
+          "Medium-Heavy (12-18 words per slide) / Conversational Tone",
+        structure: {
+          slide_1:
+            "The Vulnerable Hook: 'I used to [struggle/believe/feel] X until I realized Y.' Must feel honest, not polished.",
+          slide_2:
+            "The Relatable Breakdown: 'Here's the exact moment it clicked.' Specific situation where the old mindset broke.",
+          slide_3:
+            "The Turning Point: 'Then I discovered [insight/person/experience] that changed everything.'",
+          slide_4:
+            "The Daily Habit: 'Now I [small 1% action]. It takes 5 minutes.' Actionable, micro-level shift.",
+          slide_5:
+            "The Evidence: 'Before vs. After' internal state (mindset, confidence, results). Show both tangible + emotional proof.",
+          slide_6:
+            "The Identity Shift: 'I went from [old identity] to [new identity]. You can too.'",
+          slide_7:
+            "The Invitation CTA: 'Which version of you do you want to become? Comment below. Let's rebuild together.'",
+        },
+        key_success_factors: [
+          "Vulnerability must be REAL (not manufactured for engagement)",
+          "Include a specific date or timeframe ('6 months ago,' 'last summer')",
+          "The 'turning point' should feel like a genuine epiphany, not marketing speak",
+          "Use first-person consistently; avoid switching to advice-giving until the final CTA",
+          "Show emotion through imagery (facial expression, body language, visual context)",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Authentic, unpolished visuals work better than overly curated (warm filters, natural lighting)",
+          tone_compatibility: "Vulnerable / Inspirational / Honest",
+          visual_strategy:
+            "Mix personal photos, candid moments, lifestyle imagery. Avoid stock photos.",
+          suggested_brand_addition:
+            "add 'narrative_type' field (e.g., 'recovery', 'pivot', 'awakening') and 'vulnerability_level' (1-5 scale)",
+        },
       },
-      "text_density": "High (Question-based)",
-      "psychology": "Self-quizzes have the highest 'stop-and-read' time on TikTok. People save to finish the audit later."
+      best_for: [
+        "Personal development / mindset shifts",
+        "Recovery stories (fitness, mental health, career)",
+        "Identity transformation narratives",
+        "Trust-building for coaches, therapists, mentors",
+        "Wellness journeys",
+      ],
     },
+
     {
-      "template_id": "T-TOOLS-09",
-      "name": "The Minimalist Stack",
-      "primary_goal": "Shares / Reference",
-      "hook_style": "Curation (My 3 non-negotiable X)",
-      "structure": {
-        "slide_1": "The Stack Title (e.g., 'My 3-item desk stack for deep work')",
-        "slide_2": "Item 1: The Physical Tool (A specific pen/notebook)",
-        "slide_3": "Item 2: The Digital Tool (An app or soundscape)",
-        "slide_4": "Item 3: The Mental Tool (A specific mantra/script)",
-        "slide_5": "The Call to Action (Check the bio for the full list)"
+      template_id: "T-QUESTION-09",
+      name: "The Rapid-Fire Q&A Reveal",
+      category: "question",
+      content_rules: {
+        goal: "Engagement / Comments / Saves",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+44%",
+          comment_rate: "Very High (questions invite answers)",
+          save_rate: "High (reference material)",
+          benchmark: "Interactive Q&A drives algorithmic boost",
+        },
+        hook_style: "Question + Surprising Answer Pattern",
+        text_density: "Heavy (15-20 words per slide) / Q&A Format",
+        structure: {
+          slide_1:
+            "The Meta Hook: 'The questions I get asked MOST in my DMs [about your niche]. Let's answer them.'",
+          slide_2:
+            "Question #1 + Answer: 'Q: [Most common question]' / 'A: [Direct, surprising answer in 1-2 sentences]'",
+          slide_3:
+            "Question #2 + Answer: A different question from audience. Make the answer somewhat contrarian.",
+          slide_4:
+            "Question #3 + Answer: Third question. Include a metric or specific number in the answer.",
+          slide_5:
+            "The Bonus Insight: 'The question NOBODY asks but should:' [Your curated, underrated question + answer]",
+          slide_6:
+            "The Engagement CTA: 'What's the question you want me to answer next? Drop it in the comments.'",
+        },
+        key_success_factors: [
+          "Questions must be REAL (pulled from actual DMs or comments, not made up)",
+          "Answers should be direct and concise (avoid meandering explanations)",
+          "Include at least one surprising or contrarian answer (breaks expectations)",
+          "Use bold formatting for Q vs A (high contrast makes scanning easy)",
+          "Final 'bonus' question is your secret sauce (the thing people didn't know to ask)",
+        ],
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Q&A format benefits from clean typography and high contrast (white space critical)",
+          tone_compatibility: "Helpful / Direct / Authoritative",
+          emoji_usage:
+            "Minimal (maybe 1 question mark icon, but keep text scannable)",
+          suggested_brand_addition:
+            "add 'dm_sourcing_required' flag (yes/no) and 'answer_specificity_level' (high/medium/low)",
+        },
       },
-      "text_density": "Low (Object-focused)",
-      "psychology": "Minimalism is an aesthetic. People share this because they want their feed to reflect this 'clean' lifestyle."
+      best_for: [
+        "Expert Q&A / AMA formats",
+        "Customer service FAQ",
+        "Audience pain-point clarification",
+        "Misconception correction",
+        "Product/feature explanation",
+      ],
     },
+
     {
-      "template_id": "T-SAVE-01-EXT",
-      "name": "The Deep Protocol (Long-Form)",
-      "goal": "Maximum Saves / High Authority",
-      "slide_count": 7,
-      "structure": {
-        "slide_1": "Pattern Interrupt: A counter-intuitive claim about the topic.",
-        "slide_2": "The Cognitive Barrier: Explain the Neuroscience (e.g., RAS, Vagal Tone, Neuroplasticity).",
-        "slide_3": "Somatic Priming: A 30-second physical reset to prepare the nervous system.",
-        "slide_4": "The Core Protocol: The 'Information Bomb' scripting or journaling exercise.",
-        "slide_5": "The Anchor: A mental or physical cue to trigger the state in real-time.",
-        "slide_6": "The Cheat Sheet: A minimalist summary of slides 3-5 for easy screenshotting.",
-        "slide_7": "Retention CTA: Instruct user to 'Save this to your daily practice folder'."
+      template_id: "T-PATTERN-10",
+      name: "The Pattern Interrupt Surprise",
+      category: "pattern",
+      content_rules: {
+        goal: "Reach / Viral Potential / Shareability",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 5,
+        avg_performance: {
+          estimated_engagement_lift: "+58%",
+          share_rate: "Highest format",
+          viral_coefficient: "High (unexpected payoff drives word-of-mouth)",
+          benchmark: "Pattern interrupts are designed for viral spread",
+        },
+        hook_style: "Misdirection + Surprise Pivot",
+        text_density: "Very Light (5-10 words per slide) / Visual Storytelling",
+        structure: {
+          slide_1:
+            "The Misdirection Setup: Start with an unrelated, attention-grabbing visual or statement. Viewer thinks it's one story.",
+          slide_2:
+            "The Build: Continue the false narrative. Viewer is fully invested in expected outcome.",
+          slide_3:
+            "The Plot Twist: Unexpected pivot or reveal. Visual or text suddenly shifts context.",
+          slide_4:
+            "The Product/Brand Reveal: Now connect the surprise back to your offer/message/product. Viewer mind = blown.",
+          slide_5:
+            "The Reaction CTA: 'Tag someone who'd fall for this 😂' or 'Thought it was going where? Comment below.'",
+        },
+        key_success_factors: [
+          "Misdirection must feel AUTHENTIC (not obviously fake or too contrived)",
+          "Pivot moment (slide 3-4) should feel genuinely surprising to the viewer",
+          "Use emotional contrast (setup is different tone/energy than payoff)",
+          "Include a second 'meta' layer (viewer realizes they were played, finds it funny)",
+          "Avoid anything that feels manipulative; humor/delight is the goal, not deception",
+        ],
+        production_notes: {
+          video_tip:
+            "Use contrasting music/audio between setup and reveal for extra impact",
+          timing:
+            "Slides 1-2 should move quickly; pause at slide 3 for maximum surprise",
+          visual_contrast:
+            "Setup and payoff should have distinctly different aesthetics/colors",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Setup can be any style; reveal must align with brand identity/colors",
+          tone_compatibility: "Playful / Humorous / Irreverent works best",
+          risk_level:
+            "Medium (pattern interrupts can backfire if audience feels duped rather than delighted)",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (e.g., 'emotional', 'visual', 'contextual') and 'tone_guardrail' note",
+        },
       },
-      "text_density": "High text density on slides 2 & 4. Bold **key mechanisms** only."
-    },
-    {
-      "template_id": "T-SAVE-02-EXT",
-      "name": "The Deep Protocol (Long-Form)",
-      "goal": "Maximum Saves / High Authority",
-      "slide_count": 7,
-      "hook_style": "Declarative Mechanism (e.g., The X-Y-Z Method)",
-      "text_density": "High (15-25 words per slide) / Technical & Dense",
-      "structure": {
-        "slide_1": "Pattern Interrupt: A counter-intuitive claim about the topic.",
-        "slide_2": "The Cognitive Barrier: Explain the Neuroscience (e.g., RAS, Vagal Tone, Neuroplasticity).",
-        "slide_3": "Somatic Priming: A 30-second physical reset to prepare the nervous system.",
-        "slide_4": "The Core Protocol: The 'Information Bomb' scripting or journaling exercise.",
-        "slide_5": "The Anchor: A mental or physical cue to trigger the state in real-time.",
-        "slide_6": "The Cheat Sheet: A minimalist summary of slides 3-5 for easy screenshotting.",
-        "slide_7": "Retention CTA: Instruct user to 'Save this to your daily practice folder'."
-      }
-    },
-    {
-      "template_id": "T-VOID-05-EXT",
-      "name": "The Pattern Break (The Truth)",
-      "goal": "High Engagement / Perspective Shift",
-      "slide_count": 6,
-      "hook_style": "Friction-Based / Negative Constraint (e.g., Stop doing X)",
-      "text_density": "Ultra-Low (5-10 words per slide) / Punchy & Spaced",
-      "structure": {
-        "slide_1": "The Friction Hook: Call out a common 'fake' growth habit.",
-        "slide_2": "The Trap: Explain why that habit actually increases anxiety or lack.",
-        "slide_3": "The Subtraction: List 3 things to **stop** doing immediately.",
-        "slide_4": "The Minimalist Alternative: One high-leverage habit that replaces the 3 stops.",
-        "slide_5": "The 7-Day Prediction: Describe the physiological calm that follows this shift.",
-        "slide_6": "Authority CTA: 'Follow for the grounded path. No fluff. No shortcuts.'"
-      }
-    },
-    {
-      "template_id": "T-RECAP-07-EXT",
-      "name": "The Narrative Bridge",
-      "goal": "Followers / Deep Trust",
-      "slide_count": 7,
-      "hook_style": "Transformation Logic (e.g., The shift from X to Y)",
-      "text_density": "Medium (10-15 words per slide) / Conversational Flow",
-      "structure": {
-        "slide_1": "The Vulnerable Hook: 'I used to struggle with [Topic] until I realized X.'",
-        "slide_2": "The Breaking Point: A specific relatable moment of social or mental friction.",
-        "slide_3": "The Catalyst: The specific journaling prompt or mindset shift that fixed it.",
-        "slide_4": "The Bridge: The 1% daily action anyone can start today.",
-        "slide_5": "The Comparison: 'The Old Version' vs 'The Grounded Version' side-by-side.",
-        "slide_6": "The Proof: Tangible results of a regulated nervous system.",
-        "slide_7": "Identity CTA: 'Start your transition. Follow to rewrite your script.'"
-      }
-    },
-    {
-      "template_id": "T-MICRO-08-EXT",
-      "name": "The 60-Second Diagnostic",
-      "goal": "Saves / Comments / Time-on-Page",
-      "slide_count": 5,
-      "hook_style": "Inward Diagnostic (e.g., Is your X aligned?)",
-      "text_density": "High (20-30 words per slide) / Bulleted & Scannable",
-      "structure": {
-        "slide_1": "Diagnostic Hook: 'Is your [Topic] aligned? Take the 60-second audit.'",
-        "slide_2": "The Internal Test: 3 deep questions for the subconscious.",
-        "slide_3": "The External Test: 3 observations of their current social environment.",
-        "slide_4": "The Scoring Key: What their answers reveal about their 'Frequency'.",
-        "slide_5": "Comment Trigger: 'Comment your score below for the specific journaling prompt to fix it.'"
-      }
+      best_for: [
+        "Product launches (misdirect before reveal)",
+        "Brand awareness / viral moments",
+        "Entertainment + product hybrid content",
+        "Meme-style humor + product",
+        "Unexpected benefit reveals",
+      ],
     }
-  ]
-}
+  ]};

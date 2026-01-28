@@ -80,6 +80,7 @@ import {
   SquareTerminal,
   Trash2,
   Users,
+  Zap,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -136,7 +137,7 @@ export default function DashboardSidebar({
   };
 
   // Build base path with brandId
-  const basePath = activeBrandId ? `/brand/${activeBrandId}` : '/brand';
+  const basePath = activeBrandId ? `/brand/${activeBrandId}` : '/overview';
 
   const navItems = [
     {
@@ -149,37 +150,43 @@ export default function DashboardSidebar({
       title: "Posts",
       icon: GalleryVerticalEnd,
       key: "posts" as const,
-      href: activeBrandId ? `${basePath}/posts` : '/brand',
+      href: activeBrandId ? `${basePath}/posts` : '/overview',
     },
     {
       title: "Generate",
       icon: Sparkles,
       key: "generate" as const,
-      href: activeBrandId ? `${basePath}/generate` : '/brand',
+      href: activeBrandId ? `${basePath}/generate` : '/overview',
     },
     {
       title: "Calendar",
       icon: Calendar,
       key: "calendar" as const,
-      href: activeBrandId ? `${basePath}/calendar` : '/brand',
+      href: activeBrandId ? `${basePath}/calendar` : '/overview',
     },
     {
       title: "Templates",
       icon: FileText,
       key: "templates" as const,
-      href: activeBrandId ? `${basePath}/templates` : '/brand',
+      href: activeBrandId ? `${basePath}/templates` : '/overview',
     },
     {
       title: "Analytics",
       icon: BarChart3,
       key: "analytics" as const,
-      href: activeBrandId ? `${basePath}/analytics` : '/brand',
+      href: activeBrandId ? `${basePath}/analytics` : '/overview',
+    },
+    {
+      title: "Automation",
+      icon: Zap,
+      key: "automation" as const,
+      href: activeBrandId ? `${basePath}/automation` : '/overview',
     },
     {
       title: "Settings",
       icon: Settings,
       key: "settings" as const,
-      href: activeBrandId ? `${basePath}/settings` : '/brand',
+      href: activeBrandId ? `${basePath}/settings` : '/overview',
     },
   ];
 
@@ -424,7 +431,7 @@ export default function DashboardSidebar({
 
       <SidebarInset>
         {header}
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
+        <div className="flex flex-1 flex-col gap-4 pt-0">{children}</div>
       </SidebarInset>
 
       <BrandSetupWizard isOpen={showWizard} onClose={() => setShowWizard(false)} />

@@ -10,10 +10,10 @@ import { ThemeProvider } from "@/components/provider/theme-provider";
 
 
 const inter = Inter({ subsets: ["latin"] });
-const main = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-main",
-});
+// const main = Plus_Jakarta_Sans({
+//   subsets: ["latin"],
+//   variable: "--font-main",
+// });
 
 export const metadata: Metadata = {
   title: "Radius - AI-Powered Carousel Automation",
@@ -31,8 +31,8 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/images/favicon.png" type="image/png" />
       </head>
-      <body className={`${inter.className} ${main.variable} antialiased`}>
-      
+      <body className={`${inter.className} font-sans antialiased`}> {/**${main.variable} */}
+       
         {/* App name is Radius everywhere */}
         <QueryProvider>
           <AuthProvider>

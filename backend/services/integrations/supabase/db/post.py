@@ -150,7 +150,7 @@ def get_posts_by_variant_set(user_id: str, variant_set_id: str) -> List[Dict[str
 def create_post(
     user_id: str,
     brand_id: str,
-    template_id: str = "",
+    template_id: str,
     platform: str = "tiktok",
     content: Dict[str, Any] = None, 
     status: str = "draft",
@@ -285,7 +285,7 @@ def update_post_storage_urls(
     user_id: str,
     slide_urls: List[str],
     thumbnail_url: Optional[str] = None
-) -> bool:
+) -> dict:
     """
     Update storage URLs for post slides and thumbnail.
     
@@ -296,7 +296,7 @@ def update_post_storage_urls(
         thumbnail_url: Optional thumbnail URL
     
     Returns:
-        True if successful
+        Updated post dict
     """
     supabase = get_supabase()
     
@@ -314,7 +314,19 @@ def update_post_storage_urls(
         .eq('user_id', user_id)\
         .execute()
     
-    return True
+    # Return the updated post if response has data
+    if response.data and len(response.data) > 0:
+        return response.data[0]
+    
+    # Fallback: fetch the post if update didn't return it
+    fetch_response = supabase.from_('posts')\
+        .select('*')\
+        .eq('id', post_id)\
+        .eq('user_id', user_id)\
+        .single()\
+        .execute()
+    
+    return fetch_response.data if fetch_response.data else {}
 
 
 def update_post_content(

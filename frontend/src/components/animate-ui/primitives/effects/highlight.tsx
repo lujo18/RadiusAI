@@ -254,8 +254,9 @@ function Highlight<T extends React.ElementType = 'div'>({
 
   const render = (children: React.ReactNode) => {
     if (mode === 'parent') {
+      const ComponentAny = Component as any;
       return (
-        <Component
+        <ComponentAny
           ref={localRef}
           data-slot="motion-highlight-container"
           style={{ position: 'relative', zIndex: 1 }}
@@ -293,7 +294,7 @@ function Highlight<T extends React.ElementType = 'div'>({
             )}
           </AnimatePresence>
           {children}
-        </Component>
+        </ComponentAny>
       );
     }
 

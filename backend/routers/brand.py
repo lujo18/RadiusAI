@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
-# from pydantic import BaseModel
-# from typing import Optional
+from pydantic import BaseModel
+import logging
+import json
 
-# from backend.models.user import BrandSettings
-# from backend.services.profile.connect_account import connect_social
-# from backend.services.profile.create_profile import create_profile
-# from backend.services.integrations.late.profile import create_late_profile
-
-# from backend.auth import get_current_user  # Assuming auth is set up in backend/auth.py
+from backend.auth import get_current_user
+from backend.models.user import BrandSettings
+from backend.services.genai.client import client
+from google.genai import types
+from backend.services.integrations.groq.util.GenerateBrand import generate_brand
 
 router = APIRouter(prefix="/api/brand", tags=["brand"])
 
@@ -35,24 +35,36 @@ Late:
 independant social connections -> late profile <-> my brand
 """
 
-# @router.post("/create-profile")
-# async def create_profile_api(
-#   request: CreateProfileRequest,
-#   current_user: dict = Depends(get_current_user)
-# ):
-#   try:
-#     # Ensure brand_settings is a dict
-#     brand_settings_dict = request.brand_settings if isinstance(request.brand_settings, dict) else request.brand_settings.dict()
-#     profile = await create_profile(
-#       current_user["id"],
-#       request.profile_name,
-#       request.profile_description or "",
-#       brand_settings_dict
-#     )
-#     return {"profile": profile}
-#   except Exception as e:
-#     raise HTTPException(status_code=400, detail=str(e))
-  
+@router.post("/create-profile")
+async def create_profile_api(
+  request: dict,
+  current_user: dict = Depends(get_current_user)
+):
+  # Placeholder create-profile endpoint (implementation commented earlier)
+  raise HTTPException(status_code=501, detail="Not implemented")
+
+
+class GenerateBrandRequest(BaseModel):
+	guideline_prompt: str
+
+
+@router.post("/generate", response_model=BrandSettings)
+async def generate_brand_settings(
+	request: GenerateBrandRequest,
+	user_id: str = Depends(get_current_user)
+):
+	"""Generate BrandSettings JSON from a free-text guideline using Gemini.
+
+	Expects the model to return a JSON object matching the BrandSettings schema.
+	"""
+	try:
+		# Optional: kick off any telemetry or pre-processing
+		brand_settings = generate_brand(request.guideline_prompt)
+		return brand_settings
+
+	except Exception as e:
+		logging.error("Error generating brand settings: %s", e, exc_info=True)
+		raise HTTPException(status_code=500, detail=str(e))
 
 # class ConnectSocialRequest(BaseModel):
 #   late_profile_id: str

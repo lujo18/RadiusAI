@@ -4,66 +4,58 @@ import { SYSTEM_TEMPLATES } from "@/util/templateJson";
 import * as React from "react";
 import { TemplateCard } from "./TemplateCard";
 import { useEffect, useRef } from "react";
+import Autoplay from "embla-carousel-autoplay"
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "../ui/carousel";
+import CarouselWithFooter from "../ui/carousel-with-footer";
+import { useCreateTemplate } from "@/lib/api/hooks";
 
-export const TemplateSelector = () => {
-  const [activeTemplateId, setActiveTemplateId] = React.useState<string | null>(
-    SYSTEM_TEMPLATES.template_library[0]?.template_id || null
-  );
-  const containerRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<{ [key: string]: HTMLDivElement }>({});
+export const TemplateSelector = ({ brandId }: { brandId: string }) => {
 
-  // Auto-center the active card
-  useEffect(() => {
-    if (activeTemplateId && cardRefs.current[activeTemplateId] && containerRef.current) {
-      const activeCard = cardRefs.current[activeTemplateId];
-      const container = containerRef.current;
-      
-      // Calculate scroll position to center the card
-      const cardLeft = activeCard.offsetLeft;
-      const cardWidth = activeCard.offsetWidth;
-      const containerWidth = container.offsetWidth;
-      
-      const scrollPosition = cardLeft - (containerWidth - cardWidth) / 2;
-      
-      container.scrollTo({
-        left: scrollPosition,
-        behavior: "smooth",
-      });
-    }
-  }, [activeTemplateId]);
+  const createTemplate = useCreateTemplate()
+  const currentBrand = brandId
 
-  const handleCardSelect = (templateId: string) => {
-    setActiveTemplateId(templateId);
-  };
+
+  const handleAddTemplate = async (templateId: string): Promise<void> => {
+    const template = SYSTEM_TEMPLATES.template_library.filter((t)=> t.template_id === templateId)[0]
+
+    const response = await createTemplate.mutateAsync({
+      name: template.name,
+      category: template.category,
+      content_rules: template.content_rules,
+      brand_id: currentBrand
+    })
+
+
+    console.log("Added template:", response)
+  }
 
   return (
-    <div className="w-full">
-      <div
-        ref={containerRef}
-        className="flex flex-row overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth items-start flex-nowrap"
-        style={{
-          scrollBehavior: "smooth",
-          scrollPaddingLeft: "50%",
-          scrollbarWidth: "none"
-        }}
-      >
-        {SYSTEM_TEMPLATES.template_library.map((template, index) => (
-          <div
-            key={template.template_id}
-            ref={(el) => {
-              if (el) cardRefs.current[template.template_id] = el;
-            }}
-            className="relative flex-shrink-0 snap-center"
-          >
-            <TemplateCard
-              template={template}
-              isActive={activeTemplateId === template.template_id}
-              expanded={activeTemplateId === template.template_id}
-              onSelect={() => handleCardSelect(template.template_id)}
-            />
-          </div>
-        ))}
-      </div>
+    <div className="">
+      
+        <CarouselWithFooter>
+          {SYSTEM_TEMPLATES.template_library.map((template, index) => (
+            <CarouselItem
+              className="basis-1/3 lg:basis-1/3"
+              key={template.template_id}
+            >
+              <div className="relative h-72 flex">
+                <div className="absolute w-full h-full">
+                  <TemplateCard
+                    key={template.template_id}
+                    template={template}
+                    onSelect={() => handleAddTemplate(template.template_id)}
+                  />
+                </div>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselWithFooter>
     </div>
   );
 };

@@ -24,6 +24,18 @@ export function useBrands() {
   });
 }
 
+export function useBrand(brandId: string) {
+  return useQuery({
+    queryKey: brandKeys.detail(brandId),
+    queryFn: async () => {
+      const userId = await requireUserId();
+      return BrandRepository.getBrand(brandId, userId);
+    },
+    enabled: !!brandId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
 // ==================== INTEGRATIONS ====================
 
 export function useBrandIntegrations(brandId: string) {

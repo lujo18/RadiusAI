@@ -6,6 +6,8 @@ import { TemplateRepository } from '../supabase/repos/TemplateRepository';
 import { PostRepository } from '../supabase/repos/PostRepository';
 import { StorageRepository } from '../supabase/repos/StorageRepository';
 import { AnalyticsRepository } from '../supabase/repos/AnalyticsRepository';
+import { SystemTemplatesRepository } from '../supabase/repos/SystemTemplatesRepository';
+import { TestimonialsRepository } from '../supabase/repos/TestimonialsRepository';
 import type { Database } from '@/types/database';
 import { UserRepository } from '../supabase/repos/UserRepository';
 import { Post } from '@/types/types';
@@ -107,9 +109,9 @@ export const contentApi = {
     return response.data.postContent;
   },
 
-  generatePostsFromPrompt: async (prompt: string, brandSettings: Database['public']['Tables']['brand_settings']['Row'], brandId: string, count: number = 1): Promise<Post[]> => {
+  generatePostsFromPrompt: async (template: Database['public']['Tables']['templates']['Row'], brandSettings: Database['public']['Tables']['brand_settings']['Row'], brandId: string, count: number = 1): Promise<Post[]> => {
     const response = await apiClient.post('/api/generate/post/auto', {
-      prompt,
+      template,
       brand_settings: brandSettings,
       brand_id: brandId,
       count,
@@ -149,7 +151,7 @@ export const contentApi = {
 export const analyticsApi = {
   // GET: Fetch analytics data (optionally filtered by brand)
   getAnalytics: async (timeframe: 'day' | 'week' | 'month' = 'week', brandId?: string | null) => {
-    // TODO: Add brandId filtering to analytics
+    // SCHEDULE: Add brandId filtering to analytics
     return await AnalyticsRepository.getAllUserAnalytics();
   },
 
@@ -315,16 +317,13 @@ export const brandApi = {
 }
 
 // ----- USER / PROFILE -----
-// TODO: Already migrated to Supabase - consider removing backend API
 
 export const userApi = {
-  // GET: Fetch user profile (still using backend temporarily)
   getProfile: async () => {
     const userId = await requireUserId();
     return await UserRepository.getUser(userId);
   },
 
-  // PUT: Update user profile (still using backend temporarily)
   updateProfile: async (updates: any) => {
     const userId = await requireUserId();
     return await UserRepository.updateUser(userId, updates);
@@ -351,6 +350,101 @@ export const billingApi = {
   createCheckoutSession: async (priceId: string) => {
     const { data } = await apiClient.post('/api/billing/checkout', { priceId });
     return data;
+  },
+};
+
+// ============================================
+// ADMIN API FUNCTIONS
+// ============================================
+
+// ----- PRICING PLANS -----
+
+export const plansApi = {
+  getPlans: async () => {
+    const { data } = await apiClient.get('/api/stripe/plans');
+    return data;
+  },
+
+  getPlan: async (planId: string) => {
+    const { data } = await apiClient.get(`/api/stripe/plans/${planId}`);
+    return data;
+  },
+
+  createPlan: async (plan: Database['public']['Tables']['plans']['Insert']) => {
+    const { data } = await apiClient.post('/api/stripe/plans', plan);
+    return data;
+  },
+
+  updatePlan: async (planId: string, updates: Database['public']['Tables']['plans']['Update']) => {
+    const { data } = await apiClient.patch(`/api/stripe/plans/${planId}`, updates);
+    return data;
+  },
+
+  deletePlan: async (planId: string) => {
+    const { data } = await apiClient.delete(`/api/stripe/plans/${planId}`);
+    return data;
+  },
+};
+
+// ----- STRIPE PRODUCTS -----
+
+export const productsApi = {
+  getProducts: async () => {
+    const { data } = await apiClient.get('/api/stripe/products');
+    return data;
+  },
+
+  getProduct: async (productId: string) => {
+    const { data } = await apiClient.get(`/api/stripe/products/${productId}`);
+    return data;
+  },
+};
+
+// ----- SYSTEM TEMPLATES -----
+
+export const systemTemplatesApi = {
+  getSystemTemplates: async () => {
+    return await SystemTemplatesRepository.getSystemTemplates();
+  },
+
+  getSystemTemplate: async (id: string) => {
+    return await SystemTemplatesRepository.getSystemTemplate(id);
+  },
+
+  createSystemTemplate: async (template: Database['public']['Tables']['system_templates']['Insert']) => {
+    return await SystemTemplatesRepository.createSystemTemplate(template);
+  },
+
+  updateSystemTemplate: async (id: string, updates: Database['public']['Tables']['system_templates']['Update']) => {
+    return await SystemTemplatesRepository.updateSystemTemplate(id, updates);
+  },
+
+  deleteSystemTemplate: async (id: string) => {
+    return await SystemTemplatesRepository.deleteSystemTemplate(id);
+  },
+};
+
+// ----- TESTIMONIALS -----
+
+export const testimonialsApi = {
+  getTestimonials: async () => {
+    return await TestimonialsRepository.getTestimonials();
+  },
+
+  getTestimonial: async (id: string) => {
+    return await TestimonialsRepository.getTestimonial(id);
+  },
+
+  createTestimonial: async (testimonial: Database['public']['Tables']['testimonials']['Insert']) => {
+    return await TestimonialsRepository.createTestimonial(testimonial);
+  },
+
+  updateTestimonial: async (id: string, updates: Database['public']['Tables']['testimonials']['Update']) => {
+    return await TestimonialsRepository.updateTestimonial(id, updates);
+  },
+
+  deleteTestimonial: async (id: string) => {
+    return await TestimonialsRepository.deleteTestimonial(id);
   },
 };
 

@@ -4,8 +4,7 @@ import { Post } from '@/types/types';
 export interface GenerationRequest {
   id: string;
   status: 'pending' | 'generating' | 'completed' | 'failed';
-  prompt?: string;
-  templateId?: string;
+  templateId: string;
   error?: string;
   result?: Post[];
   createdAt: number;

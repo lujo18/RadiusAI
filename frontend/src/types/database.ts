@@ -301,6 +301,7 @@ export type Database = {
           late_account_id: string
           late_expires_in: string | null
           late_refresh_token: string | null
+          pfm_account_id: string | null
           platform: string
           profile_picture_url: string | null
           updated_at: string
@@ -321,6 +322,7 @@ export type Database = {
           late_account_id: string
           late_expires_in?: string | null
           late_refresh_token?: string | null
+          pfm_account_id?: string | null
           platform: string
           profile_picture_url?: string | null
           updated_at?: string
@@ -341,6 +343,7 @@ export type Database = {
           late_account_id?: string
           late_expires_in?: string | null
           late_refresh_token?: string | null
+          pfm_account_id?: string | null
           platform?: string
           profile_picture_url?: string | null
           updated_at?: string
@@ -689,7 +692,7 @@ export type Database = {
         Row: {
           brand_id: string | null
           category: string
-          content_rules: Json | null
+          content_rules: Json
           created_at: string
           favorite: boolean
           id: string
@@ -697,7 +700,7 @@ export type Database = {
           name: string
           parent_id: string | null
           status: string
-          style_config: Json
+          style_config: Json | null
           tags: string[] | null
           updated_at: string
           user_id: string
@@ -705,7 +708,7 @@ export type Database = {
         Insert: {
           brand_id?: string | null
           category: string
-          content_rules?: Json | null
+          content_rules: Json
           created_at?: string
           favorite?: boolean
           id?: string
@@ -713,7 +716,7 @@ export type Database = {
           name: string
           parent_id?: string | null
           status?: string
-          style_config: Json
+          style_config?: Json | null
           tags?: string[] | null
           updated_at?: string
           user_id: string
@@ -721,7 +724,7 @@ export type Database = {
         Update: {
           brand_id?: string | null
           category?: string
-          content_rules?: Json | null
+          content_rules?: Json
           created_at?: string
           favorite?: boolean
           id?: string
@@ -729,7 +732,7 @@ export type Database = {
           name?: string
           parent_id?: string | null
           status?: string
-          style_config?: Json
+          style_config?: Json | null
           tags?: string[] | null
           updated_at?: string
           user_id?: string
