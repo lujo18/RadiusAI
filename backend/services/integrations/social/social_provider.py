@@ -14,6 +14,9 @@ class CreateAuthUrlResponse(BaseModel):
     message: str   # Human-readable message for logging or UI
     
     
+class SaveIntegrationResponse(BaseModel):
+    brand_id: str
+    platform_connected: str
 
 class SocialProvider(Protocol):
     """
@@ -42,7 +45,7 @@ class SocialProvider(Protocol):
         """
         ...
 
-    def exchange_code(self, code: str, platform: str) -> dict:
+    async def save_integration(self, response: dict) -> SaveIntegrationResponse:
         """
         Exchange an OAuth code for a connected account.
         Args:
@@ -51,6 +54,9 @@ class SocialProvider(Protocol):
         Returns:
             dict: Provider-specific account details.
         """
+        ...
+        
+    async def disconnect_integration(self, integration_id: str) -> bool:
         ...
 
     def create_post(self, platform: str, content: dict, account_id: str) -> dict:

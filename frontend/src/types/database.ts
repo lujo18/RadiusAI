@@ -290,7 +290,7 @@ export type Database = {
       platform_integrations: {
         Row: {
           bio: string | null
-          brand_id: string | null
+          brand_id: string
           created_at: string
           followers_count: number | null
           following_count: number | null
@@ -298,20 +298,21 @@ export type Database = {
           id: string
           is_business_account: boolean | null
           late_access_token: string | null
-          late_account_id: string
+          late_account_id: string | null
           late_expires_in: string | null
           late_refresh_token: string | null
           pfm_account_id: string | null
           platform: string
           profile_picture_url: string | null
+          status: Database["public"]["Enums"]["integration_status"]
           updated_at: string
-          user_id: string
+          user_id: string | null
           username: string
           website_url: string | null
         }
         Insert: {
           bio?: string | null
-          brand_id?: string | null
+          brand_id: string
           created_at?: string
           followers_count?: number | null
           following_count?: number | null
@@ -319,20 +320,21 @@ export type Database = {
           id?: string
           is_business_account?: boolean | null
           late_access_token?: string | null
-          late_account_id: string
+          late_account_id?: string | null
           late_expires_in?: string | null
           late_refresh_token?: string | null
           pfm_account_id?: string | null
           platform: string
           profile_picture_url?: string | null
+          status?: Database["public"]["Enums"]["integration_status"]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           username: string
           website_url?: string | null
         }
         Update: {
           bio?: string | null
-          brand_id?: string | null
+          brand_id?: string
           created_at?: string
           followers_count?: number | null
           following_count?: number | null
@@ -340,14 +342,15 @@ export type Database = {
           id?: string
           is_business_account?: boolean | null
           late_access_token?: string | null
-          late_account_id?: string
+          late_account_id?: string | null
           late_expires_in?: string | null
           late_refresh_token?: string | null
           pfm_account_id?: string | null
           platform?: string
           profile_picture_url?: string | null
+          status?: Database["public"]["Enums"]["integration_status"]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           username?: string
           website_url?: string | null
         }
@@ -357,13 +360,6 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brand"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "platform_integrations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -569,38 +565,6 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      storage_urls: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          slide_urls: string[]
-          thumbnail: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          slide_urls?: string[]
-          thumbnail?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          slide_urls?: string[]
-          thumbnail?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "storage_urls_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: true
-            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]
@@ -1047,6 +1011,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      integration_status: "connected" | "disconnected"
       post_status:
         | "draft"
         | "ready_to_review"
@@ -1186,6 +1151,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      integration_status: ["connected", "disconnected"],
       post_status: [
         "draft",
         "ready_to_review",

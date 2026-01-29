@@ -90,14 +90,16 @@ export class BrandRepository {
   }
 
   // Integrations
-  static async getBrandIntegrations(brandId: string, userId: string) {
+  static async getBrandIntegrations(brandId: string) {
+    console.log("brandid", brandId)
+
     const { data, error } = await supabase
       .from('platform_integrations')
       .select('*')
-      .eq('brand_id', brandId)
-      .eq('user_id', userId);
+      .eq('brand_id', brandId);
+
     if (error) throw new Error(error.message);
-    return data;
+    return data || [];
   }
 
   static async createBrandIntegration(brandId: string, userId: string, integration: any) {
@@ -114,12 +116,11 @@ export class BrandRepository {
     return data;
   }
 
-  static async deleteBrandIntegration(integrationId: string, userId: string) {
+  static async deleteBrandIntegration(integrationId: string) {
     const { error } = await supabase
       .from('platform_integrations')
       .delete()
       .eq('id', integrationId)
-      .eq('user_id', userId);
     if (error) throw new Error(error.message);
     return true;
   }

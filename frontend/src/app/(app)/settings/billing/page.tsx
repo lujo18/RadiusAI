@@ -1,16 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useSubscription, useCreatePortal } from "@/lib/api/hooks/useSubscription";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/animate-ui/primitives/radix/dialog";
+import { useUserProfile } from "@/lib/api/hooks/useUser";
 
 export default function BillingPage() {
-  // Placeholder data; wire to billing API as needed
-  const plan = "Pro";
-  const postLimit = "1,000 posts";
-  const quickstart = "Included";
-  const billingEmail = "Not set";
+  const { data: subscription, isLoading } = useSubscription();
+  const createPortal = useCreatePortal();
+  const { data: user } = useUserProfile();
+  const [open, setOpen] = useState(false);
+
+  const plan = subscription?.plan || subscription?.product_name || "Free";
+  const postLimit = subscription?.post_limit || "—";
+  const quickstart = subscription?.quickstart_included ? "Included" : "Not included";
+  const billingEmail = subscription?.billing_email || "Not set";
+  const nextPayment = subscription?.current_period_end ? new Date(subscription.current_period_end * 1000) : null;
+  const amountDue = subscription?.amount_due ? `$${(subscription.amount_due / 100).toFixed(2)}` : subscription?.price || "$0.00";
 
   return (
     <div className="space-y-8">
@@ -29,7 +38,7 @@ export default function BillingPage() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm text-foreground/70 max-w-md">
                 <div>Status:</div>
-                <div className="text-foreground">Active</div>
+                <div className="text-foreground">{subscription?.status || 'Inactive'}</div>
                 <div>Plan:</div>
                 <div className="text-foreground">{plan}</div>
                 <div>Post Limit:</div>
@@ -38,10 +47,47 @@ export default function BillingPage() {
                 <div><span className="text-green-400">{quickstart}</span></div>
                 <div>Billing email:</div>
                 <div className="text-foreground">{billingEmail}</div>
+                <div>Next payment:</div>
+                <div className="text-foreground">{nextPayment ? nextPayment.toLocaleString() : '—'}</div>
+                <div>Amount due:</div>
+                <div className="text-foreground">{amountDue}</div>
               </div>
 
               <div className="w-full md:w-1/3">
-                <Button className="w-full bg-blue-500 hover:bg-blue-500/90">Manage Subscription</Button>
+                <Dialog open={open} onOpenChange={setOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full bg-blue-500 hover:bg-blue-500/90" disabled={!user || createPortal.isPending}>
+                      Manage Subscription
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Open Stripe Customer Portal</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-2">
+                      <p className="text-foreground/70">You will be redirected to Stripe to manage your subscription and billing details. Continue?</p>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                      <Button
+                        onClick={async () => {
+                          try {
+                            setOpen(false);
+                            const res = await createPortal.mutateAsync(user!.id);
+                            if (res?.url) {
+                              window.open(res.url, '_blank');
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          }
+                        }}
+                        disabled={createPortal.isPending}
+                      >
+                        Continue
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </CardContent>

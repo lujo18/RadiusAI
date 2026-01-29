@@ -9,15 +9,18 @@ type SocialItemType = {
 
 export const SocialItem = ({platform, integration}: SocialItemType) => {
 
-  console.log("Item:", platform, integration)
-
   const Icon = platform.icon;
   const isConnected = !!integration;
 
   return (
     <div className="flex items-center gap-3">
-      <div className={`${platform.color} p-2.5 rounded-lg`}>
-        <Icon className="w-5 h-5 text-foreground" />
+      <div className={`${platform.color} flex items-center justify-center rounded-lg w-10 h-10 overflow-hidden`}>
+        {integration?.profile_picture_url ? (
+          <img className="w-10 h-10" src={integration.profile_picture_url}/>
+        ) : (
+          <Icon className="w-5 h-5 text-foreground" />
+        )}
+        
       </div>
       <div>
         <p className="font-medium text-foreground">{platform.name}</p>

@@ -29,6 +29,8 @@ import { contentApi } from "@/lib/api/client";
 import { Post } from "@/types/types";
 import { Workflow } from "@/components/workflows/common/Workflow";
 import { PostItem } from "@/components/items/PostItem";
+import { usePostingModal } from '@/components/modals/PostingModalProvider';
+import { useBrandIntegrations } from '@/lib/api/hooks/useBrands';
 
 type Brand = Database["public"]["Tables"]["brand"]["Row"];
 
@@ -313,10 +315,14 @@ export default function GeneratePage() {
 
                 if (request.result && request.status === "completed") {
                   console.log("Post templates", request.result)
-
+                  const generated = request.result[0];
                   return (
-                    
-                    <PostItem postData={request.result[0]}/>
+                    <div key={request.id} className="space-y-2">
+                      <PostItem postData={generated} />
+                      <div className="flex justify-end">
+                        <PostFromGenerate post={generated} />
+                      </div>
+                    </div>
                   )
                 }
 
@@ -387,5 +393,22 @@ export default function GeneratePage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Small component to open PostingModal from Generate page
+function PostFromGenerate({ post }: { post: any }) {
+  const params = useParams();
+  const brandId = params?.brandId as string;
+  const postingModal = usePostingModal();
+  const { data: integrations } = useBrandIntegrations(brandId);
+
+  return (
+    <button
+      onClick={() => postingModal.open({ postData: post, brandId, integrations })}
+      className="px-3 py-2 bg-secondary text-foreground rounded-md hover:bg-secondary/80"
+    >
+      Post
+    </button>
   );
 }

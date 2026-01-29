@@ -4,6 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import { usePost, useUpdatePost } from "@/lib/api/hooks/usePosts";
 import { ArrowLeft } from "lucide-react";
 import { Database } from "@/types/database";
+import { usePostingModal } from '@/components/modals/PostingModalProvider';
+import { useBrandIntegrations } from '@/lib/api/hooks/useBrands';
 
 type PostRow = Database['public']['Tables']['posts']['Row'];
 
@@ -59,6 +61,21 @@ export default function PostDetailPage() {
   const content = typeof post.content === 'string' ? JSON.parse(post.content) : post.content;
   const storageUrls = typeof post.storage_urls === 'string' ? JSON.parse(post.storage_urls) : post.storage_urls;
 
+  // Local Post button component (uses global PostingModal)
+  const PostButton = ({ post, brandId }: { post: any; brandId: string }) => {
+    const postingModal = usePostingModal();
+    const { data: integrations } = useBrandIntegrations(brandId);
+
+    return (
+      <button
+        onClick={() => postingModal.open({ postData: post, brandId, integrations })}
+        className="px-4 py-2 bg-secondary text-foreground rounded-lg hover:bg-secondary/80"
+      >
+        Post
+      </button>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -109,6 +126,7 @@ export default function PostDetailPage() {
                   {updatePostMutation.isPending ? 'Updating...' : 'Mark as Posted'}
                 </button>
               )}
+              <PostButton post={post} brandId={brandId} />
             </div>
           </div>
         </div>

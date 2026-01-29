@@ -85,6 +85,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "../ui/badge";
+import { useSidebarNav } from "./sidebarContext";
 import { isAdminUser, useUserProfile } from "@/lib/api/hooks/useUser";
 
 interface SidebarWrapperProps {
@@ -136,59 +137,8 @@ export default function DashboardSidebar({
     return "U";
   };
 
-  // Build base path with brandId
-  const basePath = activeBrandId ? `/brand/${activeBrandId}` : '/overview';
-
-  const navItems = [
-    {
-      title: "Overview",
-      icon: LayoutDashboard,
-      key: "overview" as const,
-      href: activeBrandId ? basePath : '/overview',
-    },
-    {
-      title: "Posts",
-      icon: GalleryVerticalEnd,
-      key: "posts" as const,
-      href: activeBrandId ? `${basePath}/posts` : '/overview',
-    },
-    {
-      title: "Generate",
-      icon: Sparkles,
-      key: "generate" as const,
-      href: activeBrandId ? `${basePath}/generate` : '/overview',
-    },
-    {
-      title: "Calendar",
-      icon: Calendar,
-      key: "calendar" as const,
-      href: activeBrandId ? `${basePath}/calendar` : '/overview',
-    },
-    {
-      title: "Templates",
-      icon: FileText,
-      key: "templates" as const,
-      href: activeBrandId ? `${basePath}/templates` : '/overview',
-    },
-    {
-      title: "Analytics",
-      icon: BarChart3,
-      key: "analytics" as const,
-      href: activeBrandId ? `${basePath}/analytics` : '/overview',
-    },
-    {
-      title: "Automation",
-      icon: Zap,
-      key: "automation" as const,
-      href: activeBrandId ? `${basePath}/automation` : '/overview',
-    },
-    {
-      title: "Settings",
-      icon: Settings,
-      key: "settings" as const,
-      href: activeBrandId ? `${basePath}/settings` : '/overview',
-    },
-  ];
+  // Read nav items from context (allows nested layouts to override)
+  const { navItems } = useSidebarNav();
 
   const pathname = usePathname();
 
@@ -321,23 +271,24 @@ export default function DashboardSidebar({
           <SidebarGroup>
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.key}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      pathname === item.href ||
-                      (item.href === "/brand" && pathname === "/brand")
-                    }
-                    tooltip={item.title}
-                  >
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navItems.map((item) => {
+                // Resolve href if it's a function (pass current activeBrandId)
+                const resolvedHref = typeof item.href === 'function' ? item.href(activeBrandId) : item.href;
+                return (
+                  <SidebarMenuItem key={item.key}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === resolvedHref}
+                      tooltip={item.title}
+                    >
+                      <Link href={resolvedHref}>
+                        {item.icon ? <item.icon /> : null}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroup>
         </SidebarContent>
@@ -406,11 +357,11 @@ export default function DashboardSidebar({
                         <DropdownMenuSeparator />
                       </>
                     )}
-                    <DropdownMenuItem onClick={() => setActiveTab("style")}>
+                    <DropdownMenuItem onClick={() => { setActiveTab("style"); router.push('/settings'); }}>
                       <Settings />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { router.push('/settings/billing'); }}>
                       <CreditCard />
                       Billing
                     </DropdownMenuItem>

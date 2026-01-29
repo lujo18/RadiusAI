@@ -8,29 +8,33 @@ import { SocialItem } from "./SocialItem";
 type SocialIntegrationTypes = {
   platform: typeof platforms[number];
   integrations: Database["public"]["Tables"]["platform_integrations"]["Row"][];
+  onConnect: (platformId: string) => void;
+  onDisconnect: (integrationId: string) => void;
 }
 
 export const SocialIntegration = ({
   platform,
   integrations,
+  onConnect,
+  onDisconnect
 }: SocialIntegrationTypes) => {
   
   // Find integration for this platform
   const integration = integrations.find(i => i.platform === platform.id);
-  const isConnected = !!integration;
+  const isConnected = !!integration && integration.status === "connected";
 
   // Placeholder handlers and state (replace with real logic)
   const [connecting, setConnecting] = React.useState<string | null>(null);
 
   const handleConnect = async (platformId: string) => {
     setConnecting(platformId);
-    // ...connect logic
-    setTimeout(() => setConnecting(null), 1000);
+    onConnect(platformId)
+    setTimeout(() => setConnecting(null), 2000);
   };
 
   const handleDisconnect = async (integrationId: string) => {
     setConnecting(integration?.platform ?? null);
-    // ...disconnect logic
+    onDisconnect(integrationId)
     setTimeout(() => setConnecting(null), 1000);
   };
 
@@ -42,11 +46,15 @@ export const SocialIntegration = ({
       <SocialItem platform={platform} integration={integration!}/>
 
       <Button
-        onClick={() =>
-          isConnected && integration
-            ? handleDisconnect(integration.id)
-            : handleConnect(platform.id)
-        }
+        onClick={() => {
+          if (isConnected && integration) {
+            const accountId = integration.pfm_account_id || integration.late_account_id;
+            if (!accountId) return
+            handleDisconnect(accountId);
+          } else {
+            handleConnect(platform.id);
+          }
+        }}
         disabled={connecting === platform.id}
         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
           isConnected

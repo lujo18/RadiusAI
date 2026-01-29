@@ -298,13 +298,22 @@ export const brandApi = {
 
   // New OAuth flow endpoints
   startSocialConnect: async ({ late_profile_id, brand_id, platform }: { late_profile_id: string, brand_id: string, platform: string }) => {
-    const response = await apiClient.post(`/social/connect/${platform}`, {
+    console.log("Attempting to connect")
+    const response = await apiClient.post(`/api/social/connect/${platform}`, {
       existing_profile_id: late_profile_id,
       brand_id,
     });
     return response.data as { authUrl: string; platform: string; message: string };
   },
 
+  disconnectSocialAccount: async ({ integration_id }: { integration_id: string }) => {
+    const response = await apiClient.post(`/api/social/disconnect`, {
+      integration_id
+    });
+    return response.data;
+  },
+
+  // REMOVE: 2 functions below not needed
   checkConnectionStatus: async (connectToken: string) => {
     const response = await apiClient.get(`/connect-social/status/${connectToken}`);
     return response.data;

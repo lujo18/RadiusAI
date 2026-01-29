@@ -23,7 +23,6 @@ function getBrandSettings(brand: Brand): BrandSettings | null {
 export default function BrandSettingsPage() {
   const params = useParams();
   const brandId = params?.brandId as string;
-  const [activeTab, setActiveTab] = useState<'settings' | 'integrations'>('settings');
   const updateBrandSettingsMutation = useUpdateBrandSettings();
   // Fetch all brands and find the current one
   const { data: brands, isLoading, error } = useBrands();
@@ -85,9 +84,6 @@ export default function BrandSettingsPage() {
           Manage your brand identity, voice, and social media integrations
         </p>
       </div>
-
-     
-
        
           <div className='flex flex-col gap-4'>
             <Card>
@@ -95,6 +91,7 @@ export default function BrandSettingsPage() {
                 <CardTitle className="text-ghost-white">Social Media Integrations</CardTitle>
                 <CardDescription className="text-ghost-white/60">
                   Connect your social media accounts to enable posting
+
                 </CardDescription>
               </CardHeader>
               <CardContent>

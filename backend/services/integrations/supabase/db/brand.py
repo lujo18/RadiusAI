@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from backend.models.user import BrandSettings
 from backend.services.integrations.supabase.client import get_supabase
@@ -18,7 +19,7 @@ def create_supabase_brand(user_id: str, late_profile_id: str, brand_name: str, b
     return res.data[0]  # Return the profile
   
   
-def connect_social_account_to_brand(user_id: str, brand_id: str, platform: str, late_account_id: str, username: str):
+def connect_social_account_to_brand(brand_id: str, platform: str,  username: str, profile_picture_url: str | None = None, late_account_id: str | None = None, post_for_me_account_id: str | None = None):
   """
   Connects a social media account integration to a profile in Supabase.
 
@@ -32,15 +33,36 @@ def connect_social_account_to_brand(user_id: str, brand_id: str, platform: str, 
     expires_at (datetime, optional): Token expiration time.
   """
   supabase = get_supabase()
-  
+  now = datetime.now().isoformat()
+
   data = {
-    'user_id': user_id,
     'brand_id': brand_id,
     'platform': platform,
     'late_account_id': late_account_id,
-    'username': username
+    'pfm_account_id': post_for_me_account_id,
+    'username': username,
+    'profile_picture_url': profile_picture_url,
+    'status': "connected",
+    'updated_at': now,
+    'created_at': now,
   }
 
-  res = supabase.table('platform_integrations').insert(data).execute()
-  print(f"Connected {platform} account {late_account_id} to profile {brand_id}")
+  # Use upsert to ensure only one integration per (brand_id, platform).
+  # Requires a DB unique constraint on (brand_id, platform).
+  res = supabase.table('platform_integrations').upsert(data, on_conflict='brand_id,platform').execute()
+  if getattr(res, 'error', None):
+    # Fall back to insert on unexpected error
+    ins_res = supabase.table('platform_integrations').insert(data).execute()
+    print(f"Connected {platform} account {late_account_id} to profile {brand_id} (insert fallback)")
+    return ins_res.data[0] if ins_res.data else None
+
+  print(f"Upserted {platform} integration for profile {brand_id}")
+  return res.data[0] if res.data else None
+
+
+def update_social_account_status(pfm_account_id: str, status: Literal["connected", "disconnected"]):
+  supabase = get_supabase()
+  
+  res = supabase.table('platform_integrations').update({'status': status}).eq("pfm_account_id", pfm_account_id).execute()
+  print(f"Disconnected account {pfm_account_id}")
   return res.data[0] if res.data else None

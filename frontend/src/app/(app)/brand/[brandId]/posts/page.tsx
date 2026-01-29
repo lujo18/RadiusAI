@@ -43,17 +43,7 @@ import {
 
 import { Post } from "@/types/types";
 import { postApi } from "@/lib/api/client";
-import {
-  Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-  DialogFooter,
-} from "@/components/animate-ui/primitives/radix/dialog";
+import { usePostingModal } from '@/components/modals/PostingModalProvider';
 import { useBrands, useBrandIntegrations } from "@/lib/api/hooks/useBrands";
 import { Switch } from "@/components/animate-ui/components/radix/switch";
 // ...existing code...
@@ -113,21 +103,9 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
 
   const { data, isLoading, error } = usePostsByBrand(brandId);
 
-  const [postModalOpen, setPostModalOpen] = React.useState(false);
-  const [selectedPlatforms, setSelectedPlatforms] = React.useState<string[]>([]);
-
+  const postingModal = usePostingModal();
   // Fetch platform integrations for this brand
   const { data: integrations, isLoading: integrationsLoading } = useBrandIntegrations(brandId);
-  // Handler for toggling platform selection
-  const handleTogglePlatform = (platform: string) => {
-    setSelectedPlatforms((prev) =>
-      prev.includes(platform)
-        ? prev.filter((p) => p !== platform)
-        : [...prev, platform]
-    );
-  };
-
-  const handlePost = () => {};
 
   const columns: ColumnDef<Post>[] = [
     {
@@ -259,7 +237,7 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => setPostModalOpen(true)}>
+              <DropdownMenuItem onClick={() => postingModal.open({ postData: post, brandId, integrations })}>
                 Publish <Rocket />
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => downloadSlides(post)}>
@@ -378,51 +356,7 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <Dialog open={postModalOpen} onOpenChange={setPostModalOpen}>
-              <DialogPortal>
-                <DialogOverlay className="z-50 fixed inset-0 bg-black/40 backdrop-blur-sm" />
-                <div className="z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 fixed">
-                  <DialogContent className=" w-full max-w-md bg-background rounded-xl shadow-2xl p-8 border">
-                    <DialogHeader>
-                      <DialogTitle>Select Platforms to Post</DialogTitle>
-                      <DialogDescription>
-                        Choose which connected platforms to post to for this brand.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 my-6">
-                      {integrationsLoading ? (
-                        <div className="text-foreground/60">Loading integrations...</div>
-                      ) : integrations && integrations.length > 0 ? (
-                        integrations.map((integration: any) => (
-                          <div
-                            key={integration.id}
-                            className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border"
-                          >
-                            <SocialItem platform={platforms.find(i => i.id === integration.platform)!} integration={integration}/>
-                            <Switch
-                              checked={selectedPlatforms.includes(integration.platform)}
-                              onCheckedChange={() => handleTogglePlatform(integration.platform)}
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-foreground/60">No integrations found.</div>
-                      )}
-                    </div>
-                    <DialogFooter className="flex justify-end gap-4">
-                      <DialogClose>Close</DialogClose>
-                      <Button
-                        disabled={selectedPlatforms.length === 0}
-                        onClick={() => {}}
-                        variant="default"
-                      >
-                        Post
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </div>
-              </DialogPortal>
-            </Dialog>
+            {/* Posting handled via global PostingModalProvider */}
             <div className="w-full mx-auto px-6 py-12">
               <h1 className="text-3xl font-bold text-foreground mb-8">Posts</h1>
               <div className="w-full space-y-4">

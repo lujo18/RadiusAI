@@ -21,9 +21,21 @@ import {
   SidebarTrigger,
   Sidebar
 } from "@/components/animate-ui/components/radix/sidebar";
+import PostingModalProvider from '@/components/modals/PostingModalProvider';
 import { FiBell, FiSearch } from "react-icons/fi";
 import { logOut } from "@/lib/supabase/auth";
 import DashboardSidebar from '@/components/Dashboard/Sidebar';
+import { SidebarNavProvider, NavItem } from '@/components/Dashboard/sidebarContext';
+import {
+  LayoutDashboard,
+  GalleryVerticalEnd,
+  Sparkles,
+  Calendar,
+  FileText,
+  BarChart3,
+  Zap,
+  Settings,
+} from 'lucide-react';
 
 export default function AppLayout({
   children,
@@ -85,12 +97,29 @@ export default function AppLayout({
 
   return (
     <SidebarProvider>
-      <DashboardSidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        onLogout={logout}
-        
-        header={
+      {/** Compute default nav for top-level contexts (brand vs overview) */}
+      <PostingModalProvider>
+      <SidebarNavProvider
+        initial={(() => {
+          // Provide href as functions so resolved hrefs use the current activeBrandId
+          return [
+            { title: "Overview", key: "overview", href: (b?: string | null) => (b ? `/brand/${b}` : "/overview"), icon: LayoutDashboard },
+            { title: "Posts", key: "posts", href: (b?: string | null) => (b ? `/brand/${b}/posts` : "/overview"), icon: GalleryVerticalEnd },
+            { title: "Generate", key: "generate", href: (b?: string | null) => (b ? `/brand/${b}/generate` : "/overview"), icon: Sparkles },
+            { title: "Calendar", key: "calendar", href: (b?: string | null) => (b ? `/brand/${b}/calendar` : "/overview"), icon: Calendar },
+            { title: "Templates", key: "templates", href: (b?: string | null) => (b ? `/brand/${b}/templates` : "/overview"), icon: FileText },
+            { title: "Analytics", key: "analytics", href: (b?: string | null) => (b ? `/brand/${b}/analytics` : "/overview"), icon: BarChart3 },
+            { title: "Automation", key: "automation", href: (b?: string | null) => (b ? `/brand/${b}/automation` : "/overview"), icon: Zap },
+            { title: "Settings", key: "settings", href: (b?: string | null) => (b ? `/brand/${b}/settings` : "/overview"), icon: Settings },
+          ];
+        })()}
+      >
+        <DashboardSidebar 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          onLogout={logout}
+          
+          header={
           <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1" />
@@ -118,12 +147,14 @@ export default function AppLayout({
             </div>
           </header>
         }
-      >
+        >
         <SubscriptionBanner />
         <SidebarInset>
           {children}
         </SidebarInset>
-      </DashboardSidebar>
+        </DashboardSidebar>
+        </SidebarNavProvider>
+        </PostingModalProvider>
     </SidebarProvider>
   );
 }

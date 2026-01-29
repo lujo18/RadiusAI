@@ -26,7 +26,7 @@ from ..config import Config, get_settings
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/social", tags=["Social Connections"])
+router = APIRouter(prefix="/api/social", tags=["Social Connections"])
 
 settings = get_settings()
 
@@ -49,6 +49,8 @@ class StartConnectRequest(BaseModel):
     existing_profile_id: Optional[str] = None # was late_profile_id (attached to brand to handle late connection)
     brand_id: str
     
+class DisconnectSocialRequest(BaseModel):
+    integration_id: str
 class GetConnectResponse(BaseModel):
     connected: str
     profileId: str
@@ -67,7 +69,7 @@ def validate_platform(platform: str) -> str:
         )
     return platform_lower
 
-@router.get("/connect/{platform}")
+@router.post("/connect/{platform}")
 async def start_social_connect(
     request: StartConnectRequest, 
     platform: str,
@@ -90,15 +92,55 @@ async def start_social_connect(
     
     platform = validate_platform(platform)
     
-    url = provider.create_auth_url(platform, user_id, request.brand_id, str(request.existing_profile_id))
+    logger.info("Brandid", request.brand_id)
+    
+    url = await provider.create_auth_url(platform, user_id, request.brand_id, str(request.existing_profile_id))
+    
     return url
 
     
 
+@router.get("/callback")
+async def get_social_connection(request: Request):
+    
+    # FIXME: Integration guidance
+    # code = request.query_params.get("code") 
+    # platform = request.query_params.get("platform") 
+    
+    # account = exchange_code(code, platform) 
+    # save_to_db(account) 
+    
+    # return {"connected": platform, "account": account
+    
+    # TODO! Pass brand_id as external id forme
+    # TODO! Then query postforme in callback using account_ids
+    # 1. external_id 2. provider
+    # 
+    # Take this profile + brandId and make supabase connection
+    # Then return to normal url
+    response = dict(request.query_params)
+    
+    data = await provider.save_integration(response)
+    
+    brand_id = data.brand_id
+    platform_connected = data.platform_connected
+    
+    # Check required params and ensure they are all str (not None)
+    if not all([brand_id, platform_connected]):
+        raise HTTPException(status_code=400, detail="Missing required query parameters.")
+    
+    return RedirectResponse(url=f"{Config.FRONTEND_URL}/brand/{brand_id}/settings/?platform={platform_connected}")
+  
+
+@router.post("/disconnect")
+async def disconnect_social(request: DisconnectSocialRequest):
+    integration_id = request.integration_id
+    return await provider.disconnect_integration(integration_id)
+
 
 # Callback endpoint removed - Late API handles redirect directly with redirect_url parameter
 @router.get("/callback/{vs_state}")
-async def get_social_connection(vs_state: str, request: Request):
+async def get_social_connection_state(vs_state: str, request: Request):
     
     # FIXME: Integration guidance
     # code = request.query_params.get("code") 
@@ -111,6 +153,7 @@ async def get_social_connection(vs_state: str, request: Request):
     
     
     logger.info("Successfully recieved Late social connection", request)
+    logger.info("State response", vs_state)
     
     payload = decode_state(vs_state)
     

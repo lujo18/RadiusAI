@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCurrentUser, requireUserId } from '@/lib/supabase/auth';
 import { BrandRepository } from '@/lib/supabase/repos/BrandRepository';
+import { brandApi } from '@/lib/api/client';
 import type { Database } from '@/types/database';
 
 // Query Keys
@@ -42,8 +43,7 @@ export function useBrandIntegrations(brandId: string) {
   return useQuery({
     queryKey: ["brand-integrations", brandId],
     queryFn: async () => {
-      const userId = await requireUserId();
-      return BrandRepository.getBrandIntegrations(brandId, userId);
+      return await BrandRepository.getBrandIntegrations(brandId);
     },
     enabled: !!brandId,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -106,6 +106,7 @@ export function useAddIntegration() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: brandKeys.all });
       queryClient.invalidateQueries({ queryKey: brandKeys.detail(variables.brandId) });
+      queryClient.invalidateQueries({ queryKey: ['brand-integrations', variables.brandId] });
     },
   });
 }
@@ -114,12 +115,18 @@ export function useRemoveIntegration() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ integrationId }: { integrationId: string }) => {
-      const userId = await requireUserId();
-      return BrandRepository.deleteBrandIntegration(integrationId, userId);
+    mutationFn: async ({ integrationId }: { integrationId: string; brandId?: string }) => {
+      if (brandApi?.disconnectSocialAccount) {
+        return brandApi.disconnectSocialAccount({ integration_id: integrationId });
+      }
+      return BrandRepository.deleteBrandIntegration(integrationId);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: brandKeys.all });
+      const brandId = (variables as any)?.brandId as string | undefined;
+      if (brandId) {
+        queryClient.invalidateQueries({ queryKey: ['brand-integrations', brandId] });
+      }
     },
   });
 }
