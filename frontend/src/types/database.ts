@@ -43,6 +43,7 @@ export type Database = {
         Row: {
           brand_settings: Json
           created_at: string
+          cta_settings: Json | null
           description: string | null
           id: string
           late_profile_id: string
@@ -54,6 +55,7 @@ export type Database = {
         Insert: {
           brand_settings: Json
           created_at?: string
+          cta_settings?: Json | null
           description?: string | null
           id?: string
           late_profile_id: string
@@ -65,6 +67,7 @@ export type Database = {
         Update: {
           brand_settings?: Json
           created_at?: string
+          cta_settings?: Json | null
           description?: string | null
           id?: string
           late_profile_id?: string
@@ -83,69 +86,54 @@ export type Database = {
           },
         ]
       }
-      brand_settings: {
+      brand_ctas: {
         Row: {
-          aesthetic: string
           brand_id: string
-          brand_voice: string
-          content_pillars: string[]
-          created_at: string
-          emoji_usage: string
-          forbidden_words: string[]
-          hashtag_count: number
-          hashtag_style: string
-          hashtags: string[] | null
+          category: string | null
+          created_at: string | null
+          cta_text: string
+          cta_type: string | null
+          cta_url: string | null
           id: string
-          name: string
-          niche: string
-          preferred_words: string[]
-          target_audience: string
-          tone_of_voice: string
-          updated_at: string
+          is_active: boolean | null
+          is_deleted: boolean | null
+          label: string
+          metadata: Json | null
+          updated_at: string | null
         }
         Insert: {
-          aesthetic: string
           brand_id: string
-          brand_voice: string
-          content_pillars?: string[]
-          created_at?: string
-          emoji_usage: string
-          forbidden_words?: string[]
-          hashtag_count: number
-          hashtag_style: string
-          hashtags?: string[] | null
+          category?: string | null
+          created_at?: string | null
+          cta_text: string
+          cta_type?: string | null
+          cta_url?: string | null
           id?: string
-          name: string
-          niche: string
-          preferred_words?: string[]
-          target_audience: string
-          tone_of_voice: string
-          updated_at?: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          label: string
+          metadata?: Json | null
+          updated_at?: string | null
         }
         Update: {
-          aesthetic?: string
           brand_id?: string
-          brand_voice?: string
-          content_pillars?: string[]
-          created_at?: string
-          emoji_usage?: string
-          forbidden_words?: string[]
-          hashtag_count?: number
-          hashtag_style?: string
-          hashtags?: string[] | null
+          category?: string | null
+          created_at?: string | null
+          cta_text?: string
+          cta_type?: string | null
+          cta_url?: string | null
           id?: string
-          name?: string
-          niche?: string
-          preferred_words?: string[]
-          target_audience?: string
-          tone_of_voice?: string
-          updated_at?: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          label?: string
+          metadata?: Json | null
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "brand_settings_brand_id_fkey"
+            foreignKeyName: "ctas_brand_id_fkey"
             columns: ["brand_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "brand"
             referencedColumns: ["id"]
           },
@@ -452,6 +440,7 @@ export type Database = {
           is_automated: boolean | null
           metadata: Json | null
           platform: string
+          platform_captions: Json | null
           published_time: string | null
           scheduled_time: string | null
           status: Database["public"]["Enums"]["post_status"] | null
@@ -475,6 +464,7 @@ export type Database = {
           is_automated?: boolean | null
           metadata?: Json | null
           platform: string
+          platform_captions?: Json | null
           published_time?: string | null
           scheduled_time?: string | null
           status?: Database["public"]["Enums"]["post_status"] | null
@@ -498,6 +488,7 @@ export type Database = {
           is_automated?: boolean | null
           metadata?: Json | null
           platform?: string
+          platform_captions?: Json | null
           published_time?: string | null
           scheduled_time?: string | null
           status?: Database["public"]["Enums"]["post_status"] | null
@@ -607,6 +598,127 @@ export type Database = {
           recommended?: boolean | null
           style_config?: Json
           tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      team_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json | null
+          team_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          team_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          role: Database["public"]["Enums"]["team_member_role"]
+          status: Database["public"]["Enums"]["team_member_status"]
+          team_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["team_member_role"]
+          status?: Database["public"]["Enums"]["team_member_status"]
+          team_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["team_member_role"]
+          status?: Database["public"]["Enums"]["team_member_status"]
+          team_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          slug?: string
           updated_at?: string
         }
         Relationships: []
@@ -1021,6 +1133,8 @@ export type Database = {
         | "failed"
         | "deleted"
         | "archived"
+      team_member_role: "owner" | "admin" | "member" | "viewer"
+      team_member_status: "active" | "pending" | "invited" | "removed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1162,6 +1276,8 @@ export const Constants = {
         "deleted",
         "archived",
       ],
+      team_member_role: ["owner", "admin", "member", "viewer"],
+      team_member_status: ["active", "pending", "invited", "removed"],
     },
   },
 } as const

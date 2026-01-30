@@ -110,7 +110,7 @@ export default function PostDetailPage() {
                 {post.published_time && (
                   <>
                     <span>•</span>
-                    <span>Published {new Date(post.published_time).toLocaleDateString()}</span>
+                    <span>Posted {new Date(post.published_time).toLocaleDateString()}</span>
                   </>
                 )}
               </div>

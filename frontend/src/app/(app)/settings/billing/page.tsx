@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSubscription, useCreatePortal } from "@/lib/api/hooks/useSubscription";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/animate-ui/primitives/radix/dialog";
+import { Dialog, DialogTrigger, DialogPortal, DialogOverlay, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/animate-ui/primitives/radix/dialog";
 import { useUserProfile } from "@/lib/api/hooks/useUser";
 
 export default function BillingPage() {
@@ -18,7 +18,13 @@ export default function BillingPage() {
   const postLimit = subscription?.post_limit || "—";
   const quickstart = subscription?.quickstart_included ? "Included" : "Not included";
   const billingEmail = subscription?.billing_email || "Not set";
-  const nextPayment = subscription?.current_period_end ? new Date(subscription.current_period_end * 1000) : null;
+  let nextPayment: Date | null = null;
+  if (subscription?.current_period_end) {
+    const v = subscription.current_period_end;
+    if (typeof v === 'number') nextPayment = new Date(v * 1000);
+    else if (!isNaN(Number(v))) nextPayment = new Date(Number(v) * 1000);
+    else nextPayment = new Date(v);
+  }
   const amountDue = subscription?.amount_due ? `$${(subscription.amount_due / 100).toFixed(2)}` : subscription?.price || "$0.00";
 
   return (
@@ -60,33 +66,38 @@ export default function BillingPage() {
                       Manage Subscription
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Open Stripe Customer Portal</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-2">
-                      <p className="text-foreground/70">You will be redirected to Stripe to manage your subscription and billing details. Continue?</p>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                      <Button
-                        onClick={async () => {
-                          try {
-                            setOpen(false);
-                            const res = await createPortal.mutateAsync(user!.id);
-                            if (res?.url) {
-                              window.open(res.url, '_blank');
-                            }
-                          } catch (err) {
-                            console.error(err);
-                          }
-                        }}
-                        disabled={createPortal.isPending}
-                      >
-                        Continue
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
+                  <DialogPortal>
+                    <DialogOverlay className="fixed inset-0 bg-black/40 z-40" />
+                    <DialogContent className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                      <div className="w-full max-w-lg bg-card/90 backdrop-blur-md border border-border rounded-lg p-6">
+                        <DialogHeader>
+                          <DialogTitle>Open Stripe Customer Portal</DialogTitle>
+                        </DialogHeader>
+                        <div className="py-2">
+                          <p className="text-foreground/70">You will be redirected to Stripe to manage your subscription and billing details. Continue?</p>
+                        </div>
+                        <DialogFooter className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                          <Button
+                            onClick={async () => {
+                              try {
+                                setOpen(false);
+                                const res = await createPortal.mutateAsync(user!.id);
+                                if (res?.url) {
+                                  window.open(res.url, '_blank');
+                                }
+                              } catch (err) {
+                                console.error(err);
+                              }
+                            }}
+                            disabled={createPortal.isPending}
+                          >
+                            Continue
+                          </Button>
+                        </DialogFooter>
+                      </div>
+                    </DialogContent>
+                  </DialogPortal>
                 </Dialog>
               </div>
             </div>

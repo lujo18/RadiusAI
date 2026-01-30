@@ -50,6 +50,6 @@ class CreatePostRequest(BaseModel):
     variantSetId: Optional[str] = None
 
 class UpdatePostRequest(BaseModel):
-    status: Optional[Literal["draft", "scheduled", "published", "failed"]] = None
+    status: Optional[Literal["draft", "scheduled", "posted", "failed"]] = None
     scheduledTime: Optional[datetime] = None
     content: Optional[GeminiCarouselResponse] = None

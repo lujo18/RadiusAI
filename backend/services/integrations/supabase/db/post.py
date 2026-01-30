@@ -57,10 +57,10 @@ def get_posts(user_id: str) -> List[Dict[str, Any]]:
     
     return response.data or []
 
-
+# DELEGATE: parse backend to ensure all types are updated
+# Here, status should be poststatus
 def get_posts_by_status(user_id: str, status: str) -> List[Dict[str, Any]]:
     """
-    Get posts filtered by status (draft, scheduled, published, failed).
     
     Args:
         user_id: User UUID

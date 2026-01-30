@@ -1,8 +1,10 @@
 # backend/services/integrations/provider_example.py
 
-from typing import Protocol, Any
+from typing import List, Protocol, Any
 
 from pydantic import BaseModel
+
+from backend.models.post import Post
 
 class CreateAuthUrlResponse(BaseModel):
     """
@@ -59,15 +61,40 @@ class SocialProvider(Protocol):
     async def disconnect_integration(self, integration_id: str) -> bool:
         ...
 
-    def create_post(self, platform: str, content: dict, account_id: str) -> dict:
+    async def publish_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
         """
         Create a post on the given platform/account.
         Args:
-            platform: Social platform name.
-            content: Post content payload (text, images, etc).
-            account_id: Provider-specific account ID.
+            brand_id: Internal brand ID.
+            platforms: List of platform names to post to.
+            post_id: Internal post ID.
         Returns:
             dict: Provider-specific post creation response.
+        """
+        ...
+
+    async def draft_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
+        """
+        Save a post as draft.
+        Args:
+            brand_id: Internal brand ID.
+            platforms: List of platform names to save draft for.
+            post_id: Internal post ID.
+        Returns:
+            dict: Provider-specific draft creation response.
+        """
+        ...
+
+    async def schedule_post(self, brand_id: str, platforms: List[str], post_id: str, scheduled_at: str) -> dict:
+        """
+        Schedule a post for future publishing.
+        Args:
+            brand_id: Internal brand ID.
+            platforms: List of platform names to schedule for.
+            post_id: Internal post ID.
+            scheduled_at: ISO timestamp for when to publish.
+        Returns:
+            dict: Provider-specific scheduling response.
         """
         ...
 

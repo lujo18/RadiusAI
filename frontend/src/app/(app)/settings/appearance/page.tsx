@@ -1,12 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useTheme } from "next-themes";
 
 export default function AppearancePage() {
-  const [theme, setTheme] = useState<"system" | "dark" | "light">("system");
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [saving, setSaving] = useState(false);
+
+  // Keep a local value for controlled inputs until apply
+  const [local, setLocal] = useState<string>(theme || "system");
+
+  useEffect(() => {
+    // Sync when theme changes elsewhere
+    setLocal(theme || "system");
+  }, [theme]);
+
+  const apply = async (value: string) => {
+    setSaving(true);
+    try {
+      await setTheme(value as 'light' | 'dark' | 'system');
+      // small UX delay for feedback
+      setTimeout(() => setSaving(false), 600);
+    } catch (err) {
+      console.error(err);
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -23,26 +45,48 @@ export default function AppearancePage() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <label className="flex items-center space-x-3 cursor-pointer" onClick={() => setTheme('system')}>
-                <input name="theme" type="radio" checked={theme === 'system'} readOnly />
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  name="theme"
+                  type="radio"
+                  checked={local === 'system'}
+                  onChange={() => setLocal('system')}
+                />
                 <Label className="font-medium">System</Label>
               </label>
             </div>
             <div>
-              <label className="flex items-center space-x-3 cursor-pointer" onClick={() => setTheme('dark')}>
-                <input name="theme" type="radio" checked={theme === 'dark'} readOnly />
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  name="theme"
+                  type="radio"
+                  checked={local === 'dark'}
+                  onChange={() => setLocal('dark')}
+                />
                 <Label className="font-medium">Dark</Label>
               </label>
             </div>
             <div>
-              <label className="flex items-center space-x-3 cursor-pointer" onClick={() => setTheme('light')}>
-                <input name="theme" type="radio" checked={theme === 'light'} readOnly />
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  name="theme"
+                  type="radio"
+                  checked={local === 'light'}
+                  onChange={() => setLocal('light')}
+                />
                 <Label className="font-medium">Light</Label>
               </label>
             </div>
 
             <div>
-              <Button onClick={() => console.log('apply theme', theme)}>Apply</Button>
+              <div className="flex items-center gap-2">
+                <Button onClick={() => apply(local)} disabled={saving}>
+                  {saving ? 'Applying...' : 'Apply'}
+                </Button>
+                <div className="text-sm text-foreground/60">
+                  Current: {resolvedTheme || theme}
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

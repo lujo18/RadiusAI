@@ -52,6 +52,10 @@ from .user import (
     BrandSettings,
     UpdateProfileRequest,
 )
+from .platform_integration import (
+    PlatformIntegration,
+    IntegrationStatus,
+)
 
 __all__ = [
     # Enums
@@ -96,4 +100,6 @@ __all__ = [
     # User models
     "BrandSettings",
     "UpdateProfileRequest",
+    "PlatformIntegration",
+    "IntegrationStatus",
 ]

@@ -23,9 +23,9 @@ export const SocialItem = ({platform, integration}: SocialItemType) => {
         
       </div>
       <div>
-        <p className="font-medium text-foreground">{platform.name}</p>
+        <h4>{platform.name}</h4>
         {isConnected && integration && (
-          <p className="text-xs text-muted-foreground">
+          <p className="mt-0 muted">
             @{integration.username}
           </p>
         )}

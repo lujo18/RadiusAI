@@ -252,22 +252,85 @@ export const postApi = {
     return await PostRepository.updatePost(postId, updates, userId);
   },
 
+  // GET: Fetch scheduled posts within date range
+  getScheduledPosts: async (fromDate?: Date, toDate?: Date) => {
+    const userId = await requireUserId();
+    let query = supabase
+      .from('posts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'scheduled');
+    
+    if (fromDate) {
+      query = query.gte('scheduled_time', fromDate.toISOString());
+    }
+    if (toDate) {
+      query = query.lte('scheduled_time', toDate.toISOString());
+    }
+    
+    query = query.order('scheduled_time', { ascending: true });
+    
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
   // POST: Publish post
-  publishPost: async (postId: string, lateAccountId: string) => {
+  publishPost: async (brand_id: string, platforms: string[], postId: string) => {
     const userId = await requireUserId();
 
-    const response = await apiClient.post('/api/post/slideshow', {
+    const response = await apiClient.post('/api/post', {
+      brand_id: brand_id,
+      platforms: platforms,
       post_id: postId,
-      late_account_id: lateAccountId,
-      publish_now: false
+      mode: 'publish'
     });
 
     if (response.status !== 200) {
       throw new Error(`Failed to publish post: ${response.statusText}`);
     }
 
-    await PostRepository.updatePostStatus(postId, 'published', userId);
-    throw new Error('Supabase repository for publishPost not implemented yet.');
+    await PostRepository.updatePostStatus(postId, 'posted', userId);
+    return response.data;
+  },
+
+  // POST: Draft post
+  draftPost: async ({ postId, platforms, brandId }: { postId: string; platforms: string[]; brandId: string }) => {
+    const userId = await requireUserId();
+    
+    const response = await apiClient.post('/api/post', {
+      brand_id: brandId,
+      post_id: postId,
+      platforms: platforms,
+      mode: 'draft'
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to draft post: ${response.statusText}`);
+    }
+
+    await PostRepository.updatePostStatus(postId, 'draft', userId);
+    return response.data;
+  },
+
+  // POST: Schedule post
+  schedulePost: async ({ postId, platforms, scheduledAt, brandId }: { postId: string; platforms: string[]; scheduledAt: string; brandId: string }) => {
+    const userId = await requireUserId();
+    
+    const response = await apiClient.post('/api/post', {
+      brand_id: brandId,
+      post_id: postId,
+      platforms: platforms,
+      mode: 'scheduled',
+      scheduled_at: scheduledAt
+    });
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to schedule post: ${response.statusText}`);
+    }
+
+    await PostRepository.updatePostStatus(postId, 'scheduled', userId);
+    return response.data;
   },
 
   // POST: Upload slide image
@@ -283,18 +346,6 @@ export const postApi = {
 
 
 export const brandApi = {
-  getAuthUrl: async ({late_profile_id, social_platform}: {late_profile_id: string; social_platform: string}): Promise<string> => {
-    const response = await apiClient.post('/api/brand/social-auth-url', {
-      late_profile_id,
-      social_platform
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to generate posts: ${response.statusText}`);
-    }
-    
-    return response.data.auth_url;
-  },
 
   // New OAuth flow endpoints
   startSocialConnect: async ({ late_profile_id, brand_id, platform }: { late_profile_id: string, brand_id: string, platform: string }) => {
@@ -358,6 +409,11 @@ export const billingApi = {
   // POST: Create checkout session (Stripe)
   createCheckoutSession: async (priceId: string) => {
     const { data } = await apiClient.post('/api/billing/checkout', { priceId });
+    return data;
+  },
+  // POST: Create a Stripe customer portal session (backend returns a { url })
+  createPortal: async (userId: string) => {
+    const { data } = await apiClient.post('/api/stripe/create-portal', { userId });
     return data;
   },
 };

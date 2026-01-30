@@ -152,8 +152,8 @@ export default function PostDetailPage() {
   }
 
   const handlePublish = () => {
-    if (window.confirm("Mark this post as published?")) {
-      updateStatusMutation.mutate("published");
+    if (window.confirm("Mark this post as posted?")) {
+      updateStatusMutation.mutate("posted");
     }
   };
 
@@ -174,8 +174,8 @@ export default function PostDetailPage() {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl font-bold font-main text-gray-900">Post Details</h1>
-                <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  post.status === 'published' ? 'bg-green-100 text-green-700' :
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                    post.status === 'posted' ? 'bg-green-100 text-green-700' :
                   post.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
                   post.status === 'draft' ? 'bg-gray-100 text-gray-700' :
                   'bg-red-100 text-red-700'
@@ -191,7 +191,7 @@ export default function PostDetailPage() {
                 {post.publishedTime && (
                   <>
                     <span>•</span>
-                    <span>Published {new Date(post.publishedTime).toLocaleDateString()}</span>
+                    <span>Posted {new Date(post.publishedTime).toLocaleDateString()}</span>
                   </>
                 )}
               </div>
@@ -203,7 +203,7 @@ export default function PostDetailPage() {
                   onClick={handlePublish}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                 >
-                  Mark as Published
+                  Mark as Posted
                 </button>
               )}
               {post.template && (

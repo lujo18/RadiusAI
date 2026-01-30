@@ -68,9 +68,9 @@ export class PostRepository {
     return data;
   }
 
-  static async updatePostStatus(postId: string, status: string, userId: string) {
+  static async updatePostStatus(postId: string, status: Database["public"]["Enums"]["post_status"], userId: string) {
     const updateData: any = { status };
-    if (status === 'published') {
+    if (status === 'posted') {
       updateData.published_time = new Date().toISOString();
     }
     const { error } = await supabase

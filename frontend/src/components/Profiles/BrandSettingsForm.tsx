@@ -33,6 +33,7 @@ const defaultSettings: BrandSettings = {
     updated_at: '',
 };
 
+
 export default function BrandSettingsForm({
   initialValues,
   onSubmit,

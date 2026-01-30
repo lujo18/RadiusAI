@@ -1,6 +1,7 @@
 # backend/services/integrations/provider.py
+from typing import List
 from backend.config import Config
-from backend.services.integrations.social.social_provider import CreateAuthUrlResponse, SocialProvider
+from backend.services.integrations.social.social_provider import CreateAuthUrlResponse, SaveIntegrationResponse, SocialProvider
 from backend.util import generate_state
 from .social_account import create_auth_url
 from fastapi.responses import RedirectResponse
@@ -12,7 +13,28 @@ class LateProvider(SocialProvider):
       redirect_url = f"{Config.BACKEND_URL}/social/callback/{state}"
       
       return await create_auth_url(platform, redirect_url, late_profile_id=existing_profile_id)
-    def exchange_code(self, code: str, platform: str) -> dict: ...
-    def create_post(self, platform: str, content: dict, account_id: str) -> dict: ...
-    def get_profile(self, account_id: str) -> dict: ...
+    
+    async def save_integration(self, response: dict) -> SaveIntegrationResponse:
+        # TODO: Implement Late-specific integration saving
+        raise NotImplementedError("Late save_integration not implemented")
+    
+    async def disconnect_integration(self, integration_id: str) -> bool:
+        # TODO: Implement Late-specific disconnection
+        raise NotImplementedError("Late disconnect_integration not implemented")
+    
+    async def publish_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
+        # TODO: Implement Late-specific publishing
+        raise NotImplementedError("Late publish_post not implemented")
+    
+    async def draft_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
+        # TODO: Implement Late-specific draft saving
+        raise NotImplementedError("Late draft_post not implemented")
+    
+    async def schedule_post(self, brand_id: str, platforms: List[str], post_id: str, scheduled_at: str) -> dict:
+        # TODO: Implement Late-specific scheduling
+        raise NotImplementedError("Late schedule_post not implemented")
+    
+    def get_profile(self, account_id: str) -> dict:
+        # TODO: Implement Late-specific profile fetching
+        raise NotImplementedError("Late get_profile not implemented")
     # Add more methods as needed

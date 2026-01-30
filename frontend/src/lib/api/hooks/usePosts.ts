@@ -47,11 +47,13 @@ export function usePost(postId: string) {
   });
 }
 
-export function useScheduledPosts() {
+export function useScheduledPosts(fromDate?: Date, toDate?: Date, brandId?: string) {
   return useQuery({
-    queryKey: postKeys.scheduled,
-    queryFn: () => contentApi.getPosts({ status: 'scheduled' }),
+    queryKey: fromDate && toDate ? [...postKeys.scheduled, fromDate.toISOString(), toDate.toISOString(), brandId] : [...postKeys.scheduled, brandId],
+    queryFn: () => postApi.getScheduledPosts(fromDate, toDate),
     staleTime: 30 * 1000, // 30 seconds
+    retry: 1, // Only retry once on failure
+    retryDelay: 1000, // Wait 1 second before retry
   });
 }
 
@@ -110,18 +112,89 @@ export function useDeletePostWithSlides() {
   });
 }
 
-export function usePublishPost() {
+
+
+export const usePublishPost = (brandId: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ postId, lateAccountId }: { postId: string; lateAccountId: string }) =>
-      postApi.publishPost(postId, lateAccountId),
-    onSuccess: () => {
+  return useMutation<
+    unknown,
+    Error,
+    { postId: string; platforms: string[] },
+    { previous?: any[] }
+  >({
+    mutationFn: async ({ postId, platforms }) => {
+      return await postApi.publishPost(brandId, platforms, postId);
+    },
+    onMutate: async ({ postId }) => {
+      await queryClient.cancelQueries({ queryKey: postKeys.all });
+      const previous = queryClient.getQueryData<any[]>(postKeys.all);
+      queryClient.setQueryData<any[] | undefined>(postKeys.all, (old) => {
+        const list = old ?? [];
+        return list.map((p: any) => (p.id === postId ? { ...p, status: 'scheduled' } : p));
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(postKeys.all, context.previous);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
     },
   });
-}
+};
+
+export const useDraftPost = (brandId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<any, Error, { postId: string; platforms: string[] }, { previous?: any[] }>({
+    mutationFn: ({ postId, platforms }) => postApi.draftPost({ postId, platforms, brandId }),
+    onMutate: async ({ postId }) => {
+      await queryClient.cancelQueries({ queryKey: postKeys.all });
+      const previous = queryClient.getQueryData<any[]>(postKeys.all);
+
+      queryClient.setQueryData<any[] | undefined>(postKeys.all, (old) => {
+        const list = old ?? [];
+        return list.map((p: any) => (p.id === postId ? { ...p, status: 'draft' } : p));
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(postKeys.all, context.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+    },
+  });
+};
+
+export const useSchedulePost = (brandId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<any, Error, { postId: string; platforms: string[]; scheduledAt: Date }, { previous?: any[] }>({
+    mutationFn: ({ postId, platforms, scheduledAt }) => 
+      postApi.schedulePost({ postId, platforms, scheduledAt: scheduledAt.toISOString(), brandId }),
+    onMutate: async ({ postId }) => {
+      await queryClient.cancelQueries({ queryKey: postKeys.all });
+      const previous = queryClient.getQueryData<any[]>(postKeys.all);
+
+      queryClient.setQueryData<any[] | undefined>(postKeys.all, (old) => {
+        const list = old ?? [];
+        return list.map((p: any) => (p.id === postId ? { ...p, status: 'scheduled' } : p));
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(postKeys.all, context.previous);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: postKeys.all });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+    },
+  });
+};
 
 export function useGenerateWeek() {
   const queryClient = useQueryClient();
