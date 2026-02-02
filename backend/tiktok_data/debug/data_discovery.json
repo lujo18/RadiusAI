@@ -1,0 +1,88 @@
+{
+  "found_variables": [
+    {
+      "name": "__UNIVERSAL_DATA_FOR_REHYDRATION__",
+      "data": "ref: <Node>"
+    }
+  ],
+  "script_contents": [
+    {
+      "index": 0,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"_r\":\"eyJjb29raWUiOnsiYmxvY2tlcnMiOlt7ImNvb2tpZXMiOlsia3RsdkRXN0lHNUNsT2N4WVRibVkiLCJNT05JVE9SX0RFVklDRV9JRCIsIk1PTklUT1JfV0VCX0lEIl0sImRvbWFpbnMiOlsidGlrdG9rLmNvbSIsInRpa3Rva3YuY29tIl19XSwiZW5hYmxlZ..."
+    },
+    {
+      "index": 2,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"imports\":{\"acrawler\":\"https://lf16-tiktok-web.tiktokcdn-us.com/obj/tiktok-web-tx/webmssdk/2.0.0.447/webmssdk.js\",\"secsdk_sg\":\"https://sf16-website-login.neutral.ttwstatic.com/obj/tiktok_web_login_st..."
+    },
+    {
+      "index": 3,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"kind\":\"us\",\"captcha\":\"//verification-ttp2.tiktokw.us\",\"imApi\":\"https://im-api.tiktok.com\",\"imFrontier\":\"wss://im-ws.tiktok.com/ws/v2\",\"mTApi\":\"https://www.tiktok.com\",\"rootApi\":\"https://www.tiktok.c..."
+    },
+    {
+      "index": 4,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"vregion\":\"US-TTP2\",\"vgeo\":\"VGeo-US\"}..."
+    },
+    {
+      "index": 5,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"_REGION_DATA_REGION_\":\"us\",\"_REGION_DATA_REGION_CONFIGS_\":{\"acrawlerUrl\":{\"us-ttp\":{\"url\":\"https:\\u002F\\u002Flf16-tiktok-web.tiktokcdn-us.com\\u002Fobj\\u002Ftiktok-web-tx\\u002Fwebmssdk\\u002F2.0.0.221..."
+    },
+    {
+      "index": 6,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"bid\":\"tiktok_webapp\",\"sdkUrl\":\"https://lf16-cdn-tos.tiktokcdn-us.com/obj/static-tx/slardar/fe/sdk-web/browser.oci.js\",\"slardarClient\":\"SlardarClient\",\"disableInit\":true}..."
+    },
+    {
+      "index": 15,
+      "type": "application/ld+json",
+      "has_json": false,
+      "preview": "{\"@context\":\"https://schema.org/\",\"@type\":\"ItemPage\",\"@id\":\"https://www.tiktok.com/tag/gym\"}..."
+    },
+    {
+      "index": 16,
+      "type": "application/ld+json",
+      "has_json": false,
+      "preview": "{\"@context\":\"https://schema.org/\",\"@type\":\"BreadcrumbList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"item\":{\"@type\":\"Thing\",\"@id\":\"https://www.tiktok.com\",\"name\":\"TikTok\"}},{\"@type\":\"ListIt..."
+    },
+    {
+      "index": 18,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"__DEFAULT_SCOPE__\":{\"webapp.app-context\":{\"language\":\"en\",\"region\":\"US\",\"appId\":1233,\"appType\":\"m\",\"wid\":\"7602057080774215198\",\"webIdCreatedTime\":\"1769991851\",\"odinId\":\"7602057087288149023\",\"nonce\":..."
+    },
+    {
+      "index": 37,
+      "type": "application/json",
+      "has_json": false,
+      "preview": "{\"i18n\":{\"cookieBannerTitle\":\"Allow cookies from TikTok on this browser?\",\"cookieBannerSubTitle\":\"TikTok uses cookies and similar technologies to provide, improve, protect and analyze our services. Es..."
+    }
+  ],
+  "window_keys": [
+    "__PNS_RUNTIME__",
+    "__PUMBAA_RUN_FLAG__",
+    "__LOADABLE_LOADED_CHUNKS__",
+    "__SLARDAR_REGISTRY__",
+    "__$UNIVERSAL_DATA$__",
+    "__STARLING_INCONTEXT_GLOBAL__HOOK__",
+    "__STARLING_DEVTOOLS_I18N",
+    "__PRE_CACHE___keyvaluepairs",
+    "__preloadcontext__",
+    "__ac_intercepted_fetch",
+    "__ac_intercepted_open",
+    "__support_avif__",
+    "__support_webp__",
+    "__xgplayer_vod_log__",
+    "__INIT_VMOK_DEPLOY_GLOBAL_DATA__",
+    "__GARFISH_INSULATION_VARIABLE__"
+  ]
+}

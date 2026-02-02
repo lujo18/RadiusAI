@@ -11,13 +11,13 @@ export class TeamsRepo {
   table = TABLE;
 
   async list(): Promise<TeamRow[]> {
-    const { data, error } = await supabase.from(this.table).select('*');
+    const { data, error } = await supabase.from('teams').select('*');
     if (error) throw error;
     return data as TeamRow[];
   }
 
   async getById(id: string): Promise<TeamRow | null> {
-    const { data, error } = await supabase.from(this.table).select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('teams').select('*').eq('id', id).single();
     if (error) {
       // @ts-ignore
       if (error?.code === 'PGRST116') return null;
@@ -27,19 +27,19 @@ export class TeamsRepo {
   }
 
   async create(payload: TeamInsert): Promise<TeamRow> {
-    const { data, error } = await supabase.from(this.table).insert(payload).select().single();
+    const { data, error } = await supabase.from('teams').insert(payload).select().single();
     if (error) throw error;
     return data as TeamRow;
   }
 
   async update(id: string, updates: TeamUpdate): Promise<TeamRow> {
-    const { data, error } = await supabase.from(this.table).update(updates).eq('id', id).select().single();
+    const { data, error } = await supabase.from('teams').update(updates).eq('id', id).select().single();
     if (error) throw error;
     return data as TeamRow;
   }
 
   async remove(id: string): Promise<boolean> {
-    const { error } = await supabase.from(this.table).delete().eq('id', id);
+    const { error } = await supabase.from('teams').delete().eq('id', id);
     if (error) throw error;
     return true;
   }

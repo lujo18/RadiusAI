@@ -125,14 +125,15 @@ export default function Paywall() {
     setLoading(plan);
 
     try {
-      const response = await fetch('/api/stripe/create-checkout', {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiBase}/api/billing/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId,
-          userId: currentUser.id,
+          product_id: priceId,
+          user_id: currentUser.id,
           plan,
         }),
       });
@@ -154,13 +155,14 @@ export default function Paywall() {
     setLoading('manage');
 
     try {
-      const response = await fetch('/api/stripe/customer-portal', {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+      const response = await fetch(`${apiBase}/api/billing/portal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user?.id,
+          user_id: user?.id,
         }),
       });
 

@@ -1,16 +1,26 @@
 import axios, { AxiosError } from 'axios';
 import { supabase } from '@/lib/supabase/client';
+import type {
+  ProductResponse,
+  ProductsResponse,
+  StripeSubscription,
+  StripeProduct,
+  StripePrice,
+} from '@/lib/api/types/stripe';
 
 // Import all Supabase CRUD operations
 import { TemplateRepository } from '../supabase/repos/TemplateRepository';
 import { PostRepository } from '../supabase/repos/PostRepository';
 import { StorageRepository } from '../supabase/repos/StorageRepository';
 import { AnalyticsRepository } from '../supabase/repos/AnalyticsRepository';
+import analyticsSurface from '@/lib/api/surface/analyticsApi';
 import { SystemTemplatesRepository } from '../supabase/repos/SystemTemplatesRepository';
 import { TestimonialsRepository } from '../supabase/repos/TestimonialsRepository';
 import type { Database } from '@/types/database';
+import type { BrandSettings as BrandSettingsType } from '@/lib/validation/brandSchemas';
 import { UserRepository } from '../supabase/repos/UserRepository';
 import { Post } from '@/types/types';
+import postSurface from '@/lib/api/surface/postApi';
 import { requireUserId } from '@/lib/supabase/auth';
 
 // API Base URL - used only for backend-specific operations (scheduling, external integrations)
@@ -84,65 +94,17 @@ apiClient.interceptors.response.use(
 export const contentApi = {
   // GET: Fetch all posts for a user with optional filters
   getPosts: async (filters?: { status?: string; brandId?: string; templateId?: string; limit?: number }) => {
-    const userId = await requireUserId();
-    return await PostRepository.getPosts(
-      userId,
-      filters?.status as any,
-      filters?.limit,
-      filters?.brandId,
-      filters?.templateId
-    );
-  },
-
-
-  generatePosts: async (template: Database['public']['Tables']['templates']['Row'], brandSettings: Database['public']['Tables']['brand_settings']['Row'], count: number = 1) => {
-    const response = await apiClient.post('/api/generate/post', {
-      template,
-      brand_settings: brandSettings,
-      count,
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to generate posts: ${response.statusText}`);
-    }
-
-    return response.data.postContent;
-  },
-
-  generatePostsFromPrompt: async (template: Database['public']['Tables']['templates']['Row'], brandSettings: Database['public']['Tables']['brand_settings']['Row'], brandId: string, count: number = 1): Promise<Post[]> => {
-    const response = await apiClient.post('/api/generate/post/auto', {
-      template,
-      brand_settings: brandSettings,
-      brand_id: brandId,
-      count,
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to generate posts: ${response.statusText}`);
-    }
-    
-    return response.data.posts;
-  },
-
-  // POST: Generate week's content (uses backend AI)
-  generateWeek: async (styleGuide: string) => {
-    // Replace with Supabase repository call if applicable
-    throw new Error('Supabase repository for generateWeek not implemented yet.');
+    return await postSurface.getPosts(filters);
   },
 
   // DELETE: Remove a post and its slide images
   deletePostWithSlides: async (postId: string) => {
-    // Delete slide images first
-    await StorageRepository.deleteSlideImages(postId);
-    // Then delete the post object
-    const userId = await requireUserId();
-    return await PostRepository.deletePost(postId, userId);
+    return await postSurface.deletePostWithSlides(postId);
   },
 
   // PUT: Update a post
   updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    const userId = await requireUserId();
-    return await PostRepository.updatePost(postId, updates, userId);
+    return await postSurface.updatePost(postId, updates);
   },
 };
 
@@ -152,19 +114,19 @@ export const analyticsApi = {
   // GET: Fetch analytics data (optionally filtered by brand)
   getAnalytics: async (timeframe: 'day' | 'week' | 'month' = 'week', brandId?: string | null) => {
     // SCHEDULE: Add brandId filtering to analytics
-    return await AnalyticsRepository.getAllUserAnalytics();
+    return await analyticsSurface.getAnalytics(timeframe, brandId);
   },
 
   // GET: Fetch variant performance (A/B tests, optionally filtered by brand)
   getVariantPerformance: async (brandId?: string | null) => {
     // Replace with Supabase repository call if applicable
-    throw new Error('Supabase repository for getVariantPerformance not implemented yet.');
+    return await analyticsSurface.getVariantPerformance(brandId);
   },
 
   // POST: Trigger AI analysis (uses backend AI)
   analyzeAndEvolve: async () => {
     // Replace with Supabase repository call if applicable
-    throw new Error('Supabase repository for analyzeAndEvolve not implemented yet.');
+    return await analyticsSurface.analyzeAndEvolve();
   },
 };
 
@@ -173,19 +135,16 @@ export const analyticsApi = {
 export const templateApi = {
   // GET: Fetch all templates (optionally filtered by brand)
   getTemplates: async () => {
-    const userId = await requireUserId();
-    return await TemplateRepository.getTemplates(userId);
+    return await (await import('@/lib/api/surface/templateApi')).templateApi.getTemplates();
   },
 
   // GET: Fetch single template with details
   getTemplate: async (templateId: string) => {
-    const userId = await requireUserId();
-    return await TemplateRepository.getTemplate(templateId, userId);
+    return await (await import('@/lib/api/surface/templateApi')).templateApi.getTemplate(templateId);
   },
 
   getTemplatesByBrand: async (brandId: string) => {
-    const userId = await requireUserId();
-    return await TemplateRepository.getTemplatesByBrand(brandId, userId);
+    return await (await import('@/lib/api/surface/templateApi')).templateApi.getTemplatesByBrand(brandId);
   },
 
   // POST: Create new template
@@ -195,184 +154,46 @@ export const templateApi = {
    * Always map UI state to snake_case before calling this function.
    */
   createTemplate: async (templateData: any) => {
-    const userId = await requireUserId();
-    return await TemplateRepository.createTemplate(userId, templateData);
+    return await (await import('@/lib/api/surface/templateApi')).templateApi.createTemplate(templateData);
   },
 
   // PUT: Update template
   updateTemplate: async ({ templateId, updates }: { templateId: string; updates: any }) => {
-    const userId = await requireUserId();
-    return await TemplateRepository.updateTemplate(templateId, updates, userId);
+    return await (await import('@/lib/api/surface/templateApi')).templateApi.updateTemplate(templateId, updates);
   },
 
   // DELETE: Archive template
   deleteTemplate: async (templateId: string) => {
-    const userId = await requireUserId();
-    return await TemplateRepository.deleteTemplate(templateId, userId);
+    return await (await import('@/lib/api/surface/templateApi')).templateApi.deleteTemplate(templateId);
   },
 
   // PUT: Set template as default
   setDefaultTemplate: async (templateId: string) => {
-    const userId = await requireUserId();
-    return await TemplateRepository.setDefaultTemplate(templateId, userId);
+    return await (await import('@/lib/api/surface/templateApi')).templateApi.setDefaultTemplate(templateId);
   },
 };
 
-// ----- POSTS -----
-
-export const postApi = {
-  // GET: Fetch all posts (optionally filtered by brand)
-  getPosts: async (filters?: {status?: Database["public"]["Enums"]["post_status"], limit?: number, brandId?: string, templateId?: string}) => {
-    const userId = await requireUserId();
-    const { status, limit, brandId, templateId } = filters || {};
-
-    return await PostRepository.getPosts(userId, status, limit, brandId, templateId);
-  },
-
-  // GET: Fetch single post with details
-  getPost: async (postId: string) => {
-    const userId = await requireUserId();
-    return await PostRepository.getPost(postId, userId);
-  },
-
-  // POST: Create new post (with brandId support)
-  createPost: async (postData: any) => {
-    const userId = await requireUserId();
-    // Ensure postData includes user_id and brand_id
-    const postWithUserId = {
-      ...postData,
-      user_id: userId,
-    };
-    return await PostRepository.createPost(postWithUserId);
-  },
-
-  // PUT: Update post
-  updatePost: async ({ postId, updates }: { postId: string; updates: any }) => {
-    const userId = await requireUserId();
-    return await PostRepository.updatePost(postId, updates, userId);
-  },
-
-  // GET: Fetch scheduled posts within date range
-  getScheduledPosts: async (fromDate?: Date, toDate?: Date) => {
-    const userId = await requireUserId();
-    let query = supabase
-      .from('posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'scheduled');
-    
-    if (fromDate) {
-      query = query.gte('scheduled_time', fromDate.toISOString());
-    }
-    if (toDate) {
-      query = query.lte('scheduled_time', toDate.toISOString());
-    }
-    
-    query = query.order('scheduled_time', { ascending: true });
-    
-    const { data, error } = await query;
-    if (error) throw new Error(error.message);
-    return data;
-  },
-
-  // POST: Publish post
-  publishPost: async (brand_id: string, platforms: string[], postId: string) => {
-    const userId = await requireUserId();
-
-    const response = await apiClient.post('/api/post', {
-      brand_id: brand_id,
-      platforms: platforms,
-      post_id: postId,
-      mode: 'publish'
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to publish post: ${response.statusText}`);
-    }
-
-    await PostRepository.updatePostStatus(postId, 'posted', userId);
-    return response.data;
-  },
-
-  // POST: Draft post
-  draftPost: async ({ postId, platforms, brandId }: { postId: string; platforms: string[]; brandId: string }) => {
-    const userId = await requireUserId();
-    
-    const response = await apiClient.post('/api/post', {
-      brand_id: brandId,
-      post_id: postId,
-      platforms: platforms,
-      mode: 'draft'
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to draft post: ${response.statusText}`);
-    }
-
-    await PostRepository.updatePostStatus(postId, 'draft', userId);
-    return response.data;
-  },
-
-  // POST: Schedule post
-  schedulePost: async ({ postId, platforms, scheduledAt, brandId }: { postId: string; platforms: string[]; scheduledAt: string; brandId: string }) => {
-    const userId = await requireUserId();
-    
-    const response = await apiClient.post('/api/post', {
-      brand_id: brandId,
-      post_id: postId,
-      platforms: platforms,
-      mode: 'scheduled',
-      scheduled_at: scheduledAt
-    });
-
-    if (response.status !== 200) {
-      throw new Error(`Failed to schedule post: ${response.statusText}`);
-    }
-
-    await PostRepository.updatePostStatus(postId, 'scheduled', userId);
-    return response.data;
-  },
-
-  // POST: Upload slide image
-  uploadSlide: async ({ postId, slideNumber, file }: { postId: string; slideNumber: number; file: File }) => {
-    return await StorageRepository.uploadSlideImage(postId, slideNumber, file);
-  },
-
-  // POST: Track analytics
-  trackAnalytics: async ({ postId, analyticsData }: { postId: string; analyticsData: any }) => {
-    return await AnalyticsRepository.updatePostAnalytics(postId, analyticsData);
-  },
-};
+// Re-export the post surface API to avoid duplicating definitions here
+export { default as postApi } from '@/lib/api/surface/postApi';
 
 
 export const brandApi = {
 
   // New OAuth flow endpoints
   startSocialConnect: async ({ late_profile_id, brand_id, platform }: { late_profile_id: string, brand_id: string, platform: string }) => {
-    console.log("Attempting to connect")
-    const response = await apiClient.post(`/api/social/connect/${platform}`, {
-      existing_profile_id: late_profile_id,
-      brand_id,
-    });
-    return response.data as { authUrl: string; platform: string; message: string };
+    return await (await import('@/lib/api/surface/brandApi')).brandApi.startSocialConnect({ late_profile_id, brand_id, platform });
   },
 
   disconnectSocialAccount: async ({ integration_id }: { integration_id: string }) => {
-    const response = await apiClient.post(`/api/social/disconnect`, {
-      integration_id
-    });
-    return response.data;
+    return await (await import('@/lib/api/surface/brandApi')).brandApi.disconnectSocialAccount({ integration_id });
   },
 
-  // REMOVE: 2 functions below not needed
   checkConnectionStatus: async (connectToken: string) => {
-    const response = await apiClient.get(`/connect-social/status/${connectToken}`);
-    return response.data;
+    return await (await import('@/lib/api/surface/brandApi')).brandApi.checkConnectionStatus(connectToken);
   },
 
   cancelConnection: async (connectToken: string) => {
-    const response = await apiClient.delete(`/connect-social/cancel/${connectToken}`);
-    return response.data;
+    return await (await import('@/lib/api/surface/brandApi')).brandApi.cancelConnection(connectToken);
   },
 }
 
@@ -380,19 +201,16 @@ export const brandApi = {
 
 export const userApi = {
   getProfile: async () => {
-    const userId = await requireUserId();
-    return await UserRepository.getUser(userId);
+    return await (await import('@/lib/api/surface/userApi')).userApi.getProfile();
   },
 
   updateProfile: async (updates: any) => {
-    const userId = await requireUserId();
-    return await UserRepository.updateUser(userId, updates);
+    return await (await import('@/lib/api/surface/userApi')).userApi.updateProfile(updates);
   },
 
   // GET: Fetch connected accounts (still using backend temporarily)
   getConnectedAccounts: async () => {
-    // Replace with Supabase repository call if applicable
-    throw new Error('Supabase repository for getConnectedAccounts not implemented yet.');
+    return await (await import('@/lib/api/surface/userApi')).userApi.getConnectedAccounts();
   },
 };
 
@@ -401,19 +219,20 @@ export const userApi = {
 
 export const billingApi = {
   // GET: Fetch subscription info
-  getSubscription: async () => {
-    const { data } = await apiClient.get('/api/billing/subscription');
-    return data;
+  getSubscription: async (expand?: string[]) => {
+    const url = expand ? `/api/billing/subscription?expand=${encodeURIComponent(JSON.stringify(expand))}` : '/api/billing/subscription';
+    const { data } = await apiClient.get(url);
+    return data as { subscription: StripeSubscription | null };
   },
 
   // POST: Create checkout session (Stripe)
-  createCheckoutSession: async (priceId: string) => {
+  createCheckoutSession: async (priceId: string): Promise<{ url?: string; id?: string } | any> => {
     const { data } = await apiClient.post('/api/billing/checkout', { priceId });
     return data;
   },
   // POST: Create a Stripe customer portal session (backend returns a { url })
-  createPortal: async (userId: string) => {
-    const { data } = await apiClient.post('/api/stripe/create-portal', { userId });
+  createPortal: async (userId: string): Promise<{ url?: string } | any> => {
+    const { data } = await apiClient.post('/api/billing/portal', { user_id: userId });
     return data;
   },
 };
@@ -435,12 +254,12 @@ export const plansApi = {
     return data;
   },
 
-  createPlan: async (plan: Database['public']['Tables']['plans']['Insert']) => {
+  createPlan: async (plan: any) => {
     const { data } = await apiClient.post('/api/stripe/plans', plan);
     return data;
   },
 
-  updatePlan: async (planId: string, updates: Database['public']['Tables']['plans']['Update']) => {
+  updatePlan: async (planId: string, updates: any) => {
     const { data } = await apiClient.patch(`/api/stripe/plans/${planId}`, updates);
     return data;
   },
@@ -454,14 +273,14 @@ export const plansApi = {
 // ----- STRIPE PRODUCTS -----
 
 export const productsApi = {
-  getProducts: async () => {
-    const { data } = await apiClient.get('/api/stripe/products');
-    return data;
+  getProducts: async (): Promise<ProductsResponse> => {
+    const { data } = await apiClient.get('/api/billing/products');
+    return data as ProductsResponse;
   },
 
-  getProduct: async (productId: string) => {
-    const { data } = await apiClient.get(`/api/stripe/products/${productId}`);
-    return data;
+  getProduct: async (productId: string): Promise<ProductResponse> => {
+    const { data } = await apiClient.get(`/api/billing/product?productId=${productId}`);
+    return data as ProductResponse;
   },
 };
 
@@ -493,23 +312,59 @@ export const systemTemplatesApi = {
 
 export const testimonialsApi = {
   getTestimonials: async () => {
-    return await TestimonialsRepository.getTestimonials();
+    return await (await import('@/lib/api/surface/testimonialsApi')).testimonialsApi.getTestimonials();
   },
 
   getTestimonial: async (id: string) => {
-    return await TestimonialsRepository.getTestimonial(id);
+    return await (await import('@/lib/api/surface/testimonialsApi')).testimonialsApi.getTestimonial(id);
   },
 
   createTestimonial: async (testimonial: Database['public']['Tables']['testimonials']['Insert']) => {
-    return await TestimonialsRepository.createTestimonial(testimonial);
+    return await (await import('@/lib/api/surface/testimonialsApi')).testimonialsApi.createTestimonial(testimonial as any);
   },
 
   updateTestimonial: async (id: string, updates: Database['public']['Tables']['testimonials']['Update']) => {
-    return await TestimonialsRepository.updateTestimonial(id, updates);
+    return await (await import('@/lib/api/surface/testimonialsApi')).testimonialsApi.updateTestimonial(id, updates as any);
   },
 
   deleteTestimonial: async (id: string) => {
-    return await TestimonialsRepository.deleteTestimonial(id);
+    return await (await import('@/lib/api/surface/testimonialsApi')).testimonialsApi.deleteTestimonial(id);
+  },
+};
+
+// ----- PRESET PACKS -----
+
+export const presetPackApi = {
+  getPresetPacks: async (accessibility?: 'global' | 'private') => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.getPresetPacks(accessibility);
+  },
+
+  getPresetPack: async (id: string) => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.getPresetPack(id);
+  },
+
+  createPresetPack: async (data: any) => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.createPresetPack(data);
+  },
+
+  updatePresetPack: async (id: string, updates: any) => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.updatePresetPack(id, updates);
+  },
+
+  deletePresetPack: async (id: string) => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.deletePresetPack(id);
+  },
+
+  uploadPresetImage: async (data: any) => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.uploadPresetImage(data);
+  },
+
+  getPresetImages: async (packId: string, options: any) => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.getPresetImages(packId, options);
+  },
+
+  deletePresetImage: async (id: string) => {
+    return await (await import('@/lib/api/surface/presetPackApi')).presetPackApi.deletePresetImage(id);
   },
 };
 

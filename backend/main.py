@@ -2,8 +2,11 @@
 import sys
 import logging
 from pathlib import Path
+from contextlib import asynccontextmanager
 
-from backend.routers import account, post, stripe, billing
+from backend.routers import account, post, postforme_webhook, plans_bridge
+from backend.routers import billing_service
+from backend.routers import usage
 
 # Add backend directory to Python path
 backend_dir = Path(__file__).parent
@@ -20,8 +23,55 @@ from config import Config
 
 # Import routers
 from routers import brand, generate
+from routers import product_rate_limits
 
-app = FastAPI(title="ViralStack API", version="1.0.0")
+# Import analytics worker and scheduler
+from services.workers.analytics.analytic_worker import process_due_posts
+from services.workers.automation.automation_worker import process_due_automations
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
+import asyncio
+
+# Initialize scheduler
+scheduler = BackgroundScheduler()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifecycle - start/stop scheduler"""
+    # Startup: schedule the analytics worker
+    scheduler.add_job(
+        lambda: asyncio.run(process_due_posts()),
+        CronTrigger(minute="*/5"),  # every 5 minutes
+        id="analytics_worker",
+        max_instances=1,  # avoid overlapping runs
+        replace_existing=True,
+    )
+    
+    # Startup: schedule the automation worker
+    scheduler.add_job(
+        lambda: asyncio.run(process_due_automations()),
+        CronTrigger(minute="*/10"),  # every 10 minutes
+        id="automation_worker",
+        max_instances=1,  # avoid overlapping runs
+        replace_existing=True,
+    )
+    
+    scheduler.start()
+    logger = logging.getLogger(__name__)
+    logger.info("✅ Analytics worker scheduler started (runs every 5 minutes)")
+    logger.info("✅ Automation worker scheduler started (runs every 10 minutes)")
+    
+    try:
+        yield
+    finally:
+        # Shutdown: stop scheduler
+        scheduler.shutdown()
+        logger.info("📴 Analytics worker scheduler stopped")
+        logger.info("📴 Automation worker scheduler stopped")
+
+
+app = FastAPI(title="ViralStack API", version="1.0.0", lifespan=lifespan)
 
 # CORS middleware - Allow both localhost and 127.0.0.1
 app.add_middleware(
@@ -40,6 +90,8 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
+logger = logging.getLogger(__name__)
+
 # Initialize Supabase
 try:
     supabase = get_supabase()
@@ -54,8 +106,11 @@ app.include_router(brand.router)
 app.include_router(generate.router)
 app.include_router(account.router)
 app.include_router(post.router)
-app.include_router(stripe.router)  # Register the new router
-app.include_router(billing.router)
+app.include_router(plans_bridge.router)
+app.include_router(postforme_webhook.router)  # Register PostForMe webhook
+app.include_router(billing_service.router)
+app.include_router(usage.router)
+app.include_router(product_rate_limits.router)
 
 security = HTTPBearer()
 

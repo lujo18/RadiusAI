@@ -1,10 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { plansApi } from '@/lib/api/client';
-import type { Database } from '@/types/database';
 
-type Plan = Database['public']['Tables']['plans']['Row'];
-type PlanInsert = Database['public']['Tables']['plans']['Insert'];
-type PlanUpdate = Database['public']['Tables']['plans']['Update'];
+type Plan = {
+  id: string;
+  plan_id: string;
+  name: string;
+  max_brands: number | null;
+  max_posts_per_month: number | null;
+  max_slides_per_month: number | null;
+  ai_credits?: number | null;
+};
+type PlanInsert = Omit<Plan, 'id'>;
+type PlanUpdate = Partial<PlanInsert>;
 
 export const usePlans = () => {
   return useQuery({

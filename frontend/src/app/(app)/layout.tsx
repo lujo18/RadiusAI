@@ -73,6 +73,9 @@ export default function AppLayout({
     if (!isLoading && isAuthenticated && user) {
       // User is authenticated - let them see dashboard with banner if no subscription
       console.log("[App Layout] User authenticated, plan:", user?.plan || "none");
+
+    
+
       setSubscriptionChecked(true);
     } else if (!isLoading && !isAuthenticated) {
       // Not authenticated at all - redirect to login

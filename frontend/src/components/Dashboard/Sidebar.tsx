@@ -41,6 +41,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { UsageMeter } from "@/components/billingsdk/usage-meter";
+import { useUsage } from "@/lib/api/hooks/useUsage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -291,6 +293,17 @@ export default function DashboardSidebar({
               })}
             </SidebarMenu>
           </SidebarGroup>
+          {/* Usage meter group */}
+          <SidebarGroup>
+            <SidebarGroupLabel>Usage</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <div className="w-full px-3">
+                  <UsageWidget />
+                </div>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>
@@ -387,5 +400,48 @@ export default function DashboardSidebar({
 
       <BrandSetupWizard isOpen={showWizard} onClose={() => setShowWizard(false)} />
     </>
+  );
+}
+
+function UsageWidget() {
+  const { data, isLoading } = useUsage();
+  const usageRow = data?.usage;
+  const limits = data?.limits || [];
+
+  const slidesUsed = (usageRow?.usage && usageRow.usage.slides_generated) || usageRow?.slides_generated || 0;
+
+  // find relevant product limit (product_id may be 'slides_generation' or 'slides')
+  const limitRow = limits.find((l: any) => l.product_id === 'slides_generation' || l.product_id === 'slides');
+  let slidesLimit: number | null = null;
+  try {
+    if (limitRow && limitRow.rules) {
+      const rules = typeof limitRow.rules === 'string' ? JSON.parse(limitRow.rules) : limitRow.rules;
+      if (rules?.rules && Array.isArray(rules.rules) && rules.rules.length > 0) {
+        slidesLimit = rules.rules[0].limit ?? null;
+      } else if (rules?.limit) {
+        slidesLimit = rules.limit;
+      }
+    }
+  } catch (e) {
+    // ignore parse errors
+  }
+
+  const items = [
+    {
+      name: 'Slides',
+      usage: slidesUsed || 0,
+      limit: slidesLimit || 1000,
+    },
+  ];
+
+  const periodEnd = usageRow?.period_end;
+
+  return (
+    <div>
+      <UsageMeter usage={items} variant="linear" size="sm" title="Usage" description="Current billing period" progressColor="usage" />
+      {periodEnd ? (
+        <div className="text-xs text-muted-foreground mt-2">Refresh: {new Date(periodEnd).toLocaleString()}</div>
+      ) : null}
+    </div>
   );
 }

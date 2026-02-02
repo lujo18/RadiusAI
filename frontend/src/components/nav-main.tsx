@@ -73,6 +73,9 @@ export function NavMain({
           </Collapsible>
         ))}
       </SidebarMenu>
+      {/* (Usage meter moved to Dashboard Sidebar) */}
     </SidebarGroup>
   )
 }
+
+// Usage widget moved to Dashboard Sidebar

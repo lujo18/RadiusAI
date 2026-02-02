@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { productsApi } from '../client';
+import type { ProductsResponse, StripeProduct } from '@/lib/api/types/stripe';
 
 export const useStripeProducts = () => {
-  return useQuery({
+  return useQuery<StripeProduct[]>({
     queryKey: ['stripe', 'products'],
-    queryFn: () => productsApi.getProducts(),
+    queryFn: async () => {
+      const res: ProductsResponse = await productsApi.getProducts();
+      return res?.products ?? [];
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };

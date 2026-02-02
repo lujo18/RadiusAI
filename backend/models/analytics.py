@@ -1,7 +1,7 @@
 # Analytics Models
 
 from pydantic import BaseModel
-from typing import Literal
+from typing import Optional, Literal
 from datetime import datetime
 
 # ==================== ANALYTICS SUB-MODELS ====================
@@ -17,6 +17,7 @@ class PostMetrics(BaseModel):
     profileVisits: int = 0
     clickThroughRate: float = 0.0
 
+
 # ==================== ANALYTICS MODELS ====================
 
 class Analytics(BaseModel):
@@ -29,9 +30,27 @@ class Analytics(BaseModel):
     metrics: dict  # Supabase: JSON
     variant_set_id: Optional[str] = None
 
+
 class TrackAnalyticsRequest(BaseModel):
     postId: str
     templateId: str
     platform: Literal["instagram", "tiktok"]
     metrics: PostMetrics
-    variantSetId: str | None = None
+    variantSetId: Optional[str] = None
+
+
+# ==================== POST ANALYTICS TABLE MODEL ====================
+
+class PostAnalyticsRecord(BaseModel):
+    """
+    Model for post_analytics table in Supabase.
+    Represents a single analytics snapshot for a post.
+    """
+    post_id: str
+    likes: int = 0
+    comments: int = 0
+    shares: int = 0
+    saves: int = 0
+    impressions: int = 0
+    engagement_rate: Optional[float] = None
+    last_updated: str  # ISO datetime string

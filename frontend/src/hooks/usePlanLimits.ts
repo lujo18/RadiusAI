@@ -1,12 +1,19 @@
 import React from "react";
 import { useAuthStore } from '@/store/authStore';
-import { STRIPE_CONFIG } from '@/lib/stripe/config';
+
+const DEFAULT_PLAN_CONFIG = {
+  plans: {
+    starter: { limits: { templates: 10, posts: 50, profiles: 1, aiGenerations: 100 } },
+    growth: { limits: { templates: 50, posts: 500, profiles: 5, aiGenerations: 1000 } },
+    unlimited: { limits: { templates: Infinity, posts: Infinity, profiles: Infinity, aiGenerations: Infinity } },
+  }
+};
 
 export function usePlanLimits() {
   const { user } = useAuthStore();
-  
+
   const plan = user?.plan || 'starter';
-  const limits = STRIPE_CONFIG.plans[plan as keyof typeof STRIPE_CONFIG.plans]?.limits || STRIPE_CONFIG.plans.starter.limits;
+  const limits = (DEFAULT_PLAN_CONFIG as any).plans[plan]?.limits || (DEFAULT_PLAN_CONFIG as any).plans.starter.limits;
 
   const canCreateTemplate = (currentCount: number) => {
     return currentCount < limits.templates;

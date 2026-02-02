@@ -50,8 +50,9 @@ export function usePost(postId: string) {
 export function useScheduledPosts(fromDate?: Date, toDate?: Date, brandId?: string) {
   return useQuery({
     queryKey: fromDate && toDate ? [...postKeys.scheduled, fromDate.toISOString(), toDate.toISOString(), brandId] : [...postKeys.scheduled, brandId],
-    queryFn: () => postApi.getScheduledPosts(fromDate, toDate),
-    staleTime: 30 * 1000, // 30 seconds
+    queryFn: () => postApi.getScheduledPosts(fromDate, toDate, brandId),
+    staleTime: 5 * 60 * 1000, // 5 minutes - reduce API calls
+    gcTime: 10 * 60 * 1000, // Keep cached for 10 minutes
     retry: 1, // Only retry once on failure
     retryDelay: 1000, // Wait 1 second before retry
   });
@@ -91,7 +92,7 @@ export function useUpdatePost() {
 
   return useMutation({
     mutationFn: ({ postId, updates }: { postId: string; updates: any }) =>
-      postApi.updatePost({ postId, updates }),
+      postApi.updatePost(postId, updates),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       queryClient.invalidateQueries({ queryKey: postKeys.detail(variables.postId) });
@@ -112,8 +113,6 @@ export function useDeletePostWithSlides() {
   });
 }
 
-
-
 export const usePublishPost = (brandId: string) => {
   const queryClient = useQueryClient();
 
@@ -124,14 +123,14 @@ export const usePublishPost = (brandId: string) => {
     { previous?: any[] }
   >({
     mutationFn: async ({ postId, platforms }) => {
-      return await postApi.publishPost(brandId, platforms, postId);
+      return await postApi.publishPost({ brandId, platforms, postId });
     },
     onMutate: async ({ postId }) => {
       await queryClient.cancelQueries({ queryKey: postKeys.all });
       const previous = queryClient.getQueryData<any[]>(postKeys.all);
       queryClient.setQueryData<any[] | undefined>(postKeys.all, (old) => {
         const list = old ?? [];
-        return list.map((p: any) => (p.id === postId ? { ...p, status: 'scheduled' } : p));
+        return list.map((p: any) => (p.id === postId ? { ...p, status: 'published' } : p));
       });
       return { previous };
     },
@@ -175,7 +174,7 @@ export const useSchedulePost = (brandId: string) => {
 
   return useMutation<any, Error, { postId: string; platforms: string[]; scheduledAt: Date }, { previous?: any[] }>({
     mutationFn: ({ postId, platforms, scheduledAt }) => 
-      postApi.schedulePost({ postId, platforms, scheduledAt: scheduledAt.toISOString(), brandId }),
+      postApi.schedulePost({ postId, platforms, scheduled_at: scheduledAt.toISOString(), brandId }),
     onMutate: async ({ postId }) => {
       await queryClient.cancelQueries({ queryKey: postKeys.all });
       const previous = queryClient.getQueryData<any[]>(postKeys.all);
@@ -195,15 +194,3 @@ export const useSchedulePost = (brandId: string) => {
     },
   });
 };
-
-export function useGenerateWeek() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: contentApi.generateWeek,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-    },
-  });
-}

@@ -11,7 +11,7 @@ export class TeamMembersRepo {
   table = TABLE;
 
   async list(teamId?: string): Promise<TeamMemberRow[]> {
-    let q = supabase.from(this.table).select('*');
+    let q = supabase.from('team_members').select('*');
     if (teamId) q = q.eq('team_id', teamId);
     const { data, error } = await q;
     if (error) throw error;
@@ -19,7 +19,7 @@ export class TeamMembersRepo {
   }
 
   async getById(id: string): Promise<TeamMemberRow | null> {
-    const { data, error } = await supabase.from(this.table).select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('team_members').select('*').eq('id', id).single();
     if (error) {
       // @ts-ignore
       if (error?.code === 'PGRST116') return null;
@@ -29,19 +29,19 @@ export class TeamMembersRepo {
   }
 
   async create(payload: TeamMemberInsert): Promise<TeamMemberRow> {
-    const { data, error } = await supabase.from(this.table).insert(payload).select().single();
+    const { data, error } = await supabase.from('team_members').insert(payload).select().single();
     if (error) throw error;
     return data as TeamMemberRow;
   }
 
   async update(id: string, updates: TeamMemberUpdate): Promise<TeamMemberRow> {
-    const { data, error } = await supabase.from(this.table).update(updates).eq('id', id).select().single();
+    const { data, error } = await supabase.from('team_members').update(updates).eq('id', id).select().single();
     if (error) throw error;
     return data as TeamMemberRow;
   }
 
   async remove(id: string): Promise<boolean> {
-    const { error } = await supabase.from(this.table).delete().eq('id', id);
+    const { error } = await supabase.from('team_members').delete().eq('id', id);
     if (error) throw error;
     return true;
   }

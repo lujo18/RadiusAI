@@ -44,10 +44,19 @@ export default function PricingPage() {
       window.history.replaceState({}, '', '/pricing');
     }
 
-    // Fetch Stripe prices
-    fetch('/api/stripe/prices')
+    // Fetch product + price info from backend billing service
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+    fetch(`${apiBase}/api/billing/products`)
       .then(res => res.json())
-      .then(data => setPrices(data.plans))
+      .then(data => {
+        // transform into prices map expected by the page
+        const map: Record<string, any> = {};
+        (data.products || []).forEach((p: any) => {
+          // use product id or normalized name as key
+          map[p.id] = { amount: p.prices?.[0]?.unit_amount || 0, productId: p.id };
+        });
+        setPrices(map);
+      })
       .catch(console.error);
 
     // Fetch testimonials

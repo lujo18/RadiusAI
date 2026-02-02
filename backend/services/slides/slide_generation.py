@@ -4,6 +4,7 @@ from backend.models.slide import PostContent
 from backend.models.template import Template
 from backend.models.user import BrandSettings
 from backend.services.genai.generate_slideshow import generate_slideshow_auto
+from backend.services.usage import service as usage_service
 from backend.services.integrations.supabase.db.post import create_post, update_post_storage_urls
 from backend.services.integrations.supabase.storage import upload_post_images_optimized
 from backend.services.pillow.renderSlides import SlideRenderer
@@ -18,7 +19,8 @@ def generate_slideshows(
   brand_id: str,
   template: Template,
   brand_settings: BrandSettings,
-  count: int = 1
+  count: int = 1,
+  cta: dict = None
 ):
     """
     Generate slideshow content using Gemini 2.0 Flash.
@@ -32,11 +34,17 @@ def generate_slideshows(
     
     logger.info("Prompt from template", prompt)
     
-    # 1. Generate full JSON for a post
+    # 1. Check usage allowance and reserve generation tokens
+    check = usage_service.check_and_consume(user_id, product_id="slides_generation", amount=count)
+    if not check.get('allowed'):
+        raise RuntimeError(f"Slide generation not allowed: remaining={check.get('remaining')} limit={check.get('limit')}")
+
+    # 2. Generate full JSON for a post
     post_content_list = generate_slideshow_auto(
         slideshowGoals=prompt,
         brandSettings=brand_settings,
-        count=count
+        count=count,
+        cta=cta
     )
     
     # 2. Save all posts to Supabase (serialize PostContent to dict)
@@ -93,7 +101,20 @@ def generate_slideshows(
                 post = futures[future]
                 logger.error(f"Error processing post {post['id']}: {e}")
       
-    # 6. Return List[Posts] with content json and blob links from Supabase
+    # 6. Record slides generated for successful posts and return results
+    try:
+        total_slides = 0
+        for p in return_posts:
+            content = p.get('content') or {}
+            slides = content.get('slides') if isinstance(content, dict) else None
+            if slides:
+                total_slides += len(slides)
+
+        if total_slides > 0:
+            usage_service.track_slides_generated(user_id, total_slides)
+    except Exception as e:
+        logger.warning(f"Failed to record slides generated usage: {e}")
+
     return return_posts
    
     

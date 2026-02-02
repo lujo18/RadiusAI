@@ -34,7 +34,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from "@/components/animate-ui/primitives/radix/dialog";
+} from "@/components/animate-ui/components/radix/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Edit2, Plus, Loader2, Star } from "lucide-react";
 import type { Database } from "@/types/database";

@@ -21,5 +21,5 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     return () => setNavItems(prev);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <>{children}</>;
+  return <div className="p-8">{children}</div>;
 }

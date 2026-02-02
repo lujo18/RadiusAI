@@ -1,60 +1,44 @@
 import { supabase } from '../client';
-import type { Database } from '@/types/database';
 
-type Plan = Database['public']['Tables']['plans']['Row'];
-type PlanInsert = Database['public']['Tables']['plans']['Insert'];
-type PlanUpdate = Database['public']['Tables']['plans']['Update'];
+type Plan = {
+  id: string;
+  plan_id: string;
+  name: string;
+  max_brands: number | null;
+  max_posts_per_month: number | null;
+  max_slides_per_month: number | null;
+  ai_credits?: number | null;
+};
+type PlanInsert = Omit<Plan, 'id'>;
+type PlanUpdate = Partial<PlanInsert>;
 
+// Note: Plans table is not yet implemented in the database
+// These methods are stubs and will fail until the table is created
 export class PlansRepository {
   static async getPlans(): Promise<Plan[]> {
-    const { data, error } = await supabase
-      .from('plans')
-      .select('*')
-      .order('plan_id', { ascending: true });
-    if (error) throw new Error(error.message);
-    return data || [];
+    // TODO: Implement when plans table is created
+    console.warn('PlansRepository.getPlans() not yet implemented');
+    return [];
   }
 
   static async getPlan(planId: string): Promise<Plan | null> {
-    const { data, error } = await supabase
-      .from('plans')
-      .select('*')
-      .eq('plan_id', planId)
-      .single();
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(error.message);
-    }
-    return data;
+    // TODO: Implement when plans table is created
+    console.warn('PlansRepository.getPlan() not yet implemented');
+    return null;
   }
 
   static async createPlan(plan: PlanInsert): Promise<Plan> {
-    const { data, error } = await supabase
-      .from('plans')
-      .insert([plan])
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
+    // TODO: Implement when plans table is created
+    throw new Error('PlansRepository.createPlan() not yet implemented');
   }
 
   static async updatePlan(planId: string, updates: PlanUpdate): Promise<Plan> {
-    const { data, error } = await supabase
-      .from('plans')
-      .update(updates)
-      .eq('plan_id', planId)
-      .select()
-      .single();
-    if (error) throw new Error(error.message);
-    return data;
+    // TODO: Implement when plans table is created
+    throw new Error('PlansRepository.updatePlan() not yet implemented');
   }
 
   static async deletePlan(planId: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('plans')
-      .delete()
-      .eq('plan_id', planId);
-    if (error) throw new Error(error.message);
-    return true;
+    // TODO: Implement when plans table is created
+    throw new Error('PlansRepository.deletePlan() not yet implemented');
   }
 }

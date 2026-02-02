@@ -8,7 +8,7 @@
 // Templates - Template CRUD operations
 export * from './useTemplates';
 
-// Posts - Post CRUD and content generation
+// Posts - Post CRUD and publishing
 export * from './usePosts';
 
 // Brands - Brand profile management
@@ -19,3 +19,8 @@ export * from './useAnalytics';
 
 // User - User profile and account settings
 export * from './useUser';
+
+// Generation hooks (AI content generation)
+export { useGeneratePost, useGeneratePostFromPrompt } from '@/lib/api/generation/hooks/useGeneratePost';
+export { useGenerateBrand } from '@/lib/api/generation/hooks/useGenerateBrand';
+export { useGenerateVariants } from '@/lib/api/generation/hooks/useGenerateVariants';

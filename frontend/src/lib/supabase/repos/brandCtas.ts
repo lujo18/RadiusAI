@@ -11,15 +11,19 @@ export class BrandCtasRepo {
   table = TABLE;
 
   async list(brandId?: string): Promise<BrandCtaRow[]> {
-    let q = supabase.from(this.table).select('*');
+    let q = supabase.from('brand_ctas').select('*');
     if (brandId) q = q.eq('brand_id', brandId);
     const { data, error } = await q;
-    if (error) throw error;
+    if (error) {
+      const errorMsg = error.message || JSON.stringify(error);
+      console.error('[BrandCtasRepo.list]', errorMsg, error);
+      throw new Error(`Failed to list CTAs: ${errorMsg}`);
+    }
     return data as BrandCtaRow[];
   }
 
   async getById(id: string): Promise<BrandCtaRow | null> {
-    const { data, error } = await supabase.from(this.table).select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('brand_ctas').select('*').eq('id', id).single();
     if (error) {
       // PGRST116: row not found
       // Supabase client error codes are strings; handle missing row gracefully
@@ -33,20 +37,52 @@ export class BrandCtasRepo {
   }
 
   async create(payload: BrandCtaInsert): Promise<BrandCtaRow> {
-    const { data, error } = await supabase.from(this.table).insert(payload).select().single();
-    if (error) throw error;
-    return data as BrandCtaRow;
+    const { data, error } = await supabase
+      .from('brand_ctas')
+      .insert(payload)
+      .select('*');
+    
+    if (error) {
+      const errorMsg = error.message || error.details || JSON.stringify(error);
+      console.error('[BrandCtasRepo.create]', errorMsg, error);
+      throw new Error(`Failed to create CTA: ${errorMsg}`);
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error('Failed to create CTA: no data returned');
+    }
+    
+    return data[0] as BrandCtaRow;
   }
 
   async update(id: string, updates: BrandCtaUpdate): Promise<BrandCtaRow> {
-    const { data, error } = await supabase.from(this.table).update(updates).eq('id', id).select().single();
-    if (error) throw error;
-    return data as BrandCtaRow;
+    const { data, error } = await supabase
+      .from('brand_ctas')
+      .update(updates)
+      .eq('id', id)
+      .select('*');
+    
+    if (error) {
+      const errorMsg = error.message || error.details || JSON.stringify(error);
+      console.error(`[BrandCtasRepo.update] ${id}:`, errorMsg, error);
+      throw new Error(`Failed to update CTA: ${errorMsg}`);
+    }
+    
+    // Handle array response
+    if (!data || data.length === 0) {
+      throw new Error(`CTA with id ${id} not found`);
+    }
+    
+    return data[0] as BrandCtaRow;
   }
 
   async remove(id: string): Promise<boolean> {
-    const { error } = await supabase.from(this.table).delete().eq('id', id);
-    if (error) throw error;
+    const { error } = await supabase.from('brand_ctas').delete().eq('id', id);
+    if (error) {
+      const errorMsg = error.message || JSON.stringify(error);
+      console.error(`[BrandCtasRepo.remove] ${id}:`, errorMsg, error);
+      throw new Error(`Failed to delete CTA: ${errorMsg}`);
+    }
     return true;
   }
 }

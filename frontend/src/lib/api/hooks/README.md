@@ -1,3 +1,12 @@
+Purpose
+-------
+`hooks/` contains React Query hooks that call the `surface/` APIs and handle cache invalidation, optimistic updates, and retries.
+
+How to add a hook
+-----------------
+1. Create a hook that uses `useQuery`/`useMutation` from TanStack Query.
+2. Call only the `surface/` API (do not call repositories or services directly from components).
+3. Handle optimistic updates and invalidation in the hook's lifecycle callbacks.
 # React Query Hooks Structure
 
 Clean, organized hooks mirroring the `firebase/firestore/` structure for easy navigation.

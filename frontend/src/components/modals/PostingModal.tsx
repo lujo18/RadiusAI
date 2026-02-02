@@ -19,8 +19,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostContent } from "@/lib/parseJsonColumn.supabase";
-import { useScheduledPosts } from "@/lib/api/hooks/usePosts";
-import { addDays } from "date-fns";
 
 type PlatformIntegration = Database["public"]["Tables"]["platform_integrations"]["Row"];
 type Post = any;
@@ -58,10 +56,7 @@ export default function PostingModal({
   const [editableHashtags, setEditableHashtags] = useState<string[]>(content?.hashtags || []);
   const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
 
-  // Fetch scheduled posts for time block scheduler
-  const fromDate = new Date();
-  const toDate = addDays(new Date(), 30); // Next 30 days
-  const { data: scheduledPosts } = useScheduledPosts(fromDate, toDate);
+
 
   useEffect(() => {
     if (visible) {
@@ -310,11 +305,7 @@ export default function PostingModal({
                   <TimeBlockScheduler
                     selectedDateTime={selectedDateTime}
                     onTimeSelect={setSelectedDateTime}
-                    scheduledPosts={scheduledPosts?.filter(post => post.scheduled_time).map(post => ({
-                      id: post.id,
-                      scheduled_time: post.scheduled_time!,
-                      content: post.content as any
-                    })) || []}
+                    brandId={brandId}
                   />
 
                   <div className="flex justify-between items-center pt-6 border-t border-border">

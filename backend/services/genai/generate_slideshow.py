@@ -1,11 +1,12 @@
 import json
 import logging
-from typing import Dict
+from typing import Dict, Optional
 from backend.models.slide import LayoutConfig, PostContent
 from backend.models.user import BrandSettings
 from backend.models import Template
 from backend.services.genai.prompts import SYSTEM_PROMPT
 from backend.services.integrations.groq.client import groq
+from backend.services.usage.service import track_slides_generated
 from .client import client
 from .slide_layouts import get_all_layout_schemas, SLIDE_LAYOUTS, SlideLayout
 from google.genai import types
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_slideshow_auto(
-    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1
+    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1, cta: Optional[dict] = None
 ):
     """
     Generate complete TikTok slideshow with layout selection and content.
@@ -31,10 +32,10 @@ def generate_slideshow_auto(
     logger.info("Made it to generate_slideshow_auto")
 
     layout_options = get_all_layout_schemas()
-    prompt = _generate_prompt(layout_options, slideshowGoals, brandSettings, count, template_structure=None)
+    prompt = _generate_prompt(layout_options, slideshowGoals, brandSettings, count, template_structure=None, cta=cta)
 
     logger.info("FULL PROMPT:", prompt)
-
+    
     # tokens = client.models.count_tokens(model="gemini-2.0-flash", contents=prompt).total_tokens
 
     # logger.info(f"Token count: {tokens}")
@@ -179,6 +180,7 @@ def _generate_prompt(
     brand: BrandSettings,
     count: int = 1,
     template_structure: dict = None,
+    cta: Optional[dict] = None,
 ):
     # Build template enforcement section
     template_section = ""
@@ -194,11 +196,23 @@ YOU MUST:
 4. Make each subsequent slide deliver on the promise made in Slide 1
 """
 
+    # Build CTA override section if provided
+    cta_section = ""
+    if cta:
+        cta_text = cta.get('cta_text', '')
+        cta_url = cta.get('cta_url', '')
+        logger.info(f"Injecting CTA - Text: {cta_text}, URL: {cta_url}")
+        cta_section = f"""
+*** PRIORITY CTA OVERRIDE ***
+Final slide MUST include this exact CTA: "{cta_text}"
+CTA URL: {cta_url if cta_url else 'N/A'}
+Do NOT replace or modify this CTA text."""
+
     return f""" 
 SLIDESHOW STRUCTURE:
 {slideshowGoals}
 
-{template_section}
+{template_section}{cta_section}
 
 BRAND VOICE:
 Niche: {brand.niche}

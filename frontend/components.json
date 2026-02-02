@@ -26,6 +26,7 @@
     "@kokonutui": "https://kokonutui.com/r/{name}.json",
     "@magicui": "https://magicui.design/r/{name}",
     "@react-bits": "https://reactbits.dev/r/{name}.json",
-    "@blocks": "https://blocks.so/r/{name}.json"
+    "@blocks": "https://blocks.so/r/{name}.json",
+    "@billingsdk": "https://billingsdk.com/r/{name}.json"
   }
 }

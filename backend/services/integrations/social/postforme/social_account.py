@@ -166,7 +166,6 @@ async def make_post(
     # Draft flow: just update status
     if mode == "draft":
         update_post(post_id, {"status": "draft"}, user_id)
-        return {"status": "draft"}
 
     # Scheduled flow: set scheduled_time and status
     if mode == "scheduled":
@@ -174,7 +173,6 @@ async def make_post(
         if scheduled_at:
             updates["scheduled_time"] = scheduled_at
         update_post(post_id, updates, user_id)
-        return {"status": "scheduled", "scheduled_at": scheduled_at}
 
     # Publish flow
     # 1) collect connected integrations
@@ -182,11 +180,16 @@ async def make_post(
 
     # Extract pfm account ids defensively
     pfm_account_ids = []
-    for si in (social_integrations or []):
+    for si in social_integrations or []:
         if isinstance(si, dict):
-            pfm_account_ids.append(si.get("pfm_account_id") or si.get("post_for_me_account_id"))
+            pfm_account_ids.append(
+                si.get("pfm_account_id") or si.get("post_for_me_account_id")
+            )
         else:
-            pfm_account_ids.append(getattr(si, "pfm_account_id", None) or getattr(si, "post_for_me_account_id", None))
+            pfm_account_ids.append(
+                getattr(si, "pfm_account_id", None)
+                or getattr(si, "post_for_me_account_id", None)
+            )
     pfm_account_ids = [p for p in pfm_account_ids if p]
 
     # 2) build media payload from storage_urls
@@ -203,6 +206,8 @@ async def make_post(
     hashtags_list = content.get("hashtags") if isinstance(content, dict) else []
     hashtags = " ".join("#" + h for h in (hashtags_list or []))
 
+    print("organized hastags")
+
     payload = {
         "caption": caption,
         "scheduled_at": scheduled_at,
@@ -217,12 +222,14 @@ async def make_post(
                 "disclose_your_brand": False,
                 "disclose_branded_content": False,
                 "is_ai_generated": False,
-                "is_draft": False,
+                "is_draft": mode == "draft",
             }
         },
         "media": media_urls,
         "social_accounts": pfm_account_ids,
     }
+
+    print("MAKE POST PAYLOAD", payload)
 
     async with httpx.AsyncClient() as client:
         r = await client.post(
@@ -237,24 +244,30 @@ async def make_post(
         r.raise_for_status()
         resp = r.json()
 
-    # Persist external ids and mark published
+    # Persist external ids and mark posted
     external_post_id = resp.get("id") or resp.get("post_id")
 
-    updates = {"status": "published"}
+    status = "posting" if mode == "publish" else mode
+
+    updates = {"status": status}
     if external_post_id:
         updates["external_post_id"] = external_post_id
 
     update_post(post_id, updates, user_id)
 
-    return {"status": "published", "external_post_id": external_post_id}
+    return {"status": "posted", "external_post_id": external_post_id}
 
 
 async def publish_post(brand_id: str, platforms: List[str], post_id: str):
     return await make_post(brand_id, platforms, post_id, mode="publish")
 
 
-async def schedule_post(brand_id: str, platforms: List[str], post_id: str, scheduled_at: str):
-    return await make_post(brand_id, platforms, post_id, mode="scheduled", scheduled_at=scheduled_at)
+async def schedule_post(
+    brand_id: str, platforms: List[str], post_id: str, scheduled_at: str
+):
+    return await make_post(
+        brand_id, platforms, post_id, mode="scheduled", scheduled_at=scheduled_at
+    )
 
 
 async def draft_post(brand_id: str, platforms: List[str], post_id: str):
@@ -302,18 +315,16 @@ async def draft_post(brand_id: str, platforms: List[str], post_id: str):
                         "disclose_branded_content": False,
                         "is_ai_generated": False,
                         "is_draft": True,
-                        "auto_add_music": True
+                        "auto_add_music": True,
                     },
                 },
                 "media": media_urls,
                 "social_accounts": pfm_account_ids,
             },
         )
-        
+
         r.raise_for_status()
 
         post_data = r.json()
-        
-        
 
     return dict()

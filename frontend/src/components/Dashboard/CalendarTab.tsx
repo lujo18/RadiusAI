@@ -3,8 +3,6 @@ import { FiClock } from 'react-icons/fi';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TimeBlockScheduler } from '@/components/scheduling/TimeBlockScheduler';
-import { useScheduledPosts } from '@/lib/api/hooks/usePosts';
-import { addDays } from 'date-fns';
 
 interface CalendarTabProps {
   upcomingPosts: any[];
@@ -13,25 +11,12 @@ interface CalendarTabProps {
 
 export default function CalendarTab({ upcomingPosts, brandId }: CalendarTabProps) {
   const [selectedDateTime, setSelectedDateTime] = useState<Date>();
-  
-  // Fetch scheduled posts for the next 30 days - only if brandId is provided
-  const fromDate = new Date();
-  const toDate = addDays(new Date(), 30);
-  const { data: scheduledPosts, isLoading, error } = useScheduledPosts(
-    brandId ? fromDate : undefined, 
-    brandId ? toDate : undefined,
-    brandId
-  );
 
   const handleTimeSelect = (dateTime: Date) => {
     setSelectedDateTime(dateTime);
     // Could open posting modal or navigate to post creation
     console.log('Selected time slot:', dateTime);
   };
-
-  // Use mock data if no real data is available
-  const displayScheduledPosts = scheduledPosts || [];
-  const shouldShowLoading = brandId && isLoading && !error;
 
   return (
     <div>
@@ -88,26 +73,12 @@ export default function CalendarTab({ upcomingPosts, brandId }: CalendarTabProps
               <p className="text-gray-400">Select time slots to schedule new posts or view existing scheduled content</p>
             </div>
             
-            {shouldShowLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-gray-400">Loading scheduled posts...</div>
-              </div>
-            ) : error ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-red-400">Failed to load scheduled posts. Using mock data for now.</div>
-              </div>
-            ) : (
-              <TimeBlockScheduler
-                selectedDateTime={selectedDateTime}
-                onTimeSelect={handleTimeSelect}
-                scheduledPosts={displayScheduledPosts?.filter(post => post.scheduled_time).map(post => ({
-                  id: post.id,
-                  scheduled_time: post.scheduled_time!,
-                  content: post.content as any
-                })) || []}
-                className=""
-              />
-            )}
+            <TimeBlockScheduler
+              selectedDateTime={selectedDateTime}
+              onTimeSelect={handleTimeSelect}
+              brandId={brandId}
+              className=""
+            />
           </div>
         </TabsContent>
       </Tabs>

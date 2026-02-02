@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ChevronLeft } from "lucide-react";
@@ -12,7 +10,7 @@ import {
   DialogDescription,
 } from "@/components/animate-ui/components/radix/dialog";
 import { useCreateBrand } from "@/lib/api/hooks";
-import { useGenerateBrandSettings } from "@/lib/api/brand/useGenerateBrandSettings";
+import { useGenerateBrand } from "@/lib/api/generation/hooks";
 import type { Database } from "@/types/database";
 import { getCurrentUser } from "@/lib/supabase/auth";
 import { useUserProfile } from "@/lib/api/hooks/useUser";
@@ -70,7 +68,7 @@ export default function BrandSetupWizard({
   const createBrandMutation = useCreateBrand();
   const [aiPrompt, setAiPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const generateMutation = useGenerateBrandSettings();
+  const generateMutation = useGenerateBrand();
 
   // Load from local storage on mount or when dialog opens
   useEffect(() => {
@@ -370,7 +368,7 @@ export default function BrandSetupWizard({
                     setIsGenerating(false);
                   }
                 }}
-                disabled={generateMutation.isLoading || !aiPrompt.trim()}
+                disabled={generateMutation.isPending || !aiPrompt.trim()}
                 className="flex items-center gap-2"
               >
                 {isGenerating ? "Generating..." : "Generate"}

@@ -39,6 +39,118 @@ export type Database = {
   }
   public: {
     Tables: {
+      automation_runs: {
+        Row: {
+          automation_id: string
+          created_at: string | null
+          cta_id_used: string | null
+          error_message: string | null
+          id: string
+          platforms_used: string[] | null
+          post_created: string | null
+          run_finished_at: string | null
+          run_started_at: string
+          status: string
+          template_id_used: string | null
+        }
+        Insert: {
+          automation_id: string
+          created_at?: string | null
+          cta_id_used?: string | null
+          error_message?: string | null
+          id?: string
+          platforms_used?: string[] | null
+          post_created?: string | null
+          run_finished_at?: string | null
+          run_started_at?: string
+          status: string
+          template_id_used?: string | null
+        }
+        Update: {
+          automation_id?: string
+          created_at?: string | null
+          cta_id_used?: string | null
+          error_message?: string | null
+          id?: string
+          platforms_used?: string[] | null
+          post_created?: string | null
+          run_finished_at?: string | null
+          run_started_at?: string
+          status?: string
+          template_id_used?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_runs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automations: {
+        Row: {
+          brand_id: string
+          created_at: string | null
+          cta_ids: string[]
+          cursor_cta_index: number | null
+          cursor_template_index: number | null
+          error_count: number | null
+          id: string
+          is_active: boolean | null
+          last_error: string | null
+          last_run_at: string | null
+          next_run_at: string
+          platforms: string[]
+          schedule: Json
+          template_ids: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string | null
+          cta_ids: string[]
+          cursor_cta_index?: number | null
+          cursor_template_index?: number | null
+          error_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_error?: string | null
+          last_run_at?: string | null
+          next_run_at: string
+          platforms: string[]
+          schedule: Json
+          template_ids: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string | null
+          cta_ids?: string[]
+          cursor_cta_index?: number | null
+          cursor_template_index?: number | null
+          error_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_error?: string | null
+          last_run_at?: string | null
+          next_run_at?: string
+          platforms?: string[]
+          schedule?: Json
+          template_ids?: string[]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automations_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brand"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       brand: {
         Row: {
           brand_settings: Json
@@ -92,7 +204,6 @@ export type Database = {
           category: string | null
           created_at: string | null
           cta_text: string
-          cta_type: string | null
           cta_url: string | null
           id: string
           is_active: boolean | null
@@ -106,7 +217,6 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           cta_text: string
-          cta_type?: string | null
           cta_url?: string | null
           id?: string
           is_active?: boolean | null
@@ -120,7 +230,6 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           cta_text?: string
-          cta_type?: string | null
           cta_url?: string | null
           id?: string
           is_active?: boolean | null
@@ -248,33 +357,6 @@ export type Database = {
           },
         ]
       }
-      plans: {
-        Row: {
-          max_brands: number | null
-          max_posts_per_month: number | null
-          max_slides_per_month: number | null
-          name: string
-          plan_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          max_brands?: number | null
-          max_posts_per_month?: number | null
-          max_slides_per_month?: number | null
-          name: string
-          plan_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          max_brands?: number | null
-          max_posts_per_month?: number | null
-          max_slides_per_month?: number | null
-          name?: string
-          plan_id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       platform_integrations: {
         Row: {
           bio: string | null
@@ -354,31 +436,34 @@ export type Database = {
       }
       post_analytics: {
         Row: {
-          engagement: number
+          comments: number | null
           engagement_rate: number | null
           id: string
           impressions: number
           last_updated: string | null
+          likes: number
           post_id: string
           saves: number
           shares: number
         }
         Insert: {
-          engagement?: number
+          comments?: number | null
           engagement_rate?: number | null
           id?: string
           impressions?: number
           last_updated?: string | null
+          likes?: number
           post_id: string
           saves?: number
           shares?: number
         }
         Update: {
-          engagement?: number
+          comments?: number | null
           engagement_rate?: number | null
           id?: string
           impressions?: number
           last_updated?: string | null
+          likes?: number
           post_id?: string
           saves?: number
           shares?: number
@@ -393,31 +478,31 @@ export type Database = {
           },
         ]
       }
-      post_metadata: {
+      post_tracking_metadata: {
         Row: {
-          created_at: string
-          generation_params: Json
-          id: string
+          collection_count: number
+          current_interval: Database["public"]["Enums"]["post_tracking_interval"]
+          last_collected_at: string | null
+          next_collection_at: string
           post_id: string
-          variant_label: string | null
         }
         Insert: {
-          created_at?: string
-          generation_params?: Json
-          id?: string
+          collection_count?: number
+          current_interval: Database["public"]["Enums"]["post_tracking_interval"]
+          last_collected_at?: string | null
+          next_collection_at: string
           post_id: string
-          variant_label?: string | null
         }
         Update: {
-          created_at?: string
-          generation_params?: Json
-          id?: string
+          collection_count?: number
+          current_interval?: Database["public"]["Enums"]["post_tracking_interval"]
+          last_collected_at?: string | null
+          next_collection_at?: string
           post_id?: string
-          variant_label?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "post_metadata_post_id_fkey"
+            foreignKeyName: "post_tracking_metadata_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: true
             referencedRelation: "posts"
@@ -521,6 +606,110 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      preset_images: {
+        Row: {
+          aesthetic_score: number | null
+          color_palette: string
+          composition: string
+          created_at: string | null
+          id: string
+          objects: string[] | null
+          pack_id: string | null
+          storage_path: string
+          tags: string[] | null
+          updated_at: string | null
+          url: string
+          vibe: string
+        }
+        Insert: {
+          aesthetic_score?: number | null
+          color_palette: string
+          composition: string
+          created_at?: string | null
+          id?: string
+          objects?: string[] | null
+          pack_id?: string | null
+          storage_path: string
+          tags?: string[] | null
+          updated_at?: string | null
+          url: string
+          vibe: string
+        }
+        Update: {
+          aesthetic_score?: number | null
+          color_palette?: string
+          composition?: string
+          created_at?: string | null
+          id?: string
+          objects?: string[] | null
+          pack_id?: string | null
+          storage_path?: string
+          tags?: string[] | null
+          updated_at?: string | null
+          url?: string
+          vibe?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preset_images_pack_id_fkey"
+            columns: ["pack_id"]
+            isOneToOne: false
+            referencedRelation: "preset_packs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preset_packs: {
+        Row: {
+          accessibility: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          number_of_images: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accessibility: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          number_of_images?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accessibility?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          number_of_images?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      product_rate_limits: {
+        Row: {
+          product_id: string
+          rules: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          product_id: string
+          rules?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          product_id?: string
+          rules?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       slide_designs: {
         Row: {
@@ -881,30 +1070,27 @@ export type Database = {
       }
       user_activity: {
         Row: {
-          credit_count: number | null
           id: number
           period_end: string | null
           period_start: string | null
-          post_count: number | null
           updated_at: string | null
+          usage: Json | null
           user_id: string
         }
         Insert: {
-          credit_count?: number | null
           id?: number
           period_end?: string | null
           period_start?: string | null
-          post_count?: number | null
           updated_at?: string | null
+          usage?: Json | null
           user_id: string
         }
         Update: {
-          credit_count?: number | null
           id?: number
           period_end?: string | null
           period_start?: string | null
-          post_count?: number | null
           updated_at?: string | null
+          usage?: Json | null
           user_id?: string
         }
         Relationships: [
@@ -1120,7 +1306,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_usage_rpc: {
+        Args: {
+          p_amount: number
+          p_event_id?: string
+          p_metric: string
+          p_period_end?: string
+          p_period_start?: string
+          p_user_id: string
+        }
+        Returns: {
+          id: number
+          period_end: string
+          period_start: string
+          updated_at: string
+          usage: Json
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       integration_status: "connected" | "disconnected"
@@ -1133,6 +1336,7 @@ export type Database = {
         | "failed"
         | "deleted"
         | "archived"
+      post_tracking_interval: "hourly" | "daily" | "weekly" | "monthly"
       team_member_role: "owner" | "admin" | "member" | "viewer"
       team_member_status: "active" | "pending" | "invited" | "removed"
     }
@@ -1276,6 +1480,7 @@ export const Constants = {
         "deleted",
         "archived",
       ],
+      post_tracking_interval: ["hourly", "daily", "weekly", "monthly"],
       team_member_role: ["owner", "admin", "member", "viewer"],
       team_member_status: ["active", "pending", "invited", "removed"],
     },

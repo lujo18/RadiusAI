@@ -1,0 +1,21 @@
+webapp.app-context: dict
+  - language: str
+  - region: str
+  - appId: int
+  - appType: str
+  - wid: str
+webapp.biz-context: dict
+  - cookieConsent: dict
+  - os: str
+  - isMobile: bool
+  - isAndroid: bool
+  - isIOS: bool
+webapp.i18n-translation: dict
+  - Webapp: dict
+seo.abtest: dict
+  - canonical: str
+  - pageId: str
+  - vidList: list
+  - parameters: dict
+webapp.a-b: dict
+  - b_c: str

@@ -88,7 +88,7 @@ export function SubscriptionGuard({
                 Your subscription expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}
               </p>
               <Link
-                href="/api/stripe/customer-portal"
+                href="/settings/billing"
                 className="text-yellow-300 hover:text-yellow-200 text-sm underline"
               >
                 Manage subscription

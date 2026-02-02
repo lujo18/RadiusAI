@@ -39,3 +39,4 @@ python-dateutil==2.8.2
 pytest==7.4.3
 pytest-asyncio==0.21.1
 black==23.11.0
+stripe==5.0.0

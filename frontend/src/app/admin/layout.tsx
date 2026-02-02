@@ -18,6 +18,7 @@ import {
   Star,
   Settings,
   Home,
+  Package,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -39,6 +40,11 @@ const adminNavItems = [
     title: "System Templates",
     href: "/admin/templates",
     icon: Zap,
+  },
+  {
+    title: "Preset Packs",
+    href: "/admin/preset-packs",
+    icon: Package,
   },
   {
     title: "Testimonials",

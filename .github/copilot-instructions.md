@@ -115,6 +115,16 @@ npm run dev
 - **Frontend**: Axios client in `frontend/src/lib/api.ts` with interceptors for auth tokens
 - **Example**: [backend/routers/templates.py](backend/routers/templates.py) shows CRUD + performance analytics pattern
 
+### Frontend API Structure (NEW — preferred)
+- ALWAYS prefer the layered `clients/` → `services/` → `surface/` → `hooks/` structure in `frontend/src/lib/api/` when adding or modifying API behavior.
+- `clients/`: HTTP transport wrappers (e.g., `backendClient`) for backend endpoints.
+- `services/`: Orchestration and business logic (use Zod validation at service boundaries).
+- `surface/`: Thin, stable UI-facing API functions that the rest of the app imports.
+- `hooks/`: TanStack Query hooks that call `surface/` functions and handle caching/optimistic updates.
+
+- If you need to add a new endpoint or UI API and a `hook` or `surface` does not exist, create them following the READMEs under `frontend/src/lib/api/*` and prefer dynamic imports in `client.ts` to avoid circular dependencies.
+- Validate inputs in `services/` using schemas in `frontend/src/lib/validation` and update repository methods in `frontend/src/lib/supabase/repos/` when DB access is required.
+
 ### AI Generation
 - **Core service**: `backend/ai/gemini_service.py` - see [backend/ai/README.md](backend/ai/README.md)
 - **Functions**: `generate_content_with_gemini()`, `generate_week_content()`, `generate_variant_set_content()`
@@ -171,10 +181,12 @@ npm run dev
 4. Update form in `frontend/src/components/TemplateCreator/`
 
 **Add new API endpoint**:
-1. Create route in `backend/routers/{resource}.py`
-2. Add service method in `backend/services/supabase_service.py`
-3. Create TanStack Query hook in `frontend/src/lib/api/hooks/`
-4. Use hook in component with proper error handling
+1. Create route in `backend/routers/{resource}.py` (backend-only behavior belongs in routers/services).
+2. Add or update backend service method in `backend/services/`.
+3. On the frontend, prefer adding a `service` and a `surface` in `frontend/src/lib/api/services/` and `frontend/src/lib/api/surface/` respectively; add or update a repo in `frontend/src/lib/supabase/repos/` if direct DB access is needed.
+4. Add a TanStack Query hook in `frontend/src/lib/api/hooks/` that calls the `surface` function and handles cache invalidation and optimistic updates.
+5. Update `frontend/src/lib/api/client.ts` to delegate to the `surface` API (use dynamic `import()` to avoid circular imports when necessary).
+6. Add Zod validation in `services/` and unit tests for complex orchestration.
 
 **Deploy**:
 - Backend: Google Cloud Run (see [TODO.md](TODO.md#Production))

@@ -8,6 +8,7 @@ from datetime import datetime
 from backend.models.slide import PostContent
 from backend.services.integrations.supabase.client import get_supabase
 from backend.models.post import Post, CreatePostRequest, UpdatePostRequest
+from backend.services.workers.analytics import create_analytic_tracker
 
 
 # ==================== READ OPERATIONS ====================
@@ -31,7 +32,29 @@ def get_post(post_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, 
     
     response = query.single().execute()
     
+    print("got post in post.py")
+    
     # Handle not found gracefully
+    if not response.data:
+        return None
+    
+    return response.data
+
+
+def get_post_by_external_id(external_post_id: str) -> Optional[Dict[str, Any]]:
+    """
+    Get a post by external_post_id (from PostForMe webhook).
+    Used to map webhook events back to Supabase posts.
+    
+    Args:
+        external_post_id: External post ID from PostForMe
+    
+    Returns:
+        Post dict or None if not found
+    """
+    supabase = get_supabase()
+    response = supabase.from_('posts').select('*').eq('external_post_id', external_post_id).single().execute()
+    
     if not response.data:
         return None
     
@@ -197,9 +220,11 @@ def create_post(
     if variant_set_id:
         post_data['variant_set_id'] = variant_set_id
     
+    
     response = supabase.from_('posts')\
         .insert([post_data])\
         .execute()
+        
     
     if not response.data:
         raise Exception("Failed to create post")
@@ -230,9 +255,9 @@ def update_post(
     # Add updated_at timestamp
     updates['updated_at'] = datetime.now().isoformat()
     
-    query = supabase.from_('posts')\
-        .update(updates)\
-        .eq('id', post_id)
+    query = (supabase.from_('posts')
+        .update(updates)
+        .eq('id', post_id))
     
     if user_id:
         query = query.eq('user_id', user_id)
@@ -248,19 +273,28 @@ def update_post(
 def update_post_status(
     post_id: str,
     status: str,
-    user_id: str
+    user_id: Optional[str] = None,
+    published_at: Optional[str] = None,
+    social_post_id: Optional[str] = None,
+    error_message: Optional[str] = None
 ) -> bool:
     """
-    Update post status and set published_time if status is 'published'.
+    Update post status with optional webhook data.
+    Automatically starts analytics tracking when a post is published.
     
     Args:
         post_id: Post UUID
         status: New status (draft, scheduled, published, failed)
-        user_id: User UUID
+        user_id: User UUID (optional for webhook calls)
+        published_at: ISO timestamp from webhook
+        social_post_id: Social media post ID (Instagram, TikTok)
+        error_message: Error details if status is failed
     
     Returns:
         True if successful
     """
+    import asyncio
+    
     supabase = get_supabase()
     
     update_data = {
@@ -269,13 +303,29 @@ def update_post_status(
     }
     
     if status == 'published':
-        update_data['published_time'] = datetime.now().isoformat()
+        update_data['published_time'] = published_at or datetime.now().isoformat()
+        if social_post_id:
+            update_data['external_post_id'] = social_post_id  # Store as external_post_id for analytics
     
-    response = supabase.from_('posts')\
-        .update(update_data)\
-        .eq('id', post_id)\
-        .eq('user_id', user_id)\
-        .execute()
+    if status == 'failed' and error_message:
+        update_data['error_message'] = error_message
+    
+    query = supabase.from_('posts').update(update_data).eq('id', post_id)
+    
+    # Only filter by user_id if provided (webhooks may not have it)
+    if user_id:
+        query = query.eq('user_id', user_id)
+    
+    response = query.execute()
+    
+    # If post is now published, start analytics tracking
+    if status == 'published':
+        try:
+            # Run the async tracker creation
+            asyncio.run(create_analytic_tracker(post_id))
+        except Exception as e:
+            # Don't fail the post update if analytics tracking fails
+            print(f"Warning: Failed to start analytics tracking for post {post_id}: {e}")
     
     return True
 

@@ -51,7 +51,7 @@ export default function BrandSettingsForm({
   };
 
   const updateField = (field: keyof BrandSettings, value: any) => {
-    setSettings((prev) => ({ ...prev, [field]: value }));
+    setSettings((prev: BrandSettings) => ({ ...prev, [field]: value }));
   };
 
   return (

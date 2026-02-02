@@ -25,12 +25,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PostContent } from "@/lib/parseJsonColumn.supabase";
-import { contentApi } from "@/lib/api/client";
 import { Post } from "@/types/types";
 import { Workflow } from "@/components/workflows/common/Workflow";
 import { PostItem } from "@/components/items/PostItem";
 import { usePostingModal } from '@/components/modals/PostingModalProvider';
 import { useBrandIntegrations } from '@/lib/api/hooks/useBrands';
+import { useGeneratePostFromPrompt } from '@/lib/api/generation/hooks';
 
 type Brand = Database["public"]["Tables"]["brand"]["Row"];
 
@@ -42,11 +42,11 @@ function getBrandSettings(brand: Brand): BrandSettings | null {
 export default function GeneratePage() {
   const params = useParams();
   const brandId = params?.brandId as string;
-``
-  // Store
   const { queue, addToQueue, updateQueueItem } = useGenerationStore();
+  const generateMutation = useGeneratePostFromPrompt();
 
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedCta, setSelectedCta] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<string>(brandId || "");
 
   const [now, setNow] = useState(new Date());
@@ -134,12 +134,14 @@ export default function GeneratePage() {
           };
 
 
-          const posts = await contentApi.generatePostsFromPrompt(
+          const posts = await generateMutation.mutateAsync({
             template,
-            brand.brand_settings as BrandSettings,
-            selectedProfile,
-            1,
-          );
+            brandSettings: brand.brand_settings as BrandSettings,
+            brandId: selectedProfile,
+            ctaId: selectedCta || undefined,
+            count: 1,
+          });
+
 
           // Posts are already saved by the backend
           setGeneratedPosts((prev) => [...prev, ...posts]);
@@ -197,7 +199,9 @@ export default function GeneratePage() {
         <Workflow
           brandId={brandId}
           selectedTemplateId={selectedTemplate}
+          selectedCtaId={selectedCta}
           onTemplateSelect={setSelectedTemplate}
+          onCtaSelect={setSelectedCta}
           handleGenerate={handleGenerate}
         />
 

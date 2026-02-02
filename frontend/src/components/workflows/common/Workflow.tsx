@@ -2,17 +2,20 @@ import { ReactFlow, Background, Controls } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { TemplateNode } from "./TemplateNode";
 import { BrandNode } from "./BrandNode";
+import { CtaNode } from "./CtaNode";
 import { useState, useEffect } from "react";
 import { AIGenerateNode } from "./AIGenerateNode";
 
 type WorkflowProps = {
     brandId: string;
     selectedTemplateId: string | null;
+    selectedCtaId: string | null;
     onTemplateSelect: (templateId: string | null) => void;
+    onCtaSelect: (ctaId: string | null) => void;
     handleGenerate: () => void;
   };
 
-export const Workflow = ({brandId, selectedTemplateId, onTemplateSelect, handleGenerate}: WorkflowProps) => {
+export const Workflow = ({brandId, selectedTemplateId, selectedCtaId, onTemplateSelect, onCtaSelect, handleGenerate}: WorkflowProps) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -28,6 +31,7 @@ export const Workflow = ({brandId, selectedTemplateId, onTemplateSelect, handleG
   const nodetype = {
     template: TemplateNode,
     brand: BrandNode,
+    cta: CtaNode,
     ai: AIGenerateNode
   }
 
@@ -46,7 +50,13 @@ export const Workflow = ({brandId, selectedTemplateId, onTemplateSelect, handleG
     },
     {
       id: "n3",
-      position: { x: isMobile ? 50 : 850, y: isMobile ? 450 : 250 },
+      position: { x: isMobile ? 50 : 450, y: isMobile ? 450 : 350 },
+      data: {brandId, selectedCtaId, onCtaSelect},
+      type: "cta",
+    },
+    {
+      id: "n4",
+      position: { x: isMobile ? 50 : 850, y: isMobile ? 650 : 250 },
       data: {onGenerate: handleGenerate},
       type: "ai",
     },
@@ -65,6 +75,13 @@ export const Workflow = ({brandId, selectedTemplateId, onTemplateSelect, handleG
       id: "n2-n3",
       source: "n2",
       target: "n3",
+      type: "default",
+      animated: true
+    },
+    {
+      id: "n3-n4",
+      source: "n3",
+      target: "n4",
       type: "default",
       animated: true
     },

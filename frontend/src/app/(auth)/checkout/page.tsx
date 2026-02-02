@@ -70,15 +70,15 @@ function CheckoutContent() {
           return;
         }
 
-        
-
+        // Create Stripe checkout session via backend billing service
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
         // Create Stripe checkout session
-        const res = await fetch("/api/stripe/create-checkout", {
+        const res = await fetch(`${apiBase}/api/billing/checkout`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            productId,
-            userId: user.id,
+            product_id: productId,
+            user_id: user.id,
             plan,
           }),
         });

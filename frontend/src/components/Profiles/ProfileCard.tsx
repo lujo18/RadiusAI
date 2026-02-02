@@ -90,7 +90,7 @@ export default function ProfileCard({ profile, onEdit }: ProfileCardProps) {
           <div className="mb-4">
             <p className="text-xs text-muted-foreground mb-2">Content Pillars</p>
             <div className="flex flex-wrap gap-2">
-              {brandSettings.content_pillars.slice(0, 3).map((pillar, i) => (
+              {brandSettings.content_pillars.slice(0, 3).map((pillar: string, i: number) => (
                 <Badge key={i} variant="secondary">
                   {pillar}
                 </Badge>
