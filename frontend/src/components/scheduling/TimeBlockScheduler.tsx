@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, addDays, startOfDay, addHours, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { useScheduledPosts } from "@/lib/api/hooks/usePosts";
+import { convertToLocalTime } from "@/lib/time";
 
 type ScheduledPost = {
   id: string;
@@ -34,7 +35,7 @@ const TimeBlock = ({
   onClick, 
   disabled = false 
 }: TimeBlockProps) => {
-  const timeString = format(addHours(startOfDay(date), hour), 'HH:mm');
+  const timeString = convertToLocalTime(`${String(hour).padStart(2, '0')}:00`);
   const shouldDisable = disabled || isOccupied;
   
   return (
@@ -223,7 +224,7 @@ export const TimeBlockScheduler = ({
             {timeSlots.map(hour => (
               <React.Fragment key={hour}>
                 <div className="text-sm text-muted-foreground py-2">
-                  {format(addHours(startOfDay(new Date()), hour), 'HH:mm')}
+                  {convertToLocalTime(`${String(hour).padStart(2, '0')}:00`)}
                 </div>
                 {days.map(day => {
                   const isOccupied = isTimeOccupied(day, hour);
@@ -252,7 +253,7 @@ export const TimeBlockScheduler = ({
             <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
               <div className="font-medium">Selected Time:</div>
               <div className="text-sm text-muted-foreground">
-                {format(selectedDateTime, 'EEEE, MMMM d, yyyy \'at\' HH:mm')}
+                {format(selectedDateTime, 'EEEE, MMMM d, yyyy')} at {convertToLocalTime(format(selectedDateTime, 'HH:mm'))}
               </div>
             </div>
           )}

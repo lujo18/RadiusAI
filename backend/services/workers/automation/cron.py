@@ -12,7 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
 
-from backend.services.workers.automation.automation_worker import process_due_automations
+from services.workers.automation.automation_worker import process_due_automations
 
 logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()

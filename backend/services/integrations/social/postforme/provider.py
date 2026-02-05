@@ -1,8 +1,8 @@
 # backend/services/integrations/postforme/provider.py
 
 from typing import List
-from backend.models.post import Post
-from backend.services.integrations.social.social_provider import CreateAuthUrlResponse, SaveIntegrationResponse, SocialProvider
+from models.post import Post
+from services.integrations.social.social_provider import CreateAuthUrlResponse, SaveIntegrationResponse, SocialProvider
 from .social_account import (
     create_auth_url, 
     disconnect_integration, 

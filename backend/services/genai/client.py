@@ -1,4 +1,4 @@
-from backend.config import Config
+from config import Config
 
 
 class GeminiClient:

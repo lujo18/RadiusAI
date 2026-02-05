@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from backend.services.integrations.supabase.stripe import PlansRepository
-from backend.auth import get_current_user
-from backend.services.usage import repo as usage_repo
+from services.integrations.supabase.stripe import PlansRepository
+from auth import get_current_user
+from services.usage import repo as usage_repo
 
 router = APIRouter(prefix="/api/stripe", tags=["stripe"])
 

@@ -1,5 +1,5 @@
 import requests
-from backend.config import Config
+from config import Config
 
 # Create a new profile in Late
 async def create_late_profile(profile_name: str, profile_description: str) -> str:

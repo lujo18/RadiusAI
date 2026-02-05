@@ -20,6 +20,10 @@ export * from './useAnalytics';
 // User - User profile and account settings
 export * from './useUser';
 
+// Automations - Content automation workflows
+export * from './useAutomations';
+export * from './useAutomationRuns';
+
 // Generation hooks (AI content generation)
 export { useGeneratePost, useGeneratePostFromPrompt } from '@/lib/api/generation/hooks/useGeneratePost';
 export { useGenerateBrand } from '@/lib/api/generation/hooks/useGenerateBrand';

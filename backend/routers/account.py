@@ -16,13 +16,13 @@ import httpx
 import os
 from datetime import datetime, timedelta
 
-from backend.auth import get_current_user
-from backend.services.integrations.social.provider import get_social_provider
-from backend.services.integrations.supabase.db.brand import (
+from auth import get_current_user
+from services.integrations.social.provider import get_social_provider
+from services.integrations.supabase.db.brand import (
     connect_social_account_to_brand,
 )
-from backend.util import decode_state, generate_state
-from ..config import Config, get_settings
+from util import decode_state, generate_state
+from config import Config, get_settings
 
 logger = logging.getLogger(__name__)
 

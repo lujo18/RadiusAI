@@ -1,14 +1,14 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from backend.models.slide import PostContent
-from backend.models.template import Template
-from backend.models.user import BrandSettings
-from backend.services.genai.generate_slideshow import generate_slideshow_auto
-from backend.services.usage import service as usage_service
-from backend.services.integrations.supabase.db.post import create_post, update_post_storage_urls
-from backend.services.integrations.supabase.storage import upload_post_images_optimized
-from backend.services.pillow.renderSlides import SlideRenderer
-from backend.util.system_prompt import SYSTEM_PROMPT
+from models.slide import PostContent
+from models.template import Template
+from models.user import BrandSettings
+from services.genai.generate_slideshow import generate_slideshow_auto
+from services.usage import service as usage_service
+from services.integrations.supabase.db.post import create_post, update_post_storage_urls
+from services.integrations.supabase.storage import upload_post_images_optimized
+from services.pillow.renderSlides import SlideRenderer
+from util.system_prompt import SYSTEM_PROMPT
 import json
 
 

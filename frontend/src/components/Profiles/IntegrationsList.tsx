@@ -108,7 +108,7 @@ export default function IntegrationsList({
         {platforms.map((platform) => (
           <SocialIntegration
             key={platform.id}
-            platform={platform}
+            platformKey={platform.id}
             integrations={safeIntegrations}
             onConnect={handleConnect}
             onDisconnect={handleDisconnect}

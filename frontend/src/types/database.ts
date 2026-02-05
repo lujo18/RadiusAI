@@ -96,16 +96,19 @@ export type Database = {
           cta_ids: string[]
           cursor_cta_index: number | null
           cursor_template_index: number | null
+          description: string | null
           error_count: number | null
           id: string
           is_active: boolean | null
           last_error: string | null
           last_run_at: string | null
+          name: string
           next_run_at: string
           platforms: string[]
           schedule: Json
           template_ids: string[]
           updated_at: string | null
+          user_timezone: string | null
         }
         Insert: {
           brand_id: string
@@ -113,16 +116,19 @@ export type Database = {
           cta_ids: string[]
           cursor_cta_index?: number | null
           cursor_template_index?: number | null
+          description?: string | null
           error_count?: number | null
           id?: string
           is_active?: boolean | null
           last_error?: string | null
           last_run_at?: string | null
+          name: string
           next_run_at: string
           platforms: string[]
           schedule: Json
           template_ids: string[]
           updated_at?: string | null
+          user_timezone?: string | null
         }
         Update: {
           brand_id?: string
@@ -130,16 +136,19 @@ export type Database = {
           cta_ids?: string[]
           cursor_cta_index?: number | null
           cursor_template_index?: number | null
+          description?: string | null
           error_count?: number | null
           id?: string
           is_active?: boolean | null
           last_error?: string | null
           last_run_at?: string | null
+          name?: string
           next_run_at?: string
           platforms?: string[]
           schedule?: Json
           template_ids?: string[]
           updated_at?: string | null
+          user_timezone?: string | null
         }
         Relationships: [
           {
@@ -517,7 +526,6 @@ export type Database = {
           content: Json
           created_at: string
           error_message: string | null
-          external_account_id: string | null
           external_permalink: string | null
           external_post_id: string | null
           generation_prompt: string | null
@@ -526,6 +534,7 @@ export type Database = {
           metadata: Json | null
           platform: string
           platform_captions: Json | null
+          platform_ids: string[] | null
           published_time: string | null
           scheduled_time: string | null
           status: Database["public"]["Enums"]["post_status"] | null
@@ -541,7 +550,6 @@ export type Database = {
           content: Json
           created_at?: string
           error_message?: string | null
-          external_account_id?: string | null
           external_permalink?: string | null
           external_post_id?: string | null
           generation_prompt?: string | null
@@ -550,6 +558,7 @@ export type Database = {
           metadata?: Json | null
           platform: string
           platform_captions?: Json | null
+          platform_ids?: string[] | null
           published_time?: string | null
           scheduled_time?: string | null
           status?: Database["public"]["Enums"]["post_status"] | null
@@ -565,7 +574,6 @@ export type Database = {
           content?: Json
           created_at?: string
           error_message?: string | null
-          external_account_id?: string | null
           external_permalink?: string | null
           external_post_id?: string | null
           generation_prompt?: string | null
@@ -574,6 +582,7 @@ export type Database = {
           metadata?: Json | null
           platform?: string
           platform_captions?: Json | null
+          platform_ids?: string[] | null
           published_time?: string | null
           scheduled_time?: string | null
           status?: Database["public"]["Enums"]["post_status"] | null

@@ -8,22 +8,36 @@ from datetime import datetime
 
 class BrandSettings(BaseModel):
     """Account-level brand settings for AI content generation"""
-    # Match frontend BrandSettingsData which includes an optional human-friendly name
-    name: Optional[str] = None
-    niche: str
-    aesthetic: str
-    target_audience: str
-    brand_voice: str
-    content_pillars: List[str]
+    # Database fields (optional - may come from brand table instead of brand_settings JSON)
+    id: Optional[str] = None
+    brand_id: Optional[str] = None
+    
+    # Core brand info (optional with defaults)
+    name: Optional[str] = ""
+    niche: Optional[str] = ""
+    aesthetic: Optional[str] = ""
+    target_audience: Optional[str] = ""
+    brand_voice: Optional[str] = ""
+    content_pillars: Optional[List[str]] = None
 
-    tone_of_voice: Optional[str] = None
-    emoji_usage: Optional[Literal["none", "minimal", "moderate", "heavy"]] = None
+    # Voice & style (optional with defaults)
+    tone_of_voice: Optional[str] = "casual"
+    emoji_usage: Optional[Literal["none", "minimal", "moderate", "heavy"]] = "moderate"
     forbidden_words: Optional[List[str]] = None
     preferred_words: Optional[List[str]] = None
 
-    hashtag_style: Optional[Literal["niche", "trending", "mixed"]] = None
-    hashtag_count: Optional[int] = None
+    # Hashtag settings (optional with defaults)
+    hashtag_style: Optional[Literal["niche", "trending", "mixed"]] = "mixed"
+    hashtag_count: Optional[int] = 10
     hashtags: Optional[List[str]] = None
+    
+    # Timestamps (optional)
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    
+    class Config:
+        # Allow extra fields from JSON for flexibility
+        extra = "allow"
 
 class User(BaseModel):
     """User account information"""

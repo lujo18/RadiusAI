@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from backend.models import Template, BrandSettings
+from models import Template, BrandSettings
 
 def build_gemini_slide_structure(
   template: Template,

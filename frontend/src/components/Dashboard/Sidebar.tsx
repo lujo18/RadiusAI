@@ -89,6 +89,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "../ui/badge";
 import { useSidebarNav } from "./sidebarContext";
 import { isAdminUser, useUserProfile } from "@/lib/api/hooks/useUser";
+import BrandSelector from "./BrandSelector";
 
 interface SidebarWrapperProps {
   activeTab: string;
@@ -100,7 +101,7 @@ interface SidebarWrapperProps {
       | "analytics"
       | "style"
       | "generate"
-      | "profiles"
+      | "profiles",
   ) => void;
   onLogout: () => void;
   header?: React.ReactNode;
@@ -120,7 +121,7 @@ export default function DashboardSidebar({
   const supabaseUser = useAuthStore((state) => state.supabaseUser);
   const { activeBrandId } = useBrandFilter();
   const [showWizard, setShowWizard] = useState(false);
-  
+
   // Fetch user brands
   const { data: brands, isLoading: brandsLoading } = useBrands();
 
@@ -146,8 +147,8 @@ export default function DashboardSidebar({
 
   // Get active brand details
   const activeBrand = brands?.find((b) => b.id === activeBrandId);
-  const displayName = activeBrand 
-    ? ((activeBrand.brand_settings as any)?.name || 'Brand') 
+  const displayName = activeBrand
+    ? (activeBrand.brand_settings as any)?.name || "Brand"
     : "All Brands";
   const displayPlan = activeBrand ? "Brand View" : "Overview";
 
@@ -155,13 +156,21 @@ export default function DashboardSidebar({
   const handleBrandSwitch = (brandId: string | null) => {
     if (brandId === null) {
       // Go to "All Brands" - route to /overview
-      router.push('/overview');
+      router.push("/overview");
     } else {
       // Go to specific brand - route to /brand/{brandId}
-      const pathSegments = pathname.split('/').filter(Boolean);
+      const pathSegments = pathname.split("/").filter(Boolean);
       const currentPage = pathSegments[pathSegments.length - 1];
-      const isSubPage = ['generate', 'calendar', 'templates', 'analytics', 'settings'].includes(currentPage);
-      router.push(isSubPage ? `/brand/${brandId}/${currentPage}` : `/brand/${brandId}`);
+      const isSubPage = [
+        "generate",
+        "calendar",
+        "templates",
+        "analytics",
+        "settings",
+      ].includes(currentPage);
+      router.push(
+        isSubPage ? `/brand/${brandId}/${currentPage}` : `/brand/${brandId}`,
+      );
     }
   };
 
@@ -171,102 +180,18 @@ export default function DashboardSidebar({
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  >
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                      <Users className="size-4" />
-                    </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {displayName}
-                      </span>
-                      <span className="truncate text-xs">
-                        {displayPlan}
-                      </span>
-                    </div>
-                    <ChevronsUpDown className="ml-auto" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                  align="start"
-                  side={isMobile ? "bottom" : "right"}
-                  sideOffset={4}
-                >
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    Brands
-                  </DropdownMenuLabel>
-                  
-                  {/* All Brands Option */}
-                  <DropdownMenuItem
-                    onClick={() => handleBrandSwitch(null)}
-                    className="gap-2 p-2"
-                  >
-                    <div className="flex size-6 items-center justify-center rounded-sm border">
-                      <LayoutDashboard className="size-4 shrink-0" />
-                    </div>
-                    All Brands
-                    {!activeBrandId && (
-                      <BadgeCheck className="ml-auto size-4 text-primary" />
-                    )}
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuSeparator />
-                  
-                  {/* Individual Brands */}
-                  {brandsLoading ? (
-                    <DropdownMenuItem disabled className="gap-2 p-2">
-                      <div className="flex size-6 items-center justify-center rounded-sm border">
-                        <Users className="size-4 shrink-0 animate-pulse" />
-                      </div>
-                      Loading brands...
-                    </DropdownMenuItem>
-                  ) : brands && brands.length > 0 ? (
-                    brands.map((brand) => {
-                      const brandName = (brand.brand_settings as any)?.name || 'Unnamed Brand';
-                      return (
-                        <DropdownMenuItem
-                          key={brand.id}
-                          onClick={() => handleBrandSwitch(brand.id)}
-                          className="gap-2 p-2"
-                        >
-                          <div className="flex size-6 items-center justify-center rounded-sm border">
-                            <Users className="size-4 shrink-0" />
-                          </div>
-                          {brandName}
-                          {activeBrandId === brand.id && (
-                            <BadgeCheck className="ml-auto size-4 text-primary" />
-                          )}
-                        </DropdownMenuItem>
-                      );
-                    })
-                  ) : (
-                    <DropdownMenuItem disabled className="gap-2 p-2 text-muted-foreground">
-                      No brands yet
-                    </DropdownMenuItem>
-                  )}
-                  
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    className="gap-2 p-2"
-                    onClick={() => setShowWizard(true)}
-                  >
-                    <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                      <Plus className="size-4" />
-                    </div>
-                    <div className="font-medium text-muted-foreground">
-                      Create Brand
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <BrandSelector
+                brands={brands}
+                brandsLoading={brandsLoading}
+                activeBrandId={activeBrandId}
+                isMobile={isMobile}
+                displayName={displayName}
+                displayPlan={displayPlan}
+                handleBrandSwitch={handleBrandSwitch}
+                onCreateBrand={() => setShowWizard(true)}
+              />
             </SidebarMenuItem>
           </SidebarMenu>
-
         </SidebarHeader>
 
         <SidebarContent>
@@ -275,7 +200,10 @@ export default function DashboardSidebar({
             <SidebarMenu>
               {navItems.map((item) => {
                 // Resolve href if it's a function (pass current activeBrandId)
-                const resolvedHref = typeof item.href === 'function' ? item.href(activeBrandId) : item.href;
+                const resolvedHref =
+                  typeof item.href === "function"
+                    ? item.href(activeBrandId)
+                    : item.href;
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton
@@ -326,7 +254,8 @@ export default function DashboardSidebar({
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {user?.name || "User"} {isAdminUser() && <Badge>Dev</Badge>}
+                        {user?.name || "User"}{" "}
+                        {isAdminUser() && <Badge>Dev</Badge>}
                       </span>
                       <span className="truncate text-xs">{user?.email}</span>
                     </div>
@@ -354,7 +283,7 @@ export default function DashboardSidebar({
                         <span className="truncate font-semibold">
                           {user?.name || "User"}
                         </span>
-                    
+
                         <span className="truncate text-xs">{user?.email}</span>
                       </div>
                     </div>
@@ -370,11 +299,20 @@ export default function DashboardSidebar({
                         <DropdownMenuSeparator />
                       </>
                     )}
-                    <DropdownMenuItem onClick={() => { setActiveTab("style"); router.push('/settings'); }}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveTab("style");
+                        router.push("/settings");
+                      }}
+                    >
                       <Settings />
                       Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { router.push('/settings/billing'); }}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        router.push("/settings/billing");
+                      }}
+                    >
                       <CreditCard />
                       Billing
                     </DropdownMenuItem>
@@ -398,7 +336,10 @@ export default function DashboardSidebar({
         <div className="flex flex-1 flex-col gap-4 pt-0">{children}</div>
       </SidebarInset>
 
-      <BrandSetupWizard isOpen={showWizard} onClose={() => setShowWizard(false)} />
+      <BrandSetupWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+      />
     </>
   );
 }
@@ -408,15 +349,28 @@ function UsageWidget() {
   const usageRow = data?.usage;
   const limits = data?.limits || [];
 
-  const slidesUsed = (usageRow?.usage && usageRow.usage.slides_generated) || usageRow?.slides_generated || 0;
+  const slidesUsed =
+    (usageRow?.usage && usageRow.usage.slides_generated) ||
+    usageRow?.slides_generated ||
+    0;
 
   // find relevant product limit (product_id may be 'slides_generation' or 'slides')
-  const limitRow = limits.find((l: any) => l.product_id === 'slides_generation' || l.product_id === 'slides');
+  const limitRow = limits.find(
+    (l: any) =>
+      l.product_id === "slides_generation" || l.product_id === "slides",
+  );
   let slidesLimit: number | null = null;
   try {
     if (limitRow && limitRow.rules) {
-      const rules = typeof limitRow.rules === 'string' ? JSON.parse(limitRow.rules) : limitRow.rules;
-      if (rules?.rules && Array.isArray(rules.rules) && rules.rules.length > 0) {
+      const rules =
+        typeof limitRow.rules === "string"
+          ? JSON.parse(limitRow.rules)
+          : limitRow.rules;
+      if (
+        rules?.rules &&
+        Array.isArray(rules.rules) &&
+        rules.rules.length > 0
+      ) {
         slidesLimit = rules.rules[0].limit ?? null;
       } else if (rules?.limit) {
         slidesLimit = rules.limit;
@@ -428,7 +382,7 @@ function UsageWidget() {
 
   const items = [
     {
-      name: 'Slides',
+      name: "Slides",
       usage: slidesUsed || 0,
       limit: slidesLimit || 1000,
     },
@@ -438,9 +392,17 @@ function UsageWidget() {
 
   return (
     <div>
-      <UsageMeter usage={items} variant="linear" size="sm" title="Usage" description="Current billing period" progressColor="usage" />
+      <UsageMeter
+        usage={items}
+        variant="linear"
+        size="sm"
+        progressColor="usage"
+        className="p-0 border-transparent"
+      />
       {periodEnd ? (
-        <div className="text-xs text-muted-foreground mt-2">Refresh: {new Date(periodEnd).toLocaleString()}</div>
+        <div className="text-xs text-muted-foreground mt-2">
+          Refresh: {new Date(periodEnd).toLocaleString()}
+        </div>
       ) : null}
     </div>
   );

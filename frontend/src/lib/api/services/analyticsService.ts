@@ -1,11 +1,19 @@
 import { AnalyticsRepository } from '@/lib/supabase/repos/AnalyticsRepository';
-import type { Database } from '@/types/database';
 
 const analyticsService = {
-  // Fetch aggregated analytics for user or brand
+  // Fetch aggregated analytics for user or brand (delegates to repository)
   async getAnalytics(timeframe: 'day' | 'week' | 'month' = 'week', brandId?: string | null) {
-    // For now delegate to repository. Repository is a TODO but keep shape consistent.
-    return await AnalyticsRepository.getAllUserAnalytics();
+    return await AnalyticsRepository.getAnalytics({ brandId });
+  },
+
+  // Get a single post analytics row
+  async getPostAnalytics(postId: string) {
+    return await AnalyticsRepository.getPostAnalytics(postId);
+  },
+
+  // Get analytics history (for charting / trends)
+  async getAnalyticsHistory(opts?: { brandId?: string | null; postId?: string; from?: string; to?: string }) {
+    return await AnalyticsRepository.getAnalyticsHistory(opts);
   },
 
   async getVariantPerformance(brandId?: string | null) {

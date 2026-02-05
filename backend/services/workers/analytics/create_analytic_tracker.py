@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from backend.services.integrations.supabase.client import get_supabase
+from services.integrations.supabase.client import get_supabase
 
 async def create_analytic_tracker(post_id: str):
     """

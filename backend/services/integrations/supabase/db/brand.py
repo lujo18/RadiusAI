@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import List, Literal
 
-from backend.models.platform_integration import PlatformIntegration
-from backend.models.user import BrandSettings
-from backend.services.integrations.supabase.client import get_supabase
+from models.platform_integration import PlatformIntegration
+from models.user import BrandSettings
+from services.integrations.supabase.client import get_supabase
 
 
 def create_supabase_brand(

@@ -12,6 +12,7 @@ export const analyticsKeys = {
 
 // ==================== QUERIES ====================
 
+
 export function useAnalytics(timeframe: 'day' | 'week' | 'month' = 'week', brandId?: string | null) {
   return useQuery({
     queryKey: analyticsKeys.byTimeframe(timeframe, brandId),

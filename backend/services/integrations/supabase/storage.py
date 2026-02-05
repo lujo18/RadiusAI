@@ -6,7 +6,7 @@ Mirrors frontend StorageRepository.ts pattern.
 from typing import List, Dict, Optional, BinaryIO
 from io import BytesIO
 from PIL import Image
-from backend.services.integrations.supabase.client import get_supabase
+from services.integrations.supabase.client import get_supabase
 
 
 # ==================== UPLOAD OPERATIONS ====================

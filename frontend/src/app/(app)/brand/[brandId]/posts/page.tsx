@@ -53,6 +53,7 @@ import { platforms } from "@/constants/platforms";
 import { downloadSlides } from "@/util/downloadSlides";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useState } from "react";
+import { useAnalytics } from "@/lib/api/hooks";
 
 export default function Page({ params }: { params: Promise<{ brandId: string }> }) {
   // Brand switcher
@@ -102,6 +103,7 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
   };
 
   const { data, isLoading, error } = usePostsByBrand(brandId);
+  const { data: analyticData } = useAnalytics()
 
   const postingModal = usePostingModal();
   // Fetch platform integrations for this brand

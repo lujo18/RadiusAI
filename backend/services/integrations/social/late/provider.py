@@ -1,8 +1,8 @@
 # backend/services/integrations/provider.py
 from typing import List
-from backend.config import Config
-from backend.services.integrations.social.social_provider import CreateAuthUrlResponse, SaveIntegrationResponse, SocialProvider
-from backend.util import generate_state
+from config import Config
+from services.integrations.social.social_provider import CreateAuthUrlResponse, SaveIntegrationResponse, SocialProvider
+from util import generate_state
 from .social_account import create_auth_url
 from fastapi.responses import RedirectResponse
 

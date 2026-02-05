@@ -2,16 +2,16 @@ from typing import List
 from typing import Optional, Literal
 import httpx
 
-from backend.config import Config
-from backend.models.post import Post
-from backend.services.integrations.supabase.db.post import (
+from config import Config
+from models.post import Post
+from services.integrations.supabase.db.post import (
     get_post,
     update_post,
     update_post_status,
 )
 from ..social_provider import CreateAuthUrlResponse, SaveIntegrationResponse
 from typing import cast
-from backend.services.integrations.supabase.db.brand import (
+from services.integrations.supabase.db.brand import (
     connect_social_account_to_brand,
     get_social_accounts,
     update_social_account_status,
@@ -162,21 +162,25 @@ async def make_post(
         raise PermissionError("brand_id does not match post")
 
     user_id = raw_post.get("user_id")
+    
+    # Publish flow
+    # 1) collect connected integrations
+    social_integrations = get_social_accounts(brand_id, platforms)
+    
+    platform_ids = [i.id for i in social_integrations]
 
     # Draft flow: just update status
     if mode == "draft":
-        update_post(post_id, {"status": "draft"}, user_id)
+        update_post(post_id, {"status": "draft", "platform_ids": platform_ids}, user_id)
 
     # Scheduled flow: set scheduled_time and status
     if mode == "scheduled":
-        updates = {"status": "scheduled"}
+        updates = {"status": "scheduled", "platform_ids": platform_ids}
         if scheduled_at:
             updates["scheduled_time"] = scheduled_at
         update_post(post_id, updates, user_id)
 
-    # Publish flow
-    # 1) collect connected integrations
-    social_integrations = get_social_accounts(brand_id, platforms)
+    
 
     # Extract pfm account ids defensively
     pfm_account_ids = []
@@ -231,31 +235,37 @@ async def make_post(
 
     print("MAKE POST PAYLOAD", payload)
 
-    async with httpx.AsyncClient() as client:
-        r = await client.post(
-            "https://api.postforme.dev/v1/social-posts",
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {POST_FOR_ME_API_KEY}",
-            },
-            json=payload,
-            timeout=30.0,
-        )
-        r.raise_for_status()
-        resp = r.json()
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                "https://api.postforme.dev/v1/social-posts",
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {POST_FOR_ME_API_KEY}",
+                },
+                json=payload,
+                timeout=30.0,
+            )
+            r.raise_for_status()
+            resp = r.json()
+    
+            
+        print("POST FOR ME RESPONSE:", resp)
 
-    # Persist external ids and mark posted
-    external_post_id = resp.get("id") or resp.get("post_id")
+        # Persist external ids and mark posted
+        external_post_id = resp.get("id") or resp.get("post_id")
 
-    status = "posting" if mode == "publish" else mode
+        status = "posting" if mode == "publish" else mode
 
-    updates = {"status": status}
-    if external_post_id:
-        updates["external_post_id"] = external_post_id
+        updates = {"status": status, "platform_ids": platform_ids}
+        if external_post_id:
+            updates["external_post_id"] = external_post_id
 
-    update_post(post_id, updates, user_id)
+        update_post(post_id, updates, user_id)
 
-    return {"status": "posted", "external_post_id": external_post_id}
+        return {"status": "posted", "external_post_id": external_post_id}
+    except Exception as e:
+            print("FAILED TO POST, POSTFORME ", e);
 
 
 async def publish_post(brand_id: str, platforms: List[str], post_id: str):

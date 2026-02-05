@@ -3,14 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Literal
 
-from backend.models.post import Post
-from backend.models.user import BrandSettings
-from backend.services.integrations.social.provider import get_social_provider
-from backend.services.integrations.supabase.db.post import get_post
-from backend.services.profile.connect_account import connect_social
+from models.post import Post
+from models.user import BrandSettings
+from services.integrations.social.provider import get_social_provider
+from services.integrations.supabase.db.post import get_post
+from services.profile.connect_account import connect_social
 
-from backend.auth import get_current_user
-from backend.services.profile.post import (
+from auth import get_current_user
+from services.profile.post import (
     send_post,
 )  # Assuming auth is set up in backend/auth.py
 

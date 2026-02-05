@@ -7,8 +7,8 @@ from pathlib import Path
 # Add parent directory to path so we can import backend module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backend.models.slide import PostSlide, TextElement, BackgroundConfig, TextAlign, FontStyle, BackgroundType
-from backend.services.pillow.renderSlides import SlideRenderer
+from models.slide import PostSlide, TextElement, BackgroundConfig, TextAlign, FontStyle, BackgroundType
+from services.pillow.renderSlides import SlideRenderer
 
 # Create a test slide with header_and_body layout (matching slide_layouts.py)
 test_slide = PostSlide(

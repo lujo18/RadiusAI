@@ -1,8 +1,8 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
-from backend.auth import get_current_user, get_optional_user
-from backend.services.integrations.supabase.client import get_supabase, get_stripe_supabase
-from backend.config import Config
+from auth import get_current_user, get_optional_user
+from services.integrations.supabase.client import get_supabase, get_stripe_supabase
+from config import Config
 import stripe
 import json
 

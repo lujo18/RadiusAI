@@ -2,10 +2,10 @@ import stripe
 from typing import Optional, Dict, Any
 from datetime import datetime
 
-from backend.config import Config
-from backend.services.usage import repo as usage_repo
-from backend.services.usage import rules as usage_rules
-from backend.services.integrations.supabase.client import get_supabase
+from config import Config
+from services.usage import repo as usage_repo
+from services.usage import rules as usage_rules
+from services.integrations.supabase.client import get_supabase
 
 # initialize stripe key from config (billing_service sets this too, but ensure module-safe)
 if not Config.STRIPE_SECRET_KEY:

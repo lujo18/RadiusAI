@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 
-from backend.services.integrations.supabase.client import get_supabase
+from services.integrations.supabase.client import get_supabase
 
 
 def increment_usage_via_rpc(user_id: str, metric: str, amount: int = 1, period_start: Optional[str] = None, period_end: Optional[str] = None, event_id: Optional[str] = None) -> Optional[Dict[str, Any]]:

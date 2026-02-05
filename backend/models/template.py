@@ -55,20 +55,27 @@ class TemplatePerformance(BaseModel):
 # ==================== TEMPLATE MODELS ====================
 
 class Template(BaseModel):
+    # Required fields from database
     id: str
     name: str
-    is_default: bool = False
-    category: str  # Supabase: string
-    status: str  # Supabase: string
-    created_at: str  # Supabase: string (ISO)
-    updated_at: str  # Supabase: string (ISO)
+    user_id: str
+    
+    # Optional fields with defaults
+    is_default: Optional[bool] = False
+    category: Optional[str] = ""  # Supabase: string
+    status: Optional[str] = "active"  # Supabase: string
+    created_at: Optional[str] = None  # Supabase: string (ISO)
+    updated_at: Optional[str] = None  # Supabase: string (ISO)
     style_config: Optional[dict] = None  # Supabase: JSON | null
-    content_rules: dict  # Supabase: JSON
+    content_rules: Optional[dict] = None  # Supabase: JSON
     brand_id: Optional[str] = None  # Supabase: string | null
-    user_id: str  # Supabase: string
     tags: Optional[List[str]] = None  # Supabase: string[] | null
-    favorite: bool = False  # Supabase: boolean
+    favorite: Optional[bool] = False  # Supabase: boolean
     parent_id: Optional[str] = None  # Supabase: string | null
+    
+    class Config:
+        # Allow extra fields from JSON for flexibility
+        extra = "allow"
 
 class CreateTemplateRequest(BaseModel):
     name: str

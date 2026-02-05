@@ -1,4 +1,4 @@
-from backend.config import Config
+from config import Config
 import requests
 
 api_key = Config.LATE_API_KEY

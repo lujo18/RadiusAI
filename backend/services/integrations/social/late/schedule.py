@@ -1,5 +1,5 @@
 import requests
-from backend.config import Config
+from config import Config
 
 # Schedule a post via the Late API
 response = requests.post(

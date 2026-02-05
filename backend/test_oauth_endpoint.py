@@ -14,7 +14,7 @@ os.environ['LATE_API_KEY'] = 'test_key_for_validation'
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from backend.routers.account import router
+from routers.account import router
 
 # Create minimal app with just our router
 app = FastAPI()

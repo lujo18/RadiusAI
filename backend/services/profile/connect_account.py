@@ -1,6 +1,6 @@
 import requests
 from typing import Optional
-from backend.config import Config
+from config import Config
 
 
 def connect_social(late_profile_id: str, social_platform: str) -> Optional[str]:

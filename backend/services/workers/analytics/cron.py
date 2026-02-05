@@ -4,7 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
 
-from backend.services.workers.analytics.analytic_worker import process_due_posts
+from services.workers.analytics.analytic_worker import process_due_posts
 
 scheduler = BackgroundScheduler()
 

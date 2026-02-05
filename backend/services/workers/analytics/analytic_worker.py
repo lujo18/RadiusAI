@@ -2,8 +2,8 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from backend.services.integrations.supabase.client import get_supabase
-from backend.services.integrations.social.postforme.analytics_client import (
+from services.integrations.supabase.client import get_supabase
+from services.integrations.social.postforme.analytics_client import (
     get_postforme_analytics_client,
 )
 
@@ -28,7 +28,7 @@ async def fetch_platform_metrics(post_id: str) -> dict:
     """
     # 1) Get the post from Supabase to find pfm_post_id (stored as external_post_id)
     try:
-        post_response = supabase.table("posts").select("external_post_id, platform").eq("id", post_id).single().execute()
+        post_response = supabase.table("posts").select("external_post_id, platform_ids").eq("id", post_id).single().execute()
         
         if not post_response.data:
             logger.warning(f"Post {post_id} not found in Supabase")
@@ -36,7 +36,7 @@ async def fetch_platform_metrics(post_id: str) -> dict:
         
         post = post_response.data
         pfm_post_id = post.get("external_post_id")
-        platform = post.get("platform", "").lower()
+        platform_ids = post.get("platform_ids")
         
         if not pfm_post_id:
             logger.warning(f"Post {post_id} has no external_post_id (pfm_post_id)")
@@ -44,34 +44,40 @@ async def fetch_platform_metrics(post_id: str) -> dict:
         
         # 2) Call PostForMe API with the social_post_id
         # Using external_post_id as the social_post_id for PostForMe queries
-        analytics_response = await postforme_client.get_post_analytics(
-            social_post_id=pfm_post_id,
-            limit=1,
-            expand=["metrics"]
-        )
-        
-        if not analytics_response or not analytics_response.data:
-            logger.warning(f"No analytics data from PostForMe for post {post_id}")
-            return {}
-        
-        # 3) Extract metrics from first item (limit=1)
-        item = analytics_response.data[0]
-        
-        if not item.metrics:
-            logger.warning(f"No metrics in PostForMe response for post {post_id}")
-            return {}
-        
-        # 4) Map PostForMe metrics to our schema
-        metrics_dict = item.metrics.dict()
-        
-        return {
-            "likes": metrics_dict.get("likes", 0),
-            "comments": metrics_dict.get("comments", 0),
-            "shares": metrics_dict.get("shares", 0),
-            "saves": metrics_dict.get("favorites", 0),  # PostForMe uses 'favorites' for saves
-            "impressions": metrics_dict.get("reach", 0),
-            "last_updated": datetime.now(timezone.utc).isoformat(),
-        }
+        for platform in platform_ids:
+            logger.info("Getting analytics for post:", pfm_post_id)
+            analytics_response = await postforme_client.get_post_analytics(
+                social_post_id=pfm_post_id,
+                platform_id=platform,
+                limit=1,
+                expand=["metrics"]
+            )
+            
+            if not analytics_response or not analytics_response.data:
+                logger.warning(f"No analytics data from PostForMe for post {post_id}")
+                return {}
+            
+            # 3) Extract metrics from first item (limit=1)
+            item = analytics_response.data[0]
+            
+            if not item.metrics:
+                logger.warning(f"No metrics in PostForMe response for post {post_id}")
+                return {}
+            
+            # 4) Map PostForMe metrics to our schema
+            metrics_dict = item.metrics.dict()
+            
+            return {
+                "likes": metrics_dict.get("likes", 0),
+                "comments": metrics_dict.get("comments", 0),
+                "shares": metrics_dict.get("shares", 0),
+                "saves": metrics_dict.get("favorites", 0),  # PostForMe uses 'favorites' for saves
+                "impressions": metrics_dict.get("view_count", 0),
+                "total_time_watched": metrics_dict.get("total_time_watched", 0),
+                "average_time_watched": metrics_dict.get("average_time_watched", 0),
+                "new_followers": metrics_dict.get("new_followers", 0),               
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+            }
     
     except Exception as e:
         logger.error(f"Error fetching metrics for post {post_id}: {e}")
@@ -191,13 +197,24 @@ async def process_single_post(track_row: dict, post_row: dict):
             "saves": metrics.get("saves", 0),
             "impressions": metrics.get("impressions", 0),
             "engagement_rate": engagement_rate,
-            "last_updated": now.isoformat(),
+            "total_time_watched": metrics.get("total_time_watched", 0),
+            "average_time_watched": metrics.get("average_time_watched", 0),
+            "new_followers": metrics.get("new_followers", 0),          
+            "brand_id": post_row.get("brand_id"),
+            "current_interval": track_row.get("current_interval"),
+            "collection_count": track_row.get("collection_count")
         }
         
         # Upsert: update if post_analytics already exists for this post, else insert
         supabase.table("post_analytics").upsert(
-            analytics_record,
+            {**analytics_record, "last_updated": now.isoformat()},
             on_conflict="post_id"
+        ).execute()
+
+        
+        supabase.table("post_analytics_history").upsert(
+            analytics_record,
+            on_conflict="post_id,collection_count"
         ).execute()
         
         logger.info(f"Updated analytics for post {post_id}")

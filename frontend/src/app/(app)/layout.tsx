@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store";
 import { useState, useEffect } from "react";
 import SubscriptionBanner from "@/components/SubscriptionBanner";
@@ -19,13 +19,16 @@ import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-  Sidebar
+  Sidebar,
 } from "@/components/animate-ui/components/radix/sidebar";
-import PostingModalProvider from '@/components/modals/PostingModalProvider';
+import PostingModalProvider from "@/components/modals/PostingModalProvider";
 import { FiBell, FiSearch } from "react-icons/fi";
 import { logOut } from "@/lib/supabase/auth";
-import DashboardSidebar from '@/components/Dashboard/Sidebar';
-import { SidebarNavProvider, NavItem } from '@/components/Dashboard/sidebarContext';
+import DashboardSidebar from "@/components/Dashboard/Sidebar";
+import {
+  SidebarNavProvider,
+  NavItem,
+} from "@/components/Dashboard/sidebarContext";
 import {
   LayoutDashboard,
   GalleryVerticalEnd,
@@ -35,15 +38,17 @@ import {
   BarChart3,
   Zap,
   Settings,
-} from 'lucide-react';
+} from "lucide-react";
+import BrandSelector from "@/components/Dashboard/BrandSelector";
+import { Highlight } from '@/components/animate-ui/primitives/effects/highlight';
+import { useBrands } from '@/lib/api/hooks/useBrands';
+import { useBrandFilter } from '@/hooks/useBrandFilter';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-export default function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const {brandId} = useParams()
+  const { brandId } = useParams();
+  const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const supabaseUser = useAuthStore((state) => state.supabaseUser);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -51,7 +56,35 @@ export default function AppLayout({
   const logout = useAuthStore((state) => state.logout);
   const [notifications] = useState(2);
   const [subscriptionChecked, setSubscriptionChecked] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'calendar' | 'templates' | 'analytics' | 'style' | 'generate' | 'profiles'>('overview');
+  const [activeTab, setActiveTab] = useState<
+    | "overview"
+    | "calendar"
+    | "templates"
+    | "analytics"
+    | "style"
+    | "generate"
+    | "profiles"
+  >("overview");
+
+  // Brands for the brand selector in the header (overview layout)
+  const { data: brands, isLoading: brandsLoading } = useBrands();
+  const { activeBrandId } = useBrandFilter();
+  const isMobile = useIsMobile();
+
+  const activeBrand = brands?.find((b: any) => b.id === activeBrandId);
+  const displayName = activeBrand ? ((activeBrand.brand_settings as any)?.name || 'Brand') : 'All Brands';
+  const displayPlan = activeBrand ? 'Brand View' : 'Overview';
+
+  const handleBrandSwitch = (brandId: string | null) => {
+    if (brandId === null) {
+      router.push('/overview');
+    } else {
+      const pathSegments = pathname.split('/').filter(Boolean);
+      const currentPage = pathSegments[pathSegments.length - 1];
+      const isSubPage = ['generate', 'calendar', 'templates', 'analytics', 'settings'].includes(currentPage);
+      router.push(isSubPage ? `/brand/${brandId}/${currentPage}` : `/brand/${brandId}`);
+    }
+  };
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -72,9 +105,10 @@ export default function AppLayout({
   useEffect(() => {
     if (!isLoading && isAuthenticated && user) {
       // User is authenticated - let them see dashboard with banner if no subscription
-      console.log("[App Layout] User authenticated, plan:", user?.plan || "none");
-
-    
+      console.log(
+        "[App Layout] User authenticated, plan:",
+        user?.plan || "none",
+      );
 
       setSubscriptionChecked(true);
     } else if (!isLoading && !isAuthenticated) {
@@ -102,62 +136,154 @@ export default function AppLayout({
     <SidebarProvider>
       {/** Compute default nav for top-level contexts (brand vs overview) */}
       <PostingModalProvider>
-      <SidebarNavProvider
-        initial={(() => {
-          // Provide href as functions so resolved hrefs use the current activeBrandId
-          return [
-            { title: "Overview", key: "overview", href: (b?: string | null) => (b ? `/brand/${b}` : "/overview"), icon: LayoutDashboard },
-            { title: "Posts", key: "posts", href: (b?: string | null) => (b ? `/brand/${b}/posts` : "/overview"), icon: GalleryVerticalEnd },
-            { title: "Generate", key: "generate", href: (b?: string | null) => (b ? `/brand/${b}/generate` : "/overview"), icon: Sparkles },
-            { title: "Calendar", key: "calendar", href: (b?: string | null) => (b ? `/brand/${b}/calendar` : "/overview"), icon: Calendar },
-            { title: "Templates", key: "templates", href: (b?: string | null) => (b ? `/brand/${b}/templates` : "/overview"), icon: FileText },
-            { title: "Analytics", key: "analytics", href: (b?: string | null) => (b ? `/brand/${b}/analytics` : "/overview"), icon: BarChart3 },
-            { title: "Automation", key: "automation", href: (b?: string | null) => (b ? `/brand/${b}/automation` : "/overview"), icon: Zap },
-            { title: "Settings", key: "settings", href: (b?: string | null) => (b ? `/brand/${b}/settings` : "/overview"), icon: Settings },
-          ];
-        })()}
-      >
-        <DashboardSidebar 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          onLogout={logout}
-          
-          header={
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-            <div className="flex items-center gap-2 px-4">
-              <SidebarTrigger className="-ml-1" />
-              <Separator orientation="vertical" className="mr-2 h-4" />
-              
-
-              {/* Search and Notifications */}
-              <div className="ml-auto flex items-center gap-4">
-                <div className="relative hidden md:block">
-                  <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-64 h-9 pl-9 pr-3 bg-background border rounded-lg text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                  />
-                </div>
-
-                <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
-                  <FiBell className="w-5 h-5 text-foreground/80" />
-                  {notifications > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </header>
-        }
+        <SidebarNavProvider
+          initial={(() => {
+            // Provide href as functions so resolved hrefs use the current activeBrandId
+            return [
+              {
+                title: "Overview",
+                key: "overview",
+                href: (b?: string | null) => (b ? `/brand/${b}` : "/overview"),
+                icon: LayoutDashboard,
+              },
+              {
+                title: "Posts",
+                key: "posts",
+                href: (b?: string | null) =>
+                  b ? `/brand/${b}/posts` : "/overview",
+                icon: GalleryVerticalEnd,
+              },
+              {
+                title: "Generate",
+                key: "generate",
+                href: (b?: string | null) =>
+                  b ? `/brand/${b}/generate` : "/overview",
+                icon: Sparkles,
+              },
+              {
+                title: "Calendar",
+                key: "calendar",
+                href: (b?: string | null) =>
+                  b ? `/brand/${b}/calendar` : "/overview",
+                icon: Calendar,
+              },
+              {
+                title: "Templates",
+                key: "templates",
+                href: (b?: string | null) =>
+                  b ? `/brand/${b}/templates` : "/overview",
+                icon: FileText,
+              },
+              {
+                title: "Analytics",
+                key: "analytics",
+                href: (b?: string | null) =>
+                  b ? `/brand/${b}/analytics` : "/overview",
+                icon: BarChart3,
+              },
+              {
+                title: "Automation",
+                key: "automation",
+                href: (b?: string | null) =>
+                  b ? `/brand/${b}/automation` : "/overview",
+                icon: Zap,
+              },
+              {
+                title: "Settings",
+                key: "settings",
+                href: (b?: string | null) =>
+                  b ? `/brand/${b}/settings` : "/overview",
+                icon: Settings,
+              },
+            ];
+          })()}
         >
-        <SubscriptionBanner />
-        <SidebarInset>
-          {children}
-        </SidebarInset>
-        </DashboardSidebar>
+          {/* Hide the sidebar for the top-level overview page */}
+          {pathname !== "/overview" ? (
+            <DashboardSidebar
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onLogout={logout}
+              header={
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                  <div className="flex items-center gap-2 px-4">
+                    <SidebarTrigger className="-ml-1" />
+                    <Separator orientation="vertical" className="mr-2 h-4" />
+
+                    {/* Search and Notifications */}
+                    <div className="ml-auto flex items-center gap-4">
+                      <div className="relative hidden md:block">
+                        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 w-4 h-4" />
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          className="w-64 h-9 pl-9 pr-3 bg-background border rounded-lg text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        />
+                      </div>
+
+                      <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
+                        <FiBell className="w-5 h-5 text-foreground/80" />
+                        {notifications > 0 && (
+                          <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </header>
+              }
+            >
+              <SubscriptionBanner />
+              <SidebarInset>{children}</SidebarInset>
+            </DashboardSidebar>
+          ) : (
+            // Render children full-width when sidebar hidden (overview)
+
+            <div className="min-h-screen w-full">
+              <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                <div className="flex items-center gap-2 px-4">
+
+
+                  <Highlight enabled hover controlledItems mode="children">
+                    <BrandSelector
+                      brands={brands}
+                      brandsLoading={brandsLoading}
+                      activeBrandId={activeBrandId}
+                      isMobile={isMobile}
+                      displayName={displayName}
+                      displayPlan={displayPlan}
+                      handleBrandSwitch={handleBrandSwitch}
+                      onCreateBrand={() => router.push('/brand/create')}
+                    />
+                  </Highlight>
+
+                  <Separator orientation="vertical" className="mr-2 h-4" />
+
+                  {/* Search and Notifications */}
+                  <div className="ml-auto flex items-center gap-4">
+                    <div className="relative hidden md:block">
+                      <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        className="w-64 h-9 pl-9 pr-3 bg-background border rounded-lg text-sm text-foreground placeholder:text-foreground/40 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                      />
+                    </div>
+
+                    <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
+                      <FiBell className="w-5 h-5 text-foreground/80" />
+                      {notifications > 0 && (
+                        <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </header>
+              <SubscriptionBanner />
+              <main>{children}</main>
+            </div>
+          )}
         </SidebarNavProvider>
-        </PostingModalProvider>
+      </PostingModalProvider>
     </SidebarProvider>
   );
 }

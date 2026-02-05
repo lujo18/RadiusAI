@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, Header
 from typing import Optional
 import jwt
 from jwt import PyJWKClient
-from backend.config import Config
+from config import Config
 
 SUPABASE_URL = Config.SUPABASE_URL
 SUPABASE_JWT_SECRET = Config.SUPABASE_JWT_SECRET

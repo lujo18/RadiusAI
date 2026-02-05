@@ -6,21 +6,21 @@ import React from "react";
 import { SocialItem } from "./SocialItem";
 
 type SocialIntegrationTypes = {
-  platform: typeof platforms[number];
+  platformKey: typeof platforms[number]["id"];
   integrations: Database["public"]["Tables"]["platform_integrations"]["Row"][];
   onConnect: (platformId: string) => void;
   onDisconnect: (integrationId: string) => void;
 }
 
 export const SocialIntegration = ({
-  platform,
+  platformKey,
   integrations,
   onConnect,
   onDisconnect
 }: SocialIntegrationTypes) => {
   
   // Find integration for this platform
-  const integration = integrations.find(i => i.platform === platform.id);
+  const integration = integrations.find(i => i.platform === platformKey);
   const isConnected = !!integration && integration.status === "connected";
 
   // Placeholder handlers and state (replace with real logic)
@@ -40,10 +40,10 @@ export const SocialIntegration = ({
 
   return (
     <div
-      key={platform.id}
+      key={platformKey}
       className="flex items-center justify-between p-4 bg-muted/50 border border rounded-lg hover:border/50 transition"
     >
-      <SocialItem platform={platform} integration={integration!}/>
+      <SocialItem platformKey={platformKey} integration={integration!}/>
 
       <Button
         onClick={() => {
@@ -52,17 +52,17 @@ export const SocialIntegration = ({
             if (!accountId) return
             handleDisconnect(accountId);
           } else {
-            handleConnect(platform.id);
+            handleConnect(platformKey);
           }
         }}
-        disabled={connecting === platform.id}
+        disabled={connecting === platformKey}
         className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
           isConnected
             ? 'bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20'
             : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
         }`}
       >
-        {connecting === platform.id ? (
+        {connecting === platformKey ? (
           <span className="flex items-center gap-2">
             <span className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></span>
             Connecting...

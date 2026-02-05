@@ -14,10 +14,18 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 
-from backend.services.integrations.supabase.client import get_supabase
+from services.integrations.supabase.client import get_supabase
 
 logger = logging.getLogger(__name__)
-supabase = get_supabase()
+# Initialize Supabase lazily (when first needed) instead of at module import time
+_supabase = None
+
+def _get_supabase():
+    """Get Supabase client (lazy initialization)"""
+    global _supabase
+    if _supabase is None:
+        _supabase = get_supabase()
+    return _supabase
 
 
 async def fetch_due_automations(batch_size: int = 50) -> List[Dict[str, Any]]:
@@ -38,7 +46,7 @@ async def fetch_due_automations(batch_size: int = 50) -> List[Dict[str, Any]]:
         now = datetime.now(timezone.utc).isoformat()
         
         response = (
-            supabase.table("automations")
+            _get_supabase().table("automations")
             .select("*")
             .eq("is_active", True)
             .lte("next_run_at", now)
@@ -71,7 +79,7 @@ async def lock_automation_row(automation_id: UUID) -> Optional[Dict[str, Any]]:
     """
     try:
         response = (
-            supabase.table("automations")
+            _get_supabase().table("automations")
             .select("*")
             .eq("id", str(automation_id))
             .single()
@@ -103,7 +111,7 @@ async def get_template_by_id(template_id: UUID, brand_id: UUID) -> Optional[Dict
     """
     try:
         response = (
-            supabase.table("templates")
+            _get_supabase().table("templates")
             .select("*")
             .eq("id", str(template_id))
             .eq("brand_id", str(brand_id))
@@ -136,7 +144,7 @@ async def get_cta_by_id(cta_id: UUID, brand_id: UUID) -> Optional[Dict[str, Any]
     """
     try:
         response = (
-            supabase.table("brand_ctas")
+            _get_supabase().table("brand_ctas")
             .select("*")
             .eq("id", str(cta_id))
             .eq("brand_id", str(brand_id))
@@ -192,7 +200,7 @@ async def insert_automation_run(
             "error_message": error_message,
         }
         
-        response = supabase.table("automation_runs").insert(payload).execute()
+        response = _get_supabase().table("automation_runs").insert(payload).execute()
         
         if response.data:
             logger.info(f"Inserted automation_run for {automation_id}")
@@ -247,7 +255,7 @@ async def update_automation_after_success(
         }
         
         response = (
-            supabase.table("automations")
+            _get_supabase().table("automations")
             .update(payload)
             .eq("id", str(automation_id))
             .execute()
@@ -307,7 +315,7 @@ async def update_automation_after_failure(
         }
         
         response = (
-            supabase.table("automations")
+            _get_supabase().table("automations")
             .update(payload)
             .eq("id", str(automation_id))
             .execute()

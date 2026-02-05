@@ -2,12 +2,17 @@ import { platforms } from "@/constants/platforms";
 import { Database } from "@/types/database";
 
 type SocialItemType = {
-  platform: typeof platforms[number];
+  platformKey: typeof platforms[number]["id"];
   integration: Database["public"]["Tables"]["platform_integrations"]["Row"];
 }
 
 
-export const SocialItem = ({platform, integration}: SocialItemType) => {
+export const SocialItem = ({platformKey, integration}: SocialItemType) => {
+
+  const [platform] = platforms.filter(platform => platform.id == platformKey)
+
+  if (!platform || !integration) return
+
 
   const Icon = platform.icon;
   const isConnected = !!integration;

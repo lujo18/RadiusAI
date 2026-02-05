@@ -14,10 +14,11 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from backend.services.integrations.supabase.client import get_supabase
-from backend.models.slide import PostContent
-from backend.models.template import Template
-from backend.models.user import BrandSettings
+from services.integrations.supabase.db.platformIntegration import getIntegrationById
+from services.integrations.supabase.client import get_supabase
+from models.slide import PostContent
+from models.template import Template
+from models.user import BrandSettings
 
 from .helpers import (
     fetch_due_automations,
@@ -31,7 +32,15 @@ from .helpers import (
 from .schedule_calculator import compute_next_run
 
 logger = logging.getLogger(__name__)
-supabase = get_supabase()
+# Lazy initialization - will be called when first needed
+_supabase = None
+
+def _get_supabase():
+    """Get Supabase client (lazy initialization)"""
+    global _supabase
+    if _supabase is None:
+        _supabase = get_supabase()
+    return _supabase
 
 BATCH_SIZE = 50
 
@@ -109,60 +118,81 @@ async def run_automation(automation_id: UUID) -> dict:
 
         # Step 2: Extract rotation items
         template_ids = automation.get("template_ids", [])
-        cta_ids = automation.get("cta_ids", [])
-        platforms = automation.get("platforms", [])
+        cta_ids = automation.get("cta_ids", [])  # CTAs are optional
+        platformIds = automation.get("platforms", [])
+        
+        platforms = []
+        for i in platformIds:
+            integration = getIntegrationById(i)
+            if integration:
+                platforms.append(integration.platform)
+                
         brand_id = automation.get("brand_id")
         cursor_template_index = automation.get("cursor_template_index", 0) % max(len(template_ids), 1)
-        cursor_cta_index = automation.get("cursor_cta_index", 0) % max(len(cta_ids), 1)
+        cursor_cta_index = automation.get("cursor_cta_index", 0) % max(len(cta_ids), 1) if cta_ids else 0
 
-        if not template_ids or not cta_ids or not platforms:
+        # Validate required fields (templates and platforms are required, CTAs are optional)
+        if not template_ids or not platforms:
             raise ValueError(
                 f"Automation {automation_id} missing required fields: templates={bool(template_ids)}, "
-                f"ctas={bool(cta_ids)}, platforms={bool(platforms)}"
+                f"platforms={bool(platforms)}"
             )
 
         template_id = template_ids[cursor_template_index]
-        cta_id = cta_ids[cursor_cta_index]
+        cta_id = cta_ids[cursor_cta_index] if cta_ids else None  # CTA is optional
 
-        logger.info(
+        print(
             f"Automation {automation_id}: using template {template_id}, "
-            f"cta {cta_id}, platforms {platforms}"
+            f"cta {cta_id if cta_id else 'none'}, platforms {platforms}"
         )
 
-        # Step 3: Fetch template and CTA
+        # Step 3: Fetch template and optionally fetch CTA
         template_dict = await get_template_by_id(template_id, brand_id)
-        cta_dict = await get_cta_by_id(cta_id, brand_id)
+        cta_dict = None
+        if cta_id:
+            cta_dict = await get_cta_by_id(cta_id, brand_id)
 
         if not template_dict:
             raise ValueError(f"Template {template_id} not found")
-        if not cta_dict:
+        if cta_id and not cta_dict:
             raise ValueError(f"CTA {cta_id} not found")
 
         # Step 4: Fetch brand settings
-        brand_response = supabase.table("brands").select("*").eq("id", brand_id).single().execute()
+        brand_response = _get_supabase().table("brand").select("*").eq("id", brand_id).single().execute()
         if not brand_response.data:
             raise ValueError(f"Brand {brand_id} not found")
+        
 
-
-        # TODO! fix the brand settings
         brand_data = brand_response.data
-        brand_settings = BrandSettings(
-            name=brand_data.get("name", ""),
-            description=brand_data.get("description", ""),
-            niche=brand_data.get("niche", ""),
-            tone=brand_data.get("tone", ""),
-            target_audience=brand_data.get("target_audience", ""),
-        )
+        brand_settings_json = brand_data.get("brand_settings", {})
+        
+        # Parse brand_settings from JSON column
+        # BrandSettings now matches frontend structure with all optional fields
+        try:
+            brand_settings = BrandSettings(**brand_settings_json)
+        except Exception as e:
+            logger.error(f"Failed to parse brand settings: {e}", exc_info=True)
+            # Create minimal BrandSettings with defaults
+            brand_settings = BrandSettings(
+                id=brand_data.get("id", str(brand_id)),
+                brand_id=str(brand_id),
+                name=brand_data.get("name", ""),
+                niche="",
+                aesthetic="",
+                target_audience="",
+                brand_voice="",
+            )
 
         # Step 5: Generate slideshow
         logger.info(f"Generating slideshow for automation {automation_id}")
 
         # Import here to avoid circular dependency
-        from backend.services.slides.slide_generation import generate_slideshows
+        from services.slides.slide_generation import generate_slideshows
 
         # Convert template dict to Template model
         template_model = Template(
             id=template_dict.get("id"),
+            user_id=brand_data.get("user_id"),
             name=template_dict.get("name", ""),
             content_rules=template_dict.get("content_rules", {}),
         )
@@ -190,16 +220,17 @@ async def run_automation(automation_id: UUID) -> dict:
         # Step 6: Post to all platforms via PostForMe
         logger.info(f"Posting to platforms: {platforms}")
 
-        from backend.services.integrations.social.postforme.social_account import make_post
+        from services.integrations.social.postforme.social_account import make_post
+        
+        
 
         for platform in platforms:
             try:
-                logger.info(f"Posting to {platform}")
+                print(f"Posting to {platform} with brand {brand_id} post id {post_id}")
                 await make_post(
                     brand_id=str(brand_id),
                     platforms=[platform],  # PostForMe expects a list
-                    post_id=post_id,
-                    mode="publish",
+                    post_id=post_id
                 )
                 run_result["platforms_used"].append(platform)
             except Exception as e:
@@ -218,11 +249,12 @@ async def run_automation(automation_id: UUID) -> dict:
 
         # Step 8: Update rotation cursors
         new_template_index = (cursor_template_index + 1) % len(template_ids)
-        new_cta_index = (cursor_cta_index + 1) % len(cta_ids)
+        new_cta_index = (cursor_cta_index + 1) % len(cta_ids) if cta_ids else 0
 
         # Step 9: Compute next_run_at
         schedule = automation.get("schedule", {})
-        next_run_at = compute_next_run(schedule)
+        user_timezone = automation.get("user_timezone", "")
+        next_run_at = compute_next_run(schedule, user_timezone)
 
         # Step 10: Update automation row
         await update_automation_after_success(

@@ -1,16 +1,16 @@
 import json
 import logging
 from typing import Dict, Optional
-from backend.models.slide import LayoutConfig, PostContent
-from backend.models.user import BrandSettings
-from backend.models import Template
-from backend.services.genai.prompts import SYSTEM_PROMPT
-from backend.services.integrations.groq.client import groq
-from backend.services.usage.service import track_slides_generated
+from models.slide import LayoutConfig, PostContent
+from models.user import BrandSettings
+from models import Template
+from services.genai.prompts import SYSTEM_PROMPT
+from services.integrations.groq.client import groq
+from services.usage.service import track_slides_generated
 from .client import client
 from .slide_layouts import get_all_layout_schemas, SLIDE_LAYOUTS, SlideLayout
 from google.genai import types
-from backend.services.unsplash.getPhotos import queryUnsplashUrls
+from services.unsplash.getPhotos import queryUnsplashUrls
 
 logger = logging.getLogger(__name__)
 

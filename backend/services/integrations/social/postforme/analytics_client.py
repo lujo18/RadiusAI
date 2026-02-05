@@ -1,26 +1,25 @@
 # PostForMe Analytics Client
 # Handles API calls to PostForMe for fetching post metrics
 
+import logging
 import httpx
 from typing import Optional
 from datetime import datetime
-from backend.config import Config
-from backend.models.postforme_analytics import PostForMeAnalyticsResponse
+from services.integrations.supabase.db.platformIntegration import getIntegrationById
+from config import Config
+from models.postforme_analytics import PostForMeAnalyticsResponse
 
 POST_FOR_ME_API_KEY = Config.POST_FOR_ME_API_KEY
-POST_FOR_ME_BASE_URL = "https://api.postforme.dev/v1"
 
+logger = logging.Logger(__name__)
 
 class PostForMeAnalyticsClient:
     """Client for PostForMe analytics API"""
 
-    def __init__(self, api_key: str = POST_FOR_ME_API_KEY):
-        self.api_key = api_key
-        self.base_url = POST_FOR_ME_BASE_URL
-
     async def get_post_analytics(
         self,
         social_post_id: str,
+        platform_id: str,
         limit: int = 1,
         expand: Optional[list[str]] = None
     ) -> Optional[PostForMeAnalyticsResponse]:
@@ -40,19 +39,30 @@ class PostForMeAnalyticsClient:
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {POST_FOR_ME_API_KEY}",
         }
 
         params = {
-            "social_post_id": social_post_id,
+            "external_post_id": social_post_id,
             "limit": limit,
             "expand": expand,  # Will be properly formatted by httpx
         }
+        
+        
+        social_integration = getIntegrationById(platform_id)
+        
+        if social_integration is None:
+            raise ValueError("No social integration found for id", platform_id)
+            
+        
+        social_account_id = social_integration.pfm_account_id
+        
+        print("Getting analytics for post", social_post_id, " from account id", social_account_id)
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
-                    f"{self.base_url}/items",
+                    f"https://api.postforme.dev/v1/social-account-feeds/{social_account_id}",
                     headers=headers,
                     params=params,
                 )

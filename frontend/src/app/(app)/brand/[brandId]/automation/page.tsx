@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTemplates, useBrands } from "@/lib/api/hooks";
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
+import { Play, Pause, Trash2, ChevronRight } from "lucide-react";
 
 import {
   Card,
@@ -14,19 +16,17 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AutomationWizard } from "@/components/automations/AutomationWizard";
 
-type PlatformIntegration = Database["public"]["Tables"]["platform_integrations"]["Row"];
+type PlatformIntegration =
+  Database["public"]["Tables"]["platform_integrations"]["Row"];
+
+type Automation = Database["public"]["Tables"]["automations"]["Row"] & {
+  name?: string | null;
+  description?: string | null;
+};
 
 const POSTING_TIMES = [
   { label: "6:00 AM", value: "06:00" },
@@ -49,327 +49,278 @@ const DAYS_OF_WEEK = [
 
 export default function AutomationPage() {
   const params = useParams();
+  const router = useRouter();
   const brandId = params?.brandId as string;
 
   // Data fetching
   const { data: templates, isLoading: templatesLoading } = useTemplates();
   const { data: brands } = useBrands();
-  const [platformAccounts, setPlatformAccounts] = useState<PlatformIntegration[]>([]);
-  const [accountsLoading, setAccountsLoading] = useState(true);
 
   // State management
-  const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [selectedTime, setSelectedTime] = useState<string>("09:00");
-  const [selectedAccount, setSelectedAccount] = useState<string>("");
-  const [saveLoading, setSaveLoading] = useState(false);
+  const [automationWizardOpen, setAutomationWizardOpen] = useState(false);
+  const [automations, setAutomations] = useState<Automation[]>([]);
+  const [automationsLoading, setAutomationsLoading] = useState(true);
 
-  // Fetch platform integrations for this brand
+  // Fetch automations for this brand
   useEffect(() => {
-    const fetchAccounts = async () => {
+    const fetchAutomations = async () => {
       if (!brandId) return;
       try {
         const { data, error } = await supabase
-          .from("platform_integrations")
+          .from("automations")
           .select("*")
-          .eq("brand_id", brandId);
+          .eq("brand_id", brandId)
+          .order("created_at", { ascending: false });
 
         if (error) throw error;
-        setPlatformAccounts(data || []);
-        if (data && data.length > 0) {
-          setSelectedAccount(data[0].id);
-        }
+        setAutomations(data || []);
       } catch (err) {
-        console.error("Failed to fetch platform accounts:", err);
+        console.error("Failed to fetch automations:", err);
       } finally {
-        setAccountsLoading(false);
+        setAutomationsLoading(false);
       }
     };
 
-    fetchAccounts();
+    fetchAutomations();
   }, [brandId]);
 
+  const handleEditAutomation = (automation: Automation) => {
+    router.push(`/brand/${brandId}/automation/${automation.id}`);
+  };
+
+  const handleCloseWizard = (open: boolean) => {
+    setAutomationWizardOpen(open);
+  };
+
   const handleTemplateToggle = (templateId: string) => {
-    setSelectedTemplates((prev) =>
-      prev.includes(templateId)
-        ? prev.filter((id) => id !== templateId)
-        : [...prev, templateId]
-    );
+    // Not needed in simplified version
   };
 
   const handleDayToggle = (day: string) => {
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
+    // Not needed in simplified version
   };
 
   const handleSave = async () => {
-    if (!selectedTemplates.length) {
-      alert("Please select at least one template");
-      return;
-    }
-    if (!selectedDays.length) {
-      alert("Please select at least one day to post");
-      return;
-    }
-    if (!selectedAccount) {
-      alert("Please select a social media account");
-      return;
-    }
+    // Not needed in simplified version
+  };
 
-    setSaveLoading(true);
+  const handleToggleActive = async (automationId: string, isActive: boolean) => {
     try {
-      // Here you would save the automation settings to your database
-      // For now, just log the configuration
-      console.log("Automation Settings:", {
-        brandId,
-        selectedTemplates,
-        selectedDays,
-        selectedTime,
-        selectedAccount,
-      });
+      const { error } = await supabase
+        .from("automations")
+        .update({ is_active: !isActive })
+        .eq("id", automationId);
 
-      alert("Automation settings saved successfully!");
+      if (error) throw error;
+      setAutomations((prev) =>
+        prev.map((auto) =>
+          auto.id === automationId ? { ...auto, is_active: !isActive } : auto
+        )
+      );
     } catch (err) {
-      console.error("Failed to save automation settings:", err);
-      alert("Failed to save settings. Please try again.");
-    } finally {
-      setSaveLoading(false);
+      console.error("Failed to toggle automation:", err);
+    }
+  };
+
+  const handleDeleteAutomation = async (automationId: string) => {
+    if (!window.confirm("Are you sure you want to delete this automation?"))
+      return;
+    try {
+      const { error } = await supabase
+        .from("automations")
+        .delete()
+        .eq("id", automationId);
+
+      if (error) throw error;
+      setAutomations((prev) => prev.filter((auto) => auto.id !== automationId));
+    } catch (err) {
+      console.error("Failed to delete automation:", err);
     }
   };
 
   const currentBrand = brands?.find((b) => b.id === brandId);
-  const selectedAccountData = platformAccounts.find((a) => a.id === selectedAccount);
 
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Posting Automation
-          </h1>
-          <p className="text-foreground/60">
-            Set up automatic carousel generation and posting schedules
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-foreground mb-2">
+          Posting Automation
+        </h1>
+        <p className="text-foreground/60">
+          Set up automatic carousel generation and posting schedules
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Template Selection */}
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>Select Templates for Rotation</CardTitle>
-                <CardDescription>
-                  Choose which templates to use for generating carousels. The system will rotate through these templates.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {templatesLoading ? (
-                    <p className="text-sm text-foreground/50">Loading templates...</p>
-                  ) : templates && templates.length > 0 ? (
-                    templates.map((template) => (
-                      <div key={template.id} className="flex items-center space-x-3">
-                        <Checkbox
-                          id={`template-${template.id}`}
-                          checked={selectedTemplates.includes(template.id)}
-                          onCheckedChange={() => handleTemplateToggle(template.id)}
-                        />
-                        <label
-                          htmlFor={`template-${template.id}`}
-                          className="flex-1 cursor-pointer text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
-                        >
-                          {template.name}
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-foreground/50">
-                      No templates available. Create one to get started.
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+      <div className="mb-8">
+        <Button onClick={() => setAutomationWizardOpen(true)}>
+          Create Automation
+        </Button>
+      </div>
 
-            {/* Schedule Configuration */}
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle>Posting Schedule</CardTitle>
-                <CardDescription>
-                  Select which days and times you want to post
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Days Selection */}
-                <div>
-                  <Label className="text-base font-semibold mb-3 block">
-                    Days to Post
-                  </Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <div key={day.value} className="flex items-center space-x-3">
-                        <Checkbox
-                          id={`day-${day.value}`}
-                          checked={selectedDays.includes(day.value)}
-                          onCheckedChange={() => handleDayToggle(day.value)}
-                        />
-                        <label
-                          htmlFor={`day-${day.value}`}
-                          className="cursor-pointer text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
-                        >
-                          {day.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+      {/* Automations List */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold text-foreground mb-4">
+          Your Automations
+        </h2>
 
-                <Separator className="bg-border/50" />
-
-                {/* Time Selection */}
-                <div>
-                  <Label htmlFor="time-select" className="text-base font-semibold mb-3 block">
-                    Posting Time
-                  </Label>
-                  <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger id="time-select" className="w-full">
-                      <SelectValue placeholder="Select a time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {POSTING_TIMES.map((time) => (
-                        <SelectItem key={time.value} value={time.value}>
-                          {time.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-foreground/50 mt-2">
-                    All posts will be scheduled for the selected time on their respective days
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+        {automationsLoading ? (
+          <div className="text-center py-12">
+            <p className="text-foreground/60">Loading automations...</p>
           </div>
+        ) : automations.length === 0 ? (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-foreground/60">
+                No automations yet. Create one to get started!
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {automations.map((automation) => (
+              <Card
+                key={automation.id}
+                className="hover:border-primary/50 transition-all duration-300"
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{automation.name}</CardTitle>
+                      {automation.description && (
+                        <CardDescription className="mt-1">
+                          {automation.description}
+                        </CardDescription>
+                      )}
+                    </div>
+                    <Badge
+                      variant={automation.is_active ? "default" : "secondary"}
+                      className="ml-2 whitespace-nowrap"
+                    >
+                      {automation.is_active ? "Active" : "Paused"}
+                    </Badge>
+                  </div>
+                </CardHeader>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Social Account Selection */}
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Active Account</CardTitle>
-                <CardDescription>Select where to post</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {accountsLoading ? (
-                  <p className="text-sm text-foreground/50">Loading accounts...</p>
-                ) : platformAccounts.length > 0 ? (
-                  <>
-                    <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select account" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {platformAccounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium capitalize">
-                                {account.platform}
-                              </span>
-                              <span className="text-xs text-foreground/60">
-                                @{account.username}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    {/* Account Details */}
-                    {selectedAccountData && (
-                      <div className="space-y-3 pt-2 border-t border-border/50">
-                        {selectedAccountData.profile_picture_url && (
-                          <img
-                            src={selectedAccountData.profile_picture_url}
-                            alt={selectedAccountData.username}
-                            className="w-12 h-12 rounded-full"
-                          />
-                        )}
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {selectedAccountData.full_name || "Unnamed Account"}
-                          </p>
-                          <p className="text-xs text-foreground/60">
-                            @{selectedAccountData.username}
-                          </p>
-                          <div className="flex gap-2 text-xs text-foreground/50 pt-2">
-                            <span>{selectedAccountData.followers_count || 0} followers</span>
-                          </div>
-                        </div>
-                        {selectedAccountData.is_business_account && (
-                          <Badge variant="secondary" className="text-xs">
-                            Business Account
+                <CardContent className="space-y-4">
+                  {/* Schedule Info */}
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <p className="text-foreground/60">Templates</p>
+                      <p className="font-medium">
+                        {automation.template_ids?.length || 0} template(s)
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-foreground/60">Platforms</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {automation.platforms?.map((platform) => (
+                          <Badge key={platform} variant="outline" className="text-xs">
+                            {platform.charAt(0).toUpperCase() + platform.slice(1)}
                           </Badge>
-                        )}
+                        ))}
+                      </div>
+                    </div>
+                    {automation.schedule && (
+                      <div>
+                        <p className="text-foreground/60">Schedule</p>
+                        <p className="text-xs text-foreground/50">
+                          {(() => {
+                            const schedule = automation.schedule as Record<string, string[]>;
+                            const activeDays = Object.entries(schedule)
+                              .filter(([, times]) => times && times.length > 0)
+                              .map(([day]) => day.charAt(0).toUpperCase() + day.slice(1));
+                            return activeDays.length > 0
+                              ? `${activeDays.slice(0, 3).join(", ")}${activeDays.length > 3 ? ` +${activeDays.length - 3}` : ""}`
+                              : "No schedule";
+                          })()}
+                        </p>
                       </div>
                     )}
-                  </>
-                ) : (
-                  <p className="text-sm text-foreground/50">
-                    No connected accounts. Please connect a social media account first.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                  </div>
 
-            {/* Summary */}
-            <Card className="glass-card">
-              <CardHeader>
-                <CardTitle className="text-lg">Configuration Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div>
-                  <p className="text-foreground/60">Templates Selected</p>
-                  <p className="font-medium text-foreground">
-                    {selectedTemplates.length} of {templates?.length || 0}
-                  </p>
-                </div>
-                <Separator className="bg-border/50" />
-                <div>
-                  <p className="text-foreground/60">Days Active</p>
-                  <p className="font-medium text-foreground">
-                    {selectedDays.length > 0 ? selectedDays.length : 0} days
-                  </p>
-                </div>
-                <Separator className="bg-border/50" />
-                <div>
-                  <p className="text-foreground/60">Posting Time</p>
-                  <p className="font-medium text-foreground">
-                    {POSTING_TIMES.find((t) => t.value === selectedTime)?.label || "Not set"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                  <Separator />
 
-            {/* Save Button */}
-            <Button
-              onClick={handleSave}
-              disabled={
-                saveLoading || 
-                selectedTemplates.length === 0 || 
-                selectedDays.length === 0 ||
-                !selectedAccount
-              }
-              className="w-full bg-primary hover:bg-primary/80 text-background shadow-lg hover:shadow-primary/50"
-              size="lg"
-            >
-              {saveLoading ? "Saving..." : "Save Automation Settings"}
-            </Button>
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={automation.is_active ? "default" : "outline"}
+                      onClick={() =>
+                        handleToggleActive(automation.id, automation.is_active ?? false)
+                      }
+                      className="flex-1"
+                    >
+                      {automation.is_active ? (
+                        <>
+                          <Pause className="w-4 h-4 mr-1" />
+                          Pause
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4 mr-1" />
+                          Resume
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => handleEditAutomation(automation)}
+                    >
+                      View Details
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDeleteAutomation(automation.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="rounded bg-foreground/5 p-2">
+                      <p className="text-foreground/60">Posts Created</p>
+                      <p className="font-semibold text-foreground">
+                        {automation.error_count || 0}
+                      </p>
+                    </div>
+                    <div className="rounded bg-foreground/5 p-2">
+                      <p className="text-foreground/60">Errors</p>
+                      <p className="font-semibold text-foreground">
+                        {automation.error_count || 0}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
+        )}
       </div>
+
+      <AutomationWizard
+        isOpen={automationWizardOpen}
+        onOpenChange={handleCloseWizard}
+        brandId={brandId}
+        onSuccess={() => {
+          // Refresh automations list after creation
+          setAutomationsLoading(true);
+          supabase
+            .from("automations")
+            .select("*")
+            .eq("brand_id", brandId)
+            .order("created_at", { ascending: false })
+            .then(({ data }) => {
+              setAutomations(data || []);
+              setAutomationsLoading(false);
+            });
+        }}
+      />
     </div>
   );
 }

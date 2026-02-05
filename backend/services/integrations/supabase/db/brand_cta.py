@@ -1,5 +1,5 @@
 from typing import Optional
-from backend.services.integrations.supabase.client import get_supabase
+from services.integrations.supabase.client import get_supabase
 
 
 def get_brand_cta(cta_id: str) -> Optional[dict]:

@@ -3,19 +3,19 @@ from fastapi.encoders import jsonable_encoder
 import logging
 from pydantic import BaseModel
 from typing import Optional
-from backend.auth import get_current_user
-from backend.services.genai.gemini_service import generate_content_with_gemini
-from backend.services.genai.generate_slideshow import generate_slideshow_auto
-from backend.models import Template
-from backend.models.user import BrandSettings
-from backend.services.integrations.groq.util.GenerateBrand import generate_brand
-from backend.services.slides.slide_generation import generate_slideshows
-from backend.services.genai.client import client
-from backend.services.integrations.supabase.db.brand_cta import get_brand_cta
+from auth import get_current_user
+from services.genai.gemini_service import generate_content_with_gemini
+from services.genai.generate_slideshow import generate_slideshow_auto
+from models import Template
+from models.user import BrandSettings
+from services.integrations.groq.util.GenerateBrand import generate_brand
+from services.slides.slide_generation import generate_slideshows
+from services.genai.client import client
+from services.integrations.supabase.db.brand_cta import get_brand_cta
 from google.genai import types
 import json
 
-from backend.services.usage.service import track_slides_generated
+from services.usage.service import track_slides_generated
 
 
 class GeneratePostRequest(BaseModel):

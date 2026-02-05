@@ -3,8 +3,8 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from backend.auth import get_current_user
-from backend.services.usage import repo as usage_repo
+from auth import get_current_user
+from services.usage import repo as usage_repo
 
 logger = logging.getLogger(__name__)
 

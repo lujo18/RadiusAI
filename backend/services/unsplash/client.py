@@ -1,4 +1,4 @@
-from backend.config import Config
+from config import Config
 from unsplash.api import Api
 from unsplash.auth import Auth
 

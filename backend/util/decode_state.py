@@ -1,7 +1,7 @@
 import jwt
 from fastapi import HTTPException
 
-from backend.config import Config
+from config import Config
 
 
 def decode_state(state: str):

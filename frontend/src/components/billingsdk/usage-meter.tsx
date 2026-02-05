@@ -119,7 +119,7 @@ function CircleUsageItem({
   );
 }
 
-function LinearUsageItem({
+export function LinearUsageItem({
   item,
   config,
   progressColor,

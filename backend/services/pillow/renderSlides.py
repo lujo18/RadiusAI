@@ -4,7 +4,7 @@ from typing import List
 import io
 from pathlib import Path
 
-from backend.models.slide import PostSlide, TextElement, BackgroundConfig
+from models.slide import PostSlide, TextElement, BackgroundConfig
 # --- Text Layout Helper ---
 class TextLayout:
 	def __init__(self, width: int, height: int, padding: int = 80):
@@ -118,6 +118,43 @@ class SlideRenderer:
 			print(f"[FontLoader] Failed to load font '{font_path}' for family '{family}': {e}. Using default font.")
 			return ImageFont.load_default()
 
+	def _fetch_image_with_retry(self, url: str, max_retries: int = 3, timeout: int = 10):
+		"""Fetch image from URL with retry logic and proper headers"""
+		import requests
+		from io import BytesIO
+		import time
+		
+		headers = {
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+			'Accept': 'image/*,*/*;q=0.8',
+			'Accept-Language': 'en-US,en;q=0.5',
+			'DNT': '1',
+			'Connection': 'keep-alive',
+		}
+		
+		for attempt in range(max_retries):
+			try:
+				response = requests.get(url, headers=headers, timeout=timeout)
+				response.raise_for_status()
+				return BytesIO(response.content)
+			except requests.exceptions.Timeout:
+				print(f"[Background] Timeout fetching {url} (attempt {attempt + 1}/{max_retries})")
+				if attempt < max_retries - 1:
+					time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s, 4s
+				else:
+					raise
+			except requests.exceptions.ConnectionError as e:
+				print(f"[Background] Connection error: {e} (attempt {attempt + 1}/{max_retries})")
+				if attempt < max_retries - 1:
+					time.sleep(2 ** attempt)
+				else:
+					raise
+			except Exception as e:
+				print(f"[Background] Error fetching image: {e}")
+				raise
+		
+		return None
+
 	def _apply_background(self, img: Image.Image, bg_config: BackgroundConfig) -> None:
 		"""Apply background matching Konva's behavior"""
 		if bg_config.type == 'solid' and bg_config.color:
@@ -147,18 +184,16 @@ class SlideRenderer:
 			# Load and paste background image (fill height, crop width if needed)
 			try:
 				from PIL import Image as PILImage
-				import requests
-				from io import BytesIO
+				from PIL import Image as PILImageModule
 
-				response = requests.get(bg_config.image_url)
-				bg_img = PILImage.open(BytesIO(response.content)).convert('RGBA')
+				img_bytes = self._fetch_image_with_retry(bg_config.image_url)
+				bg_img = PILImage.open(img_bytes).convert('RGBA')
 				bg_w, bg_h = bg_img.size
 				target_w, target_h = self.width, self.height
 				# Always fill the height, crop width if needed
 				scale = target_h / bg_h
 				new_w = int(bg_w * scale)
 				new_h = target_h
-				from PIL import Image as PILImageModule
 				bg_img = bg_img.resize((new_w, new_h), PILImageModule.Resampling.LANCZOS)
 				# Center and crop horizontally if needed
 				if new_w > target_w:
@@ -176,9 +211,12 @@ class SlideRenderer:
 				temp_bg.paste(overlay, (0, 0), overlay)
 				img.paste(temp_bg.convert('RGB'), (0, 0))
 			except Exception as e:
-				print(f"Failed to load background image: {e}")
-				# Fallback to gray
-				ImageDraw.Draw(img).rectangle([(0, 0), (self.width, self.height)], fill='#333333')
+				print(f"[Background] Failed to load background image after retries: {e}")
+				# Fallback to dark gradient (more interesting than solid gray)
+				self._apply_background(img, BackgroundConfig(
+					type='gradient',
+					gradient_colors=['#1a1a2e', '#16213e']
+				))
 
 	def _get_wrapped_lines(self, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list:
 		"""Helper to wrap text into lines, respecting explicit \n breaks"""

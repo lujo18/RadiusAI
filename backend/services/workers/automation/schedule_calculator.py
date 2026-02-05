@@ -18,6 +18,7 @@ Times: HH:MM in 24-hour format
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ WEEKDAY_NAMES = {
 }
 
 
-def compute_next_run(schedule: Dict[str, List[str]]) -> datetime:
+def compute_next_run(schedule: Dict[str, List[str]], user_timezone: str) -> datetime:
     """
     Compute the next execution time based on schedule.
     
@@ -50,8 +51,9 @@ def compute_next_run(schedule: Dict[str, List[str]]) -> datetime:
     if not schedule or not isinstance(schedule, dict):
         raise ValueError("Schedule must be a non-empty dict")
     
+    user_tz = ZoneInfo(user_timezone)
     # Get current time in UTC
-    now = datetime.now(timezone.utc)
+    now = datetime.now(user_tz)
     
     # Try to find the next execution time
     next_run = _find_next_execution(now, schedule)
@@ -59,9 +61,11 @@ def compute_next_run(schedule: Dict[str, List[str]]) -> datetime:
     if not next_run:
         raise ValueError(f"Could not compute next run time from schedule: {schedule}")
     
+    next_run_utc = next_run.astimezone(ZoneInfo("UTC"))
+    
     logger.info(f"Computed next_run_at: {next_run.isoformat()} (current: {now.isoformat()})")
     
-    return next_run
+    return next_run_utc
 
 
 def _find_next_execution(current_time: datetime, schedule: Dict[str, List[str]]) -> Optional[datetime]:

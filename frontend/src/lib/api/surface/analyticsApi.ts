@@ -6,6 +6,14 @@ export const analyticsApi = {
     return await analyticsService.getAnalytics(timeframe, brandId);
   },
 
+  getPostAnalytics: async (postId: string) => {
+    return await analyticsService.getPostAnalytics(postId);
+  },
+
+  getAnalyticsHistory: async (opts?: { brandId?: string | null; postId?: string; from?: string; to?: string }) => {
+    return await analyticsService.getAnalyticsHistory(opts);
+  },
+
   getVariantPerformance: async (brandId?: string | null) => {
     return await analyticsService.getVariantPerformance(brandId);
   },

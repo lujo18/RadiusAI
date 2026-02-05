@@ -3,11 +3,11 @@ from pydantic import BaseModel
 import logging
 import json
 
-from backend.auth import get_current_user
-from backend.models.user import BrandSettings
-from backend.services.genai.client import client
+from auth import get_current_user
+from models.user import BrandSettings
+from services.genai.client import client
 from google.genai import types
-from backend.services.integrations.groq.util.GenerateBrand import generate_brand
+from services.integrations.groq.util.GenerateBrand import generate_brand
 
 router = APIRouter(prefix="/api/brand", tags=["brand"])
 

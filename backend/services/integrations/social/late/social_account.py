@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 import httpx
-from backend.config import Config
+from config import Config
 from ..social_provider import CreateAuthUrlResponse
 
 

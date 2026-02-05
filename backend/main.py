@@ -4,13 +4,13 @@ import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from backend.routers import account, post, postforme_webhook, plans_bridge
-from backend.routers import billing_service
-from backend.routers import usage
-
-# Add backend directory to Python path
+# Add backend directory to Python path first (before any imports)
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
+
+from routers import account, post, postforme_webhook, plans_bridge, brand, generate, product_rate_limits
+from routers import billing_service
+from routers import usage
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,9 +21,6 @@ from auth import get_current_user
 from dotenv import load_dotenv
 from config import Config
 
-# Import routers
-from routers import brand, generate
-from routers import product_rate_limits
 
 # Import analytics worker and scheduler
 from services.workers.analytics.analytic_worker import process_due_posts

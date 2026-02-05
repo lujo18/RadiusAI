@@ -5,10 +5,10 @@ Mirrors frontend PostRepository pattern.
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from backend.models.slide import PostContent
-from backend.services.integrations.supabase.client import get_supabase
-from backend.models.post import Post, CreatePostRequest, UpdatePostRequest
-from backend.services.workers.analytics import create_analytic_tracker
+from models.slide import PostContent
+from services.integrations.supabase.client import get_supabase
+from models.post import Post, CreatePostRequest, UpdatePostRequest
+from services.workers.analytics import create_analytic_tracker
 
 
 # ==================== READ OPERATIONS ====================
@@ -302,7 +302,7 @@ def update_post_status(
         'updated_at': datetime.now().isoformat()
     }
     
-    if status == 'published':
+    if status == 'posted':
         update_data['published_time'] = published_at or datetime.now().isoformat()
         if social_post_id:
             update_data['external_post_id'] = social_post_id  # Store as external_post_id for analytics

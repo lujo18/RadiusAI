@@ -2,9 +2,9 @@
 # Helper functions for analytics operations
 
 from typing import Optional
-from backend.services.integrations.supabase.client import get_supabase
-from backend.models.analytics import PostAnalyticsRecord
-from backend.services.workers.analytics.create_analytic_tracker import create_analytic_tracker
+from services.integrations.supabase.client import get_supabase
+from models.analytics import PostAnalyticsRecord
+from services.workers.analytics.create_analytic_tracker import create_analytic_tracker
 from datetime import datetime, timezone
 
 supabase = get_supabase()

@@ -4,14 +4,14 @@ import json
 from typing import List, Dict, Any
 
 
-from backend.services.genai.prompts import build_generation_prompt
-from backend.services.genai.structure_input import build_gemini_slide_structure
-from backend.models import (
+from services.genai.prompts import build_generation_prompt
+from services.genai.structure_input import build_gemini_slide_structure
+from models import (
     Template, 
     BrandSettings
 )
-from backend.models.slide import PostContent, LayoutConfig
-from backend.config import Config
+from models.slide import PostContent, LayoutConfig
+from config import Config
 import sys
 from pathlib import Path
 

@@ -4,7 +4,7 @@ from typing import List, Protocol, Any
 
 from pydantic import BaseModel
 
-from backend.models.post import Post
+from models.post import Post
 
 class CreateAuthUrlResponse(BaseModel):
     """

@@ -248,12 +248,7 @@ export default function PostingModal({
                             onCheckedChange={() => toggle(integration.id)} 
                           />
                           <SocialItem 
-                            platform={{ 
-                              id: integration.platform, 
-                              name: integration.platform, 
-                              icon: () => null, 
-                              color: 'bg-background' 
-                            } as any} 
+                            platformKey={integration.platform} 
                             integration={integration} 
                           />
                         </div>

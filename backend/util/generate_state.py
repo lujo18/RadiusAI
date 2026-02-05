@@ -2,7 +2,7 @@
 import jwt
 import time
 
-from backend.config import Config
+from config import Config
 
 def generate_state(brand_id: str, user_id: str):
     """

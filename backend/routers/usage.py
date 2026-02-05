@@ -2,9 +2,9 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from backend.auth import get_current_user
-from backend.services.usage import repo as usage_repo
-from backend.services.usage import service as usage_service
+from auth import get_current_user
+from services.usage import repo as usage_repo
+from services.usage import service as usage_service
 
 logger = logging.getLogger(__name__)
 
