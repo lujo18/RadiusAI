@@ -1,5 +1,5 @@
 import { platforms } from "@/constants/platforms";
-import { useBrandIntegrations } from "@/lib/api/hooks";
+import { useBrandIntegrations } from '@/features/brand/hooksIntegrations';
 import { Database } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import React from "react";

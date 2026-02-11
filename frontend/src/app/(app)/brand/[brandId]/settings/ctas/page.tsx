@@ -13,7 +13,7 @@ import {
   useUpdateBrandCta,
   useDeleteBrandCta,
   useToggleBrandCtaStatus,
-} from '@/lib/api/hooks/useBrandCtas';
+} from '@/features/brand_ctas/hooks';
 import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 
 
@@ -228,7 +228,7 @@ export default function CTAPage() {
             </CardContent>
           </Card>
         ) : (
-          ctas?.map((cta) => (
+          ctas?.map((cta: any) => (
             <Card
               key={cta.id}
               className="border border-border bg-card/50 backdrop-blur-md overflow-hidden"

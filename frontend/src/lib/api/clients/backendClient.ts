@@ -1,25 +1,30 @@
-import axios from 'axios';
-import { supabase } from '@/lib/supabase/client';
+const getBackendUrl = (path: string): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  return `${baseUrl}${path}`;
+};
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-
-export const backendClient = axios.create({
-  baseURL: API_BASE,
-  headers: { 'Content-Type': 'application/json' },
-});
-
-backendClient.interceptors.request.use(async (cfg) => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    // Avoid replacing Axios headers object; assign Authorization field
-    if (cfg.headers) {
-      (cfg.headers as Record<string, string>)['Authorization'] = `Bearer ${session.access_token}`;
-    } else {
-      // eslint-disable-next-line no-param-reassign
-      cfg.headers = { Authorization: `Bearer ${session.access_token}` } as any;
-    }
+const backendClient = {
+  async get(path: string) {
+    const res = await fetch(getBackendUrl(path), { method: 'GET' });
+    return res.json();
+  },
+  async post(path: string, body?: any) {
+    const res = await fetch(getBackendUrl(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    return res.json();
+  },
+  async put(path: string, body?: any) {
+    const res = await fetch(getBackendUrl(path), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    return res.json();
+  },
+  async del(path: string) {
+    const res = await fetch(getBackendUrl(path), { method: 'DELETE' });
+    return res.json();
   }
-  return cfg;
-});
+  ,
+  // alias using full name expected by some callers
+  async delete(path: string) {
+    return backendClient.del(path);
+  }
+};
 
 export default backendClient;

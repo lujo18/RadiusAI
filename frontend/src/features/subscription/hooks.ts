@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { billingApi } from "@/lib/api/client";
-import { useUserProfile } from "./useUser";
+import { billingApi } from '@/lib/api/client';
+import { useUserProfile } from '@/features/user/hooks';
 import type { StripeSubscription } from '@/lib/api/types/stripe';
 
 export const useSubscription = () => {

@@ -1,4 +1,4 @@
-import { automationService } from '@/lib/api/services/automationService';
+import { automationService } from './services';
 import type { Database } from '@/types/database';
 
 type AutomationRow = Database['public']['Tables']['automations']['Row'];

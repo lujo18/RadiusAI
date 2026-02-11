@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePosts, useDeletePostWithSlides, usePostsByBrand } from "@/lib/api/hooks/usePosts";
+import { usePosts, useDeletePostWithSlides, usePostsByBrand } from "@/features/posts/hooks";
 import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
@@ -42,9 +42,9 @@ import {
 } from "@/components/ui/table";
 
 import { Post } from "@/types/types";
-import { postApi } from "@/lib/api/client";
+import { postService } from "@/features/posts/services";
 import { usePostingModal } from '@/components/modals/PostingModalProvider';
-import { useBrands, useBrandIntegrations } from "@/lib/api/hooks/useBrands";
+import { useBrands, useBrandIntegrations } from "@/features/brand/hooks";
 import { Switch } from "@/components/animate-ui/components/radix/switch";
 // ...existing code...
 import { SocialItem } from "@/components/platform-integrations/SocialItem";
@@ -53,7 +53,7 @@ import { platforms } from "@/constants/platforms";
 import { downloadSlides } from "@/util/downloadSlides";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useState } from "react";
-import { useAnalytics } from "@/lib/api/hooks";
+import { useAnalytics } from "@/features/analytics/hooks";
 
 export default function Page({ params }: { params: Promise<{ brandId: string }> }) {
   // Brand switcher
@@ -86,7 +86,7 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
     if (selectedRows.length === 0) return;
     if (!window.confirm(`Delete ${selectedRows.length} selected post(s) and all their slides? This cannot be undone.`)) return;
     for (const row of selectedRows) {
-      await deletePostMutation.mutateAsync(row.original.id);
+      await (deletePostMutation as any).mutateAsync(row.original.id);
     }
     setBulkDeleteLoading(false)
   };
@@ -263,9 +263,9 @@ export default function Page({ params }: { params: Promise<{ brandId: string }> 
                 disabled={deletePostMutation.isPending}
                 onClick={async (e) => {
                   e.stopPropagation();
-                  if (window.confirm("Are you sure you want to delete this post and all its slides? This cannot be undone.")) {
-                    await deletePostMutation.mutateAsync(post.id);
-                  }
+                    if (window.confirm("Are you sure you want to delete this post and all its slides? This cannot be undone.")) {
+                      await (deletePostMutation as any).mutateAsync(post.id);
+                    }
                 }}
               >
                 {deletePostMutation.isPending ? "Deleting..." : "Delete post"}

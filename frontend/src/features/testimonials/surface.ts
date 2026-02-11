@@ -1,4 +1,4 @@
-import testimonialsService from '@/lib/api/services/testimonialsService';
+import { testimonialsService } from '@/features/testimonials/services';
 
 export const testimonialsApi = {
   getTestimonials: async () => {

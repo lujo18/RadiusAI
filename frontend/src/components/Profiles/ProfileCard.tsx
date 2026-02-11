@@ -17,7 +17,7 @@ type PlatformIntegration = {
   accessToken?: string;
   username?: string;
 };
-import { useDeleteBrand } from '@/lib/api/hooks';
+import { useDeleteBrand } from '@/features/brand/hooks';
 
 interface ProfileCardProps {
   profile: Brand;

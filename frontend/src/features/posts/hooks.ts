@@ -1,7 +1,7 @@
 // React Query hooks for Posts
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { postApi, contentApi } from '@/lib/api/client';
+import postSurface from '@/features/posts/surface';
 import { Database } from '@/types/database';
 
 // Query Keys
@@ -18,9 +18,9 @@ export const postKeys = {
 // ==================== QUERIES ====================
 
 export function usePosts(filters?: {status?: Database["public"]["Enums"]["post_status"], limit?: number, brandId?: string, templateId?: string}) {
-  return useQuery({
+  return useQuery<Database['public']['Tables']['posts']['Row'][]>({
     queryKey: postKeys.filtered(filters || {}),
-    queryFn: () => postApi.getPosts(filters),
+    queryFn: () => postSurface.getPosts(filters),
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 }
@@ -39,18 +39,18 @@ export function usePostsByStatus(status: Database["public"]["Enums"]["post_statu
 }
 
 export function usePost(postId: string) {
-  return useQuery({
+  return useQuery<Database['public']['Tables']['posts']['Row'] | null>({
     queryKey: postKeys.detail(postId),
-    queryFn: () => postApi.getPost(postId),
+    queryFn: () => postSurface.getPost(postId),
     enabled: !!postId,
     staleTime: 30 * 1000, // 30 seconds
   });
 }
 
 export function useScheduledPosts(fromDate?: Date, toDate?: Date, brandId?: string) {
-  return useQuery({
+  return useQuery<Database['public']['Tables']['posts']['Row'][]>({
     queryKey: fromDate && toDate ? [...postKeys.scheduled, fromDate.toISOString(), toDate.toISOString(), brandId] : [...postKeys.scheduled, brandId],
-    queryFn: () => postApi.getScheduledPosts(fromDate, toDate, brandId),
+    queryFn: () => postSurface.getScheduledPosts(fromDate, toDate, brandId),
     staleTime: 5 * 60 * 1000, // 5 minutes - reduce API calls
     gcTime: 10 * 60 * 1000, // Keep cached for 10 minutes
     retry: 1, // Only retry once on failure
@@ -64,7 +64,7 @@ export function useCreatePost() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (postData: any) => postApi.createPost(postData),
+    mutationFn: (postData: any) => postSurface.createPost(postData),
     onSuccess: (_, postData) => {
       // Invalidate all generic queries
       queryClient.invalidateQueries({ queryKey: postKeys.all });
@@ -92,7 +92,7 @@ export function useUpdatePost() {
 
   return useMutation({
     mutationFn: ({ postId, updates }: { postId: string; updates: any }) =>
-      postApi.updatePost(postId, updates),
+      postSurface.updatePost(postId, updates),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       queryClient.invalidateQueries({ queryKey: postKeys.detail(variables.postId) });
@@ -105,7 +105,7 @@ export function useDeletePostWithSlides() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: contentApi.deletePostWithSlides,
+    mutationFn: (postId: string) => postSurface.deletePostWithSlides(postId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.all });
       queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
@@ -123,7 +123,7 @@ export const usePublishPost = (brandId: string) => {
     { previous?: any[] }
   >({
     mutationFn: async ({ postId, platforms }) => {
-      return await postApi.publishPost({ brandId, platforms, postId });
+      return await postSurface.publishPost({ brandId, platforms, postId });
     },
     onMutate: async ({ postId }) => {
       await queryClient.cancelQueries({ queryKey: postKeys.all });
@@ -148,7 +148,7 @@ export const useDraftPost = (brandId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation<any, Error, { postId: string; platforms: string[] }, { previous?: any[] }>({
-    mutationFn: ({ postId, platforms }) => postApi.draftPost({ postId, platforms, brandId }),
+    mutationFn: ({ postId, platforms }) => postSurface.draftPost({ postId, platforms, brandId }),
     onMutate: async ({ postId }) => {
       await queryClient.cancelQueries({ queryKey: postKeys.all });
       const previous = queryClient.getQueryData<any[]>(postKeys.all);
@@ -174,7 +174,7 @@ export const useSchedulePost = (brandId: string) => {
 
   return useMutation<any, Error, { postId: string; platforms: string[]; scheduledAt: Date }, { previous?: any[] }>({
     mutationFn: ({ postId, platforms, scheduledAt }) => 
-      postApi.schedulePost({ postId, platforms, scheduled_at: scheduledAt.toISOString(), brandId }),
+      postSurface.schedulePost({ postId, platforms, scheduled_at: scheduledAt.toISOString(), brandId }),
     onMutate: async ({ postId }) => {
       await queryClient.cancelQueries({ queryKey: postKeys.all });
       const previous = queryClient.getQueryData<any[]>(postKeys.all);

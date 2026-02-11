@@ -3,7 +3,7 @@
  * Stable, UI-facing API that wraps the service layer
  */
 
-import { brandCtaService } from '@/lib/api/services/brandCtaService';
+import { brandCtaService } from '@/features/brand_ctas/services';
 import type { Database } from '@/types/database';
 
 type BrandCtaInsert = Database['public']['Tables']['brand_ctas']['Insert'];
@@ -37,3 +37,5 @@ export const brandCtaApi = {
   duplicate: (ctaId: string, targetBrandId: string) =>
     brandCtaService.duplicateCta(ctaId, targetBrandId),
 };
+
+export default brandCtaApi;

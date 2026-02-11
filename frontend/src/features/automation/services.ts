@@ -85,3 +85,5 @@ export const automationService = {
     }
   },
 };
+
+export default automationService;

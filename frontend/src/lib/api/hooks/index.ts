@@ -1,30 +1,24 @@
-/**
- * React Query Hooks Index
- * 
- * Organized by resource type, mirroring the database structure.
- * Each file contains hooks for a specific resource.
- */
+// Compatibility barrel: re-export commonly used legacy hook APIs
+export * from '@/features/posts/hooks';
+export * from '@/features/brand/hooks';
+export * from '@/features/templates/hooks';
+export * from '@/features/user/hooks';
+export * from '@/features/brand_ctas/hooks';
+export * from '@/features/presetPacks/hooks';
+export * from '@/features/automation/hooks';
 
-// Templates - Template CRUD operations
-export * from './useTemplates';
-
-// Posts - Post CRUD and publishing
+// Keep legacy surface-specific hooks where present in lib/api/hooks (these files may still exist)
+export * from './usePlans';export * from './useBrands';
 export * from './usePosts';
-
-// Brands - Brand profile management
-export * from './useBrands';
-
-// Analytics - Performance tracking and A/B testing
-export * from './useAnalytics';
-
-// User - User profile and account settings
+export * from './usePresetPacks';
+export * from './useSubscription';
 export * from './useUser';
-
-// Automations - Content automation workflows
+export * from './useUsage';
+export * from './useSystemTemplates';
+export * from './useTemplates';
+export * from './useTestimonials';
+export * from './useStripeProducts';
+export * from './useBrandCtas';
 export * from './useAutomations';
-export * from './useAutomationRuns';
-
-// Generation hooks (AI content generation)
-export { useGeneratePost, useGeneratePostFromPrompt } from '@/lib/api/generation/hooks/useGeneratePost';
-export { useGenerateBrand } from '@/lib/api/generation/hooks/useGenerateBrand';
-export { useGenerateVariants } from '@/lib/api/generation/hooks/useGenerateVariants';
+export * from './usePlans';
+export * from './useAnalytics';

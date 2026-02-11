@@ -3,7 +3,8 @@
 import { differenceInSeconds } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useTemplates, useBrands } from "@/lib/api/hooks";
+import { useTemplates } from "@/features/templates/hooks";
+import { useBrands } from "@/features/brand/hooks";
 import { useGenerationStore } from "@/store/generationStore";
 import type { BrandSettings } from "@/components/TemplateCreator/contentTypes";
 import type { Database } from "@/types/database";
@@ -29,8 +30,8 @@ import { Post } from "@/types/types";
 import { Workflow } from "@/components/workflows/common/Workflow";
 import { PostItem } from "@/components/items/PostItem";
 import { usePostingModal } from '@/components/modals/PostingModalProvider';
-import { useBrandIntegrations } from '@/lib/api/hooks/useBrands';
-import { useGeneratePostFromPrompt } from '@/lib/api/generation/hooks';
+import { useBrandIntegrations } from '@/features/brand/hooks';
+import { useGeneratePostFromPrompt } from '@/features/generation/hooks';
 
 type Brand = Database["public"]["Tables"]["brand"]["Row"];
 
@@ -97,8 +98,8 @@ export default function GeneratePage() {
     // Fire async request without blocking
     (async () => {
       try {
-        const rawTemplate = templates?.find((t) => t.id === selectedTemplate);
-        const brand = brands?.find((b) => b.id === selectedProfile);
+        const rawTemplate = (templates as any[])?.find((t: any) => t.id === selectedTemplate);
+        const brand = (brands as any[])?.find((b: any) => b.id === selectedProfile);
 
         // if (brand && selectedGenType === "template" && rawTemplate) {
         //   // Patch template.brand_id to always be string|null
@@ -317,7 +318,7 @@ export default function GeneratePage() {
                   );
                 }
 
-                if (request.result && request.status === "completed") {
+                if (request.result && request.status === "completed" && request.result[0]) {
                   console.log("Post templates", request.result)
                   const generated = request.result[0];
                   return (
@@ -385,7 +386,7 @@ export default function GeneratePage() {
         
 
         {/* Empty States */}
-        {!templatesLoading && templates?.length === 0 && (
+        {!templatesLoading && (templates as any[])?.length === 0 && (
           <div className="mt-6 text-center text-muted-foreground text-sm">
             No templates found. Create a template first.
           </div>

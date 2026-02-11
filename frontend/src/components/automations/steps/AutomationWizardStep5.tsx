@@ -1,47 +1,59 @@
-import React from 'react';
-import { useTemplates } from '@/lib/api/hooks/useTemplates';
-import { useBrandCtas } from '@/lib/api/hooks/useBrandCtas';
-import { Skeleton } from '@/components/ui/skeleton';
-import { convertToLocalTime } from '@/lib/time';
-import type { AutomationWizardData } from '../AutomationWizard';
+import React from "react";
+import { useTemplates } from "@/features/templates/hooks";
+import { useBrandCtas } from "@/features/brand_ctas/hooks";
+import { Skeleton } from "@/components/ui/skeleton";
+import { compareToWeekday, convertToLocalTime, getTimeUntil } from "@/lib/time";
+import type { AutomationWizardData } from "../AutomationWizard";
+import { format, isAfter } from "date-fns";
 
 interface Step5Props {
   data: AutomationWizardData;
 }
 
 export function AutomationWizardStep5({ data }: Step5Props) {
-  const { data: templates } = useTemplates('');
+  const { data: templates } = useTemplates("");
   const { data: ctas } = useBrandCtas(data.brandId);
 
-  const selectedTemplates = templates?.filter((t) =>
-    data.templateIds.includes(t.id)
-  ) || [];
+  const selectedTemplates =
+    (templates as any[])?.filter((t: any) => data.templateIds.includes(t.id)) ||
+    [];
 
-  const selectedCtas = ctas?.filter((c) =>
-    data.ctaIds.includes(c.id)
-  ) || [];
+  const selectedCtas =
+    (ctas as any[])?.filter((c: any) => data.ctaIds.includes(c.id)) || [];
 
   const getNextRunDate = () => {
     // Find first day with scheduled times
-    const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const weekdays = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ];
     const dayLabels: Record<string, string> = {
-      monday: 'Monday',
-      tuesday: 'Tuesday',
-      wednesday: 'Wednesday',
-      thursday: 'Thursday',
-      friday: 'Friday',
-      saturday: 'Saturday',
-      sunday: 'Sunday',
+      monday: "Monday",
+      tuesday: "Tuesday",
+      wednesday: "Wednesday",
+      thursday: "Thursday",
+      friday: "Friday",
+      saturday: "Saturday",
+      sunday: "Sunday",
     };
 
     for (const day of weekdays) {
       const times = data.schedule[day as keyof typeof data.schedule] || [];
-      if (times.length > 0) {
-        return `${dayLabels[day]} at ${convertToLocalTime(times[0])}`;
+      if (times.length > 0 && compareToWeekday(day) != "after") {
+        for (const time of times) {
+          if (!getTimeUntil(time).isPast) {
+            return `${dayLabels[day]} at ${convertToLocalTime(time)}`;
+          }
+        }
       }
     }
 
-    return 'Not scheduled';
+    return "Not scheduled";
   };
 
   return (
@@ -49,7 +61,8 @@ export function AutomationWizardStep5({ data }: Step5Props) {
       <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
         <h3 className="font-semibold text-primary mb-2">✓ Ready to Create</h3>
         <p className="text-sm text-foreground/80">
-          Review your automation details below. Click "Create Automation" to get started!
+          Review your automation details below. Click "Create Automation" to get
+          started!
         </p>
       </div>
 
@@ -64,7 +77,9 @@ export function AutomationWizardStep5({ data }: Step5Props) {
           {data.description && (
             <div className="flex justify-between py-2 border-b border-border/50">
               <span className="text-foreground/60">Description</span>
-              <span className="font-medium text-right max-w-xs">{data.description}</span>
+              <span className="font-medium text-right max-w-xs">
+                {data.description}
+              </span>
             </div>
           )}
         </div>
@@ -77,7 +92,7 @@ export function AutomationWizardStep5({ data }: Step5Props) {
         </h4>
         <div className="space-y-2">
           {selectedTemplates.length > 0 ? (
-            selectedTemplates.map((template, idx) => (
+            selectedTemplates.map((template: any, idx: number) => (
               <div
                 key={template.id}
                 className="flex items-center gap-3 p-2 rounded bg-foreground/5"
@@ -88,7 +103,7 @@ export function AutomationWizardStep5({ data }: Step5Props) {
                 <div>
                   <p className="text-sm font-medium">{template.name}</p>
                   <p className="text-xs text-foreground/60">
-                    {template.category || 'General'}
+                    {template.category || "General"}
                   </p>
                 </div>
               </div>
@@ -109,7 +124,7 @@ export function AutomationWizardStep5({ data }: Step5Props) {
         </h4>
         <div className="space-y-2">
           {selectedCtas.length > 0 ? (
-            selectedCtas.map((cta, idx) => (
+            selectedCtas.map((cta: any, idx: number) => (
               <div
                 key={cta.id}
                 className="flex items-start gap-3 p-2 rounded bg-foreground/5"
@@ -119,7 +134,9 @@ export function AutomationWizardStep5({ data }: Step5Props) {
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{cta.label}</p>
-                  <p className="text-xs text-foreground/60 mt-1">{cta.cta_text}</p>
+                  <p className="text-xs text-foreground/60 mt-1">
+                    {cta.cta_text}
+                  </p>
                   {cta.cta_url && (
                     <p className="text-xs text-foreground/50 mt-1 truncate">
                       {cta.cta_url}
@@ -159,13 +176,25 @@ export function AutomationWizardStep5({ data }: Step5Props) {
         <h4 className="font-medium">Posting Schedule</h4>
         <div className="space-y-2 text-sm">
           {(() => {
-            const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            const weekdays = [
+              "monday",
+              "tuesday",
+              "wednesday",
+              "thursday",
+              "friday",
+              "saturday",
+              "sunday",
+            ];
             const activeDays = weekdays.filter(
-              (day) => (data.schedule[day as keyof typeof data.schedule] || []).length > 0
+              (day) =>
+                (data.schedule[day as keyof typeof data.schedule] || [])
+                  .length > 0,
             );
             const totalPosts = weekdays.reduce(
-              (sum, day) => sum + (data.schedule[day as keyof typeof data.schedule] || []).length,
-              0
+              (sum, day) =>
+                sum +
+                (data.schedule[day as keyof typeof data.schedule] || []).length,
+              0,
             );
 
             return (
@@ -192,22 +221,28 @@ export function AutomationWizardStep5({ data }: Step5Props) {
       <div className="rounded-lg bg-foreground/5 border border-border p-4 space-y-2">
         {(() => {
           const weekdays = [
-            { id: 'monday', label: 'Monday' },
-            { id: 'tuesday', label: 'Tuesday' },
-            { id: 'wednesday', label: 'Wednesday' },
-            { id: 'thursday', label: 'Thursday' },
-            { id: 'friday', label: 'Friday' },
-            { id: 'saturday', label: 'Saturday' },
-            { id: 'sunday', label: 'Sunday' },
+            { id: "monday", label: "Monday" },
+            { id: "tuesday", label: "Tuesday" },
+            { id: "wednesday", label: "Wednesday" },
+            { id: "thursday", label: "Thursday" },
+            { id: "friday", label: "Friday" },
+            { id: "saturday", label: "Saturday" },
+            { id: "sunday", label: "Sunday" },
           ];
 
           return weekdays
-            .filter((day) => (data.schedule[day.id as keyof typeof data.schedule] || []).length > 0)
+            .filter(
+              (day) =>
+                (data.schedule[day.id as keyof typeof data.schedule] || [])
+                  .length > 0,
+            )
             .map((day) => {
-              const times = data.schedule[day.id as keyof typeof data.schedule] || [];
+              const times =
+                data.schedule[day.id as keyof typeof data.schedule] || [];
               return (
                 <p key={day.id} className="text-sm">
-                  <strong>{day.label}:</strong> {times.map((t) => convertToLocalTime(t)).join(', ')}
+                  <strong>{day.label}:</strong>{" "}
+                  {times.map((t) => convertToLocalTime(t)).join(", ")}
                 </p>
               );
             });

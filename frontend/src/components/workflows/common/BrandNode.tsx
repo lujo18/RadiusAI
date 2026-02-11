@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { useBrand } from '@/lib/api/hooks';
+import { useBrand } from '@/features/brand/hooks';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Loader2, FileText, BarChart3 } from 'lucide-react';
 import {

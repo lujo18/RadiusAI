@@ -39,4 +39,6 @@ const templateService = {
   },
 };
 
+export { templateService };
+
 export default templateService;

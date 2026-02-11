@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store";
-import { useBrands } from "@/lib/api/hooks/useBrands";
+import { useBrands } from '@/features/brand/hooks';
 import { useBrandFilter } from "@/hooks/useBrandFilter";
 import BrandSetupWizard from "@/components/Profiles/BrandSetupWizard";
 import {
@@ -42,7 +42,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { UsageMeter } from "@/components/billingsdk/usage-meter";
-import { useUsage } from "@/lib/api/hooks/useUsage";
+import { useUsage } from '@/features/usage/hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,7 +88,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "../ui/badge";
 import { useSidebarNav } from "./sidebarContext";
-import { isAdminUser, useUserProfile } from "@/lib/api/hooks/useUser";
+import { isAdminUser, useUserProfile } from '@/features/user/hooks';
 import BrandSelector from "./BrandSelector";
 
 interface SidebarWrapperProps {

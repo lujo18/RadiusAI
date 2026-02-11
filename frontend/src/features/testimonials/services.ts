@@ -22,4 +22,6 @@ const testimonialsService = {
   },
 };
 
+export { testimonialsService };
+
 export default testimonialsService;

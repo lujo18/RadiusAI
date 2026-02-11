@@ -11,7 +11,7 @@ import BrandSettingsForm from './BrandSettingsForm';
 import IntegrationsList from './IntegrationsList';
 import type { BrandSettings } from '../TemplateCreator/contentTypes';
 import type { Database } from '@/types/database';
-import { useUpdateBrandSettings } from '@/lib/api/hooks';
+import { useUpdateBrandSettings } from '@/features/brand/hooks';
 
 type Brand = Database['public']['Tables']['brand']['Row'];
 

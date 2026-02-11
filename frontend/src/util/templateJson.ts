@@ -72,7 +72,8 @@ export const SYSTEM_TEMPLATES = {
           benchmark: "Educational carousels are highest-saving content type",
         },
         hook_style: "Solution Promise (e.g., 'The 5-step system to achieve X')",
-        text_density: "Medium (10-15 words per slide) / Scannable Numbered List",
+        text_density:
+          "Medium (10-15 words per slide) / Scannable Numbered List",
         structure: {
           slide_1:
             "The Promise Hook: 'The [number]-step [outcome] system I wish I knew earlier.' Include a numbered visual (1 → N).",
@@ -97,7 +98,8 @@ export const SYSTEM_TEMPLATES = {
         brand_integration_notes: {
           aesthetic_requirement:
             "Consistent icon set or design system across all steps",
-          tone_compatibility: "Professional + Accessible (avoid overly academic)",
+          tone_compatibility:
+            "Professional + Accessible (avoid overly academic)",
           emoji_usage:
             "Minimal (1-2 per slide max for readability on step slides)",
           suggested_brand_addition:
@@ -125,7 +127,8 @@ export const SYSTEM_TEMPLATES = {
           estimated_engagement_lift: "+52%",
           comment_rate: "Very High (sparks debate)",
           share_rate: "High (contrarian content spreads)",
-          benchmark: "@thebirdspapaya myth format went 5M+ reach multiple times",
+          benchmark:
+            "@thebirdspapaya myth format went 5M+ reach multiple times",
         },
         hook_style: "Contrarian Statement / Belief Challenge",
         text_density:
@@ -155,7 +158,8 @@ export const SYSTEM_TEMPLATES = {
           aesthetic_requirement:
             "Use contrasting colors (red/green or bold/muted) for myth vs truth",
           tone_compatibility: "Edgy / Opinionated / Authoritative works best",
-          emoji_usage: "Moderate to Heavy (myth-busting relies on visual 'pop')",
+          emoji_usage:
+            "Moderate to Heavy (myth-busting relies on visual 'pop')",
           forbidden_words_note:
             "Avoid 'maybe,' 'possibly,' 'could' — be definitive",
           suggested_brand_addition:
@@ -582,5 +586,553 @@ export const SYSTEM_TEMPLATES = {
         "Meme-style humor + product",
         "Unexpected benefit reveals",
       ],
-    }
-  ]};
+    },
+
+    {
+      template_id: "T-CHECKLIST-11",
+      name: "One-Screen Checklist",
+      category: "checklist",
+      content_rules: {
+        goal: "Saves / Evergreen",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 5,
+        avg_performance: {
+          estimated_engagement_lift: "+40%",
+          share_rate: "High",
+          viral_coefficient: "Medium (High utility drives saves)",
+          benchmark: "80%+ completion rate",
+        },
+        hook_style: "Outcome-Oriented Utility",
+        text_density: "Medium (8-14 words/slide)",
+        structure: {
+          slide_1:
+            "Hook: 'Checklist to get [specific outcome] without guessing.'",
+          slide_2: "Checklist Part 1: 3–5 items (Foundations)",
+          slide_3: "Checklist Part 2: 3–5 items (Optimization)",
+          slide_4: "Checklist Part 3: 3–5 items (Mistakes to avoid)",
+          slide_5:
+            "Summary + CTA: 'Save this checklist. Use it before your next [task].'",
+        },
+        key_success_factors: [
+          "Use clear bullets, not paragraphs",
+          "All items should be binary (done/not done)",
+          "Order from easiest → hardest actions",
+          "Label sections clearly: 'Foundation / Optimize / Avoid'",
+          "Design for screenshot readability (no tiny text)",
+        ],
+        production_notes: {
+          video_tip: "Use a steady rhythmic track to match checking off items",
+          timing:
+            "Ensure the final summary slide stays on screen long enough to screenshot",
+          visual_contrast:
+            "Use high-contrast boxes or cards for checklist items",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Clean, minimalist layout to maintain readability",
+          tone_compatibility: "Practical / Direct",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (N/A for this format) and 'tone_guardrail' note: avoid excessive emojis to maintain authority",
+        },
+      },
+      best_for: [
+        "Launch checklist",
+        "Onboarding checklist",
+        "Content checklist",
+        "Workout/meal prep checklist",
+        "Daily system checklist",
+      ],
+    },
+    {
+      template_id: "T-MISTAKES-12",
+      name: "The Mistake Map",
+      category: "educational",
+      content_rules: {
+        goal: "Comments / Saves",
+        platform_optimized: ["Instagram", "TikTok", "LinkedIn"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+42%",
+          share_rate: "High",
+          viral_coefficient: "High (Pain-point resonance)",
+          benchmark: "High comment volume from relatability",
+        },
+        hook_style: "Negative Constraint (Fear of Missing Out/Failing)",
+        text_density: "Medium (10-16 words/slide)",
+        structure: {
+          slide_1:
+            "Hook: '[N] mistakes killing your [outcome] (and what to do instead).'",
+          slide_2: "Mistake #1 + quick consequence + 1-line fix",
+          slide_3: "Mistake #2 + consequence + 1-line fix",
+          slide_4: "Mistake #3 + consequence + 1-line fix",
+          slide_5: "Bonus mistake: Less obvious, more advanced",
+          slide_6:
+            "CTA: 'Which mistake hits you hardest? Comment the number & save this.'",
+        },
+        key_success_factors: [
+          "Mistakes must be specific, not generic",
+          "Each slide = 1 mistake, 1 consequence, 1 fix",
+          "Use numbers (#1, #2, #3…) visually big",
+          "At least one 'controversial' mistake to spark replies",
+          "Language should be blunt, not soft",
+        ],
+        production_notes: {
+          video_tip:
+            "Use 'error' sound effects or visual glitches for mistake reveals",
+          timing: "Fast-paced delivery to keep the 'pain' high and 'fix' quick",
+          visual_contrast:
+            "Use red/warning colors for mistakes vs green/brand for fixes",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement: "Numbered cards with consistent layout",
+          tone_compatibility: "Edgy / Direct / Honest",
+          risk_level: "Low-Medium",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (Logic-based) and 'tone_guardrail' note: ensure fixes are empowering, not just critical",
+        },
+      },
+      best_for: [
+        "Sales mistakes",
+        "Fitness/nutrition mistakes",
+        "Hiring/management mistakes",
+        "Content strategy mistakes",
+        "Money/finance mistakes",
+      ],
+    },
+    {
+      template_id: "T-DOTHIS-13",
+      name: "Do This, Not That",
+      category: "comparison",
+      content_rules: {
+        goal: "Saves / Clarity",
+        platform_optimized: ["Instagram", "TikTok", "LinkedIn"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+39%",
+          share_rate: "High",
+          viral_coefficient: "Medium (Visual clarity makes it sharable)",
+          benchmark: "80%+ completion rate",
+        },
+        hook_style: "Comparison / Optimization",
+        text_density: "Light-Medium (8-12 words/slide)",
+        structure: {
+          slide_1: "Hook: 'Do this, not that, to get [outcome] faster.'",
+          slide_2:
+            "Row 1: 'Not that' (common behavior) vs 'Do this' (better behavior)",
+          slide_3: "Row 2: 'Not that' vs 'Do this'",
+          slide_4: "Row 3: 'Not that' vs 'Do this'",
+          slide_5: "Row 4: 'Not that' vs 'Do this' (advanced tweak)",
+          slide_6: "CTA: 'Pick 1 to switch this week. Save as a reminder.'",
+        },
+        key_success_factors: [
+          "Make 'Not that' obviously relatable and slightly painful",
+          "Make 'Do this' clearly more specific and actionable",
+          "Left = red/grey 'Not that', Right = green/brand color 'Do this'",
+          "Keep each pair focused on one dimension",
+          "Avoid nuance; make the choice visually and logically obvious",
+        ],
+        production_notes: {
+          video_tip:
+            "Split screen video showing the 'wrong' way vs the 'right' way side-by-side",
+          timing: "Consistent rhythm for each comparison slide",
+          visual_contrast: "Consistent left/right split for all comparisons",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Clean split-screen or side-by-side card design",
+          tone_compatibility: "Practical / Straightforward",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (Behavioral) and 'tone_guardrail' note: do not mock the 'Not That' behavior too harshly",
+        },
+      },
+      best_for: [
+        "Content tactics",
+        "Sales scripts",
+        "Study habits",
+        "Training techniques",
+        "Spending/saving behaviors",
+      ],
+    },
+    {
+      template_id: "T-ROADMAP-14",
+      name: "The Level-Up Roadmap",
+      category: "growth",
+      content_rules: {
+        goal: "Saves / Progress Tracking",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 7,
+        avg_performance: {
+          estimated_engagement_lift: "+41%",
+          share_rate: "Very High",
+          viral_coefficient: "High (Gamified progression)",
+          benchmark: "83% completion rate",
+        },
+        hook_style: "Aspirational Journey",
+        text_density: "Medium (10-15 words/slide)",
+        structure: {
+          slide_1: "Hook: 'Roadmap from [Level 1] to [Level 4] in [niche].'",
+          slide_2: "Level 1: Starting point (behaviors, metrics, mindset)",
+          slide_3: "Level 2: Next stage (what changes, what you focus on)",
+          slide_4: "Level 3: Advanced stage (systems, leverage, key metric)",
+          slide_5:
+            "Level 4: 'Pro' stage (what it actually looks like day-to-day)",
+          slide_6:
+            "Common plateau: Where people get stuck & how to break through",
+          slide_7:
+            "CTA: 'Screenshot this roadmap. Circle your level and next step.'",
+        },
+        key_success_factors: [
+          "Each level should feel clearly different and realistic",
+          "Include at least one quantifiable metric per level",
+          "Visually show a ladder/steps or ascending graph",
+          "Avoid vague labels like 'beginner'; use specific descriptors",
+          "Make 'next step' for each level painfully obvious",
+        ],
+        production_notes: {
+          video_tip: "Use ascending sound scales or 'level up' gaming SFX",
+          timing: "Slow down slightly at Level 3 and 4 to show complexity",
+          visual_contrast:
+            "Step/ladder or tiered cards with progression colors",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Hierarchical layout (Bottom to Top or Left to Right)",
+          tone_compatibility: "Aspirational / Structured",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (N/A) and 'tone_guardrail' note: maintain a supportive, coaching voice",
+        },
+      },
+      best_for: [
+        "Skill progression",
+        "Revenue stages",
+        "Fitness levels",
+        "Social media growth stages",
+        "Career ladder",
+      ],
+    },
+    {
+      template_id: "T-STACK-15",
+      name: "The Resource Stack",
+      category: "curation",
+      content_rules: {
+        goal: "Saves / Shares",
+        platform_optimized: ["Instagram", "TikTok", "LinkedIn"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+43%",
+          share_rate: "Very High",
+          viral_coefficient: "High (Tool-based utility is highly viral)",
+          benchmark: "Very high save rate",
+        },
+        hook_style: "The 'Starting Over' hypothetical / Authority curation",
+        text_density: "Medium (8-14 words/slide)",
+        structure: {
+          slide_1: "Hook: 'The [niche] stack I’d use if I had to start over.'",
+          slide_2: "Category 1: Tools/apps/resources + 1-line use-case each",
+          slide_3: "Category 2: Tools/apps/resources + 1-line use-case each",
+          slide_4: "Category 3: Tools/apps/resources + 1-line use-case each",
+          slide_5: "Bonus: 1–2 underrated tools/resources nobody talks about",
+          slide_6: "CTA: 'Save this stack. Comment if you want a deep-dive.'",
+        },
+        key_success_factors: [
+          "Group tools by function (editing, outreach, analytics, etc.)",
+          "Only include tools/resources you can briefly explain",
+          "Include at least one free/low-cost option per category",
+          "Use actual logos/icons if allowed for quick recognition",
+          "Title each category clearly: 'Capture / Nurture / Convert' etc.",
+        ],
+        production_notes: {
+          video_tip: "Screen-record the tool interfaces for a split second",
+          timing: "Quick cuts between tool categories",
+          visual_contrast: "Card/grid layout with tool names and 1-liners",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement:
+            "Logos/Icons must be high quality and consistent size",
+          tone_compatibility: "Helpful / Tactical",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (Tool-based) and 'tone_guardrail' note: ensure tools mentioned align with brand values",
+        },
+      },
+      best_for: [
+        "Creator tool stack",
+        "Sales stack",
+        "Productivity stack",
+        "Learning/education stack",
+        "Fitness/nutrition stack",
+      ],
+    },
+    {
+      template_id: "T-SCRIPT-16",
+      name: "Plug-and-Play Scripts",
+      category: "utility",
+      content_rules: {
+        goal: "Saves / Implementation",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+44%",
+          share_rate: "Very High",
+          viral_coefficient: "Medium-High (Tangible value)",
+          benchmark: "80%+ completion rate",
+        },
+        hook_style: "Effort Reduction / 'Steal This'",
+        text_density: "Heavy (15-22 words/slide, formatted as lines)",
+        structure: {
+          slide_1:
+            "Hook: 'Steal these scripts for [specific situation] so you don’t overthink.'",
+          slide_2: "Script 1: Scenario + 3–4 lines (with fill-in brackets)",
+          slide_3: "Script 2: Scenario + 3–4 lines",
+          slide_4: "Script 3: Scenario + 3–4 lines",
+          slide_5: "Bonus script: For a tougher/awkward scenario",
+          slide_6: "CTA: 'Save these. Copy/paste, tweak brackets, then send.'",
+        },
+        key_success_factors: [
+          "Format scripts line-by-line (easy to screenshot & copy)",
+          "Use placeholders: [niche], [result], [timeframe]",
+          "Keep language simple and direct, no fluff",
+          "Each script handles one clear objection/goal",
+          "Emphasize 'copy → tweak → send' in CTA",
+        ],
+        production_notes: {
+          video_tip: "Use a typing sound effect as the script appears",
+          timing: "Slow enough to read the full script text",
+          visual_contrast: "Chat-bubble or code-block look for script sections",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement: "Must look like a UI element (SMS/DM/Code)",
+          tone_compatibility: "Direct / Conversational",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (N/A) and 'tone_guardrail' note: scripts must match the user's authentic brand voice",
+        },
+      },
+      best_for: [
+        "DM scripts",
+        "Sales objections",
+        "Client onboarding messages",
+        "Networking/intros",
+        "Follow-up messages",
+      ],
+    },
+    {
+      template_id: "T-CASE-17",
+      name: "Mini Case Study",
+      category: "authority",
+      content_rules: {
+        goal: "Trust / Leads",
+        platform_optimized: ["Instagram", "TikTok", "LinkedIn"],
+        slide_count: 6,
+        avg_performance: {
+          estimated_engagement_lift: "+37%",
+          share_rate: "Medium",
+          viral_coefficient: "Low-Medium (High trust, lower mass-share)",
+          benchmark: "High profile clicks/lead intent",
+        },
+        hook_style: "Result-First (Before & After)",
+        text_density: "Medium (10-15 words/slide)",
+        structure: {
+          slide_1:
+            "Hook: 'How we went from [starting metric] to [result] in [timeframe].'",
+          slide_2: "Context: Who it was for + starting situation",
+          slide_3: "Strategy: 1–3 levers pulled (keep it simple)",
+          slide_4: "Execution: What was actually done week-to-week",
+          slide_5: "Results: Metrics, screenshots, before/after graph",
+          slide_6:
+            "CTA: 'Comment CASE for breakdown / link in bio for full story.'",
+        },
+        key_success_factors: [
+          "Include at least 2 clear numbers (before vs after)",
+          "Show 1 image of proof (screenshot/chart/photo)",
+          "Keep 'strategy' to 3 bullets max",
+          "Make 'who it was for' extremely specific",
+          "No mystery—show exactly what happened at a high level",
+        ],
+        production_notes: {
+          video_tip: "Voiceover explaining the 'Aha' moment of the strategy",
+          timing: "Linger on the results slide (Slide 5) to build credibility",
+          visual_contrast:
+            "Use data viz or mock analytics cards where possible",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement: "Professional, data-backed look",
+          tone_compatibility: "Evidence-based / Confident",
+          risk_level: "Medium (Must have verifiable data)",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (N/A) and 'tone_guardrail' note: avoid sounding like a 'get rich quick' scheme",
+        },
+      },
+      best_for: [
+        "Client results",
+        "Personal experiment",
+        "Product feature success",
+        "Ad/campaign performance",
+        "Routine/protocol results",
+      ],
+    },
+    {
+      template_id: "T-ROUTINE-18",
+      name: "Daily/Weekly Blueprint",
+      category: "lifestyle",
+      content_rules: {
+        goal: "Saves / Habit Adoption",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 5,
+        avg_performance: {
+          estimated_engagement_lift: "+38%",
+          share_rate: "High",
+          viral_coefficient: "Medium",
+          benchmark: "80%+ completion rate",
+        },
+        hook_style: "Structure / Peace of Mind",
+        text_density: "Medium (10-15 words/slide)",
+        structure: {
+          slide_1:
+            "Hook: 'My [daily/weekly] blueprint for [outcome] without burning out.'",
+          slide_2: "Block 1: Morning / Start-of-day tasks",
+          slide_3: "Block 2: Deep work / Core work block",
+          slide_4: "Block 3: Maintenance / admin / low-energy tasks",
+          slide_5: "Block 4: Evening / reset / review / CTA",
+        },
+        key_success_factors: [
+          "Organize by time blocks, not random tasks",
+          "Label each block with goal (Focus / Output / Recovery)",
+          "Keep examples concrete, not vague",
+          "Make it clear user should adapt, not copy blindly",
+          "Use simple timeline or column layout",
+        ],
+        production_notes: {
+          video_tip: "Time-lapse footage of you completing the blocks",
+          timing: "Calm, steady transitions",
+          visual_contrast: "Timeline or 2x2 grid of blocks",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement: "Clock or calendar icons for time blocks",
+          tone_compatibility: "Structured / Calm",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (N/A) and 'tone_guardrail' note: ensure the routine feels attainable",
+        },
+      },
+      best_for: [
+        "Creator daily routine",
+        "Training schedule",
+        "Study routine",
+        "Client work schedule",
+        "Marketing/content calendar",
+      ],
+    },
+    {
+      template_id: "T-CHALLENGE-19",
+      name: "7-Day Challenge",
+      category: "community",
+      content_rules: {
+        goal: "Engagement / Habit Start",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 7,
+        avg_performance: {
+          estimated_engagement_lift: "+40%",
+          share_rate: "High",
+          viral_coefficient: "High (Network effect of 'joining' a challenge)",
+          benchmark: "High comment volume ('IN')",
+        },
+        hook_style: "Low-Barrier Commitment",
+        text_density: "Light-Medium (8-12 words/slide)",
+        structure: {
+          slide_1:
+            "Hook: '7-day [niche] challenge to get your first quick win.'",
+          slide_2: "Day 1: Simple starter action",
+          slide_3: "Day 2: Slightly harder action",
+          slide_4: "Day 3: Action + quick reflection prompt",
+          slide_5: "Day 4–5: Stack previous days + new micro action",
+          slide_6: "Day 6–7: Hardest actions + mini self-review",
+          slide_7: "CTA: 'Comment “IN”, save this, and tag me on Day 7.'",
+        },
+        key_success_factors: [
+          "Day 1 must be extremely easy (almost too easy)",
+          "Each day = one clear action + 1 line of context max",
+          "Visually show 'Day 1 / Day 2 / …' labels big",
+          "Include accountability CTA (comment/tag/DM)",
+          "Make challenge outcome very small and achievable",
+        ],
+        production_notes: {
+          video_tip: "Show a calendar being marked off day by day",
+          timing: "Fast, high-energy transitions",
+          visual_contrast: "Sequential day cards with consistent style",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement: "Bold 'Day #' headers",
+          tone_compatibility: "Encouraging / Energetic",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (Incentive-based) and 'tone_guardrail' note: keep tasks under 5-10 mins to prevent drop-off",
+        },
+      },
+      best_for: [
+        "Content posting challenge",
+        "Outreach challenge",
+        "Habit-building challenge",
+        "Money/savings challenge",
+        "Health/steps challenge",
+      ],
+    },
+    {
+      template_id: "T-SWIPETHREAD-20",
+      name: "Swipeable Idea Thread",
+      category: "reach",
+      content_rules: {
+        goal: "Reach / Saves",
+        platform_optimized: ["Instagram", "TikTok"],
+        slide_count: 8,
+        avg_performance: {
+          estimated_engagement_lift: "+45%",
+          share_rate: "High",
+          viral_coefficient: "High (Rapid consumption + utility)",
+          benchmark: "High completion rate",
+        },
+        hook_style: "Listicle / Idea Bank",
+        text_density: "Light (6-12 words/slide)",
+        structure: {
+          slide_1: "Hook: '[N] ideas for [target outcome] you can use today.'",
+          slide_2: "Idea #1: Short title + 1-line how-to",
+          slide_3: "Idea #2: Short title + 1-line how-to",
+          slide_4: "Idea #3: Short title + 1-line how-to",
+          slide_5: "Idea #4: Short title + 1-line how-to",
+          slide_6: "Idea #5: Short title + 1-line how-to",
+          slide_7: "Idea #6: Short title + 1-line how-to (advanced)",
+          slide_8: "CTA: 'Save this. Try 1 idea today, 1 tomorrow.'",
+        },
+        key_success_factors: [
+          "Keep each idea independent and executable",
+          "Title bold, explanation smaller",
+          "Front-load strongest 2 ideas at slides 2–3",
+          "At least one 'weird' or unexpected idea to stand out",
+          "Avoid generic clichés; each idea should feel fresh",
+        ],
+        production_notes: {
+          video_tip: "Use a subtle 'swipe' sound effect between each idea",
+          timing: "Very fast pace, mimicking a Twitter/X thread",
+          visual_contrast: "Simple heading + subtext template reused per slide",
+        },
+        brand_integration_notes: {
+          aesthetic_requirement: "Repetitive, easy-to-digest layout",
+          tone_compatibility: "Punchy / Practical",
+          risk_level: "Low",
+          suggested_brand_addition:
+            "add 'misdirection_type' field (Contextual) and 'tone_guardrail' note: quality over quantity; don't use filler ideas",
+        },
+      },
+      best_for: [
+        "Content ideas",
+        "Offer angles",
+        "Hook formulas",
+        "Workout variations",
+        "Study tactics",
+      ],
+    },
+  ],
+};

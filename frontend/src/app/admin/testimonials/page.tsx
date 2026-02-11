@@ -6,7 +6,7 @@ import {
   useCreateTestimonial,
   useUpdateTestimonial,
   useDeleteTestimonial,
-} from "@/lib/api/hooks/useTestimonials";
+} from "@/features/testimonials/hooks";
 import {
   Card,
   CardContent,
@@ -323,7 +323,7 @@ export default function TestimonialsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {testimonials.map((testimonial) => (
+              {testimonials.map((testimonial: any) => (
                 <Card
                   key={testimonial.id}
                   className="glass-card border border-border/50"

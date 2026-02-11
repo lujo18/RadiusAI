@@ -13,7 +13,7 @@ import {
   CarouselPrevious,
 } from "../ui/carousel";
 import CarouselWithFooter from "../ui/carousel-with-footer";
-import { useCreateTemplate } from "@/lib/api/hooks";
+import { useCreateTemplate } from '@/features/templates/hooks';
 
 export const TemplateSelector = ({ brandId }: { brandId: string }) => {
 
@@ -24,7 +24,7 @@ export const TemplateSelector = ({ brandId }: { brandId: string }) => {
   const handleAddTemplate = async (templateId: string): Promise<void> => {
     const template = SYSTEM_TEMPLATES.template_library.filter((t)=> t.template_id === templateId)[0]
 
-    const response = await createTemplate.mutateAsync({
+    const response = await (createTemplate as any).mutateAsync({
       name: template.name,
       category: template.category,
       content_rules: template.content_rules,

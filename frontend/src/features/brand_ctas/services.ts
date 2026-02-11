@@ -127,3 +127,5 @@ export const brandCtaService = {
     }
   },
 };
+
+export default brandCtaService;

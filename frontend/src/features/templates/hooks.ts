@@ -1,7 +1,8 @@
 // React Query hooks for Templates
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { templateApi } from '@/lib/api/client';
+import { templateService } from './services';
+import type { Database } from '@/types/database';
 
 // Query Keys
 export const templateKeys = {
@@ -13,22 +14,22 @@ export const templateKeys = {
 // ==================== QUERIES ====================
 
 export function useTemplates(brandId?: string | null) {
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: brandId !== undefined ? templateKeys.byBrand(brandId) : templateKeys.all,
     queryFn: async () => {
       if (brandId) {
-        return await templateApi.getTemplatesByBrand(brandId); 
+        return await templateService.getTemplatesByBrand(brandId);
       }
-      return await templateApi.getTemplates();
+      return await templateService.getTemplates();
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
 
 export function useTemplate(templateId: string) {
-  return useQuery({
+  return useQuery<any | null>({
     queryKey: templateKeys.detail(templateId),
-    queryFn: () => templateApi.getTemplate(templateId),
+    queryFn: () => templateService.getTemplate(templateId),
     enabled: !!templateId,
     staleTime: 1 * 60 * 1000, // 1 minute
   });
@@ -42,7 +43,7 @@ export function useCreateTemplate() {
   console.log("Tanstack Create Template", queryClient)
 
   return useMutation({
-    mutationFn: templateApi.createTemplate,
+    mutationFn: templateService.createTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: templateKeys.all });
     },
@@ -54,7 +55,7 @@ export function useUpdateTemplate() {
 
   return useMutation({
     mutationFn: ({ templateId, updates }: { templateId: string; updates: any }) => 
-      templateApi.updateTemplate({ templateId, updates }),
+      templateService.updateTemplate(templateId, updates),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: templateKeys.all });
       queryClient.invalidateQueries({ queryKey: templateKeys.detail(variables.templateId) });
@@ -66,7 +67,7 @@ export function useDeleteTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: templateApi.deleteTemplate,
+    mutationFn: templateService.deleteTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: templateKeys.all });
     },
@@ -77,7 +78,7 @@ export function useSetDefaultTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: templateApi.setDefaultTemplate,
+    mutationFn: templateService.setDefaultTemplate,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: templateKeys.all });
     },

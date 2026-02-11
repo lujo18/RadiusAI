@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { SubscriptionManagement } from "@/components/billingsdk/subscription-management";
 import { type CurrentPlan, plans } from "@/lib/billingsdk-config";
-import { useCreatePortal, useSubscription } from "@/lib/api/hooks/useSubscription";
-import { useUserProfile } from "@/lib/api/hooks/useUser";
+import { useCreatePortal, useSubscription } from '@/features/subscription/hooks';
+import { useUserProfile } from '@/features/user/hooks';
 import { Currency } from "lucide-react";
 import { getCurrencySymbol, formatCurrency } from '@/lib/currency';
 
@@ -111,8 +111,8 @@ export default function BillingPage() {
           warningText:
             "If you cancel your subscription, you will lose access to premium features. Your data will be retained for 30 days.",
           onCancel: async (planId) => {
-            try {
-              const res = await createPortal.mutateAsync(user!.id);
+              try {
+              const res = await createPortal.mutateAsync((user as any).id);     
               if (res?.url) {
                 window.open(res.url, "_blank");
               }
@@ -126,7 +126,7 @@ export default function BillingPage() {
         }}
         openPortal={async () => {
           try {
-            const res = await createPortal.mutateAsync(user!.id);
+            const res = await createPortal.mutateAsync((user as any).id);
             if (res?.url) window.open(res.url, "_blank");
           } catch (err) {
             console.error(err);

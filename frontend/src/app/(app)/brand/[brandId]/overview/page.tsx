@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { useBrands } from "@/lib/api/hooks/useBrands";
+import { useBrands } from '@/features/brand/hooks';
 import { useAuthStore } from "@/store";
 import { TemplateSelector } from "@/components/Templates/TemplateSelector";
 import { OverviewPageComponent } from "@/components/pages/OverviewPageComponent";

@@ -19,7 +19,7 @@ import { PresetPackImages } from './components/PresetPackImages';
 import {
   usePresetPacks,
   useDeletePresetPack,
-} from '@/lib/api/hooks/usePresetPacks';
+} from '@/features/presetPacks/hooks';
 import type { PresetPack } from '@/types/presetPack';
 
 export default function PresetPacksPage() {

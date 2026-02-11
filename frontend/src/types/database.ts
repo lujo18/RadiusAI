@@ -445,43 +445,135 @@ export type Database = {
       }
       post_analytics: {
         Row: {
+          average_time_watched: number | null
+          brand_id: string | null
+          collected_at: string | null
+          collection_count: number | null
           comments: number | null
+          current_interval: string | null
           engagement_rate: number | null
           id: string
           impressions: number
           last_updated: string | null
           likes: number
+          new_followers: number | null
+          platform: string | null
           post_id: string
           saves: number
           shares: number
+          total_time_watched: number | null
         }
         Insert: {
+          average_time_watched?: number | null
+          brand_id?: string | null
+          collected_at?: string | null
+          collection_count?: number | null
           comments?: number | null
+          current_interval?: string | null
           engagement_rate?: number | null
           id?: string
           impressions?: number
           last_updated?: string | null
           likes?: number
+          new_followers?: number | null
+          platform?: string | null
           post_id: string
           saves?: number
           shares?: number
+          total_time_watched?: number | null
         }
         Update: {
+          average_time_watched?: number | null
+          brand_id?: string | null
+          collected_at?: string | null
+          collection_count?: number | null
           comments?: number | null
+          current_interval?: string | null
           engagement_rate?: number | null
           id?: string
           impressions?: number
           last_updated?: string | null
           likes?: number
+          new_followers?: number | null
+          platform?: string | null
           post_id?: string
           saves?: number
           shares?: number
+          total_time_watched?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "post_analytics_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_analytics_history: {
+        Row: {
+          average_time_watched: number | null
+          brand_id: string | null
+          collected_at: string
+          collection_count: number | null
+          comments: number | null
+          current_interval: string | null
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          likes: number | null
+          new_followers: number | null
+          platform_id: string | null
+          post_id: string
+          raw_payload: Json | null
+          saves: number | null
+          shares: number | null
+          total_time_watched: number | null
+        }
+        Insert: {
+          average_time_watched?: number | null
+          brand_id?: string | null
+          collected_at?: string
+          collection_count?: number | null
+          comments?: number | null
+          current_interval?: string | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          new_followers?: number | null
+          platform_id?: string | null
+          post_id: string
+          raw_payload?: Json | null
+          saves?: number | null
+          shares?: number | null
+          total_time_watched?: number | null
+        }
+        Update: {
+          average_time_watched?: number | null
+          brand_id?: string | null
+          collected_at?: string
+          collection_count?: number | null
+          comments?: number | null
+          current_interval?: string | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          likes?: number | null
+          new_followers?: number | null
+          platform_id?: string | null
+          post_id?: string
+          raw_payload?: Json | null
+          saves?: number | null
+          shares?: number | null
+          total_time_watched?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_analytics_history_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
@@ -1315,6 +1407,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_processed_analytics: {
+        Args: {
+          p_brand_id?: string
+          p_post_id?: string
+          p_range?: string
+          p_section?: string
+          p_window_limit?: number
+        }
+        Returns: {
+          collected_at: string
+          comments: number
+          engagement_rate: number
+          impressions: number
+          likes: number
+          saves: number
+          shares: number
+        }[]
+      }
       increment_usage_rpc: {
         Args: {
           p_amount: number

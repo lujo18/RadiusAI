@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { usePresetImages } from '@/lib/api/hooks/usePresetPacks';
+import { usePresetImages } from '@/features/presetPacks/hooks';
 import type { PresetPack } from '@/types/presetPack';
 
 interface PresetPackImagesDialogProps {

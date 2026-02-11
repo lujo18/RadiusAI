@@ -3,7 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AutomationWizardData } from '../AutomationWizard';
-import { useBrandCtas } from '@/lib/api/hooks/useBrandCtas';
+import { useBrandCtas } from '@/features/brand_ctas/hooks';
 
 interface Step3CTAProps {
   data: AutomationWizardData;
@@ -35,7 +35,7 @@ export function AutomationWizardStep3CTA({ data, onChange, brandId }: Step3CTAPr
     );
   }
 
-  const activeCtas = ctas?.filter((cta) => cta.is_active) || [];
+  const activeCtas = ctas?.filter((cta: any) => cta.is_active) || [];
 
   return (
     <div className="space-y-4">
@@ -48,7 +48,7 @@ export function AutomationWizardStep3CTA({ data, onChange, brandId }: Step3CTAPr
 
       <div className="space-y-3">
         {activeCtas.length > 0 ? (
-          activeCtas.map((cta) => (
+          activeCtas.map((cta: any) => (
             <div
               key={cta.id}
               className="flex items-start space-x-3 p-4 rounded-lg border border-border hover:bg-foreground/5 hover:border-border/80 transition-all cursor-pointer"

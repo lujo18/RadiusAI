@@ -1,4 +1,4 @@
-import { useBrands } from "@/lib/api/hooks/useBrands";
+import { useBrands } from '@/features/brand/hooks';
 import Stats10 from "../stats-10";
 import { BrandSelector } from "../selectors/BrandSelector";
 import { Brand } from "../TemplateCreator/contentTypes";
@@ -6,6 +6,7 @@ import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
+import { DashboardAnalytics } from '@/features/analytics/components/blocks/DashboardAnalytics';
 
 type OverviewPageType = {
   brandId: string | null;
@@ -14,7 +15,6 @@ type OverviewPageType = {
 export const OverviewPageComponent = ({ brandId }: OverviewPageType) => {
   const { data: brands, isLoading, error } = useBrands();
   
-
   return (
     <div className="flex flex-col p-6 gap-4">
       <h1>Overview</h1>
@@ -29,7 +29,9 @@ export const OverviewPageComponent = ({ brandId }: OverviewPageType) => {
           <Button onClick={() => {}}>Create brand<Plus/></Button>
         </Card>
       )}
-      <Stats10 />
+      {/* <Stats10 /> */}
+
+      <DashboardAnalytics brandId={brandId}/>
     </div>
   );
 };

@@ -1,0 +1,1 @@
+export { testimonialsService } from './index';

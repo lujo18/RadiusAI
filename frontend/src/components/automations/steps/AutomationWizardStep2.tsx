@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTemplates } from '@/lib/api/hooks/useTemplates';
+import { useTemplates } from '@/features/templates/hooks';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,7 +35,7 @@ export function AutomationWizardStep2({ data, onChange, brandId }: Step2Props) {
     );
   }
 
-  if (!templates || templates.length === 0) {
+  if (!templates || (templates as any[]).length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-foreground/60">
@@ -56,7 +56,7 @@ export function AutomationWizardStep2({ data, onChange, brandId }: Step2Props) {
       </div>
 
       <div className="space-y-3 max-h-[400px] overflow-y-auto">
-        {templates.map((template) => (
+        {(templates as any[]).map((template: any) => (
           <div
             key={template.id}
             className="flex items-start space-x-3 p-3 rounded-lg border border-border hover:bg-foreground/5 transition-colors cursor-pointer"

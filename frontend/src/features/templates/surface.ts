@@ -1,4 +1,4 @@
-import templateService from '@/lib/api/services/templateService';
+import { templateService } from '@/features/templates/services';
 
 export const templateApi = {
   getTemplates: async () => {

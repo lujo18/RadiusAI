@@ -9,17 +9,14 @@ import { Skeleton } from "../ui/skeleton";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  useTemplates,
-  useCreateTemplate,
-  useDeleteTemplate,
-} from "@/lib/api/hooks";
+import { useTemplates, useCreateTemplate, useDeleteTemplate } from "@/features/templates/hooks";
 import TemplateCreator from "@/components/TemplateCreator/index";
 import TemplateViewSwitcher from "@/components/Templates/TemplateViewSwitcher";
 
 const TemplatesTab = ({ brandId }: { brandId: string }) => {
   const { data: templates, isLoading: templatesLoading } =
     useTemplates(brandId);
+  const templatesArr = templates as any[];
 
   const handleSaveTemplate = (templateData: any) => {
     console.log("Client Create Template", {
@@ -37,7 +34,7 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
     );
   };
   const handleDeleteTemplate = (templateId: string) => {
-    deleteTemplateMutation.mutate(templateId);
+    (deleteTemplateMutation as any).mutate(templateId);
   };
 
   const router = useRouter();
@@ -74,7 +71,7 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
 
         {/* Template View Switcher */}
         <TemplateViewSwitcher
-          templates={templates}
+          templates={templates as any[]}
           isLoading={templatesLoading}
           brandId={brandId}
           onDelete={handleDeleteTemplate}
@@ -86,7 +83,7 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-primary mb-2">
-                {templates?.filter((t: any) => t.status === "active").length ||
+                {templatesArr?.filter((t: any) => t.status === "active").length ||
                   0}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -97,13 +94,13 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-green-400 mb-2">
-                {templates && templates.length > 0
+                {templatesArr && templatesArr.length > 0
                   ? (
-                      templates.reduce(
+                      templatesArr.reduce(
                         (sum: number, t: any) =>
                           sum + (t.performance?.avg_engagement_rate || 0),
                         0,
-                      ) / templates.length
+                      ) / templatesArr.length
                     ).toFixed(1)
                   : "0.0"}
                 %
@@ -116,7 +113,7 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-blue-400 mb-2">
-                {templates?.reduce(
+                {templatesArr?.reduce(
                   (sum: number, t: any) =>
                     sum + (t.performance?.total_posts || 0),
                   0,
@@ -130,7 +127,7 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-yellow-400 mb-2">
-                {templates?.filter((t: any) => t.status === "testing").length ||
+                {templatesArr?.filter((t: any) => t.status === "testing").length ||
                   0}
               </div>
               <div className="text-sm text-muted-foreground">

@@ -45,7 +45,7 @@ async def fetch_platform_metrics(post_id: str) -> dict:
         # 2) Call PostForMe API with the social_post_id
         # Using external_post_id as the social_post_id for PostForMe queries
         for platform in platform_ids:
-            logger.info("Getting analytics for post:", pfm_post_id)
+            logger.info(f"Getting analytics for post: {pfm_post_id}")
             analytics_response = await postforme_client.get_post_analytics(
                 social_post_id=pfm_post_id,
                 platform_id=platform,
@@ -67,10 +67,12 @@ async def fetch_platform_metrics(post_id: str) -> dict:
             # 4) Map PostForMe metrics to our schema
             metrics_dict = item.metrics.dict()
             
+            print("Metrics", metrics_dict)
+            
             return {
-                "likes": metrics_dict.get("likes", 0),
-                "comments": metrics_dict.get("comments", 0),
-                "shares": metrics_dict.get("shares", 0),
+                "likes": metrics_dict.get("like_count", 0),
+                "comments": metrics_dict.get("comment_count", 0),
+                "shares": metrics_dict.get("share_count", 0),
                 "saves": metrics_dict.get("favorites", 0),  # PostForMe uses 'favorites' for saves
                 "impressions": metrics_dict.get("view_count", 0),
                 "total_time_watched": metrics_dict.get("total_time_watched", 0),
@@ -114,7 +116,7 @@ async def process_due_posts():
         # 2) Get basic post info (for age, user, platform, etc.)
         posts = (
             supabase.table("posts")
-            .select("id, user_id, published_time, platform, brand_id")
+            .select("id, user_id, published_time, platform, platform_ids, brand_id")
             .in_("id", post_ids)
             .execute()
         )
@@ -128,6 +130,7 @@ async def process_due_posts():
             if not p:
                 logger.warning(f"Post {row['post_id']} not found in posts table")
                 continue
+            logger.info(f"[DEBUG] Processing post {row['post_id']}: brand_id from posts table = {p.get('brand_id')}")
             tasks.append(process_single_post(row, p))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -159,6 +162,11 @@ async def process_single_post(track_row: dict, post_row: dict):
     brand_id = post_row.get("brand_id")
     platform = post_row.get("platform", "")
     
+    logger.info(
+        f"[DEBUG] process_single_post started: post_id={post_id}, "
+        f"brand_id={brand_id}, platform={platform}"
+    )
+    
     # Use published_time if available, else created_at
     published_time_str = post_row.get("published_time")
     if published_time_str:
@@ -177,47 +185,71 @@ async def process_single_post(track_row: dict, post_row: dict):
             logger.warning(f"No metrics fetched for post {post_id}, skipping analytics update")
             return
 
-        # 2) Calculate engagement rate (if possible)
+        # 2) Calculate total engagement (likes + comments + shares + saves)
+        total_engagement = (
+            metrics.get("likes", 0)
+            + metrics.get("comments", 0)
+            + metrics.get("shares", 0)
+            + metrics.get("saves", 0)
+        )
+        
+        # 3) Calculate engagement rate (if possible)
         engagement_rate = None
         if metrics.get("impressions", 0) > 0:
-            total_engagement = (
-                metrics.get("likes", 0)
-                + metrics.get("comments", 0)
-                + metrics.get("shares", 0)
-                + metrics.get("saves", 0)
-            )
-            engagement_rate = total_engagement / metrics["impressions"]
-
-        # 3) Upsert analytics (update if exists, insert if new)
+            engagement_rate = round(total_engagement / metrics["impressions"] * 100) / 100.0
+        
+        # 4) Upsert analytics (update if exists, insert if new)
+        # Save all available fields to post_analytics
         analytics_record = {
             "post_id": post_id,
+            "impressions": metrics.get("impressions", 0),
             "likes": metrics.get("likes", 0),
             "comments": metrics.get("comments", 0),
             "shares": metrics.get("shares", 0),
             "saves": metrics.get("saves", 0),
-            "impressions": metrics.get("impressions", 0),
             "engagement_rate": engagement_rate,
             "total_time_watched": metrics.get("total_time_watched", 0),
             "average_time_watched": metrics.get("average_time_watched", 0),
-            "new_followers": metrics.get("new_followers", 0),          
-            "brand_id": post_row.get("brand_id"),
-            "current_interval": track_row.get("current_interval"),
-            "collection_count": track_row.get("collection_count")
+            "new_followers": metrics.get("new_followers", 0),
+            "last_updated": now.isoformat()
         }
         
         # Upsert: update if post_analytics already exists for this post, else insert
         supabase.table("post_analytics").upsert(
-            {**analytics_record, "last_updated": now.isoformat()},
+            analytics_record,
             on_conflict="post_id"
         ).execute()
 
+        # Also save to history with additional metadata
+        history_record = {
+            "post_id": post_id,
+            "impressions": metrics.get("impressions", 0),
+            "likes": metrics.get("likes", 0),
+            "comments": metrics.get("comments", 0),
+            "shares": metrics.get("shares", 0),
+            "saves": metrics.get("saves", 0),
+            "engagement_rate": engagement_rate,
+            "total_time_watched": metrics.get("total_time_watched", 0),
+            "average_time_watched": metrics.get("average_time_watched", 0),
+            "new_followers": metrics.get("new_followers", 0),
+            "collection_count": track_row.get("collection_count"),
+            "current_interval": track_row.get("current_interval"),
+            "brand_id": post_row.get("brand_id"),
+            "collected_at": now.isoformat()
+        }
         
+        logger.info(f"[DEBUG] Inserting history record: {history_record}")
+        # Use upsert instead of insert to handle collection_count=0 already existing
         supabase.table("post_analytics_history").upsert(
-            analytics_record,
+            history_record,
             on_conflict="post_id,collection_count"
         ).execute()
         
-        logger.info(f"Updated analytics for post {post_id}")
+        logger.info(
+            f"[DEBUG] Saved analytics history for post {post_id}: "
+            f"brand_id={history_record.get('brand_id')}, "
+            f"requested_brand_id_from_post_row={brand_id}"
+        )
 
         # 4) Compute next collection interval based on post age
         age_hours = (now - posted_at).total_seconds() / 3600

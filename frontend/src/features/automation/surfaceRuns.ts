@@ -1,4 +1,4 @@
-import { automationRunService } from '@/lib/api/services/automationRunService';
+import { automationRunService } from '@/features/automation/servicesRuns';
 import type { Database } from '@/types/database';
 
 type AutomationRunRow = Database['public']['Tables']['automation_runs']['Row'];

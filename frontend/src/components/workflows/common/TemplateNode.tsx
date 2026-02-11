@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { useTemplates } from "@/lib/api/hooks";
+import { useTemplates } from '@/features/templates/hooks';
 import type { Tables } from "@/types/database";
 
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +40,7 @@ export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
 
   const { data: templates, isLoading, error } = useTemplates(brandId);
   const router = useRouter()
+  const templatesArr = templates as any[];
 
 
   const handleTemplateSelect = (templateId: string | null, eventDetails?: any) => {
@@ -49,12 +50,12 @@ export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
     }
   };
 
-  const selectedTemplate = templates?.find((t) => t.id === selectedTemplateId);
+  const selectedTemplate = (templatesArr as any[])?.find((t: any) => t.id === selectedTemplateId) as Tables<'templates'> | undefined;
 
   const filteredTemplates = useMemo(() => {
-    if (!templates) return [];
-    return templates.filter((template) => template.id !== "");
-  }, [templates]);
+    if (!templatesArr) return [] as Tables<'templates'>[];
+    return templatesArr.filter((template: any) => template.id !== "") as Tables<'templates'>[];
+  }, [templatesArr]);
 
   return (
     <BaseNode className="w-80">
@@ -83,7 +84,7 @@ export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
           <div className="text-sm text-red-500 text-center py-2">
             Failed to load templates
           </div>
-        ) : !templates || templates.length === 0 ? (
+        ) : !templatesArr || templatesArr.length === 0 ? (
           <div className="text-sm text-muted-foreground text-center py-2">
             <p className="mb-4">No templates found for this brand</p>
 
@@ -105,7 +106,7 @@ export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
                 <ComboboxContent>
                   <ComboboxEmpty>No templates found.</ComboboxEmpty>
                   <ComboboxList>
-                    {filteredTemplates.map((template) => (
+                    {filteredTemplates.map((template: Tables<'templates'>) => (
                       <ComboboxItem key={template.id} value={template.id}>
                         <Item size="xs" className="p-0">
                           <ItemTitle className="font-medium whitespace-nowrap">
@@ -138,17 +139,17 @@ export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
                       {selectedTemplate.category || "N/A"}
                     </Badge>
                   </div>
-                  {selectedTemplate.content_rules?.slide_count && (
+                  {(selectedTemplate.content_rules as any)?.slide_count && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Slides:</span>
-                      <span>{selectedTemplate.content_rules.slide_count}</span>
+                      <span>{(selectedTemplate.content_rules as any).slide_count}</span>
                     </div>
                   )}
-                  {selectedTemplate.content_rules?.platform_optimized && (
+                  {(selectedTemplate.content_rules as any)?.platform_optimized && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Platforms:</span>
                       <div className="flex gap-1">
-                        {selectedTemplate.content_rules.platform_optimized.map(
+                        {(selectedTemplate.content_rules as any).platform_optimized?.map(
                           (platform: string) => (
                             <Badge
                               key={platform}

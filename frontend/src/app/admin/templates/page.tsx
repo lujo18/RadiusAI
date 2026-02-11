@@ -6,7 +6,7 @@ import {
   useCreateSystemTemplate,
   useUpdateSystemTemplate,
   useDeleteSystemTemplate,
-} from "@/lib/api/hooks/useSystemTemplates";
+} from "@/features/templates";
 import {
   Card,
   CardContent,
@@ -349,7 +349,7 @@ export default function SystemTemplatesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {templates.map((template) => (
+                  {templates.map((template: any) => (
                     <TableRow key={template.id} className="border-border/50">
                       <TableCell className="font-medium">
                         {template.name}
@@ -359,7 +359,7 @@ export default function SystemTemplatesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {(template.tags || []).map((tag) => (
+                          {(template.tags || []).map((tag: any) => (
                             <Badge key={tag} variant="secondary" className="text-xs">
                               {tag}
                             </Badge>

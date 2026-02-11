@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useTemplates, useBrands } from "@/lib/api/hooks";
+import { useTemplates } from "@/features/templates/hooks";
+import { useBrands } from "@/features/brand/hooks";
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/types/database";
 import { Play, Pause, Trash2, ChevronRight } from "lucide-react";

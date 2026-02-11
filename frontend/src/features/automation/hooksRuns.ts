@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { automationRunApi } from '@/lib/api/surface/automationRunApi';
+import { automationRunApi } from '@/features/automation/surfaceRuns';
 import type { Database } from '@/types/database';
 
 type AutomationRunRow = Database['public']['Tables']['automation_runs']['Row'];

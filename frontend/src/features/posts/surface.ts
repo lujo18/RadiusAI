@@ -2,7 +2,7 @@ import { PostRepository } from '@/lib/supabase/repos/PostRepository';
 import { supabase } from '@/lib/supabase/client';
 import { requireUserId } from '@/lib/supabase/auth';
 import type { Database } from '@/types/database';
-import postService from '@/lib/api/services/postService';
+import { postService } from '@/features/posts/services';
 
 /**
  * Post CRUD operations only.

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { automationApi } from '@/lib/api/surface/automationApi';
+import { automationApi } from '@/features/automation/surface';
 import type { Database } from '@/types/database';
 
 type AutomationRow = Database['public']['Tables']['automations']['Row'];
@@ -42,7 +42,7 @@ export function useAutomation(id: string | null | undefined) {
 export function useCreateAutomation() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<AutomationRow, unknown, { brandId: string; payload: Omit<AutomationInsert, 'brand_id'> }>({
     mutationFn: async ({ brandId, payload }: { brandId: string; payload: Omit<AutomationInsert, 'brand_id'> }) => {
       payload = {...payload, "user_timezone": Intl.DateTimeFormat().resolvedOptions().timeZone};
       return automationApi.create(brandId, payload);
@@ -62,7 +62,7 @@ export function useCreateAutomation() {
 export function useUpdateAutomation() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<AutomationRow, unknown, { id: string; updates: AutomationUpdate }>({
     mutationFn: async ({ id, updates }: { id: string; updates: AutomationUpdate }) => {
       return automationApi.update(id, updates);
     },
@@ -81,7 +81,7 @@ export function useUpdateAutomation() {
 export function useDeleteAutomation() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<boolean, unknown, string>({
     mutationFn: async (id: string) => {
       return automationApi.delete(id);
     },
@@ -102,7 +102,7 @@ export function useDeleteAutomation() {
 export function useToggleAutomationActive() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<AutomationRow, unknown, { id: string; isActive: boolean }>({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
       return automationApi.toggleActive(id, isActive);
     },
@@ -119,7 +119,7 @@ export function useToggleAutomationActive() {
 export function useUpdateAutomationSchedule() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<AutomationRow, unknown, { id: string; schedule: Record<string, string[]> }>({
     mutationFn: async ({ id, schedule }: { id: string; schedule: Record<string, string[]> }) => {
       return automationApi.updateSchedule(id, schedule);
     },
@@ -136,7 +136,7 @@ export function useUpdateAutomationSchedule() {
 export function useUpdateAutomationNextRun() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<AutomationRow, unknown, { id: string; nextRunAt: string }>({
     mutationFn: async ({ id, nextRunAt }: { id: string; nextRunAt: string }) => {
       return automationApi.updateNextRun(id, nextRunAt);
     },

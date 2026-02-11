@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
-import { useTemplate, useUpdateTemplate } from "@/lib/api/hooks";
+import { useTemplate, useUpdateTemplate } from "@/features/templates/hooks";
 import { DynamicJSONForm } from "@/components/TemplateCreator/DynamicJSONForm";
 import type { Template } from "@/components/TemplateCreator/contentTypes";
 
@@ -38,15 +38,16 @@ export default function TemplateEditPage() {
   // Initialize form data when template loads
   useEffect(() => {
     if (template) {
+      const t = template as any;
       setFormData({
-        name: template.name || '',
-        category: template.category || '',
-        status: template.status || 'active',
-        favorite: template.favorite || false,
-        is_default: template.is_default || false,
-        tags: template.tags || [],
-        content_rules: template.content_rules || {},
-        style_config: template.style_config || null,
+        name: t.name || '',
+        category: t.category || '',
+        status: t.status || 'active',
+        favorite: t.favorite || false,
+        is_default: t.is_default || false,
+        tags: t.tags || [],
+        content_rules: t.content_rules || {},
+        style_config: t.style_config || null,
       });
     }
   }, [template]);

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '@/lib/api/client';
+import type { Database } from '@/types/database';
 
 // Query Keys
 export const userKeys = {
@@ -12,7 +13,7 @@ export const userKeys = {
 // ==================== QUERIES ====================
 
 export function useUserProfile() {
-  return useQuery({
+  return useQuery<Database['public']['Tables']['users']['Row'] | null>({
     queryKey: userKeys.profile,
     queryFn: userApi.getProfile,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -23,7 +24,7 @@ export function useUserProfile() {
 export const useUser = useUserProfile;
 
 export function useConnectedAccounts() {
-  return useQuery({
+  return useQuery<any[]>({
     queryKey: userKeys.accounts,
     queryFn: userApi.getConnectedAccounts,
     staleTime: 2 * 60 * 1000, // 2 minutes

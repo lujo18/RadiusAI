@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { brandCtaApi } from '@/lib/api/surface/brandCtaApi';
+import { brandCtaApi } from '@/features/brand_ctas/surface';
 import type { Database } from '@/types/database';
 
 type BrandCtaRow = Database['public']['Tables']['brand_ctas']['Row'];
@@ -26,7 +26,7 @@ export const brandCtaKeys = {
  * Fetch all CTAs for a specific brand
  */
 export function useBrandCtas(brandId: string) {
-  return useQuery({
+  return useQuery<BrandCtaRow[]>({
     queryKey: brandCtaKeys.list(brandId),
     queryFn: () => brandCtaApi.list(brandId),
     enabled: !!brandId,
@@ -38,7 +38,7 @@ export function useBrandCtas(brandId: string) {
  * Fetch a single CTA by ID
  */
 export function useBrandCta(ctaId: string | null) {
-  return useQuery({
+  return useQuery<BrandCtaRow | null>({
     queryKey: brandCtaKeys.detail(ctaId || ''),
     queryFn: () => brandCtaApi.get(ctaId!),
     enabled: !!ctaId,
@@ -50,7 +50,7 @@ export function useBrandCta(ctaId: string | null) {
  * Fetch all CTAs across all brands
  */
 export function useAllBrandCtas() {
-  return useQuery({
+  return useQuery<BrandCtaRow[]>({
     queryKey: brandCtaKeys.lists(),
     queryFn: () => brandCtaApi.listAll(),
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -65,7 +65,7 @@ export function useAllBrandCtas() {
 export function useCreateBrandCta() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<BrandCtaRow, unknown, { brandId: string; payload: Omit<BrandCtaInsert, 'brand_id'> }>({
     mutationFn: ({ brandId, payload }: { brandId: string; payload: Omit<BrandCtaInsert, 'brand_id'> }) =>
       brandCtaApi.create(brandId, payload),
 
@@ -88,7 +88,7 @@ export function useCreateBrandCta() {
 export function useUpdateBrandCta() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<BrandCtaRow, unknown, { ctaId: string; updates: BrandCtaUpdate }>({
     mutationFn: ({ ctaId, updates }: { ctaId: string; updates: BrandCtaUpdate }) =>
       brandCtaApi.update(ctaId, updates),
 
@@ -112,7 +112,7 @@ export function useUpdateBrandCta() {
 export function useDeleteBrandCta() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<boolean, unknown, { ctaId: string; brandId: string }>({
     mutationFn: ({ ctaId, brandId }: { ctaId: string; brandId: string }) =>
       brandCtaApi.delete(ctaId),
 
@@ -136,7 +136,7 @@ export function useDeleteBrandCta() {
 export function useToggleBrandCtaStatus() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<BrandCtaRow, unknown, { ctaId: string; isActive: boolean }>({
     mutationFn: ({ ctaId, isActive }: { ctaId: string; isActive: boolean }) =>
       brandCtaApi.toggleStatus(ctaId, isActive),
 
@@ -159,7 +159,7 @@ export function useToggleBrandCtaStatus() {
 export function useDuplicateBrandCta() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<BrandCtaRow, unknown, { ctaId: string; targetBrandId: string }>({
     mutationFn: ({ ctaId, targetBrandId }: { ctaId: string; targetBrandId: string }) =>
       brandCtaApi.duplicate(ctaId, targetBrandId),
 

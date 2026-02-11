@@ -16,7 +16,7 @@
 // import { Background, BackgroundSchema } from "@/types/parseBackground";
 // import { TextElement, TextElementsArraySchema } from "@/types/parseTextElement";
 // import { z } from "zod";
-// import { contentApi } from "@/lib/api/client";
+// import { contentApi } from '@/features/common/hooks/client';
 // import { buildStageForExport, stageToBlob } from "@/lib/konva/stageBuilder";
 // import { StorageRepository } from "@/lib/supabase/repos/StorageRepository";
 // import { PostRepository } from "@/lib/supabase/repos/PostRepository";

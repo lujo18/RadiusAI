@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { useBrandCtas } from "@/lib/api/hooks/useBrandCtas";
+import { useBrandCtas } from '@/features/brand_ctas/hooks';
 import type { Database } from "@/types/database";
 
 import { Badge } from "@/components/ui/badge";
@@ -47,14 +47,14 @@ export const CtaNode: React.FC<CtaNodeProps> = ({ data }) => {
     }
   };
 
-  const selectedCta = ctas?.find((c) => c.id === selectedCtaId);
+  const selectedCta = ctas?.find((c: BrandCta) => c.id === selectedCtaId);
 
   const filteredCtas = useMemo(() => {
-    if (!ctas) return [];
-    return ctas.filter((cta) => !cta.is_deleted);
+    if (!ctas) return [] as BrandCta[];
+    return ctas.filter((cta: BrandCta) => !cta.is_deleted) as BrandCta[];
   }, [ctas]);
 
-  const activeCtas = filteredCtas.filter((c) => c.is_active);
+  const activeCtas = filteredCtas.filter((c: BrandCta) => c.is_active);
 
   return (
     <BaseNode className="w-80">
@@ -103,7 +103,7 @@ export const CtaNode: React.FC<CtaNodeProps> = ({ data }) => {
                 <ComboboxContent>
                   <ComboboxEmpty>No active CTAs found.</ComboboxEmpty>
                   <ComboboxList>
-                    {activeCtas.map((cta) => (
+                    {activeCtas.map((cta: BrandCta) => (
                       <ComboboxItem key={cta.id} value={cta.id}>
                         <Item size="xs" className="p-0">
                           <ItemTitle className="font-medium whitespace-nowrap">

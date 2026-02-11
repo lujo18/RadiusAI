@@ -2,7 +2,7 @@ import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import type { AutomationWizardData } from '../AutomationWizard';
-import { useBrandIntegrations } from '@/lib/api/hooks';
+import { useBrandIntegrations } from '@/features/brand/hooksIntegrations';
 import { SocialItem } from '@/components/platform-integrations/SocialItem';
 
 interface Step3Props {

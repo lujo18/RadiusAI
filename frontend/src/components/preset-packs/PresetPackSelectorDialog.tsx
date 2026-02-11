@@ -17,7 +17,7 @@ import {
 import {
   usePresetPacks,
   useUserPrivatePacks,
-} from '@/lib/api/hooks/usePresetPacks';
+} from '@/features/presetPacks/hooks';
 import type { PresetPack } from '@/types/presetPack';
 import { CreatePresetPackForm } from './CreatePresetPackForm';
 import { PresetPackImagesDialog } from './PresetPackImagesDialog';

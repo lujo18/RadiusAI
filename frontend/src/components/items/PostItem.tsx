@@ -13,7 +13,7 @@ import {
 } from "../ui/item";
 import { Post } from "@/types/types";
 import { usePostingModal } from '@/components/modals/PostingModalProvider';
-import { useBrandIntegrations } from '@/lib/api/hooks/useBrands';
+import { useBrandIntegrations } from '@/features/brand/hooks';
 import { Database } from '@/types/database';
 import { Iphone } from "../ui/iphone";
 import { PostContent } from "@/lib/parseJsonColumn.supabase";

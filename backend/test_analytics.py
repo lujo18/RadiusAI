@@ -10,12 +10,22 @@ from services.workers.analytics.analytic_worker import fetch_platform_metrics, p
 from services.analytics_service import get_post_analytics
 
 
-post_id = "1ac8333f-979e-48d9-81a3-0f75f73550c9"
+post_id = "a68ce25b-4e43-45f9-9229-39bcf19542a2"
 
 try:
-  val = asyncio.run(process_due_posts())
+  val = asyncio.run(fetch_platform_metrics(post_id))
   
   print("Analytics", val)
   
 except Exception as e:
   print("Failed to get analytics", e)
+
+
+
+# try:
+#   val = asyncio.run(process_due_posts())
+  
+#   print("Analytics", val)
+  
+# except Exception as e:
+#   print("Failed to get analytics", e)

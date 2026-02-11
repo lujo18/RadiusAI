@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import BrandSelector from "@/components/Dashboard/BrandSelector";
 import { Highlight } from '@/components/animate-ui/primitives/effects/highlight';
-import { useBrands } from '@/lib/api/hooks/useBrands';
+import { useBrands } from '@/features/brand/hooks';
 import { useBrandFilter } from '@/hooks/useBrandFilter';
 import { useIsMobile } from '@/hooks/use-mobile';
 

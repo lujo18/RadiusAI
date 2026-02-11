@@ -17,7 +17,7 @@ import { CreateImageForm } from './CreateImageForm';
 import {
   usePresetImages,
   useDeletePresetImage,
-} from '@/lib/api/hooks/usePresetPacks';
+} from '@/features/presetPacks/hooks';
 import type { PresetPack, PresetImage } from '@/types/presetPack';
 
 interface PresetPackImagesProps {

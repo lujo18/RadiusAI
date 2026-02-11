@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useCreatePresetPack } from '@/lib/api/hooks/usePresetPacks';
+import { useCreatePresetPack } from '@/features/presetPacks/hooks';
 
 const createPackSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),

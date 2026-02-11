@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useQueryClient } from '@tanstack/react-query';
-import brandApi from './brandApi';
+import brandGenerationService from '@/features/brand/generateService';
 
 export type BrandSettingsData = {
   niche?: string;
@@ -20,7 +20,7 @@ export type BrandSettingsData = {
 };
 
 async function generateBrandRequest(guideline_prompt: string): Promise<BrandSettingsData> {
-  const data = await brandApi.generateBrandSettings(guideline_prompt);
+  const data = await brandGenerationService.generateFromGuideline(guideline_prompt);
   return data as BrandSettingsData;
 }
 

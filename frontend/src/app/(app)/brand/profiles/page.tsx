@@ -7,7 +7,7 @@ import { FiPlus } from 'react-icons/fi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useBrands } from '@/lib/api/hooks';
+import { useBrands } from '@/features/brand/hooks';
 import CreateProfileDialog from '@/components/Profiles/CreateProfileDialog';
 import EditProfileDialog from '@/components/Profiles/EditProfileDialog';
 import ProfileCard from '@/components/Profiles/ProfileCard';

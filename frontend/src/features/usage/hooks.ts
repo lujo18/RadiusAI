@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usageApi } from '@/lib/api/surface/usageApi';
+import { usageApi } from '@/features/usage/surface';
 
 export const useUsage = () => {
   return useQuery({

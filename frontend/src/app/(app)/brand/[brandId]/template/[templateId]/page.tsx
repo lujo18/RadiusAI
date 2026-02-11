@@ -17,7 +17,7 @@ import {
   Calendar,
   ImageIcon
 } from "lucide-react";
-import { useTemplate, useUpdateTemplate, useDeleteTemplate } from "@/lib/api/hooks";
+import { useTemplate, useUpdateTemplate, useDeleteTemplate } from "@/features/templates/hooks";
 import type { Template } from "@/components/TemplateCreator/contentTypes";
 import type { StyleConfig } from "@/components/TemplateCreator/styleConfigTypes";
 
@@ -35,7 +35,7 @@ export default function TemplateDetailPage() {
       // ...existing code...
     const handleDelete = () => {
       if (templateId) {
-        deleteTemplateMutation.mutate(templateId);
+        (deleteTemplateMutation as any).mutate(templateId);
       }
     }
   const params = useParams();
@@ -50,12 +50,15 @@ export default function TemplateDetailPage() {
 
   // Always sanitize template before usage
   const sanitizedTemplate = template
-    ? {
-        ...template,
-        brand_id: typeof template.brand_id === 'undefined' ? null : template.brand_id,
-        tags: typeof template.tags === 'undefined' ? null : template.tags,
-        content_rules: {},
-      }
+    ? (() => {
+        const t = template as any;
+        return {
+          ...t,
+          brand_id: typeof t.brand_id === 'undefined' ? null : t.brand_id,
+          tags: typeof t.tags === 'undefined' ? null : t.tags,
+          content_rules: {},
+        };
+      })()
     : undefined;
 
   // Update template name mutation
@@ -100,7 +103,7 @@ export default function TemplateDetailPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Template Name and Actions */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-foreground">{template?.name}</h1>
+        <h1 className="text-3xl font-bold text-foreground">{sanitizedTemplate?.name}</h1>
         <div className="flex items-center gap-2">
           <Button
             onClick={() => router.push(`/brand/${params.brandId}/template/${templateId}/edit`)}

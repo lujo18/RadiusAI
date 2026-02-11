@@ -1,11 +1,12 @@
 "use client";
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { usePost, useUpdatePost } from "@/lib/api/hooks/usePosts";
+import { usePost, useUpdatePost } from '@/features/posts/hooks';
 import { ArrowLeft } from "lucide-react";
 import { Database } from "@/types/database";
 import { usePostingModal } from '@/components/modals/PostingModalProvider';
-import { useBrandIntegrations } from '@/lib/api/hooks/useBrands';
+import { useBrandIntegrations } from '@/features/brand/hooks';
+import { useAnalytics } from "@/features/analytics";
 
 type PostRow = Database['public']['Tables']['posts']['Row'];
 
@@ -17,6 +18,8 @@ export default function PostDetailPage() {
 
   // Fetch post details using hook
   const { data: post, isLoading, error } = usePost(postId);
+
+  const { data: analytics, isLoading: analyticsLoading, error: analyticsError} = useAnalytics("24h", "first", null, postId);
 
   // Update post mutation using hook
   const updatePostMutation = useUpdatePost();
@@ -222,6 +225,14 @@ export default function PostDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+      <div>
+        <p>{
+          analyticsLoading ?
+          ("Loading analytics"):
+          (JSON.stringify(analytics))
+          
+          }</p>
       </div>
     </div>
   );

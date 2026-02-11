@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { productsApi } from '../client';
+import { productsApi } from '@/lib/api/client';
 import type { ProductsResponse, StripeProduct } from '@/lib/api/types/stripe';
 
 export const useStripeProducts = () => {

@@ -82,7 +82,8 @@ export default function Paywall() {
   const [loading, setLoading] = useState<string | null>(null);
 
   // Use TanStack Query hook to fetch Stripe products (with joined price info)
-  const { data: products, isLoading: pricesLoading } = require('@/lib/api/hooks/useStripeProducts').useStripeProducts();
+  const { useStripeProducts } = require('@/features/stripe/hooksProducts');
+  const { data: products, isLoading: pricesLoading } = useStripeProducts();
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
 
   // Map products to pricing tiers when products change

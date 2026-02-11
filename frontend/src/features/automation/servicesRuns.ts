@@ -70,3 +70,5 @@ export const automationRunService = {
     }
   },
 };
+
+export default automationRunService;

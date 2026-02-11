@@ -1,0 +1,1 @@
+export { automationService } from './index';

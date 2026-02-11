@@ -1,23 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { useCreateAutomation, useUpdateAutomation } from '@/lib/api/hooks/useAutomations';
-import type { Database } from '@/types/database';
-import { AutomationWizardStep1 } from './steps/AutomationWizardStep1';
-import { AutomationWizardStep2 } from './steps/AutomationWizardStep2';
-import { AutomationWizardStep3CTA } from './steps/AutomationWizardStep3CTA';
-import { AutomationWizardStep3 } from './steps/AutomationWizardStep3';
-import { AutomationWizardStep4 } from './steps/AutomationWizardStep4';
-import { AutomationWizardStep5 } from './steps/AutomationWizardStep5';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import {
+  useCreateAutomation,
+  useUpdateAutomation,
+} from "@/features/automation/hooks";
+import type { Database } from "@/types/database";
+import { AutomationWizardStep1 } from "./steps/AutomationWizardStep1";
+import { AutomationWizardStep2 } from "./steps/AutomationWizardStep2";
+import { AutomationWizardStep3CTA } from "./steps/AutomationWizardStep3CTA";
+import { AutomationWizardStep3 } from "./steps/AutomationWizardStep3";
+import { AutomationWizardStep4 } from "./steps/AutomationWizardStep4";
+import { AutomationWizardStep5 } from "./steps/AutomationWizardStep5";
+import { compareToWeekday, getNextRunTimestamp, getTimeUntil } from "@/lib/time";
 
-type AutomationInsert = Database['public']['Tables']['automations']['Insert'];
+type AutomationInsert = Database["public"]["Tables"]["automations"]["Insert"];
 
 export interface AutomationWizardData {
   // Step 1: Visual Info
@@ -31,7 +35,7 @@ export interface AutomationWizardData {
   ctaIds: string[];
 
   // Step 4: Accounts (Platforms)
-  platforms: Array<'instagram' | 'tiktok' | 'facebook' | 'linkedin'>;
+  platforms: Array<"instagram" | "tiktok" | "facebook" | "linkedin">;
 
   // Step 5: Schedule - per-weekday times
   schedule: {
@@ -49,7 +53,14 @@ interface AutomationWizardProps {
   initialData?: AutomationWizardData & { id?: string };
 }
 
-const STEPS = ['Visual Info', 'Templates', 'CTAs', 'Accounts', 'Schedule', 'Confirm'];
+const STEPS = [
+  "Visual Info",
+  "Templates",
+  "CTAs",
+  "Accounts",
+  "Schedule",
+  "Confirm",
+];
 const TOTAL_STEPS = STEPS.length;
 
 export function AutomationWizard({
@@ -61,39 +72,43 @@ export function AutomationWizard({
 }: AutomationWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const isEditMode = !!initialData?.id;
-  
+
   const [wizardData, setWizardData] = useState<AutomationWizardData>(
-    initialData ? {
-      name: initialData.name,
-      description: initialData.description,
-      brandId: initialData.brandId || brandId,
-      templateIds: initialData.templateIds,
-      ctaIds: initialData.ctaIds,
-      platforms: initialData.platforms,
-      schedule: initialData.schedule,
-      nextRunAt: initialData.nextRunAt,
-    } : {
-      name: '',
-      description: '',
-      brandId: brandId,
-      templateIds: [],
-      ctaIds: [],
-      platforms: [],
-      schedule: {
-        monday: [],
-        tuesday: [],
-        wednesday: [],
-        thursday: [],
-        friday: [],
-        saturday: [],
-        sunday: [],
-      },
-      nextRunAt: new Date().toISOString(),
-    }
+    initialData
+      ? {
+          name: initialData.name,
+          description: initialData.description,
+          brandId: initialData.brandId || brandId,
+          templateIds: initialData.templateIds,
+          ctaIds: initialData.ctaIds,
+          platforms: initialData.platforms,
+          schedule: initialData.schedule,
+          nextRunAt: initialData.nextRunAt,
+        }
+      : {
+          name: "",
+          description: "",
+          brandId: brandId,
+          templateIds: [],
+          ctaIds: [],
+          platforms: [],
+          schedule: {
+            monday: [],
+            tuesday: [],
+            wednesday: [],
+            thursday: [],
+            friday: [],
+            saturday: [],
+            sunday: [],
+          },
+          nextRunAt: new Date().toISOString(),
+        },
   );
 
-  const { mutate: createAutomation, isPending: isCreatePending } = useCreateAutomation();
-  const { mutate: updateAutomation, isPending: isUpdatePending } = useUpdateAutomation();
+  const { mutate: createAutomation, isPending: isCreatePending } =
+    useCreateAutomation();
+  const { mutate: updateAutomation, isPending: isUpdatePending } =
+    useUpdateAutomation();
 
   const progress = ((currentStep + 1) / TOTAL_STEPS) * 100;
 
@@ -109,7 +124,22 @@ export function AutomationWizard({
     }
   };
 
+  const getNextRunTime = () => {
+    for (const day of Object.keys(wizardData.schedule)) {
+      const times = wizardData.schedule[day as keyof typeof wizardData.schedule] || [];
+      if (times.length > 0 && compareToWeekday(day) != "after") {
+        for (const time of times) {
+          if (!getTimeUntil(time).isPast) {
+            return getNextRunTimestamp(day, time);
+          }
+        }
+      }
+    }
+  };
+
   const handleSubmit = () => {
+    const nextRunAt = getNextRunTime();
+
     const payload = {
       name: wizardData.name,
       description: wizardData.description,
@@ -117,7 +147,7 @@ export function AutomationWizard({
       cta_ids: wizardData.ctaIds,
       platforms: wizardData.platforms,
       schedule: wizardData.schedule,
-      next_run_at: wizardData.nextRunAt,
+      next_run_at: nextRunAt?.toISOString() || new Date().toISOString(),
     } as any;
 
     if (isEditMode && initialData?.id) {
@@ -133,7 +163,7 @@ export function AutomationWizard({
             setCurrentStep(0);
             if (onSuccess) onSuccess();
           },
-        }
+        },
       );
     } else {
       // Create new automation
@@ -154,7 +184,7 @@ export function AutomationWizard({
             setCurrentStep(0);
             if (onSuccess) onSuccess();
           },
-        }
+        },
       );
     }
   };
@@ -166,13 +196,13 @@ export function AutomationWizard({
       case 1: // Templates
         return wizardData.templateIds.length > 0;
       case 2: // CTAs
-        return wizardData.ctaIds.length > 0;
+        return true;
       case 3: // Platforms
         return wizardData.platforms.length > 0;
       case 4: // Schedule
         // Check if at least one day has at least one time
         const hasSchedule = Object.values(wizardData.schedule).some(
-          (times) => Array.isArray(times) && times.length > 0
+          (times) => Array.isArray(times) && times.length > 0,
         );
         return hasSchedule;
       case 5: // Confirm
@@ -189,7 +219,7 @@ export function AutomationWizard({
       <DialogContent className="lg:max-w-2xl max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? 'Edit Automation' : 'Create New Automation'}
+            {isEditMode ? "Edit Automation" : "Create New Automation"}
           </DialogTitle>
           <DialogDescription>
             Step {currentStep + 1} of {TOTAL_STEPS}: {STEPS[currentStep]}
@@ -203,7 +233,9 @@ export function AutomationWizard({
             {STEPS.map((step, idx) => (
               <span
                 key={step}
-                className={idx === currentStep ? 'font-semibold text-foreground' : ''}
+                className={
+                  idx === currentStep ? "font-semibold text-foreground" : ""
+                }
               >
                 {step}
               </span>
@@ -217,10 +249,18 @@ export function AutomationWizard({
             <AutomationWizardStep1 data={wizardData} onChange={setWizardData} />
           )}
           {currentStep === 1 && (
-            <AutomationWizardStep2 data={wizardData} onChange={setWizardData} brandId={brandId} />
+            <AutomationWizardStep2
+              data={wizardData}
+              onChange={setWizardData}
+              brandId={brandId}
+            />
           )}
           {currentStep === 2 && (
-            <AutomationWizardStep3CTA data={wizardData} onChange={setWizardData} brandId={brandId} />
+            <AutomationWizardStep3CTA
+              data={wizardData}
+              onChange={setWizardData}
+              brandId={brandId}
+            />
           )}
           {currentStep === 3 && (
             <AutomationWizardStep3 data={wizardData} onChange={setWizardData} />
@@ -228,9 +268,7 @@ export function AutomationWizard({
           {currentStep === 4 && (
             <AutomationWizardStep4 data={wizardData} onChange={setWizardData} />
           )}
-          {currentStep === 5 && (
-            <AutomationWizardStep5 data={wizardData} />
-          )}
+          {currentStep === 5 && <AutomationWizardStep5 data={wizardData} />}
         </div>
 
         {/* Navigation Buttons */}
@@ -244,10 +282,7 @@ export function AutomationWizard({
           </Button>
 
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
 
@@ -259,11 +294,11 @@ export function AutomationWizard({
               >
                 {isCreatePending || isUpdatePending
                   ? isEditMode
-                    ? 'Updating...'
-                    : 'Creating...'
+                    ? "Updating..."
+                    : "Creating..."
                   : isEditMode
-                  ? 'Save Changes'
-                  : 'Create Automation'}
+                    ? "Save Changes"
+                    : "Create Automation"}
               </Button>
             ) : (
               <Button

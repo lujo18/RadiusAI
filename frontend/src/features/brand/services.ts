@@ -49,4 +49,6 @@ const brandService = {
   },
 };
 
+export { brandService };
+
 export default brandService;

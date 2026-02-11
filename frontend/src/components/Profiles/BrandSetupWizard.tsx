@@ -9,11 +9,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/animate-ui/components/radix/dialog";
-import { useCreateBrand } from "@/lib/api/hooks";
-import { useGenerateBrand } from "@/lib/api/generation/hooks";
+import { useCreateBrand } from '@/features/brand/hooks';
+import { useGenerateBrand } from '@/features/generation/hooks';
 import type { Database } from "@/types/database";
 import { getCurrentUser } from "@/lib/supabase/auth";
-import { useUserProfile } from "@/lib/api/hooks/useUser";
+import { useUserProfile } from '@/features/user/hooks';
 
 const STORAGE_KEY = "brand_wizard_draft";
 const STORAGE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -154,7 +154,7 @@ export default function BrandSetupWizard({
       // Get current user ID from auth store or local storage
     ;
 
-      const response = useUser.data?.id
+      const response = (useUser.data as any)?.id
       
       if (!response) {
         alert('Failed to get user information');
@@ -342,19 +342,19 @@ export default function BrandSetupWizard({
 
                     const generated: BrandSettingsData = {
                       ...defaultSettings,
-                      name: data.name || defaultSettings.name,
-                      niche: data.niche || defaultSettings.niche,
-                      aesthetic: data.aesthetic || defaultSettings.aesthetic,
-                      target_audience: data.target_audience || defaultSettings.target_audience,
-                      brand_voice: data.brand_voice || defaultSettings.brand_voice,
-                      content_pillars: data.content_pillars || defaultSettings.content_pillars,
-                      tone_of_voice: data.tone_of_voice || defaultSettings.tone_of_voice,
-                      emoji_usage: data.emoji_usage || defaultSettings.emoji_usage,
-                      forbidden_words: data.forbidden_words || defaultSettings.forbidden_words,
-                      preferred_words: data.preferred_words || defaultSettings.preferred_words,
-                      hashtag_style: data.hashtag_style || defaultSettings.hashtag_style,
-                      hashtag_count: data.hashtag_count || defaultSettings.hashtag_count,
-                      hashtags: data.hashtags || defaultSettings.hashtags,
+                      name: (data as any).name || defaultSettings.name,
+                      niche: (data as any).niche || defaultSettings.niche,
+                      aesthetic: (data as any).aesthetic || defaultSettings.aesthetic,
+                      target_audience: (data as any).target_audience || defaultSettings.target_audience,
+                      brand_voice: (data as any).brand_voice || defaultSettings.brand_voice,
+                      content_pillars: (data as any).content_pillars || defaultSettings.content_pillars,
+                      tone_of_voice: (data as any).tone_of_voice || defaultSettings.tone_of_voice,
+                      emoji_usage: (data as any).emoji_usage || defaultSettings.emoji_usage,
+                      forbidden_words: (data as any).forbidden_words || defaultSettings.forbidden_words,
+                      preferred_words: (data as any).preferred_words || defaultSettings.preferred_words,
+                      hashtag_style: (data as any).hashtag_style || defaultSettings.hashtag_style,
+                      hashtag_count: (data as any).hashtag_count || defaultSettings.hashtag_count,
+                      hashtags: (data as any).hashtags || defaultSettings.hashtags,
                       
                     };
 

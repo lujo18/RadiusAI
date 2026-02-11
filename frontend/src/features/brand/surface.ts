@@ -1,4 +1,4 @@
-import brandService from '@/lib/api/services/brandService';
+import { brandService } from '@/features/brand/services';
 
 export const brandApi = {
   startSocialConnect: async ({ late_profile_id, brand_id, platform }: { late_profile_id: string; brand_id: string; platform: string }) => {

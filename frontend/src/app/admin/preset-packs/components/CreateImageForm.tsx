@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { useUploadPresetImage } from '@/lib/api/hooks/usePresetPacks';
+import { useUploadPresetImage } from '@/features/presetPacks/hooks';
 
 const createImageSchema = z.object({
   file: z.instanceof(File).refine((file) => file.size <= 10 * 1024 * 1024, 'File must be under 10MB'),

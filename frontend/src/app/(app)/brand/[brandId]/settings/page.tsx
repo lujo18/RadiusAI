@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import BrandSettingsForm from '@/components/Profiles/BrandSettingsForm';
 import IntegrationsList from '@/components/Profiles/IntegrationsList';
-import { useBrandIntegrations, useBrands, useUpdateBrandSettings } from '@/lib/api/hooks/useBrands';
+import { useBrandIntegrations, useBrands, useUpdateBrandSettings } from '@/features/brand/hooks';
 import type { BrandSettings } from '@/components/TemplateCreator/contentTypes';
 import type { Database } from '@/types/database';
 

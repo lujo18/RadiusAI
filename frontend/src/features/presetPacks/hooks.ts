@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import presetPackApi from '@/lib/api/surface/presetPackApi';
+import { presetPackApi } from '@/features/presetPacks/surface';
 import type { PresetPack, PresetImage, CreatePresetPackRequest, CreatePresetImageRequest } from '@/types/presetPack';
 
 // Query keys

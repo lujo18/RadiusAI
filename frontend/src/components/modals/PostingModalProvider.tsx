@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState } from "react";
-import { usePublishPost, useDraftPost, useSchedulePost, useUpdatePost } from "@/lib/api/hooks/usePosts";
+import { usePublishPost, useDraftPost, useSchedulePost, useUpdatePost } from '@/features/posts/hooks';
 import PostingModal from "./PostingModal";
 import { Database } from "@/types/database";
 import { useToast } from "@/hooks/use-toast";

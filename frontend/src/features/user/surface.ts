@@ -1,4 +1,4 @@
-import userService from '@/lib/api/services/userService';
+import { userService } from '@/features/user/services';
 
 export const userApi = {
   getProfile: async () => {

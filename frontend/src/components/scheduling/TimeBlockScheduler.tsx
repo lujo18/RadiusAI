@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, startOfDay, addHours, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
-import { useScheduledPosts } from "@/lib/api/hooks/usePosts";
+import { useScheduledPosts } from '@/features/posts/hooks';
 import { convertToLocalTime } from "@/lib/time";
 
 type ScheduledPost = {
@@ -104,7 +104,7 @@ export const TimeBlockScheduler = ({
   // Check if a time slot is occupied
   const isTimeOccupied = (date: Date, hour: number) => {
     const targetDateTime = addHours(startOfDay(date), hour);
-    return scheduledPosts.some(post => {
+    return scheduledPosts.some((post: any) => {
       if (!post.scheduled_time) return false;
       // Convert UTC database time to local timezone
       const postTime = new Date(post.scheduled_time);
@@ -123,7 +123,7 @@ export const TimeBlockScheduler = ({
 
   // Get occupied post for a time slot
   const getOccupiedPost = (date: Date, hour: number): ScheduledPost | undefined => {
-    return scheduledPosts.find(post => {
+    return scheduledPosts.find((post: any) => {
       if (!post.scheduled_time) return false;
       // Convert UTC database time to local timezone
       const postTime = new Date(post.scheduled_time);

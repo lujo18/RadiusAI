@@ -1,28 +1,34 @@
-import type { Database } from '@/types/stripe';
-
-export type StripeProduct = Database['stripe']['Tables']['products']['Row'];
-export type StripePrice = Database['stripe']['Tables']['prices']['Row'];
-export type StripeSubscription = Database['stripe']['Tables']['subscriptions']['Row'];
-
-export interface ProductResponse {
-  product: StripeProduct | null | any;
-  prices: StripePrice[];
-}
-
-export interface ProductsResponse {
-  products: StripeProduct[];
-}
-
 export type StripePlan = {
   id: string;
-  nickname?: string | null;
-  amount?: number | null;
-  currency?: string | null;
-  product?: string | null;
+  nickname?: string;
+  price?: number;
+  currency?: string;
+  interval?: 'month' | 'year' | string;
+  metadata?: Record<string, any>;
 };
 
-export interface PlansResponse {
+export type PlansResponse = {
   plans: StripePlan[];
-}
+};
 
-export {};
+export type StripeProduct = {
+  id: string;
+  name?: string;
+  description?: string;
+  metadata?: Record<string, any>;
+};
+
+export type ProductsResponse = {
+  products: StripeProduct[];
+};
+
+export type StripeSubscription = {
+  id: string;
+  customer_id?: string;
+  status?: string;
+  price_id?: string;
+  current_period_end?: number;
+  items?: any;
+  plan?: any;
+  metadata?: Record<string, any>;
+};

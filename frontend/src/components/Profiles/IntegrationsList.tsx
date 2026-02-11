@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { FiInstagram, FiTwitter } from "react-icons/fi";
 import { SiTiktok, SiFacebook } from "react-icons/si";
 import { Button } from "@/components/ui/button";
-import { brandApi } from "@/lib/api/client";
+import { brandApi } from '@/lib/api/client';
 import { useSearchParams } from "next/navigation";
 import { Database } from "@/types/database";
 import { platforms } from "@/constants/platforms";
 import { SocialIntegration } from "../platform-integrations/SocialIntegration";
 import { Alert, AlertTitle } from "../ui/alert";
 import { CircleFadingArrowUpIcon, OctagonAlert } from "lucide-react";
-import { useRemoveIntegration } from '@/lib/api/hooks/useBrands';
+import { useRemoveIntegration } from '@/features/brand/hooks';
 
 interface IntegrationsListProps {
   lateProfileId: string;

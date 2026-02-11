@@ -8,7 +8,7 @@ import {
 } from '@/components/animate-ui/components/radix/dialog';
 import BrandSettingsForm from './BrandSettingsForm';
 import type { BrandSettings } from '../TemplateCreator/contentTypes';
-import { useCreateBrand } from '@/lib/api/hooks';
+import { useCreateBrand } from '@/features/brand/hooks';
 
 interface CreateProfileDialogProps {
   onClose: () => void;

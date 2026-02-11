@@ -1,4 +1,4 @@
-import PresetPackService from '@/lib/api/services/presetPackService';
+import { PresetPackService } from '@/features/presetPacks/services';
 import type { PresetPack, PresetImage, CreatePresetPackRequest, CreatePresetImageRequest } from '@/types/presetPack';
 
 export const presetPackApi = {
