@@ -1,30 +1,41 @@
-const getBackendUrl = (path: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  return `${baseUrl}${path}`;
-};
+import axios from 'axios';
+import { supabase } from '@/lib/supabase/client';
 
-const backendClient = {
-  async get(path: string) {
-    const res = await fetch(getBackendUrl(path), { method: 'GET' });
-    return res.json();
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+const backendClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
   },
-  async post(path: string, body?: any) {
-    const res = await fetch(getBackendUrl(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
-    return res.json();
+});
+
+// Request interceptor to add auth token from Supabase
+backendClient.interceptors.request.use(
+  async (config) => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
-  async put(path: string, body?: any) {
-    const res = await fetch(getBackendUrl(path), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
-    return res.json();
-  },
-  async del(path: string) {
-    const res = await fetch(getBackendUrl(path), { method: 'DELETE' });
-    return res.json();
+  (error) => {
+    return Promise.reject(error);
   }
-  ,
-  // alias using full name expected by some callers
-  async delete(path: string) {
-    return backendClient.del(path);
+);
+
+// Response interceptor for error handling
+backendClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Unauthorized - clear session and redirect to login
+      supabase.auth.signOut();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
   }
-};
+);
 
 export default backendClient;

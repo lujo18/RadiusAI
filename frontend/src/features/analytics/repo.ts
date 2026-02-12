@@ -14,7 +14,8 @@ export class AnalyticsRepository {
       p_post_id: postId,
       p_timeframe: timeframe,
       p_section: section,
-			p_mode: 'change'
+			p_mode: 'change',
+			p_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     })
 
     console.log("DATA", data)
@@ -30,7 +31,8 @@ export class AnalyticsRepository {
       
       p_range: timeframe,
       p_section: section,
-			p_mode: 'change'
+			p_mode: 'change',
+			p_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
     })
 
     if (error) throw error;

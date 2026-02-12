@@ -16,7 +16,8 @@ export const DashboardAnalytics = ({brandId, postId} : {brandId?: string | null,
   const {data, isLoading, error} = useAnalytics(selectedTimeframe, selectedSection, brandId);
 
   return (
-    <section aria-labelledby="usage-overview">
+      <section aria-labelledby="usage-overview">
+
         <div className="sticky top-0 z-20 flex items-center justify-betwee pb-4 pt-4 sm:pt-6 lg:top-0 lg:mx-0 lg:px-0 lg:pt-8 bg-background">
           <Filterbar
             selectedTimeframe={selectedTimeframe}

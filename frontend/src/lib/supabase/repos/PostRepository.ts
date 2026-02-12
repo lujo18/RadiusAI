@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { supabase } from '../client'
+import { AnalyticsRepository } from '@/features/analytics/repo';
 
 export class PostRepository {
   static async getPost(postId: string, userId?: string) {
@@ -106,6 +107,30 @@ export class PostRepository {
     const { error } = await query;
     if (error) throw new Error(error.message);
     return true;
+  }
+
+  /**
+   * Return all posts for a brand with their analytics attached on the `analytics` key.
+   */
+  static async getPostsWithAnalyticsByBrand(brandId: string, userId: string) {
+    const posts = await this.getPosts(userId, undefined, undefined, brandId);
+    if (!posts || posts.length === 0) return [];
+
+    const analytics = await AnalyticsRepository.getAnalytics({ brandId });
+    const map = new Map<string, any>();
+    (analytics || []).forEach((a: any) => map.set(a.post_id, a));
+
+    return posts.map((p: any) => ({ ...p, analytics: map.get(p.id) ?? null }));
+  }
+
+  /**
+   * Return a single post with its analytics attached as `analytics`.
+   */
+  static async getPostWithAnalytics(postId: string, userId?: string) {
+    const post = await this.getPost(postId, userId);
+    if (!post) return null;
+    const analytics = await AnalyticsRepository.getPostAnalytics(postId);
+    return { ...post, analytics: analytics ?? null };
   }
 
   // Helpers

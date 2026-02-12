@@ -222,7 +222,11 @@ export default function DashboardSidebar({
             </SidebarMenu>
           </SidebarGroup>
           {/* Usage meter group */}
-          <SidebarGroup>
+          
+        </SidebarContent>
+
+        <SidebarFooter>
+          
             <SidebarGroupLabel>Usage</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -231,10 +235,7 @@ export default function DashboardSidebar({
                 </div>
               </SidebarMenuItem>
             </SidebarMenu>
-          </SidebarGroup>
-        </SidebarContent>
-
-        <SidebarFooter>
+          
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>

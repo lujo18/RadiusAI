@@ -47,6 +47,34 @@ export function usePost(postId: string) {
   });
 }
 
+// ==================== POSTS + ANALYTICS ====================
+
+export function usePostsWithAnalytics(brandId?: string | null, userId?: string) {
+  return useQuery({
+    queryKey: ['postsWithAnalytics', 'brand', brandId ?? null] as const,
+    queryFn: async () => {
+      if (!brandId) return [];
+      const res = await postSurface.getPostsWithAnalyticsByBrand(brandId);
+      return res ?? [];
+    },
+    enabled: !!brandId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
+export function usePostWithAnalytics(postId?: string | null, userId?: string) {
+  return useQuery({
+    queryKey: ['postsWithAnalytics', 'post', postId ?? null] as const,
+    queryFn: async () => {
+      if (!postId) return null;
+      const res = await postSurface.getPostWithAnalytics(postId);
+      return res ?? null;
+    },
+    enabled: !!postId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
 export function useScheduledPosts(fromDate?: Date, toDate?: Date, brandId?: string) {
   return useQuery<Database['public']['Tables']['posts']['Row'][]>({
     queryKey: fromDate && toDate ? [...postKeys.scheduled, fromDate.toISOString(), toDate.toISOString(), brandId] : [...postKeys.scheduled, brandId],

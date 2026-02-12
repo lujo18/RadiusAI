@@ -9,13 +9,14 @@ import { Skeleton } from "../ui/skeleton";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useTemplates, useCreateTemplate, useDeleteTemplate } from "@/features/templates/hooks";
+import { useTemplates, useCreateTemplate, useDeleteTemplate, useTemplatesWithAnalytics } from "@/features/templates/hooks";
 import TemplateCreator from "@/components/TemplateCreator/index";
 import TemplateViewSwitcher from "@/components/Templates/TemplateViewSwitcher";
 
 const TemplatesTab = ({ brandId }: { brandId: string }) => {
   const { data: templates, isLoading: templatesLoading } =
-    useTemplates(brandId);
+    useTemplatesWithAnalytics(brandId);
+    console.log("templates", templates)
   const templatesArr = templates as any[];
 
   const handleSaveTemplate = (templateData: any) => {

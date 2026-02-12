@@ -8,7 +8,7 @@ from services.usage import service as usage_service
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/usage", tags=["usage"])
+router = APIRouter(prefix="/api/usage", tags=["usage"], redirect_slashes=False)
 
 
 class ConsumeRequest(BaseModel):

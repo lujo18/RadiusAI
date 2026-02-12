@@ -316,7 +316,7 @@ export function UsageMeter({
           )}
         </CardHeader>
       )}
-      <CardContent className={"grid grid-cols-1 gap-4"}>
+      <div className={"grid grid-cols-1 gap-4"}>
         {usage.map((item, i) => (
           <LinearUsageItem
             key={item.name || i}
@@ -327,7 +327,7 @@ export function UsageMeter({
             getStatus={getStatus}
           />
         ))}
-      </CardContent>
+      </div>
     </Card>
   );
 }

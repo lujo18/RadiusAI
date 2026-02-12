@@ -113,12 +113,13 @@ export const TemplateViewSwitcher: React.FC<TemplateViewSwitcherProps> = ({
                   </div>
                 </CardHeader>
 
+             
                 {/* Performance Stats */}
                 <CardContent className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Total Posts</span>
                     <span className="font-semibold">
-                      {(template as any).performance?.total_posts || 0}
+                      {(template as any).analytics?.postCount || 0}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
@@ -126,13 +127,13 @@ export const TemplateViewSwitcher: React.FC<TemplateViewSwitcherProps> = ({
                       Avg Engagement
                     </span>
                     <span className="font-semibold text-chart-4">
-                      {((template as any).performance?.avg_engagement_rate || 0).toFixed(1)}%
+                      {((template as any).analytics?.engagementRate || 0).toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Avg Saves</span>
+                    <span className="text-muted-foreground">Total Impressions</span>
                     <span className="font-semibold">
-                      {(template as any).performance?.avg_saves || 0}
+                      {(template as any).analytics?.impressions || 0}
                     </span>
                   </div>
                 </CardContent>

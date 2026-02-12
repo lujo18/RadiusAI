@@ -35,6 +35,15 @@ export function useTemplate(templateId: string) {
   });
 }
 
+export function useTemplatesWithAnalytics(brandId: string) {
+  return useQuery<any[]>({
+    queryKey: ['brand-template-analytics', brandId] as const,
+    queryFn: () => templateService.getBrandTemplateWithAnalytics(brandId),
+    enabled: !!brandId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+}
+
 // ==================== MUTATIONS ====================
 
 export function useCreateTemplate() {

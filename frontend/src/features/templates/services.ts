@@ -1,6 +1,6 @@
-import { TemplateRepository } from '@/lib/supabase/repos/TemplateRepository';
-import { requireUserId } from '@/lib/supabase/auth';
-import type { Database } from '@/types/database';
+import { TemplateRepository } from "@/lib/supabase/repos/TemplateRepository";
+import { requireUserId } from "@/lib/supabase/auth";
+import type { Database } from "@/types/database";
 
 const templateService = {
   async getTemplates() {
@@ -16,6 +16,11 @@ const templateService = {
   async getTemplatesByBrand(brandId: string) {
     const userId = await requireUserId();
     return await TemplateRepository.getTemplatesByBrand(brandId, userId);
+  },
+
+  async getBrandTemplateWithAnalytics(brandId: string) {
+    const userId = await requireUserId();
+    return await TemplateRepository.getBrandTemplatesWithAnalytics(brandId, userId);
   },
 
   async createTemplate(templateData: any) {
