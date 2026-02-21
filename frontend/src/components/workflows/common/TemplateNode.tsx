@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { useTemplates } from '@/features/templates/hooks';
 import type { Tables } from "@/types/database";
@@ -35,16 +35,14 @@ export type TemplateNodeProps = NodeProps & {
   data: TemplateNodeData;
 };
 
-export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
+const TemplateNodeComponent: React.FC<TemplateNodeProps> = ({ data }) => {
   const { brandId, selectedTemplateId, onTemplateSelect } = data;
 
   const { data: templates, isLoading, error } = useTemplates(brandId);
   const router = useRouter()
   const templatesArr = templates as any[];
 
-
   const handleTemplateSelect = (templateId: string | null, eventDetails?: any) => {
-    console.log("Select no guarantee", templateId)
     if (onTemplateSelect) {
       onTemplateSelect(templateId);
     }
@@ -68,7 +66,7 @@ export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
       <BaseNodeHeader>
         <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
           <FileText className="w-4 h-4 text-primary" />
-          Template Selector
+          Template Selector  
         </BaseNodeHeaderTitle>
       </BaseNodeHeader>
 
@@ -178,3 +176,5 @@ export const TemplateNode: React.FC<TemplateNodeProps> = ({ data }) => {
     </BaseNode>
   );
 };
+
+export const TemplateNode = memo(TemplateNodeComponent);

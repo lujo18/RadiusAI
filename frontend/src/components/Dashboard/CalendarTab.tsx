@@ -19,15 +19,15 @@ export default function CalendarTab({ upcomingPosts, brandId }: CalendarTabProps
   };
 
   return (
-    <div>
-      <h1 className="text-4xl font-bold mb-8">Content Calendar</h1>
+    <div className="p-4">
+      <h1>Content Calendar</h1>
       
-      <Tabs defaultValue="calendar" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="scheduler" className="w-full">
+        {/* <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="calendar">Monthly Calendar</TabsTrigger>
           <TabsTrigger value="scheduler">Time Block Scheduler</TabsTrigger>
         </TabsList>
-        
+         */}
         <TabsContent value="calendar" className="mt-6">
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-6">
             <div className="flex justify-between items-center mb-6">

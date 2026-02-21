@@ -27,7 +27,7 @@ async def test_api():
                     data = await resp.json()
                     
                     # Save response
-                    with open(f'c:\\Users\\asplo\\Documents\\GitHub\\SlideForge\\backend\\tiktok_data\\debug\\api_response_{urls.index(url)}.json', 'w') as f:
+                    with open(f'c:\\Users\\asplo\\Documents\\GitHub\\Radius\\backend\\tiktok_data\\debug\\api_response_{urls.index(url)}.json', 'w') as f:
                         json.dump(data, f, indent=2)
                     
                     # Show structure

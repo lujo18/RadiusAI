@@ -29,7 +29,7 @@ class PostMetadata(BaseModel):
 
 class Post(BaseModel):
     id: str
-    user_id: str
+    brand_id: str  # Brand ownership (links to team via brand.team_id)
     template_id: str
     variant_set_id: Optional[str] = None
     platform: str  # Supabase: string
@@ -43,6 +43,7 @@ class Post(BaseModel):
     metadata: dict = {}
 
 class CreatePostRequest(BaseModel):
+    teamId: str  # NOW REQUIRED: Must specify team when creating
     templateId: str
     platform: Literal["instagram", "tiktok"]
     content: GeminiCarouselResponse

@@ -1,10 +1,10 @@
-# 🚀 SlideForge Firestore Setup Checklist
+# 🚀 Radius Firestore Setup Checklist
 
 ## ✅ Completion Checklist
 
 ### 1. Firebase Project Setup
 - [ ] Go to https://console.firebase.google.com/
-- [ ] Create new project (or select existing "slideforge-2488d")
+- [ ] Create new project (or select existing "Radius-2488d")
 - [ ] Enable **Firestore Database**
   - [ ] Start in **production mode**
   - [ ] Choose region (us-central1 recommended)
@@ -33,7 +33,7 @@
 
 **Find your bucket name:**
 1. Firebase Console → Storage
-2. Copy the bucket name from URL (e.g., `slideforge-2488d.appspot.com`)
+2. Copy the bucket name from URL (e.g., `Radius-2488d.appspot.com`)
 
 ### 4. Set Firestore Security Rules
 
@@ -52,7 +52,7 @@
 ### 6. Install Backend Dependencies
 
 ```powershell
-cd SlideForge
+cd Radius
 .\venv\Scripts\Activate.ps1
 pip install python-multipart
 ```
@@ -71,7 +71,7 @@ Should show:
 ### 7. Start Backend Server
 
 ```powershell
-cd SlideForge
+cd Radius
 .\venv\Scripts\Activate.ps1
 uvicorn backend.main:app --reload
 ```
@@ -97,7 +97,7 @@ Invoke-RestMethod -Uri "http://localhost:8000/api/templates" `
 ```
 
 **Option 2: Using Postman**
-- [ ] Import `SlideForge API` collection (if you have one)
+- [ ] Import `Radius API` collection (if you have one)
 - [ ] Set Authorization header: `Bearer YOUR_TOKEN`
 - [ ] Test GET `/api/templates`
 - [ ] Test POST `/api/templates` with template data

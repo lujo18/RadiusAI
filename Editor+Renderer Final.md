@@ -12,7 +12,7 @@ Schedule posts	❌	✅	Needs cron
 Auto-post to socials	❌	✅	Server-side only APIs
 Analytics aggregation	❌	✅	Heavy computation
 Bulk operations	❌	✅	Admin tasks
-🚀 Action Plan for SlideForge
+🚀 Action Plan for Radius
 Keep in Frontend:
 
 All Firestore template/post CRUD

@@ -37,7 +37,7 @@ Complete guide to migrate your FastAPI backend from Firebase to Supabase.
 
 ```powershell
 # Activate your virtual environment
-& C:\Users\asplo\Documents\GitHub\SlideForge\venv\Scripts\Activate.ps1
+& C:\Users\asplo\Documents\GitHub\Radius\venv\Scripts\Activate.ps1
 
 # Uninstall Firebase
 pip uninstall firebase-admin -y

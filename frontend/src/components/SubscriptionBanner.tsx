@@ -25,7 +25,7 @@ export default function SubscriptionBanner() {
             <h3 className="text-foreground font-semibold">Subscription Required</h3>
             <p className="text-sm text-muted-foreground">
               {status === 'canceled' 
-                ? 'Your subscription has ended. Reactivate to continue using ViralStack.'
+                ? 'Your subscription has ended. Reactivate to continue using Radius.'
                 : status === 'past_due'
                 ? 'Your payment is past due. Please update your payment method.'
                 : 'Subscribe to unlock all features and start creating amazing content.'}

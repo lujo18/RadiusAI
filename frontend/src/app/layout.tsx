@@ -16,7 +16,7 @@ const inter = Inter({ subsets: ["latin"] });
 // });
 
 export const metadata: Metadata = {
-  title: "Radius - AI-Powered Carousel Automation",
+  title: "Radius - Automate",
   description:
     "Generate, schedule, and optimize Instagram & TikTok carousels on autopilot",
 };

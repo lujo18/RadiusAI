@@ -171,14 +171,14 @@ async def make_post(
 
     # Draft flow: just update status
     if mode == "draft":
-        update_post(post_id, {"status": "draft", "platform_ids": platform_ids}, user_id)
+        update_post(post_id, {"status": "draft", "platform_ids": platform_ids})
 
     # Scheduled flow: set scheduled_time and status
     if mode == "scheduled":
         updates = {"status": "scheduled", "platform_ids": platform_ids}
         if scheduled_at:
             updates["scheduled_time"] = scheduled_at
-        update_post(post_id, updates, user_id)
+        update_post(post_id, updates)
 
     
 
@@ -261,7 +261,7 @@ async def make_post(
         if external_post_id:
             updates["external_post_id"] = external_post_id
 
-        update_post(post_id, updates, user_id)
+        update_post(post_id, updates)
 
         return {"status": "posted", "external_post_id": external_post_id}
     except Exception as e:

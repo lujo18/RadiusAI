@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { FiPlus, FiX } from 'react-icons/fi';
 import { Button } from '@/components/ui/button';
 import type { BrandSettings } from '../TemplateCreator/contentTypes';
+import { useGetBrandUsage } from "@/features/usage";
 
 interface BrandSettingsFormProps {
   initialValues?: BrandSettings;
@@ -11,6 +12,7 @@ interface BrandSettingsFormProps {
   onCancel: () => void;
   isSubmitting: boolean;
   submitLabel: string;
+  isBrandLimitReached?: boolean;
 }
 
 const defaultSettings: BrandSettings = {
@@ -40,10 +42,14 @@ export default function BrandSettingsForm({
   onCancel,
   isSubmitting,
   submitLabel,
+  
+  isBrandLimitReached = false,
 }: BrandSettingsFormProps) {
   const [settings, setSettings] = useState<BrandSettings>(
     initialValues || defaultSettings
   );
+
+  const {data: brandUsage} = useGetBrandUsage()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,6 +186,7 @@ export default function BrandSettingsForm({
         onCancel={onCancel}
         submitLabel={submitLabel}
         isSubmitting={isSubmitting}
+        brandUsage={brandUsage}
       />
     </form>
   );
@@ -351,27 +358,41 @@ function FormActions({
   onCancel,
   submitLabel,
   isSubmitting,
+  isBrandLimitReached = false,
+  brandUsage,
 }: {
   onCancel: () => void;
   submitLabel: string;
   isSubmitting: boolean;
+  isBrandLimitReached?: boolean;
+  brandUsage?: { brand_count?: number; brand_limit?: number | null; remaining?: number | null };
 }) {
   return (
-    <div className="flex justify-end gap-4 pt-6 border-t border-muted/80">
-      <Button
-        type="button"
-        onClick={onCancel}
-        className="px-6 py-2.5 border border-muted/80 rounded-lg hover:bg-muted transition"
-      >
-        Cancel
-      </Button>
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className="px-6 py-2.5 bg-accent hover:bg-accent/80 text-accent-foreground rounded-lg font-semibold transition disabled:opacity-50"
-      >
-        {isSubmitting ? 'Saving...' : submitLabel}
-      </Button>
+    <div className="flex justify-between items-center pt-6 border-t border-muted/80">
+      <div className="text-sm text-muted-foreground">
+        {brandUsage?.brand_limit !== null && (
+          <span>
+            Brands: <span className="font-semibold text-foreground">{brandUsage?.brand_count || 0}/{brandUsage?.brand_limit || '∞'}</span>
+          </span>
+        )}
+      </div>
+      <div className="flex gap-4 justify-end">
+        <Button
+          type="button"
+          onClick={onCancel}
+          className="px-6 py-2.5 border border-muted/80 rounded-lg hover:bg-muted transition"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSubmitting || isBrandLimitReached}
+          title={isBrandLimitReached ? 'Brand limit reached. Upgrade your plan to create more brands.' : ''}
+          className="px-6 py-2.5 bg-accent hover:bg-accent/80 text-accent-foreground rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? 'Saving...' : submitLabel}
+        </Button>
+      </div>
     </div>
   );
 }

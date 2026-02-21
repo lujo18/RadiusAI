@@ -1,4 +1,4 @@
-# SlideForge Template System Architecture
+# Radius Template System Architecture
 
 ## 🏗️ Firestore Data Structure
 

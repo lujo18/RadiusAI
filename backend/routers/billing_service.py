@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from auth import get_current_user, get_optional_user
 from services.integrations.supabase.client import get_supabase, get_stripe_supabase
 from config import Config
+from services.usage.service import sync_usage_period_from_subscription
 import stripe
 import json
 
@@ -249,18 +250,112 @@ async def stripe_webhook(request: Request):
         if event.type == 'checkout.session.completed':
             session = event.data.object
             customer_id = session.get('customer')
+            subscription_id = session.get('subscription')
             metadata = session.get('metadata') or {}
             user_id = metadata.get('user_id')
             # If the session has metadata with user id, persist the customer id
             if user_id:
                     try:
                         supabase = get_supabase()
-                        supabase.table('users').update({'stripe_customer_id': customer_id}).eq('id', user_id).execute()
-                        print(f"Persisted stripe_customer_id {customer_id} for user {user_id} from webhook")
+                        update_data = {'stripe_customer_id': customer_id}
+                        
+                        # If subscription was created, fetch and store product_id
+                        if subscription_id:
+                            try:
+                                sub = stripe.Subscription.retrieve(subscription_id)
+                                update_data['stripe_subscription_id'] = subscription_id
+                                
+                                # Extract product ID from subscription items
+                                if sub.get('items') and sub['items'].get('data'):
+                                    price = sub['items']['data'][0].get('price')
+                                    if price:
+                                        product_id = price.get('product')
+                                        if product_id:
+                                            update_data['stripe_product_id'] = product_id
+                            except Exception as e:
+                                print(f"Failed to retrieve subscription {subscription_id}: {e}")
+                        
+                        supabase.table('users').update(update_data).eq('id', user_id).execute()
+                        
+                        # Sync usage period on checkout complete to initialize credits for new customers
+                        sync_usage_period_from_subscription(user_id)
+                        print(f"Persisted Stripe data for user {user_id}: customer={customer_id}, subscription={subscription_id}, product={update_data.get('stripe_product_id')}")
                     except Exception as e:
-                        print(f"Failed to persist stripe_customer_id from webhook: {e}")
+                        print(f"Failed to persist Stripe data from webhook: {e}")
 
-        # Additional event handling can go here (invoice.payment_succeeded, customer.subscription.created)
+        elif event.type in ['customer.subscription.created', 'customer.subscription.updated']:
+            # Subscription created or entered new billing period - refresh user's activity/credits
+            subscription = event.data.object
+            customer_id = subscription.get('customer')
+            subscription_id = subscription.get('id')
+            try:
+                # Look up user_id by customer_id
+                supabase = get_supabase()
+                user_res = supabase.table('users').select('id').eq('stripe_customer_id', customer_id).execute()
+                if getattr(user_res, 'data', None) and len(user_res.data) > 0:
+                    user_id = user_res.data[0].get('id')
+                    
+                    # Extract product ID from subscription items
+                    update_data = {'stripe_subscription_id': subscription_id}
+                    if subscription.get('items') and subscription['items'].get('data'):
+                        price = subscription['items']['data'][0].get('price')
+                        if price:
+                            product_id = price.get('product')
+                            if product_id:
+                                update_data['stripe_product_id'] = product_id
+                    
+                    # Update user with subscription and product info
+                    supabase.table('users').update(update_data).eq('id', user_id).execute()
+                    print(f"Updated Stripe data for user {user_id}: subscription={subscription_id}, product={update_data.get('stripe_product_id')}")
+                    
+                    # Sync usage period - creates new team_activity row if billing period changed
+                    sync_result = sync_usage_period_from_subscription(user_id)
+                    if sync_result:
+                        print(f"Synced usage period for user {user_id}: period_start={sync_result.get('period_start')}, period_end={sync_result.get('period_end')}")
+                    else:
+                        print(f"Usage period sync returned None for user {user_id} - may be already in same period")
+                else:
+                    print(f"No user found for customer_id {customer_id}")
+            except Exception as e:
+                print(f"Failed to sync usage period from subscription event: {e}")
+        
+        elif event.type == 'customer.subscription.deleted':
+            # Subscription cancelled - clear subscription data
+            subscription = event.data.object
+            customer_id = subscription.get('customer')
+            try:
+                supabase = get_supabase()
+                user_res = supabase.table('users').select('id').eq('stripe_customer_id', customer_id).execute()
+                if getattr(user_res, 'data', None) and len(user_res.data) > 0:
+                    user_id = user_res.data[0].get('id')
+                    # Clear subscription data
+                    supabase.table('users').update({
+                        'stripe_subscription_id': None,
+                        'stripe_product_id': None
+                    }).eq('id', user_id).execute()
+                    print(f"Cleared subscription data for user {user_id}")
+                else:
+                    print(f"No user found for customer_id {customer_id}")
+            except Exception as e:
+                print(f"Failed to clear subscription data: {e}")
+
+        elif event.type == 'invoice.payment_succeeded':
+            # Invoice paid - may indicate period change, try to sync usage as fallback
+            invoice = event.data.object
+            customer_id = invoice.get('customer')
+            try:
+                supabase = get_supabase()
+                user_res = supabase.table('users').select('id').eq('stripe_customer_id', customer_id).execute()
+                if getattr(user_res, 'data', None) and len(user_res.data) > 0:
+                    user_id = user_res.data[0].get('id')
+                    # Sync usage period - idempotent, safe to call multiple times per period
+                    sync_result = sync_usage_period_from_subscription(user_id)
+                    if sync_result:
+                        print(f"Synced usage period for user {user_id} via invoice: period_start={sync_result.get('period_start')}, period_end={sync_result.get('period_end')}")
+                else:
+                    print(f"No user found for customer_id {customer_id}")
+            except Exception as e:
+                print(f"Failed to sync usage period from invoice.payment_succeeded: {e}")
 
         print(f"Received Stripe webhook: {event.type}")
         return {"received": True}
@@ -269,296 +364,417 @@ async def stripe_webhook(request: Request):
         raise HTTPException(status_code=500, detail='Webhook processing error')
 
 
-@router.get('/subscription')
-def get_subscription(request: Request, user: str = Depends(get_current_user)):
-    """Return the current Stripe subscription for the authenticated user.
-
-    This looks up the user's `stripe_customer_id` from the `users` table
-    then queries the `stripe.subscriptions` table (via the service role key)
-    to return the latest subscription row.
-    """
+@router.get("/invoices")
+async def get_invoices(user: str = Depends(get_current_user)):
+    """Return recent invoices for the authenticated user."""
+    require_stripe_key()
     try:
         supabase = get_supabase()
-        
-
-        # Fetch the customer's stripe_customer_id from users table
         user_res = supabase.table('users').select('stripe_customer_id').eq('id', user).execute()
         if not getattr(user_res, 'data', None) or len(user_res.data) == 0:
             raise HTTPException(status_code=404, detail='User not found')
-
+        
         customer_id = user_res.data[0].get('stripe_customer_id')
         if not customer_id:
-            raise HTTPException(status_code=404, detail='No Stripe customer configured for this user')
+            return {"invoices": []}
 
-        # Use Stripe SDK directly to fetch latest subscription for the customer.
-        # Support optional expand query param (JSON-encoded array) passed from frontend.
-        # To avoid Stripe's deep expansion limits, we strip any trailing '.product' segments
-        # from the requested expands and perform product retrieval server-side.
-        raw_expand = request.query_params.get('expand') if request is not None else None
-
-        product_expand_requested = False
-        safe_expand = None
-        if raw_expand:
-            try:
-                requested = json.loads(raw_expand)
-                if isinstance(requested, list):
-                    # Detect whether caller asked for product expansion somewhere
-                    product_expand_requested = any('product' in str(e) for e in requested)
-                    # Build a safe expand list by removing '.product' suffixes to avoid depth limits
-                    safe_list = []
-                    for e in requested:
-                        if isinstance(e, str) and '.product' in e:
-                            safe_list.append(e.replace('.product', ''))
-                        else:
-                            safe_list.append(e)
-                    # Dedupe while preserving order
-                    seen = set()
-                    safe_expand = []
-                    for e in safe_list:
-                        if e not in seen:
-                            seen.add(e)
-                            safe_expand.append(e)
-                else:
-                    safe_expand = None
-            except Exception:
-                safe_expand = None
-
-        if stripe.api_key and customer_id:
-            try:
-                if safe_expand:
-                    stripe_subs = stripe.Subscription.list(customer=customer_id, limit=1, expand=safe_expand)
-                else:
-                    stripe_subs = stripe.Subscription.list(customer=customer_id, limit=1)
+        # Fetch latest invoices
+        invoices = stripe.Invoice.list(customer=customer_id, limit=25, status='paid')
+        
+        normalized_invoices = []
+        for inv in invoices.data:
+            normalized_invoices.append({
+                'id': getattr(inv, 'id', None),
+                'amount': getattr(inv, 'amount_paid', None),
+                'currency': getattr(inv, 'currency', None),
+                'status': getattr(inv, 'status', None),
+                'created': getattr(inv, 'created', None),
+                'paid_at': getattr(inv, 'paid_at', None),
+                'invoice_date': getattr(inv, 'date', None),
+                'period_start': getattr(inv, 'period_start', None),
+                'period_end': getattr(inv, 'period_end', None),
+                'pdf_url': getattr(inv, 'invoice_pdf', None),
+            })
+        
+        return {"invoices": normalized_invoices}
+    except Exception as e:
+        print(f'[get_invoices] Error: {e}')
+        raise HTTPException(status_code=500, detail=f'Failed to fetch invoices: {str(e)}')
 
 
-                if stripe_subs and getattr(stripe_subs, 'data', None) and len(stripe_subs.data) > 0:
-                    s = stripe_subs.data[0]
-                    # Debug: print raw subscription and items to help diagnose empty items.data
-                    try:
-                        print("[DEBUG] Raw Stripe subscription repr:", repr(s))
-                    except Exception:
-                        try:
-                            print("[DEBUG] Raw Stripe subscription str:", str(s))
-                        except Exception:
-                            pass
-                    try:
-                        # Prefer dict-like access (Stripe objects support .get)
-                        if hasattr(s, 'get'):
-                            items_debug = s.get('items')
-                        else:
-                            tmp = getattr(s, 'items', None)
-                            items_debug = tmp if not callable(tmp) else None
-                        print("[DEBUG] items attribute:", items_debug)
-                        items_len = 0
-                        if items_debug:
-                            if isinstance(items_debug, dict):
-                                items_len = len(items_debug.get('data', []))
-                            else:
-                                items_len = len(getattr(items_debug, 'data', []) if getattr(items_debug, 'data', None) else [])
-                        print("[DEBUG] items.data length:", items_len)
-                    except Exception as _:
-                        print("[DEBUG] failed to introspect items attribute")
-                    # Normalize/enrich subscription returned from Stripe SDK
-                    enriched = {
-                        'id': getattr(s, 'id', None),
-                        'status': getattr(s, 'status', None),
-                        'current_period_end': getattr(s, 'current_period_end', None),
-                        'items': {'data': []},
-                    }
-
-                    # Try to extract items and price objects (prices may be expanded)
-                    try:
-                        # Read items using dict-like access when possible
-                        if hasattr(s, 'get'):
-                            items = s.get('items')
-                        else:
-                            tmp = getattr(s, 'items', None)
-                            items = tmp if not callable(tmp) else None
-                        if items and (getattr(items, 'data', None) or (isinstance(items, dict) and items.get('data'))):
-                            product_ids = set()
-                            data_iter = items.data if getattr(items, 'data', None) else items.get('data', [])
-                            for it in data_iter:
-                                # get price object or id
-                                price_obj = None
-                                if isinstance(it, dict):
-                                    price_obj = it.get('price')
-                                else:
-                                    price_obj = getattr(it, 'price', None)
-
-                                # normalize price to plain dict
-                                price_dict = None
-                                try:
-                                    if hasattr(price_obj, 'to_dict'):
-                                        price_dict = price_obj.to_dict()
-                                    elif isinstance(price_obj, dict):
-                                        price_dict = price_obj
-                                    else:
-                                        price_dict = {
-                                            'id': getattr(price_obj, 'id', None),
-                                            'unit_amount': getattr(price_obj, 'unit_amount', None),
-                                            'currency': getattr(price_obj, 'currency', None),
-                                            'product': getattr(price_obj, 'product', None) if price_obj is not None else None,
-                                        }
-                                except Exception:
-                                    price_dict = {'id': None}
-
-                                if isinstance(price_dict.get('product'), str):
-                                    product_ids.add(price_dict.get('product'))
-
-                                # Extract per-item period end if available (period.end, current_period_end, or billing_cycle_anchor)
-                                period_end = None
-                                try:
-                                    if isinstance(it, dict):
-                                        # possible shapes: { 'period': { 'start': ..., 'end': ... } } or 'current_period_end' fields
-                                        period_obj = it.get('period') or it.get('current_period_end') or it.get('billing_cycle_anchor')
-                                        if isinstance(period_obj, dict):
-                                            period_end = period_obj.get('end') or period_obj.get('current_period_end')
-                                        else:
-                                            period_end = period_obj
-                                    else:
-                                        # object-like access
-                                        period_obj = getattr(it, 'period', None)
-                                        if period_obj is not None:
-                                            if hasattr(period_obj, 'get'):
-                                                period_end = period_obj.get('end') or period_obj.get('current_period_end')
-                                            else:
-                                                period_end = getattr(period_obj, 'end', None) or getattr(period_obj, 'current_period_end', None)
-                                        if not period_end:
-                                            period_end = getattr(it, 'current_period_end', None) or getattr(it, 'billing_cycle_anchor', None)
-                                except Exception:
-                                    period_end = None
-
-                                item_out = {
-                                    'id': getattr(it, 'id', None) if not isinstance(it, dict) else it.get('id'),
-                                    'price': price_dict,
-                                    'current_period_end': period_end,
-                                }
-                                enriched['items']['data'].append(item_out)
-
-                            # If caller requested product expansion, fetch product objects separately
-                            # (avoids deep expansion limit). Prefer Supabase cached products first.
-                            if product_expand_requested and len(product_ids) > 0:
-                                product_map = {}
-                                # Try to read cached products from Supabase stripe.products
-                                try:
-                                    stripe_supabase = get_stripe_supabase()
-                                    sup_res = stripe_supabase.table('products').select('*').in_('id', list(product_ids)).execute()
-                                    if getattr(sup_res, 'data', None):
-                                        for p in sup_res.data:
-                                            pid = p.get('id')
-                                            if pid:
-                                                product_map[pid] = p
-                                except Exception as e:
-                                    print(f"Supabase products cache read failed: {e}")
-
-                                # Fetch any missing product objects from Stripe and upsert to cache
-                                missing = [pid for pid in product_ids if pid not in product_map]
-                                for pid in missing:
-                                    try:
-                                        prod = stripe.Product.retrieve(pid)
-                                        prod_dict = {
-                                            'id': getattr(prod, 'id', None),
-                                            'name': getattr(prod, 'name', None),
-                                            'description': getattr(prod, 'description', None),
-                                            'metadata': getattr(prod, 'metadata', None) or {},
-                                        }
-                                        product_map[pid] = prod_dict
-                                        # attempt to upsert into Supabase cache (best-effort)
-                                        try:
-                                            if 'stripe_supabase' in locals():
-                                                stripe_supabase.table('products').upsert(prod_dict).execute()
-                                        except Exception as e:
-                                            print(f"Failed to upsert product {pid} to supabase cache: {e}")
-                                    except Exception as ex:
-                                        print(f"Failed to retrieve product {pid} from Stripe: {ex}")
-                                        continue
-
-                                # attach product objects into price.product where applicable
-                                for it in enriched['items']['data']:
-                                    p = it.get('price')
-                                    pid = p.get('product') if isinstance(p, dict) else None
-                                    if pid and pid in product_map:
-                                        p['product'] = product_map[pid]
-
-                            # Populate top-level plan shorthand from first item if available
-                            first_price = enriched['items']['data'][0].get('price')
-                            if first_price:
-                                enriched['plan'] = first_price
-                                try:
-                                    amount = first_price.get('unit_amount') or first_price.get('amount')
-                                    if amount:
-                                        enriched['amount_due'] = int(amount)
-                                        enriched['amount_due_display'] = f"{int(amount) / 100:.2f}"
-                                        enriched['currency'] = first_price.get('currency') or 'usd'
-                                except Exception:
-                                    pass
-                            # If subscription-level current_period_end is missing, prefer item-level period end
-                            try:
-                                if not enriched.get('current_period_end'):
-                                    for it in enriched.get('items', {}).get('data', []):
-                                        item_period = it.get('current_period_end')
-                                        if item_period:
-                                            enriched['current_period_end'] = item_period
-                                            break
-                            except Exception:
-                                pass
-                    except Exception:
-                        print("Failed to extract plan info from Stripe subscription")
-
-                    return {'subscription': enriched}
-            except Exception as e:
-                logger.exception("Stripe API subscription fetch failed: %s", e)
-        # If Stripe API returned no subscriptions, try reading the synced `stripe.subscriptions` table
-        try:
-            stripe_supabase = get_stripe_supabase()
-            sub_res = stripe_supabase.table('subscriptions').select('*').eq('customer', customer_id).order('created_at', desc=True).limit(1).execute()
-            sub_status = getattr(sub_res, 'status_code', None)
-            sub_error = getattr(sub_res, 'error', None)
-            if getattr(sub_res, 'data', None) and len(sub_res.data) > 0:
-                row = sub_res.data[0]
-                # Normalize shape similar to enriched above
-                enriched = {
-                    'id': row.get('id'),
-                    'status': row.get('status'),
-                    'current_period_end': row.get('current_period_end'),
-                    'plan': row.get('plan'),
-                    'amount_due': None,
-                }
-                # Try to extract plan info from synced JSON
-                try:
-                    plan = row.get('plan')
-                    if isinstance(plan, dict):
-                        amount = plan.get('unit_amount') or plan.get('amount')
-                        if amount:
-                            enriched['amount_due'] = int(amount)
-                            enriched['amount_due_display'] = f"{int(amount) / 100:.2f}"
-                            enriched['currency'] = plan.get('currency') or 'usd'
-                        product_id = plan.get('product')
-                        if product_id:
-                            enriched['product_id'] = product_id
-                except Exception:
-                    pass
-
-                # Attach product if synced products table has it
-                try:
-                    prod_res = stripe_supabase.table('products').select('*').eq('id', enriched.get('product_id')).limit(1).execute()
-                    if getattr(prod_res, 'data', None) and len(prod_res.data) > 0:
-                        enriched['product'] = prod_res.data[0]
-                except Exception:
-                    pass
-
-                return {'subscription': enriched}
+@router.post("/upgrade")
+async def upgrade_subscription(req: Request, user: str = Depends(get_current_user)):
+    """
+    Upgrade user's subscription to a new plan immediately
+    Handles prorated billing automatically
+    
+    Body params:
+    - new_price_id: Stripe Price ID for the new plan
+    - new_product_id: (optional) Stripe Product ID if price_id not provided
+    """
+    require_stripe_key()
+    
+    body = await req.json()
+    new_price_id = body.get("new_price_id") or body.get("newPriceId") or body.get("priceId")
+    new_product_id = body.get("new_product_id") or body.get("newProductId") or body.get("productId")
+    
+    if not new_price_id and not new_product_id:
+        raise HTTPException(status_code=400, detail="new_price_id or new_product_id required")
+    
+    try:
+        supabase = get_supabase()
+        
+        # Get user's current subscription
+        user_res = supabase.table('users')\
+            .select('stripe_customer_id, stripe_subscription_id, stripe_product_id')\
+            .eq('id', user)\
+            .execute()
+        
+        if not getattr(user_res, 'data', None) or len(user_res.data) == 0:
+            raise HTTPException(status_code=404, detail='User not found')
+        
+        user_data = user_res.data[0]
+        customer_id = user_data.get('stripe_customer_id')
+        subscription_id = user_data.get('stripe_subscription_id')
+        current_product_id = user_data.get('stripe_product_id')
+        
+        if not subscription_id:
+            # User doesn't have a subscription - redirect to checkout instead
+            raise HTTPException(
+                status_code=400,
+                detail='No active subscription. Please use checkout endpoint instead.'
+            )
+        
+        # Resolve price_id from product_id if needed
+        if not new_price_id and new_product_id:
+            prices = stripe.Price.list(product=new_product_id, active=True, type='recurring', limit=10)
+            if prices.data:
+                new_price_id = prices.data[0].id
             else:
-                # Log diagnostic info if the service-role request failed
-                if sub_status == 403 or sub_error:
-                    print(f"Failed to read synced subscriptions for customer {customer_id}: {sub_error or sub_status}")
-        except Exception as e:
-            print(f"Error querying synced stripe.subscriptions: {e}")
+                raise HTTPException(status_code=404, detail=f'No recurring price found for product {new_product_id}')
+        
+        # Verify new price is different from current
+        current_sub = stripe.Subscription.retrieve(subscription_id)
+        current_price_id = current_sub['items']['data'][0]['price']['id']
+        
+        if current_price_id == new_price_id:
+            raise HTTPException(status_code=400, detail='User is already on this plan')
+        
+        # Get the new price details to extract product
+        new_price = stripe.Price.retrieve(new_price_id)
+        new_product_id_resolved = new_price.product if hasattr(new_price, 'product') else new_price.get('product')
+        
+        # Check if this is an upgrade or downgrade (based on price amount)
+        current_amount = current_sub['items']['data'][0]['price']['unit_amount']
+        new_amount = new_price.unit_amount
+        
+        is_upgrade = new_amount > current_amount
+        proration_behavior = 'always_invoice' if is_upgrade else 'create_prorations'
+        
+        # Update the subscription with immediate proration
+        updated_sub = stripe.Subscription.modify(
+            subscription_id,
+            items=[{
+                'id': current_sub['items']['data'][0]['id'],
+                'price': new_price_id,
+            }],
+            proration_behavior=proration_behavior,  # Immediate billing for upgrades
+            billing_cycle_anchor='unchanged',  # Keep same billing date
+        )
+        
+        # Update user record with new product_id
+        supabase.table('users').update({
+            'stripe_product_id': new_product_id_resolved
+        }).eq('id', user).execute()
+        
+        print(f"Successfully upgraded user {user} from {current_product_id} to {new_product_id_resolved}")
+        
+        return {
+            "success": True,
+            "subscription": {
+                "id": updated_sub.id,
+                "status": updated_sub.status,
+                "current_period_end": updated_sub.current_period_end,
+                "product_id": new_product_id_resolved,
+            },
+            "message": f"Successfully upgraded to new plan! {'Prorated charges will be billed immediately.' if is_upgrade else 'Credit will be applied to next invoice.'}"
+        }
+        
+    except stripe.error.StripeError as e:
+        print(f"Stripe error upgrading subscription: {e}")
+        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Failed to upgrade subscription: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upgrade subscription: {str(e)}")
 
-        # Nothing found
-        return {'subscription': None}
+
+@router.get("/available-upgrades")
+async def get_available_upgrades(user: str = Depends(get_current_user)):
+    """
+    Get available upgrade options for the current user
+    Returns plans that are higher tier than current plan
+    """
+    require_stripe_key()
+    
+    try:
+        supabase = get_supabase()
+        
+        # Get user's current product
+        user_res = supabase.table('users')\
+            .select('stripe_product_id, stripe_subscription_id')\
+            .eq('id', user)\
+            .execute()
+        
+        if not getattr(user_res, 'data', None) or len(user_res.data) == 0:
+            raise HTTPException(status_code=404, detail='User not found')
+        
+        user_data = user_res.data[0]
+        current_product_id = user_data.get('stripe_product_id')
+        
+        # Get all active products with prices
+        products = stripe.Product.list(active=True, limit=100)
+        
+        available_upgrades = []
+        current_price = 0
+        
+        for product in products.data:
+            # Get the default price for this product
+            prices = stripe.Price.list(product=product.id, active=True, type='recurring', limit=1)
+            if not prices.data:
+                continue
+            
+            price = prices.data[0]
+            price_amount = price.unit_amount or 0
+            
+            # Track current plan price
+            if product.id == current_product_id:
+                current_price = price_amount
+            
+            # Build product info
+            product_info = {
+                "product_id": product.id,
+                "price_id": price.id,
+                "name": product.name,
+                "description": product.description,
+                "amount": price_amount / 100,  # Convert cents to dollars
+                "currency": price.currency,
+                "interval": price.recurring.get('interval') if price.recurring else 'month',
+                "metadata": product.metadata or {},
+            }
+            
+            available_upgrades.append(product_info)
+        
+        # Filter to only higher-priced plans
+        upgrade_options = [
+            p for p in available_upgrades 
+            if (p['amount'] * 100) > current_price
+        ]
+        
+        # Sort by price ascending
+        upgrade_options.sort(key=lambda x: x['amount'])
+        
+        return {
+            "current_product_id": current_product_id,
+            "upgrades": upgrade_options
+        }
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Failed to fetch upgrade options: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch upgrade options: {str(e)}")
+
+
+@router.get("/subscription")
+async def get_subscription(user: str = Depends(get_current_user), request: Request = None):
+    """Return the current Stripe subscription for the authenticated user using Stripe SDK."""
+    try:
+        require_stripe_key()
+        supabase = get_supabase()
+        
+        # Parse expand param from query string
+        expand_param = request.query_params.get("expand")
+        expand_list = []
+        if expand_param:
+            try:
+                expand_list = json.loads(expand_param) if isinstance(expand_param, str) else expand_param
+                if not isinstance(expand_list, list):
+                    expand_list = []
+            except:
+                expand_list = []
+        
+        print(f'[get_subscription] expand_list: {expand_list}')
+        
+        # Fetch the customer's stripe_customer_id from users table
+        user_res = supabase.table('users').select('stripe_customer_id').eq('id', user).execute()
+        if not getattr(user_res, 'data', None) or len(user_res.data) == 0:
+            print(f'[get_subscription] User {user} not found in database')
+            raise HTTPException(status_code=404, detail='User not found')
+
+        customer_id = user_res.data[0].get('stripe_customer_id')
+        if not customer_id:
+            print(f'[get_subscription] User {user} has no stripe_customer_id')
+            raise HTTPException(status_code=404, detail='No Stripe customer configured for this user')
+
+        print(f'[get_subscription] Fetching subscriptions for customer {customer_id}')
+        
+        # Filter out product expansion (too deep) and make separate call for products
+        safe_expand = [e for e in expand_list if 'product' not in e]
+        
+        # Simple Stripe SDK call - list subscriptions for this customer
+        try:
+            if safe_expand:
+                stripe_subs = stripe.Subscription.list(
+                    customer=customer_id,
+                    limit=1,
+                    expand=safe_expand
+                )
+            else:
+                stripe_subs = stripe.Subscription.list(
+                    customer=customer_id,
+                    limit=1,
+                )
+        except Exception as e:
+            print(f'[get_subscription] Stripe API error: {e}')
+            raise HTTPException(status_code=500, detail=f'Failed to fetch subscription from Stripe: {str(e)}')
+
+        # Check if we got any subscriptions
+        if not stripe_subs or not getattr(stripe_subs, 'data', None) or len(stripe_subs.data) == 0:
+            print(f'[get_subscription] No subscriptions found for customer {customer_id}')
+            return {'subscription': None}
+
+        # Extract first subscription and normalize response
+        sub = stripe_subs.data[0]
+        print(f'[get_subscription] Found subscription: {sub.id}, status: {sub.status}')
+        
+        # Collect product IDs from items
+        product_ids = set()
+        try:
+            # Try dict-like access first (Stripe objects support both attribute and dict access)
+            items_obj = sub.get('items') if hasattr(sub, 'get') else getattr(sub, 'items', None)
+            print(f'[get_subscription] items_obj (dict attempt): {items_obj}')
+            
+            if items_obj is None:
+                print('[get_subscription] items_obj is None, skipping product collection')
+            elif isinstance(items_obj, dict):
+                items_data = items_obj.get('data', [])
+                print(f'[get_subscription] items_data from dict: {len(items_data) if items_data else 0} items')
+                for item in items_data:
+                    price_id = item.get('price')
+                    if price_id:
+                        product_id = price_id.get('product') if isinstance(price_id, dict) else price_id
+                        if product_id and isinstance(product_id, str):
+                            product_ids.add(product_id)
+        except Exception as e:
+            print(f'[get_subscription] Error collecting product IDs: {e}', exc_info=True)
+        
+        # Fetch products separately to avoid expansion depth limit
+        products_map = {}
+        for product_id in product_ids:
+            try:
+                product = stripe.Product.retrieve(product_id)
+                products_map[product_id] = product
+                print(f'[get_subscription] Fetched product {product_id}: {product.name}')
+            except Exception as e:
+                print(f'[get_subscription] Failed to fetch product {product_id}: {e}')
+        
+        # Build normalized response directly from Stripe object
+        enriched = {
+            'id': getattr(sub, 'id', None),
+            'customer': customer_id,
+            'status': getattr(sub, 'status', None),
+            'current_period_start': getattr(sub, 'created', None),  # Use created timestamp
+            'current_period_end': None,  # Will be calculated from items
+            'items': {'data': []},
+        }
+
+        # Process items and prices
+        try:
+            # Try dict-like access for items
+            items_obj = sub.get('items') if hasattr(sub, 'get') else getattr(sub, 'items', None)
+            print(f'[get_subscription] items_obj for processing: {type(items_obj)}')
+            
+            if items_obj and isinstance(items_obj, dict):
+                items_data = items_obj.get('data', [])
+                print(f'[get_subscription] Processing {len(items_data)} items')
+                
+                for idx, item in enumerate(items_data):
+                    print(f'[get_subscription] Processing item {idx}')
+                    price_data = item.get('price') if isinstance(item, dict) else getattr(item, 'price', None)
+                    print(f'[get_subscription] price_data type: {type(price_data)}')
+                    
+                    if price_data:
+                        # Handle both dict and object access
+                        if isinstance(price_data, dict):
+                            product_id = price_data.get('product')
+                            price_id = price_data.get('id')
+                            unit_amount = price_data.get('unit_amount')
+                            currency = price_data.get('currency')
+                            recurring = price_data.get('recurring')
+                        else:
+                            product_id = getattr(price_data, 'product', None)
+                            price_id = getattr(price_data, 'id', None)
+                            unit_amount = getattr(price_data, 'unit_amount', None)
+                            currency = getattr(price_data, 'currency', None)
+                            recurring = getattr(price_data, 'recurring', None)
+                        
+                        item_dict = {
+                            'id': item.get('id') if isinstance(item, dict) else getattr(item, 'id', None),
+                            'quantity': item.get('quantity') if isinstance(item, dict) else getattr(item, 'quantity', None),
+                            'price': {
+                                'id': price_id,
+                                'amount': unit_amount,
+                                'currency': currency,
+                                'recurring': recurring,
+                                'product': None,
+                            }
+                        }
+                        
+                        # Attach product info (from separately fetched products map)
+                        if product_id and product_id in products_map:
+                            product = products_map[product_id]
+                            item_dict['price']['product'] = {
+                                'id': getattr(product, 'id', None),
+                                'name': getattr(product, 'name', None),
+                                'description': getattr(product, 'description', None),
+                                'metadata': getattr(product, 'metadata', None) or {},
+                            }
+                        elif product_id:
+                            # Product fetch failed, just store ID
+                            item_dict['price']['product'] = {'id': product_id}
+                        
+                        print(f'[get_subscription] Appending item: {item_dict["id"]}')
+                        enriched['items']['data'].append(item_dict)
+                        
+                        # Capture next billing date from first item
+                        if enriched['current_period_end'] is None:
+                            item_period_end = item.get('current_period_end') if isinstance(item, dict) else getattr(item, 'current_period_end', None)
+                            print(f'[get_subscription] item_period_end: {item_period_end}')
+                            if item_period_end:
+                                enriched['current_period_end'] = item_period_end
+                    else:
+                        print(f'[get_subscription] No price_data for item {idx}')
+            else:
+                print(f'[get_subscription] items_obj is not a dict: {type(items_obj)}')
+        except Exception as e:
+            print(f'[get_subscription] Error processing items: {e}', exc_info=True)
+            
+        # Calculate display price from first item
+        if enriched['items']['data']:
+            first_price = enriched['items']['data'][0].get('price')
+            if first_price and first_price.get('amount'):
+                amount = first_price['amount']
+                enriched['amount_due'] = amount
+                enriched['amount_due_display'] = f"${amount / 100:.2f}"
+                enriched['currency'] = first_price.get('currency', 'usd').upper()
+
+        print(f'[get_subscription] Returning subscription with {len(enriched["items"]["data"])} items')
+        return {'subscription': enriched}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f'[get_subscription] Unexpected error: {e}')
         raise HTTPException(status_code=500, detail=f'Failed to fetch subscription: {str(e)}')

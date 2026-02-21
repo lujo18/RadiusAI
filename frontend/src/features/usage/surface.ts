@@ -30,4 +30,29 @@ export const usageApi = {
     const { data } = await backendClient.post('/api/usage/track/ai-credits', { amount, action });
     return data;
   },
+
+  async getBrandUsage() {
+    const { data } = await backendClient.get('/api/usage/brands');
+    return data;
+  },
+
+  async trackBrand() {
+    const { data } = await backendClient.post('/api/usage/brands/track');
+    return data;
+  },
+
+  async getTemplateUsage() {
+    const { data } = await backendClient.get('/api/usage/templates');
+    return data;
+  },
+
+  async trackTemplate() {
+    const { data } = await backendClient.post('/api/usage/templates/track');
+    return data;
+  },
+
+  async getCreditsUsage() {
+    const { data } = await backendClient.get('/api/usage/credits');
+    return data;
+  },
 };

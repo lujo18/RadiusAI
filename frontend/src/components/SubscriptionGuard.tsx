@@ -54,7 +54,7 @@ export function SubscriptionGuard({
               {status === 'past_due'
                 ? 'Your payment failed. Please update your payment method to restore access.'
                 : status === 'canceled'
-                ? 'Your subscription has been canceled. Reactivate to continue using ViralStack.'
+                ? 'Your subscription has been canceled. Reactivate to continue using Radius.'
                 : 'You need an active subscription to access this feature.'}
             </p>
             <div className="flex gap-4 justify-center">

@@ -25,6 +25,8 @@ interface Step2TemplateEditorProps {
   onCancel: () => void;
   isEditing?: boolean;
   isLoading?: boolean;
+  isTemplateCreation?: boolean;
+  templateUsage?: { template_count?: number; template_limit?: number | null; remaining?: number | null };
 }
 
 export default function Step2TemplateEditor({
@@ -34,7 +36,10 @@ export default function Step2TemplateEditor({
   onCancel,
   isEditing = false,
   isLoading = false,
+  isTemplateCreation = false,
+  templateUsage,
 }: Step2TemplateEditorProps) {
+  const isTemplateLimitReached = !isEditing && isTemplateCreation && templateUsage?.template_limit !== null && (templateUsage?.remaining ?? 0) <= 0;
   const handleTagsChange = (value: string) => {
     const tags = value.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0);
     onInputChange("tags", tags);
@@ -182,23 +187,33 @@ export default function Step2TemplateEditor({
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end gap-3 p-6 border-t border-border sticky bottom-0 bg-background">
-        <Button
-          variant="outline"
-          onClick={onCancel}
-          disabled={isLoading}
-          className="h-9"
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onSave}
-          disabled={isLoading || !formData.name.trim()}
-          className="gap-2 h-9"
-        >
-          {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {isEditing ? "Update" : "Create"}
-        </Button>
+      <div className="flex justify-between items-center p-6 border-t border-border sticky bottom-0 bg-background">
+        <div className="text-sm text-muted-foreground">
+          {isTemplateCreation && templateUsage?.template_limit !== null && (
+            <span>
+              Templates: <span className="font-semibold text-foreground">{templateUsage?.template_count || 0}/{templateUsage?.template_limit || '∞'}</span>
+            </span>
+          )}
+        </div>
+        <div className="flex justify-end gap-3">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isLoading}
+            className="h-9"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onSave}
+            disabled={isLoading || !formData.name.trim() || isTemplateLimitReached}
+            title={isTemplateLimitReached ? 'Template limit reached. Upgrade your plan to create more templates.' : ''}
+            className="gap-2 h-9 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isEditing ? "Update" : "Create"}
+          </Button>
+        </div>
       </div>
     </div>
   );

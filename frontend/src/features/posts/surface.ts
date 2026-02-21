@@ -1,6 +1,5 @@
 import { PostRepository } from "@/lib/supabase/repos/PostRepository";
 import { supabase } from "@/lib/supabase/client";
-import { requireUserId } from "@/lib/supabase/auth";
 import type { Database } from "@/types/database";
 import { postService } from "@/features/posts/services";
 
@@ -10,8 +9,7 @@ import { postService } from "@/features/posts/services";
  */
 export const postSurface = {
   async getPost(postId: string) {
-    const userId = await requireUserId();
-    return await PostRepository.getPost(postId, userId);
+    return await PostRepository.getPost(postId);
   },
 
   async getPosts(filters?: {
@@ -20,12 +18,13 @@ export const postSurface = {
     templateId?: string;
     limit?: number;
   }) {
-    const userId = await requireUserId();
+    const brandId = filters?.brandId;
+    if (!brandId) throw new Error('brandId is required to fetch posts');
+    
     return await PostRepository.getPosts(
-      userId,
+      brandId,
       filters?.status as any,
       filters?.limit,
-      filters?.brandId,
       filters?.templateId,
     );
   },
@@ -42,8 +41,7 @@ export const postSurface = {
   },
 
   async deletePost(postId: string) {
-    const userId = await requireUserId();
-    return await PostRepository.deletePost(postId, userId);
+    return await PostRepository.deletePost(postId);
   },
 
   // Publishing operations
@@ -97,16 +95,13 @@ export const postSurface = {
 
   // Scheduled posts query
   async getScheduledPosts(fromDate?: Date, toDate?: Date, brandId?: string) {
-    const userId = await requireUserId();
+    if (!brandId) throw new Error('brandId is required');
+    
     let query = supabase
       .from("posts")
       .select("*")
-      .eq("user_id", userId)
+      .eq("brand_id", brandId)
       .eq("status", "scheduled");
-
-    if (brandId) {
-      query = query.eq("brand_id", brandId);
-    }
 
     if (fromDate) {
       query = query.gte("scheduled_time", fromDate.toISOString());
@@ -126,13 +121,12 @@ export const postSurface = {
   },
 
   async getPostsWithAnalyticsByBrand(brandId: string) {
-    const userId = await requireUserId();
-    return PostRepository.getPostsWithAnalyticsByBrand(brandId, userId);
+    
+    return PostRepository.getPostsWithAnalyticsByBrand(brandId);
   },
 
   async getPostWithAnalytics(postId: string) {
-    const userId = await requireUserId();
-    return PostRepository.getPostWithAnalytics(postId, userId);
+    return PostRepository.getPostWithAnalytics(postId);
   },
 };
 

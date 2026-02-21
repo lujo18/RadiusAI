@@ -9,7 +9,7 @@ import { LayoutGrid, LayoutList } from "lucide-react";
 import TemplateTableView from "./TemplateTableView";
 import { Template } from "@/types/template";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 interface TemplateViewSwitcherProps {
   templates: Template[] | undefined;
@@ -30,6 +30,8 @@ export const TemplateViewSwitcher: React.FC<TemplateViewSwitcherProps> = ({
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const router = useRouter();
+  const params = useParams();
+  const teamId = (params?.teamId as string) || "";
 
   return (
     <div className="space-y-6">
@@ -85,7 +87,7 @@ export const TemplateViewSwitcher: React.FC<TemplateViewSwitcherProps> = ({
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-xl mb-1">
+                      <CardTitle>
                         {template.name}
                       </CardTitle>
                       <Badge variant="secondary" className="text-xs uppercase">
@@ -115,38 +117,38 @@ export const TemplateViewSwitcher: React.FC<TemplateViewSwitcherProps> = ({
 
              
                 {/* Performance Stats */}
-                <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total Posts</span>
-                    <span className="font-semibold">
+                <CardContent className="space-y-3 muted">
+                  <div className="flex justify-between">
+                    <span>Total Posts</span>
+                    <span>
                       {(template as any).analytics?.postCount || 0}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
+                  <div className="flex justify-between">
+                    <span>
                       Avg Engagement
                     </span>
-                    <span className="font-semibold text-chart-4">
+                    <span>
                       {((template as any).analytics?.engagementRate || 0).toFixed(1)}%
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Total Impressions</span>
-                    <span className="font-semibold">
+                  <div className="flex justify-between">
+                    <span>Total Impressions</span>
+                    <span>
                       {(template as any).analytics?.impressions || 0}
                     </span>
                   </div>
                 </CardContent>
 
                 {/* Actions */}
-                <CardContent className="flex gap-2 pt-4 border-t border">
+                <CardContent className="flex gap-2 pt-4">
                   <Button
                     variant="secondary"
                     size="sm"
                     className="flex-1"
                     onClick={(e) => {
                       e.stopPropagation();
-                      router.push(`/brand/${brandId}/template/${template.id}`);
+                      router.push(`/${teamId}/brand/${brandId}/template/${template.id}`);
                     }}
                   >
                     Edit

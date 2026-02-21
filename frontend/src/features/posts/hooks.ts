@@ -1,46 +1,65 @@
 // React Query hooks for Posts
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import postSurface from '@/features/posts/surface';
 import { Database } from '@/types/database';
 
 // Query Keys
 export const postKeys = {
-  all: ['posts'] as const,
-  filtered: (filters: { status?: Database["public"]["Enums"]["post_status"]; brandId?: string; templateId?: string; limit?: number }) => 
-    ['posts', filters] as const,
-  byBrand: (brandId: string | null) => ['posts', 'brand', brandId] as const,
-  byTemplate: (templateId: string) => ['posts', 'template', templateId] as const,
-  scheduled: ['posts', 'scheduled'] as const,
-  detail: (id: string) => ['posts', id] as const,
+  all: () => ['posts'] as const,
+  allForBrand: (brandId: string) => ['posts', brandId] as const,
+  filtered: (brandId: string, filters: { status?: Database["public"]["Enums"]["post_status"]; templateId?: string; limit?: number }) => 
+    ['posts', brandId, filters] as const,
+  byTemplate: (brandId: string, templateId: string) => ['posts', brandId, 'template', templateId] as const,
+  scheduled: (brandId: string) => ['posts', brandId, 'scheduled'] as const,
+  detail: (brandId: string, id: string) => ['posts', brandId, id] as const,
 };
 
 // ==================== QUERIES ====================
 
 export function usePosts(filters?: {status?: Database["public"]["Enums"]["post_status"], limit?: number, brandId?: string, templateId?: string}) {
+  const brandId = filters?.brandId;
+
   return useQuery<Database['public']['Tables']['posts']['Row'][]>({
-    queryKey: postKeys.filtered(filters || {}),
-    queryFn: () => postSurface.getPosts(filters),
+    queryKey: postKeys.filtered(brandId || '', filters || {}),
+    queryFn: () => postSurface.getPosts({ ...filters }),
+    enabled: !!brandId,
     staleTime: 1 * 60 * 1000, // 1 minute
   });
 }
 
 // Convenience hooks for specific use cases
 export function usePostsByBrand(brandId: string) {
-  return usePosts({ brandId });
+  return useQuery<Database['public']['Tables']['posts']['Row'][]>({
+    queryKey: postKeys.allForBrand(brandId),
+    queryFn: () => postSurface.getPosts({ brandId }),
+    enabled: !!brandId,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
 }
 
-export function usePostsByTemplate(templateId: string) {
-  return usePosts({ templateId });
+export function usePostsByTemplate(templateId: string, brandId: string) {
+  return useQuery<Database['public']['Tables']['posts']['Row'][]>({
+    queryKey: postKeys.byTemplate(brandId, templateId),
+    queryFn: () => postSurface.getPosts({ templateId, brandId }),
+    enabled: !!brandId && !!templateId,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
 }
 
-export function usePostsByStatus(status: Database["public"]["Enums"]["post_status"]) {
-  return usePosts({ status });
+export function usePostsByStatus(status: Database["public"]["Enums"]["post_status"], brandId: string) {
+  return useQuery<Database['public']['Tables']['posts']['Row'][]>({
+    queryKey: postKeys.filtered(brandId, { status }),
+    queryFn: () => postSurface.getPosts({ status, brandId }),
+    enabled: !!brandId,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  });
 }
 
 export function usePost(postId: string) {
   return useQuery<Database['public']['Tables']['posts']['Row'] | null>({
-    queryKey: postKeys.detail(postId),
+    queryKey: postKeys.detail('', postId),
     queryFn: () => postSurface.getPost(postId),
     enabled: !!postId,
     staleTime: 30 * 1000, // 30 seconds
@@ -49,7 +68,7 @@ export function usePost(postId: string) {
 
 // ==================== POSTS + ANALYTICS ====================
 
-export function usePostsWithAnalytics(brandId?: string | null, userId?: string) {
+export function usePostsWithAnalytics(brandId?: string | null) {
   return useQuery({
     queryKey: ['postsWithAnalytics', 'brand', brandId ?? null] as const,
     queryFn: async () => {
@@ -62,7 +81,7 @@ export function usePostsWithAnalytics(brandId?: string | null, userId?: string) 
   });
 }
 
-export function usePostWithAnalytics(postId?: string | null, userId?: string) {
+export function usePostWithAnalytics(postId?: string | null) {
   return useQuery({
     queryKey: ['postsWithAnalytics', 'post', postId ?? null] as const,
     queryFn: async () => {
@@ -75,10 +94,11 @@ export function usePostWithAnalytics(postId?: string | null, userId?: string) {
   });
 }
 
-export function useScheduledPosts(fromDate?: Date, toDate?: Date, brandId?: string) {
+export function useScheduledPosts(brandId?: string, fromDate?: Date, toDate?: Date) {
   return useQuery<Database['public']['Tables']['posts']['Row'][]>({
-    queryKey: fromDate && toDate ? [...postKeys.scheduled, fromDate.toISOString(), toDate.toISOString(), brandId] : [...postKeys.scheduled, brandId],
-    queryFn: () => postSurface.getScheduledPosts(fromDate, toDate, brandId),
+    queryKey: [...postKeys.scheduled(brandId || ''), fromDate?.toISOString(), toDate?.toISOString()],
+    queryFn: () => brandId ? postSurface.getPosts({ brandId, status: 'scheduled' as any }) : Promise.resolve([]),
+    enabled: !!brandId,
     staleTime: 5 * 60 * 1000, // 5 minutes - reduce API calls
     gcTime: 10 * 60 * 1000, // Keep cached for 10 minutes
     retry: 1, // Only retry once on failure
@@ -88,55 +108,48 @@ export function useScheduledPosts(fromDate?: Date, toDate?: Date, brandId?: stri
 
 // ==================== MUTATIONS ====================
 
-export function useCreatePost() {
+export function useCreatePost(brandId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (postData: any) => postSurface.createPost(postData),
+    mutationFn: (postData: any) => postSurface.createPost({ ...postData, brand_id: brandId }),
     onSuccess: (_, postData) => {
-      // Invalidate all generic queries
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
-
-      // Invalidate brand-specific queries if brandId is provided
-      if (postData?.brand_id) {
-        queryClient.invalidateQueries({
-          queryKey: postKeys.filtered({ brandId: postData.brand_id }),
-        });
-      }
+      // Invalidate brand-specific queries
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(brandId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled(brandId) });
 
       // Invalidate template-specific queries if templateId is provided
       if (postData?.template_id) {
         queryClient.invalidateQueries({
-          queryKey: postKeys.filtered({ templateId: postData.template_id }),
+          queryKey: postKeys.byTemplate(brandId, postData.template_id),
         });
       }
     },
   });
 }
 
-export function useUpdatePost() {
+export function useUpdatePost(brandId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ postId, updates }: { postId: string; updates: any }) =>
       postSurface.updatePost(postId, updates),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-      queryClient.invalidateQueries({ queryKey: postKeys.detail(variables.postId) });
-      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(brandId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.detail(brandId, variables.postId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled(brandId) });
     },
   });
 }
 
-export function useDeletePostWithSlides() {
+export function useDeletePostWithSlides(brandId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (postId: string) => postSurface.deletePostWithSlides(postId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(brandId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled(brandId) });
     },
   });
 }
@@ -154,20 +167,20 @@ export const usePublishPost = (brandId: string) => {
       return await postSurface.publishPost({ brandId, platforms, postId });
     },
     onMutate: async ({ postId }) => {
-      await queryClient.cancelQueries({ queryKey: postKeys.all });
-      const previous = queryClient.getQueryData<any[]>(postKeys.all);
-      queryClient.setQueryData<any[] | undefined>(postKeys.all, (old) => {
+      await queryClient.cancelQueries({ queryKey: postKeys.allForBrand(brandId) });
+      const previous = queryClient.getQueryData<any[]>(postKeys.allForBrand(brandId));
+      queryClient.setQueryData<any[] | undefined>(postKeys.allForBrand(brandId), (old) => {
         const list = old ?? [];
-        return list.map((p: any) => (p.id === postId ? { ...p, status: 'published' } : p));
+        return list.map((p: any) => (p.id === postId ? { ...p, status: 'posted' } : p));
       });
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(postKeys.all, context.previous);
+      if (context?.previous) queryClient.setQueryData(postKeys.allForBrand(brandId), context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(brandId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled(brandId) });
     },
   });
 };
@@ -178,21 +191,21 @@ export const useDraftPost = (brandId: string) => {
   return useMutation<any, Error, { postId: string; platforms: string[] }, { previous?: any[] }>({
     mutationFn: ({ postId, platforms }) => postSurface.draftPost({ postId, platforms, brandId }),
     onMutate: async ({ postId }) => {
-      await queryClient.cancelQueries({ queryKey: postKeys.all });
-      const previous = queryClient.getQueryData<any[]>(postKeys.all);
+      await queryClient.cancelQueries({ queryKey: postKeys.allForBrand(brandId) });
+      const previous = queryClient.getQueryData<any[]>(postKeys.allForBrand(brandId));
 
-      queryClient.setQueryData<any[] | undefined>(postKeys.all, (old) => {
+      queryClient.setQueryData<any[] | undefined>(postKeys.allForBrand(brandId), (old) => {
         const list = old ?? [];
         return list.map((p: any) => (p.id === postId ? { ...p, status: 'draft' } : p));
       });
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(postKeys.all, context.previous);
+      if (context?.previous) queryClient.setQueryData(postKeys.allForBrand(brandId), context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(brandId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled(brandId) });
     },
   });
 };
@@ -204,21 +217,21 @@ export const useSchedulePost = (brandId: string) => {
     mutationFn: ({ postId, platforms, scheduledAt }) => 
       postSurface.schedulePost({ postId, platforms, scheduled_at: scheduledAt.toISOString(), brandId }),
     onMutate: async ({ postId }) => {
-      await queryClient.cancelQueries({ queryKey: postKeys.all });
-      const previous = queryClient.getQueryData<any[]>(postKeys.all);
+      await queryClient.cancelQueries({ queryKey: postKeys.allForBrand(brandId) });
+      const previous = queryClient.getQueryData<any[]>(postKeys.allForBrand(brandId));
 
-      queryClient.setQueryData<any[] | undefined>(postKeys.all, (old) => {
+      queryClient.setQueryData<any[] | undefined>(postKeys.allForBrand(brandId), (old) => {
         const list = old ?? [];
         return list.map((p: any) => (p.id === postId ? { ...p, status: 'scheduled' } : p));
       });
       return { previous };
     },
     onError: (_err, _vars, context) => {
-      if (context?.previous) queryClient.setQueryData(postKeys.all, context.previous);
+      if (context?.previous) queryClient.setQueryData(postKeys.allForBrand(brandId), context.previous);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: postKeys.all });
-      queryClient.invalidateQueries({ queryKey: postKeys.scheduled });
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(brandId) });
+      queryClient.invalidateQueries({ queryKey: postKeys.scheduled(brandId) });
     },
   });
 };

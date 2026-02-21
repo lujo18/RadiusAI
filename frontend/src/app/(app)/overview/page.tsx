@@ -1,84 +1,55 @@
 "use client";
 
-import React, { Suspense } from "react";
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { useDashboardStore, useAuthStore } from '@/store';
-import { useBrandFilter } from '@/hooks/useBrandFilter';
-import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiUsers, FiActivity, FiArrowRight, FiPlus, FiCheckCircle, FiX } from 'react-icons/fi';
-import { useRouter, useSearchParams } from 'next/navigation';
-import OnboardingModal from '@/components/OnboardingModal';
-import { supabase } from '@/lib/supabase/client';
-import { OverviewPageComponent } from "@/components/pages/OverviewPageComponent";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { TeamRepository } from '@/lib/supabase/repos/TeamRepository';
 
-function OverviewPageContent() {
+export default function OverviewRedirectPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const isGenerating = useDashboardStore((state) => state.isGenerating);
-  const stats = useDashboardStore((state) => state.stats);
-  const login = useAuthStore((state) => state.login);
-  const user = useAuthStore((state) => state.user);
-  const { activeBrandId, isOverview } = useBrandFilter();
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Restore session after Stripe redirect if needed
-    const restoreSession = async () => {
-      const sessionId = searchParams.get('session_id');
-      
-      // If coming from Stripe, ensure session is restored
-      if (sessionId && !user) {
-        const { data: { session }, error } = await supabase.auth.getSession();
+    const redirectToTeam = async () => {
+      try {
+        // Get user's first (primary) team
+        const firstTeamId = await TeamRepository.getFirstTeam();
         
-        if (session && !error) {
-          const restoredUser = {
-            id: session.user.id,
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            email: session.user.email || '',
-            plan: 'growth' as const,
-          };
-          login(restoredUser, session.user, session);
-        } else if (error || !session) {
-          // Session invalid, redirect to login
-          router.push('/login?error=session_expired');
+        if (!firstTeamId) {
+          // User has no teams - redirect to create one or login page
+          router.replace('/login?error=no_teams');
           return;
         }
+
+        router.replace(`/${firstTeamId}/overview`);
+      } catch (err) {
+        console.error('Redirect error:', err);
+        setError('An error occurred while loading your teams');
+        setLoading(false);
       }
     };
-    
-    restoreSession();
-    
-    // Check if user just completed payment
-    const sessionId = searchParams.get('session_id');
-    const onboarding = searchParams.get('onboarding');
-    
-    if (sessionId) {
-      // Show success banner
-      setShowSuccessBanner(true);
-      
-      // Auto-hide banner after 5 seconds
-      setTimeout(() => setShowSuccessBanner(false), 5000);
-    }
-    
-    if (onboarding === 'true') {
-      // Show onboarding modal
-      setShowOnboarding(true);
-    }
-  }, [searchParams]);
 
- 
+    redirectToTeam();
+  }, [router]);
 
-  
   return (
-    <OverviewPageComponent brandId={activeBrandId}/>
-  );
-}
-
-export default function OverviewPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <OverviewPageContent />
-    </Suspense>
+    <div className="flex items-center justify-center min-h-screen flex-col gap-4">
+      {loading ? (
+        <>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
+          <p className="text-muted-foreground">Redirecting to your dashboard...</p>
+        </>
+      ) : (
+        <>
+          <p className="text-destructive font-semibold">{error}</p>
+          <button
+            onClick={() => router.push('/login')}
+            className="btn-primary"
+          >
+            Back to Login
+          </button>
+        </>
+      )}
+    </div>
   );
 }

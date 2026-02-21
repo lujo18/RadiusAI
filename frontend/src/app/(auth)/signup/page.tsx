@@ -108,14 +108,14 @@ function SignupPageInner() {
           <Link href="/" className="flex items-center mb-12">
             <FiZap className="text-primary text-3xl mr-2" />
             <span className="text-2xl font-bold text-foreground">
-              ViralStack
+              Radius
             </span>
           </Link>
 
           {/* Welcome Text */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-foreground mb-2">
-              Welcome to ViralStack
+              Welcome to Radius
             </h1>
             <p className="text-muted-foreground">
               Get started - it's free. No credit card needed.

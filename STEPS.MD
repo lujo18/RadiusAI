@@ -1,4 +1,4 @@
-# SlideForge – Production-Grade SaaS Build Plan  
+# Radius – Production-Grade SaaS Build Plan  
 **Goal**: Full-stack web app (Next.js + FastAPI + Firebase) that auto-generates A/B-tested Instagram/TikTok carousels using Gemini (text) + Leonardo AI / Flux (images), schedules via official Meta & TikTok APIs, pulls analytics, auto-refines content, and monetizes via Stripe subscriptions.
 
 **Target Launch**: 6–8 weeks (solo dev, 20–40 hrs/week)  
@@ -29,7 +29,7 @@
 
 ## Phase 2: Environment & Accounts Setup (Week 1 | 8–10 hrs)
 
-- [ ] Create monorepo with Turborepo (`npx create-turbo@latest slideforge`)
+- [ ] Create monorepo with Turborepo (`npx create-turbo@latest Radius`)
 - [ ] Initialize GitHub repo + GitHub Actions (lint + test)
 - [ ] Set up Docker + local .env for all services
 - [ ] Create & configure:
@@ -189,4 +189,4 @@ Use that exact image URL for Instagram/TikTok posting
 Print this, put it on your wall, and check boxes daily.  
 This is the same roadmap that multiple $10k–$50k MRR AI content tools followed in 2025.
 
-Let’s ship SlideForge.
+Let’s ship Radius.

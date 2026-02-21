@@ -113,10 +113,10 @@ async def process_due_posts():
         
         post_ids = [row["post_id"] for row in due.data]
 
-        # 2) Get basic post info (for age, user, platform, etc.)
+        # 2) Get basic post info (for platform, etc.)
         posts = (
             supabase.table("posts")
-            .select("id, user_id, published_time, platform, platform_ids, brand_id")
+            .select("id, published_time, platform, platform_ids, brand_id")
             .in_("id", post_ids)
             .execute()
         )
@@ -158,7 +158,6 @@ async def process_single_post(track_row: dict, post_row: dict):
         post_row: Row from posts table
     """
     post_id = track_row["post_id"]
-    user_id = post_row["user_id"]
     brand_id = post_row.get("brand_id")
     platform = post_row.get("platform", "")
     
@@ -234,7 +233,6 @@ async def process_single_post(track_row: dict, post_row: dict):
             "new_followers": metrics.get("new_followers", 0),
             "collection_count": track_row.get("collection_count"),
             "current_interval": track_row.get("current_interval"),
-            "brand_id": post_row.get("brand_id"),
             "collected_at": now.isoformat()
         }
         
@@ -247,8 +245,7 @@ async def process_single_post(track_row: dict, post_row: dict):
         
         logger.info(
             f"[DEBUG] Saved analytics history for post {post_id}: "
-            f"brand_id={history_record.get('brand_id')}, "
-            f"requested_brand_id_from_post_row={brand_id}"
+            f"collection_count={track_row.get('collection_count')}"
         )
 
         # 4) Compute next collection interval based on post age

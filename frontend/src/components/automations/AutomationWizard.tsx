@@ -19,7 +19,11 @@ import { AutomationWizardStep3CTA } from "./steps/AutomationWizardStep3CTA";
 import { AutomationWizardStep3 } from "./steps/AutomationWizardStep3";
 import { AutomationWizardStep4 } from "./steps/AutomationWizardStep4";
 import { AutomationWizardStep5 } from "./steps/AutomationWizardStep5";
-import { compareToWeekday, getNextRunTimestamp, getTimeUntil } from "@/lib/time";
+import {
+  compareToWeekday,
+  getNextRunTimestamp,
+  getTimeUntil,
+} from "@/lib/time";
 
 type AutomationInsert = Database["public"]["Tables"]["automations"]["Insert"];
 
@@ -125,12 +129,28 @@ export function AutomationWizard({
   };
 
   const getNextRunTime = () => {
-    for (const day of Object.keys(wizardData.schedule)) {
-      const times = wizardData.schedule[day as keyof typeof wizardData.schedule] || [];
-      if (times.length > 0 && compareToWeekday(day) != "after") {
-        for (const time of times) {
-          if (!getTimeUntil(time).isPast) {
-            return getNextRunTimestamp(day, time);
+    console.log("enter");
+    const weekdays = [
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+    ];
+    for (const weekday of weekdays) {
+      if (Object.keys(wizardData.schedule).includes(weekday)) {
+        console.log("day1", weekday);
+        const times =
+          wizardData.schedule[weekday as keyof typeof wizardData.schedule] || [];
+        console.log("day2", weekday);
+        if (times.length > 0 && compareToWeekday(weekday) != "after") {
+          for (const time of times) {
+            if (!getTimeUntil(time).isPast) {
+              console.log("date", weekday, "time", time);
+              return getNextRunTimestamp(weekday, time);
+            }
           }
         }
       }

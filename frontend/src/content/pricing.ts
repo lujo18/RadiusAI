@@ -9,8 +9,8 @@ export const pricingContent = {
   // HERO / HEADER
   // ==========================================
   hero: {
-    headline: "Simple, Transparent Pricing",
-    subheadline: "Choose the plan that fits your content creation needs. No hidden fees. Cancel anytime.",
+    headline: "Pricing for TikTok slideshow automation & Instagram carousels",
+    subheadline: "Plans designed for solo creators, growth teams, and agencies building high-performing carousels. No hidden fees.",
     badge: "Save 30% with annual billing"
   },
 
@@ -83,7 +83,7 @@ export const pricingContent = {
   // ==========================================
   comparison: {
     headline: "Compare our plans",
-    subheadline: "Find the perfect plan for your needs",
+    subheadline: "Find the perfect plan for TikTok slideshow automation, CTA testing, and scaled carousel production",
     categories: [
       {
         name: "Content Generation",
@@ -173,9 +173,9 @@ export const pricingContent = {
   // FINAL CTA
   // ==========================================
   cta: {
-    headline: "Ready to create viral content?",
-    subheadline: "Join thousands of creators who've automated their content pipeline with ViralStack.",
+    headline: "Ready to automate TikTok slideshows and scale carousels?",
+    subheadline: "Join thousands of creators using automated CTA testing and niche templates to increase engagement.",
     ctaPrimary: "Get Started",
-    features: ["✓ Instant access", "✓ All features included", "✓ Cancel anytime"]
+    features: ["Instant access", "All features included", "Cancel anytime"]
   }
 };

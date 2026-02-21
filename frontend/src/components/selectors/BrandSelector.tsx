@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database } from "@/types/database";
 import { Button } from "../ui/button";
@@ -14,12 +14,14 @@ interface BrandSelectorProps {
 
 export function BrandSelector({ brands, activeBrandId }: BrandSelectorProps) {
   const router = useRouter();
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   const handleBrandChange = (value: string) => {
     if (value === "all") {
-      router.push("/overview");
+      router.push(`/${teamId}/overview`);
     } else {
-      router.push(`/brand/${value}/overview`);
+      router.push(`/${teamId}/brand/${value}/overview`);
     }
   };
 

@@ -16,7 +16,7 @@ class PlatformIntegration(BaseModel):
     """
 
     id: str
-    brand_id: str
+    brand_id: str  # Brand ownership (links to team via brand.team_id)
     platform: str
     username: str
 
@@ -38,7 +38,7 @@ class PlatformIntegration(BaseModel):
 
     status: IntegrationStatus
 
-    user_id: Optional[str] = None
+    user_id: Optional[str] = None  # Creator attribution
 
     created_at: str
     updated_at: str

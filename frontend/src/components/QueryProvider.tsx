@@ -1,6 +1,8 @@
 'use client';
 import React from "react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
 
@@ -29,13 +31,26 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       })
   );
 
+  const [persister] = useState(
+    () =>
+      createSyncStoragePersister({
+        storage: typeof window !== 'undefined' ? window.localStorage : null as any,
+      })
+  );
+
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      }}
+    >
       {children}
       {/* DevTools only in development */}
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

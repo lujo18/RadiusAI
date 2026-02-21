@@ -1,46 +1,53 @@
 import { TemplateRepository } from "@/lib/supabase/repos/TemplateRepository";
+import { BrandRepository } from "@/lib/supabase/repos/BrandRepository";
 import { requireUserId } from "@/lib/supabase/auth";
 import type { Database } from "@/types/database";
 
 const templateService = {
   async getTemplates() {
-    const userId = await requireUserId();
-    return await TemplateRepository.getTemplates(userId);
+    // Try to get accessible brands, but fall back to querying with RLS if it fails
+    const brandIds = await BrandRepository.getAccessibleBrandIds();
+    console.log('[SERVICE] getTemplates - brandIds:', brandIds);
+    
+    if (brandIds.length > 0) {
+      return await TemplateRepository.getTemplates(brandIds);
+    } else {
+      // Fallback: query all and let RLS filter
+      console.log('[SERVICE] No branded IDs, falling back to RLS-only filtering');
+      return await TemplateRepository.getTemplatesWithoutBrandFilter();
+    }
   },
 
   async getTemplate(templateId: string) {
-    const userId = await requireUserId();
-    return await TemplateRepository.getTemplate(templateId, userId);
+    return await TemplateRepository.getTemplate(templateId);
   },
 
   async getTemplatesByBrand(brandId: string) {
-    const userId = await requireUserId();
-    return await TemplateRepository.getTemplatesByBrand(brandId, userId);
+    if (!brandId) throw new Error('brandId is required');
+    return await TemplateRepository.getTemplatesByBrand(brandId);
   },
 
   async getBrandTemplateWithAnalytics(brandId: string) {
-    const userId = await requireUserId();
-    return await TemplateRepository.getBrandTemplatesWithAnalytics(brandId, userId);
+    if (!brandId) throw new Error('brandId is required');
+    return await TemplateRepository.getBrandTemplatesWithAnalytics(brandId);
   },
 
   async createTemplate(templateData: any) {
-    const userId = await requireUserId();
-    return await TemplateRepository.createTemplate(userId, templateData);
+    if (!templateData.brand_id) throw new Error('brand_id is required in template data');
+    return await TemplateRepository.createTemplate(templateData);
   },
 
   async updateTemplate(templateId: string, updates: any) {
-    const userId = await requireUserId();
-    return await TemplateRepository.updateTemplate(templateId, updates, userId);
+    return await TemplateRepository.updateTemplate(templateId, updates);
   },
 
   async deleteTemplate(templateId: string) {
-    const userId = await requireUserId();
-    return await TemplateRepository.deleteTemplate(templateId, userId);
+    return await TemplateRepository.deleteTemplate(templateId);
   },
 
-  async setDefaultTemplate(templateId: string) {
-    const userId = await requireUserId();
-    return await TemplateRepository.setDefaultTemplate(templateId, userId);
+  async setDefaultTemplate(templateId: string, brandId: string) {
+    if (!brandId) throw new Error('brandId is required');
+    return await TemplateRepository.setDefaultTemplate(templateId, brandId);
   },
 };
 

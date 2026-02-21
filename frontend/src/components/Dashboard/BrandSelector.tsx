@@ -8,7 +8,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenuButton } from "@/components/animate-ui/components/radix/sidebar";
-import { BadgeCheck, ChevronsUpDown, LayoutDashboard, Plus, Users } from "lucide-react";
+import {
+  ArrowUp,
+  BadgeCheck,
+  ChartBarIncreasing,
+  ChartNoAxesColumnIncreasing,
+  ChevronsUpDown,
+  LayoutDashboard,
+  Plus,
+  Users,
+} from "lucide-react";
+import { useGetBrandUsage } from "@/features/usage/hooks";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
 
 interface BrandSelectorProps {
   brands?: any[];
@@ -31,6 +42,32 @@ export default function BrandSelector({
   handleBrandSwitch,
   onCreateBrand,
 }: BrandSelectorProps) {
+  const { data: brandUsage, isLoading: brandUsageLoading } = useGetBrandUsage();
+
+  if (brandUsageLoading) return;
+
+  const CreateButton = () => {
+    return (
+      <DropdownMenuItem
+            className="p-2 flex justify-between"
+            onClick={onCreateBrand}
+            disabled={brandUsage.remaining <= 0}
+          >
+            <div className="flex flex-row items-center gap-2">
+              <div className="flex size-6 items-center justify-center rounded-md border bg-background">
+                <Plus className="size-4" />
+              </div>
+              <span>Create Brand</span>
+            </div>
+            <span className="muted">
+              {brandUsage?.brand_count ?? 0} /{" "}
+              {brandUsage?.brand_limit ?? "Unlimited"}
+            </span>
+          </DropdownMenuItem>
+    )
+  }
+
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -55,14 +92,21 @@ export default function BrandSelector({
         side={isMobile ? "bottom" : "right"}
         sideOffset={4}
       >
-        <DropdownMenuLabel className="text-xs text-muted-foreground">Brands</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          Brands
+        </DropdownMenuLabel>
 
-        <DropdownMenuItem onClick={() => handleBrandSwitch(null)} className="gap-2 p-2">
+        <DropdownMenuItem
+          onClick={() => handleBrandSwitch(null)}
+          className="gap-2 p-2"
+        >
           <div className="flex size-6 items-center justify-center rounded-sm border">
             <LayoutDashboard className="size-4 shrink-0" />
           </div>
           All Brands
-          {!activeBrandId && <BadgeCheck className="ml-auto size-4 text-primary" />}
+          {!activeBrandId && (
+            <BadgeCheck className="ml-auto size-4 text-primary" />
+          )}
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
@@ -76,28 +120,48 @@ export default function BrandSelector({
           </DropdownMenuItem>
         ) : brands && brands.length > 0 ? (
           brands.map((brand) => {
-            const brandName = (brand.brand_settings as any)?.name || "Unnamed Brand";
+            const brandName =
+              (brand.brand_settings as any)?.name || "Unnamed Brand";
             return (
-              <DropdownMenuItem key={brand.id} onClick={() => handleBrandSwitch(brand.id)} className="gap-2 p-2">
+              <DropdownMenuItem
+                key={brand.id}
+                onClick={() => handleBrandSwitch(brand.id)}
+                className="gap-2 p-2"
+              >
                 <div className="flex size-6 items-center justify-center rounded-sm border">
                   <Users className="size-4 shrink-0" />
                 </div>
                 {brandName}
-                {activeBrandId === brand.id && <BadgeCheck className="ml-auto size-4 text-primary" />}
+                {activeBrandId === brand.id && (
+                  <BadgeCheck className="ml-auto size-4 text-primary" />
+                )}
               </DropdownMenuItem>
             );
           })
         ) : (
-          <DropdownMenuItem disabled className="gap-2 p-2 text-muted-foreground">No brands yet</DropdownMenuItem>
+          <DropdownMenuItem
+            disabled
+            className="gap-2 p-2 text-muted-foreground"
+          >
+            No brands yet
+          </DropdownMenuItem>
         )}
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="gap-2 p-2" onClick={onCreateBrand}>
-          <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-            <Plus className="size-4" />
-          </div>
-          <div className="font-medium text-muted-foreground">Create Brand</div>
-        </DropdownMenuItem>
+        <HoverCard openDelay={10} closeDelay={200}>
+          {brandUsage.remaining <= 0 ? (
+            <HoverCardTrigger>
+              <CreateButton/>
+            </HoverCardTrigger>
+          ) : (
+            <CreateButton/>
+          )}
+          <HoverCardContent className="mt-2 flex flex-row items-center gap-2">
+            <ChartNoAxesColumnIncreasing className="small text-primary" size={16}/>
+            <span className="small text-primary">Upgrade to create more brands</span>
+          </HoverCardContent>
+          
+        </HoverCard>
       </DropdownMenuContent>
     </DropdownMenu>
   );

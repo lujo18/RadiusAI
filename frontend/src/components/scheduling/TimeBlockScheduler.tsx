@@ -93,9 +93,9 @@ export const TimeBlockScheduler = ({
 
   // Fetch scheduled posts for the 30-day window
   const { data: scheduledPosts = [], isLoading, error } = useScheduledPosts(
+    brandId,
     fromDate,
-    toDate,
-    brandId
+    toDate
   );
 
   // Generate time slots (9 AM to 9 PM)

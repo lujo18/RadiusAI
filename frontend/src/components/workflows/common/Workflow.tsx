@@ -3,7 +3,7 @@ import "@xyflow/react/dist/style.css";
 import { TemplateNode } from "./TemplateNode";
 import { BrandNode } from "./BrandNode";
 import { CtaNode } from "./CtaNode";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AIGenerateNode } from "./AIGenerateNode";
 
 type WorkflowProps = {
@@ -35,7 +35,7 @@ export const Workflow = ({brandId, selectedTemplateId, selectedCtaId, onTemplate
     ai: AIGenerateNode
   }
 
-  const initialNodes = [
+  const initialNodes = useMemo(() => [
     {
       id: "n1",
       position: { x: isMobile ? 50 : 50, y: isMobile ? 50 : 200 },
@@ -60,10 +60,9 @@ export const Workflow = ({brandId, selectedTemplateId, selectedCtaId, onTemplate
       data: {onGenerate: handleGenerate},
       type: "ai",
     },
-    
-  ];
+  ], [brandId, selectedTemplateId, onTemplateSelect, selectedCtaId, onCtaSelect, handleGenerate, isMobile]);
 
-  const initialEdges = [
+  const initialEdges = useMemo(() => [
     {
       id: "n1-n2",
       source: "n1",
@@ -85,7 +84,7 @@ export const Workflow = ({brandId, selectedTemplateId, selectedCtaId, onTemplate
       type: "default",
       animated: true
     },
-  ];
+  ], []);
 
   const defaultViewport = { x: 0, y: 0, zoom: isMobile ? 0.75 : 0.95 }
 

@@ -58,7 +58,10 @@ class Template(BaseModel):
     # Required fields from database
     id: str
     name: str
-    user_id: str
+    
+    # Optional fields (no longer in database schema)
+    team_id: Optional[str] = None  # Removed from DB - kept for backward compatibility
+    user_id: Optional[str] = None  # Removed from DB - kept for backward compatibility
     
     # Optional fields with defaults
     is_default: Optional[bool] = False
@@ -68,7 +71,7 @@ class Template(BaseModel):
     updated_at: Optional[str] = None  # Supabase: string (ISO)
     style_config: Optional[dict] = None  # Supabase: JSON | null
     content_rules: Optional[dict] = None  # Supabase: JSON
-    brand_id: Optional[str] = None  # Supabase: string | null
+    brand_id: Optional[str] = None  # Supabase: string | null (PRIMARY KEY for access control)
     tags: Optional[List[str]] = None  # Supabase: string[] | null
     favorite: Optional[bool] = False  # Supabase: boolean
     parent_id: Optional[str] = None  # Supabase: string | null
@@ -80,10 +83,10 @@ class Template(BaseModel):
 class CreateTemplateRequest(BaseModel):
     name: str
     category: str  # Changed from TemplateCategory to str to match Supabase
-    style_config: Optional[StyleConfig] = None
-    content_rules: dict  # Required for Supabase
+    style_config: Optional[dict] = None  # Accept both StyleConfig and dict
+    content_rules: Optional[dict] = None  # Optional - can be added later
     is_default: bool = False
-    brand_id: Optional[str] = None
+    brand_id: Optional[str] = None  # Brand context (optional, RLS will validate)
     tags: Optional[List[str]] = None
     favorite: bool = False
     parent_id: Optional[str] = None

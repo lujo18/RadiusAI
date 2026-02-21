@@ -4,14 +4,29 @@ from typing import Optional, Dict, Any
 from services.integrations.supabase.client import get_supabase
 
 
-def increment_usage_via_rpc(user_id: str, metric: str, amount: int = 1, period_start: Optional[str] = None, period_end: Optional[str] = None, event_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def get_user_team_id(user_id: str) -> Optional[str]:
+    """Resolve user_id to their team_id. Returns None if user not found."""
+    supabase = get_supabase()
+    try:
+        res = supabase.table('users').select('team_id').eq('id', user_id).single().execute()
+        if getattr(res, 'error', None):
+            print(f"get_user_team_id error for {user_id}", res.error)
+            return None
+        data = getattr(res, 'data', None)
+        return data.get('team_id') if data else None
+    except Exception as e:
+        print(f"get_user_team_id failed for {user_id}", e)
+        return None
+
+
+def increment_usage_via_rpc(team_id: str, metric: str, amount: int = 1, period_start: Optional[str] = None, period_end: Optional[str] = None, event_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Call the `increment_usage_rpc` Postgres function via Supabase RPC.
 
     Returns the updated/inserted row dict or None on error. Falls back to None when RPC not available.
     """
     supabase = get_supabase()
     params = {
-        "p_user_id": user_id,
+        "p_team_id": team_id,
         "p_metric": metric,
         "p_amount": amount,
         "p_period_start": period_start,
@@ -31,11 +46,11 @@ def increment_usage_via_rpc(user_id: str, metric: str, amount: int = 1, period_s
         return None
 
 
-def get_user_activity(user_id: str) -> Optional[Dict[str, Any]]:
+def get_team_activity(team_id: str) -> Optional[Dict[str, Any]]:
     supabase = get_supabase()
-    res = supabase.table("user_activity").select("*").eq("user_id", user_id).execute()
+    res = supabase.table("team_activity").select("*").eq("team_id", team_id).execute()
     if getattr(res, "error", None):
-        print("Error reading user_activity", res.error)
+        print("Error reading team_activity", res.error)
         return None
     data = res.data or []
     if len(data) == 0:
@@ -43,18 +58,18 @@ def get_user_activity(user_id: str) -> Optional[Dict[str, Any]]:
     return data[0]
 
 
-def get_user_activity_for_period(user_id: str, period_start: str, period_end: str) -> Optional[Dict[str, Any]]:
+def get_team_activity_for_period(team_id: str, period_start: str, period_end: str) -> Optional[Dict[str, Any]]:
     supabase = get_supabase()
     res = (
-        supabase.table("user_activity")
+        supabase.table("team_activity")
         .select("*")
-        .eq("user_id", user_id)
+        .eq("team_id", team_id)
         .eq("period_start", period_start)
         .eq("period_end", period_end)
         .execute()
     )
     if getattr(res, "error", None):
-        print("Error reading user_activity for period", res.error)
+        print("Error reading team_activity for period", res.error)
         return None
     data = res.data or []
     if len(data) == 0:
@@ -62,17 +77,17 @@ def get_user_activity_for_period(user_id: str, period_start: str, period_end: st
     return data[0]
 
 
-def upsert_user_activity(user_id: str, period_start: str, period_end: str, post_inc: int = 0, credit_inc: int = 0) -> Dict[str, Any]:
-    """Insert or update a user_activity row. Increments counts atomically where supported.
+def upsert_team_activity(team_id: str, period_start: str, period_end: str, post_inc: int = 0, credit_inc: int = 0) -> Dict[str, Any]:
+    """Insert or update a team_activity row. Increments counts atomically where supported.
 
     Falls back to a select+update when upsert is not appropriate.
     """
     supabase = get_supabase()
     now = datetime.utcnow().isoformat()
 
-    # Try upsert with provided primary keys (user_id + period_start + period_end assumed unique)
+    # Try upsert with provided primary keys (team_id + period_start + period_end assumed unique)
     payload = {
-        "user_id": user_id,
+        "team_id": team_id,
         "period_start": period_start,
         "period_end": period_end,
         "updated_at": now,
@@ -87,12 +102,12 @@ def upsert_user_activity(user_id: str, period_start: str, period_end: str, post_
     payload["usage"] = usage_map
 
     try:
-        res = supabase.table("user_activity").upsert(payload, on_conflict="user_id,period_start,period_end").execute()
+        res = supabase.table("team_activity").upsert(payload, on_conflict="team_id,period_start,period_end").execute()
         if getattr(res, "error", None):
             # fallback: ensure row exists then increment
-            existing = get_user_activity_for_period(user_id, period_start, period_end)
+            existing = get_team_activity_for_period(team_id, period_start, period_end)
             if not existing:
-                ins = supabase.table("user_activity").insert(payload).execute()
+                ins = supabase.table("team_activity").insert(payload).execute()
                 return ins.data[0] if getattr(ins, "data", None) else {}
 
             updates = {}
@@ -104,38 +119,38 @@ def upsert_user_activity(user_id: str, period_start: str, period_end: str, post_
                 existing_usage["credit_count"] = (existing_usage.get("credit_count") or 0) + credit_inc
             updates["usage"] = existing_usage
             updates["updated_at"] = now
-            upd = supabase.table("user_activity").update(updates).eq("id", existing.get("id")).execute()
+            upd = supabase.table("team_activity").update(updates).eq("id", existing.get("id")).execute()
             return upd.data[0] if getattr(upd, "data", None) else {}
 
         return res.data[0] if getattr(res, "data", None) else {}
     except Exception as e:
-        print("Failed to upsert user_activity", e)
+        print("Failed to upsert team_activity", e)
         # best-effort insert
-        ins = supabase.table("user_activity").insert(payload).execute()
+        ins = supabase.table("team_activity").insert(payload).execute()
         return ins.data[0] if getattr(ins, "data", None) else {}
 
 
-def set_user_activity_period(user_id: str, period_start: str, period_end: str) -> Optional[Dict[str, Any]]:
+def set_team_activity_period(team_id: str, period_start: str, period_end: str) -> Optional[Dict[str, Any]]:
     """Ensure the user's activity row has the provided period. Creates a row if none exists."""
-    existing = get_user_activity(user_id)
+    existing = get_team_activity(team_id)
     if not existing:
-        return upsert_user_activity(user_id, period_start, period_end, post_inc=0, credit_inc=0)
+        return upsert_team_activity(team_id, period_start, period_end, post_inc=0, credit_inc=0)
 
     supabase = get_supabase()
     now = datetime.utcnow().isoformat()
-    res = supabase.table("user_activity").update({"period_start": period_start, "period_end": period_end, "updated_at": now}).eq("id", existing.get("id")).execute()
+    res = supabase.table("team_activity").update({"period_start": period_start, "period_end": period_end, "updated_at": now}).eq("id", existing.get("id")).execute()
     if getattr(res, "error", None):
-        print("Error updating user_activity period", res.error)
+        print("Error updating team_activity period", res.error)
         return None
     return res.data[0] if getattr(res, "data", None) else None
 
 
-def increment_usage_field(user_id: str, field: str, amount: int = 1) -> Optional[Dict[str, Any]]:
-    """Increment a numeric usage field (`post_count`, `credit_count`) for the current user_activity row.
+def increment_usage_field(team_id: str, field: str, amount: int = 1) -> Optional[Dict[str, Any]]:
+    """Increment a numeric usage field (`post_count`, `credit_count`) for the current team_activity row.
 
     Returns the updated row or None.
     """
-    existing = get_user_activity(user_id)
+    existing = get_team_activity(team_id)
     if not existing:
         # Cannot increment without period information
         return None
@@ -154,7 +169,7 @@ def increment_usage_field(user_id: str, field: str, amount: int = 1) -> Optional
 
     now = datetime.utcnow().isoformat()
     updates["updated_at"] = now
-    res = supabase.table("user_activity").update(updates).eq("id", existing.get("id")).execute()
+    res = supabase.table("team_activity").update(updates).eq("id", existing.get("id")).execute()
     if getattr(res, "error", None):
         print("Error incrementing usage field", res.error)
         return None
@@ -191,6 +206,67 @@ def get_all_product_rate_limits() -> Optional[list]:
         return []
 
 
+def increment_credits(team_id: str, credit_type: str, amount: int = 1) -> Optional[Dict[str, Any]]:
+    """Increment credits in the usage JSON. Credit types: 'text_generation', 'image_generation'.
+    
+    Structure in team_activity.usage:
+    {
+        "credits": {
+            "text_generation": int,
+            "image_generation": int,
+            "total": int
+        }
+    }
+    """
+    supabase = get_supabase()
+    now = datetime.utcnow().isoformat()
+    
+    existing = get_team_activity(team_id)
+    if existing:
+        usage_map = existing.get("usage") or {}
+        credits = usage_map.get("credits") or {}
+        
+        # Increment the specific credit type
+        credits[credit_type] = (credits.get(credit_type) or 0) + amount
+        # Update total
+        credits["total"] = sum(v for k, v in credits.items() if k != "total")
+        
+        usage_map["credits"] = credits
+        updates = {"usage": usage_map, "updated_at": now}
+        
+        try:
+            res = supabase.table("team_activity").update(updates).eq("id", existing.get("id")).execute()
+            if getattr(res, "error", None):
+                print("increment_credits update error", res.error)
+                return None
+            return res.data[0] if getattr(res, "data", None) else None
+        except Exception as e:
+            print("increment_credits failed update", e)
+            return None
+    
+    # Create new row with credits
+    payload = {
+        "team_id": team_id,
+        "updated_at": now,
+        "usage": {
+            "credits": {
+                credit_type: amount,
+                "total": amount,
+            }
+        },
+    }
+    
+    try:
+        res = supabase.table("team_activity").insert(payload).execute()
+        if getattr(res, "error", None):
+            print("increment_credits insert error", res.error)
+            return None
+        return res.data[0] if getattr(res, "data", None) else None
+    except Exception as e:
+        print("increment_credits failed insert", e)
+        return None
+
+
 def set_product_rate_limit(product_id: str, rules: Any) -> Optional[Dict[str, Any]]:
     """Create or update a product_rate_limits row for a product_id with given rules (JSON or dict)."""
     supabase = get_supabase()
@@ -210,8 +286,8 @@ def set_product_rate_limit(product_id: str, rules: Any) -> Optional[Dict[str, An
         return None
 
 
-def increment_or_create_usage(user_id: str, metric: str, amount: int = 1, period_start: Optional[str] = None, period_end: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Atomically increment a metric stored in the `usage` JSON column, creating the user_activity row if it does not exist.
+def increment_or_create_usage(team_id: str, metric: str, amount: int = 1, period_start: Optional[str] = None, period_end: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Atomically increment a metric stored in the `usage` JSON column, creating the team_activity row if it does not exist.
 
     - If a row exists, merges into `usage` JSON and updates the timestamp.
     - If no row exists, inserts a new row with provided period_start/period_end (if any) and the metric initialized to `amount`.
@@ -222,20 +298,20 @@ def increment_or_create_usage(user_id: str, metric: str, amount: int = 1, period
 
     # Try RPC first (atomic server-side increment); fall back to client-side logic if RPC not available
     try:
-        rpc_res = increment_usage_via_rpc(user_id, metric, amount, period_start, period_end)
+        rpc_res = increment_usage_via_rpc(team_id, metric, amount, period_start, period_end)
         if rpc_res:
             return rpc_res
     except Exception:
         # ignore and fall back
         pass
 
-    existing = get_user_activity(user_id)
+    existing = get_team_activity(team_id)
     if existing:
         usage_map = existing.get("usage") or {}
         usage_map[metric] = (usage_map.get(metric) or 0) + amount
         updates = {"usage": usage_map, "updated_at": now}
         try:
-            res = supabase.table("user_activity").update(updates).eq("id", existing.get("id")).execute()
+            res = supabase.table("team_activity").update(updates).eq("id", existing.get("id")).execute()
             if getattr(res, "error", None):
                 print("increment_or_create_usage update error", res.error)
                 return None
@@ -246,7 +322,7 @@ def increment_or_create_usage(user_id: str, metric: str, amount: int = 1, period
 
     # create new row
     payload = {
-        "user_id": user_id,
+        "team_id": team_id,
         "updated_at": now,
         "usage": {metric: amount},
     }
@@ -256,7 +332,7 @@ def increment_or_create_usage(user_id: str, metric: str, amount: int = 1, period
         payload["period_end"] = period_end
 
     try:
-        res = supabase.table("user_activity").insert(payload).execute()
+        res = supabase.table("team_activity").insert(payload).execute()
         if getattr(res, "error", None):
             print("increment_or_create_usage insert error", res.error)
             return None

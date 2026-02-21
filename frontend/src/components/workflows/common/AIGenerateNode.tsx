@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ export type AIGenerateNodeProps = NodeProps & {
   data: AIGenerateNodeData;
 };
 
-export const AIGenerateNode: React.FC<AIGenerateNodeProps> = ({ data }) => {
+const AIGenerateNodeComponent: React.FC<AIGenerateNodeProps> = ({ data }) => {
   const { onGenerate } = data;
 
   const [isGenerating, setIsGenerating] = useState(false)
@@ -57,3 +57,5 @@ export const AIGenerateNode: React.FC<AIGenerateNodeProps> = ({ data }) => {
     </div>
   );
 };
+
+export const AIGenerateNode = memo(AIGenerateNodeComponent);

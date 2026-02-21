@@ -24,6 +24,7 @@ interface TemplateCreatorProps {
   onSave: (template: CreateTemplateInput) => void;
   existingTemplate?: any;
   brandId?: string;
+  templateUsage?: { template_count?: number; template_limit?: number | null; remaining?: number | null };
 }
 
 export default function TemplateCreator({
@@ -32,6 +33,7 @@ export default function TemplateCreator({
   onSave,
   existingTemplate,
   brandId,
+  templateUsage,
 }: TemplateCreatorProps) {
   const [step, setStep] = useState(1);
   const [selectedSystemTemplate, setSelectedSystemTemplate] = useState<
@@ -226,6 +228,8 @@ export default function TemplateCreator({
             onSave={handleSaveTemplate}
             onCancel={handleBack}
             isEditing={!!existingTemplate}
+            isTemplateCreation={!existingTemplate}
+            templateUsage={templateUsage}
           />
         )}
       </DialogContent>

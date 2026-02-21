@@ -1,7 +1,7 @@
 # Subscription Status Handling - Setup Complete ✅
 
 ## Overview
-Your SlideForge app now has complete subscription status handling with Stripe webhooks integration. All subscription events are tracked in the `profiles` table with real-time updates.
+Your Radius app now has complete subscription status handling with Stripe webhooks integration. All subscription events are tracked in the `profiles` table with real-time updates.
 
 ## Database Schema
 The following columns were added to your `profiles` table:

@@ -11,7 +11,9 @@ import React from "react";
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
-import { Check, Zap, Sparkles, Building2 } from 'lucide-react';
+import { Check, Zap, Sparkles, Building2, TrendingUp } from 'lucide-react';
+import UpgradeFlow from '@/components/billing/UpgradeFlow';
+import UsageBanner from '@/components/billing/UsageBanner';
 
 interface PricingTier {
   id: 'starter' | 'pro' | 'agency';
@@ -80,6 +82,7 @@ const TIER_CONFIG: Omit<PricingTier, 'price' | 'priceId'>[] = [
 export default function Paywall() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState<string | null>(null);
+  const [showUpgradeFlow, setShowUpgradeFlow] = useState(false);
 
   // Use TanStack Query hook to fetch Stripe products (with joined price info)
   const { useStripeProducts } = require('@/features/stripe/hooksProducts');
@@ -201,6 +204,13 @@ export default function Paywall() {
           </p>
         </div>
 
+        {/* Usage Banner - Shows when limits are close or reached */}
+        {user && (
+          <div className="mb-8">
+            <UsageBanner />
+          </div>
+        )}
+
         {/* Current Plan Badge */}
         {user && (
           <div className="text-center mb-8">
@@ -215,6 +225,9 @@ export default function Paywall() {
         <div className="grid md:grid-cols-3 gap-8 mb-12">
           {pricingTiers.map((tier) => {
             const isCurrentPlan = user?.plan === tier.id;
+            const currentTierPrice = pricingTiers.find(t => t.id === user?.plan)?.price || 0;
+            const isUpgrade = tier.price > currentTierPrice;
+            const isDowngrade = tier.price < currentTierPrice;
 
             return (
               <div
@@ -226,7 +239,7 @@ export default function Paywall() {
                 } ${isCurrentPlan ? 'ring-4 ring-green-500' : ''}`}
               >
                 {/* Popular Badge */}
-                {tier.popular && (
+                {tier.popular && !isCurrentPlan && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <span className="px-4 py-1 bg-chart-1 text-primary-foreground text-sm font-bold rounded-full">
                       MOST POPULAR
@@ -239,6 +252,16 @@ export default function Paywall() {
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                     <span className="px-4 py-1 bg-chart-4 text-primary-foreground text-sm font-bold rounded-full">
                       CURRENT PLAN
+                    </span>
+                  </div>
+                )}
+
+                {/* Upgrade Badge */}
+                {isUpgrade && user && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="px-4 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-bold rounded-full flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      UPGRADE
                     </span>
                   </div>
                 )}
@@ -268,14 +291,20 @@ export default function Paywall() {
 
                 {/* CTA Button */}
                 <Button
-                  onClick={() =>
-                    isCurrentPlan && tier.price > 0
-                      ? handleManageSubscription()
-                      : handleSubscribe(tier.priceId, tier.id)
-                  }
-                  disabled={loading !== null}
+                  onClick={() => {
+                    if (isCurrentPlan && tier.price > 0) {
+                      handleManageSubscription();
+                    } else if (isUpgrade && user) {
+                      setShowUpgradeFlow(true);
+                    } else {
+                      handleSubscribe(tier.priceId, tier.id);
+                    }
+                  }}
+                  disabled={loading !== null || (isDowngrade && !!user)}
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
-                    tier.popular
+                    isUpgrade && user
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
+                      : tier.popular
                       ? 'bg-primary text-primary-foreground hover:bg-primary/80'
                       : 'bg-card/20 text-foreground hover:bg-card/30'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -284,8 +313,19 @@ export default function Paywall() {
                     ? 'Loading...'
                     : isCurrentPlan
                     ? 'Manage Subscription'
+                    : isUpgrade && user
+                    ? 'Upgrade Now'
+                    : isDowngrade && user
+                    ? 'Contact Support for Downgrade'
                     : 'Subscribe Now'}
                 </Button>
+
+                {/* Upgrade Note */}
+                {isUpgrade && user && (
+                  <p className="mt-2 text-xs text-center text-green-400">
+                    ⚡ Instant upgrade with prorated billing
+                  </p>
+                )}
 
                 {/* Features List */}
                 <ul className="mt-8 space-y-3">
@@ -308,12 +348,19 @@ export default function Paywall() {
           </p>
           <p className="text-sm">
             Need a custom plan?{' '}
-            <a href="mailto:support@viralstack.app" className="text-purple-400 hover:underline">
+            <a href="mailto:support@Radius.app" className="text-purple-400 hover:underline">
               Contact us
             </a>
           </p>
         </div>
       </div>
+
+      {/* Upgrade Flow Modal */}
+      <UpgradeFlow
+        isOpen={showUpgradeFlow}
+        onClose={() => setShowUpgradeFlow(false)}
+        trigger="paywall"
+      />
     </div>
   );
 }

@@ -13,24 +13,18 @@ from services.workers.analytics import create_analytic_tracker
 
 # ==================== READ OPERATIONS ====================
 
-def get_post(post_id: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def get_post(post_id: str) -> Optional[Dict[str, Any]]:
     """
     Get a single post by ID.
     
     Args:
         post_id: Post UUID
-        user_id: Optional user_id for RLS filtering
     
     Returns:
         Post dict or None if not found
     """
     supabase = get_supabase()
-    query = supabase.from_('posts').select('*').eq('id', post_id)
-    
-    if user_id:
-        query = query.eq('user_id', user_id)
-    
-    response = query.single().execute()
+    response = supabase.from_('posts').select('*').eq('id', post_id).single().execute()
     
     print("got post in post.py")
     
@@ -53,20 +47,29 @@ def get_post_by_external_id(external_post_id: str) -> Optional[Dict[str, Any]]:
         Post dict or None if not found
     """
     supabase = get_supabase()
-    response = supabase.from_('posts').select('*').eq('external_post_id', external_post_id).single().execute()
-    
+    try:
+        response = supabase.from_('posts').select('*').eq('external_post_id', external_post_id).single().execute()
+    except Exception as e:
+        # Supabase/PostgREST will raise when .single() finds 0 rows (PGRST116).
+        # Treat 'no rows' as not-found and return None; re-raise unexpected errors.
+        msg = str(e)
+        if 'Cannot coerce the result to a single JSON object' in msg or 'PGRST116' in msg:
+            return None
+        # Log and re-raise other exceptions so callers can handle them
+        raise
+
     if not response.data:
         return None
-    
+
     return response.data
 
 
-def get_posts(user_id: str) -> List[Dict[str, Any]]:
+def get_posts(brand_id: str) -> List[Dict[str, Any]]:
     """
-    Get all posts for a user, ordered by creation date (newest first).
+    Get all posts for a brand, ordered by creation date (newest first).
     
     Args:
-        user_id: User UUID
+        brand_id: Brand UUID
     
     Returns:
         List of post dicts
@@ -74,19 +77,18 @@ def get_posts(user_id: str) -> List[Dict[str, Any]]:
     supabase = get_supabase()
     response = supabase.from_('posts')\
         .select('*')\
-        .eq('user_id', user_id)\
+        .eq('brand_id', brand_id)\
         .order('created_at', desc=True)\
         .execute()
     
     return response.data or []
 
-# DELEGATE: parse backend to ensure all types are updated
-# Here, status should be poststatus
-def get_posts_by_status(user_id: str, status: str) -> List[Dict[str, Any]]:
+def get_posts_by_status(brand_id: str, status: str) -> List[Dict[str, Any]]:
     """
+    Get posts by brand and status.
     
     Args:
-        user_id: User UUID
+        brand_id: Brand UUID
         status: Post status string
     
     Returns:
@@ -95,7 +97,7 @@ def get_posts_by_status(user_id: str, status: str) -> List[Dict[str, Any]]:
     supabase = get_supabase()
     response = supabase.from_('posts')\
         .select('*')\
-        .eq('user_id', user_id)\
+        .eq('brand_id', brand_id)\
         .eq('status', status)\
         .order('created_at', desc=True)\
         .execute()
@@ -103,12 +105,12 @@ def get_posts_by_status(user_id: str, status: str) -> List[Dict[str, Any]]:
     return response.data or []
 
 
-def get_posts_by_template(user_id: str, template_id: str) -> List[Dict[str, Any]]:
+def get_posts_by_template(brand_id: str, template_id: str) -> List[Dict[str, Any]]:
     """
-    Get all posts created from a specific template.
+    Get all posts created from a specific template for a brand.
     
     Args:
-        user_id: User UUID
+        brand_id: Brand UUID
         template_id: Template UUID
     
     Returns:
@@ -117,7 +119,7 @@ def get_posts_by_template(user_id: str, template_id: str) -> List[Dict[str, Any]
     supabase = get_supabase()
     response = supabase.from_('posts')\
         .select('*')\
-        .eq('user_id', user_id)\
+        .eq('brand_id', brand_id)\
         .eq('template_id', template_id)\
         .order('created_at', desc=True)\
         .execute()
@@ -125,12 +127,12 @@ def get_posts_by_template(user_id: str, template_id: str) -> List[Dict[str, Any]
     return response.data or []
 
 
-def get_scheduled_posts(user_id: str) -> List[Dict[str, Any]]:
+def get_scheduled_posts(brand_id: str) -> List[Dict[str, Any]]:
     """
-    Get all scheduled posts ordered by scheduled time (earliest first).
+    Get all scheduled posts for a brand, ordered by scheduled time (earliest first).
     
     Args:
-        user_id: User UUID
+        brand_id: Brand UUID
     
     Returns:
         List of scheduled post dicts
@@ -138,7 +140,7 @@ def get_scheduled_posts(user_id: str) -> List[Dict[str, Any]]:
     supabase = get_supabase()
     response = supabase.from_('posts')\
         .select('*')\
-        .eq('user_id', user_id)\
+        .eq('brand_id', brand_id)\
         .eq('status', 'scheduled')\
         .order('scheduled_time', desc=False)\
         .execute()
@@ -146,12 +148,12 @@ def get_scheduled_posts(user_id: str) -> List[Dict[str, Any]]:
     return response.data or []
 
 
-def get_posts_by_variant_set(user_id: str, variant_set_id: str) -> List[Dict[str, Any]]:
+def get_posts_by_variant_set(brand_id: str, variant_set_id: str) -> List[Dict[str, Any]]:
     """
-    Get all posts in a variant set (for A/B testing).
+    Get all posts in a variant set (for A/B testing) for a brand.
     
     Args:
-        user_id: User UUID
+        brand_id: Brand UUID
         variant_set_id: Variant set UUID
     
     Returns:
@@ -160,7 +162,7 @@ def get_posts_by_variant_set(user_id: str, variant_set_id: str) -> List[Dict[str
     supabase = get_supabase()
     response = supabase.from_('posts')\
         .select('*')\
-        .eq('user_id', user_id)\
+        .eq('brand_id', brand_id)\
         .eq('variant_set_id', variant_set_id)\
         .order('created_at', desc=True)\
         .execute()
@@ -171,7 +173,6 @@ def get_posts_by_variant_set(user_id: str, variant_set_id: str) -> List[Dict[str
 # ==================== CREATE OPERATIONS ====================
 
 def create_post(
-    user_id: str,
     brand_id: str,
     template_id: str,
     platform: str = "tiktok",
@@ -185,7 +186,6 @@ def create_post(
     Create a new post.
     
     Args:
-        user_id: User UUID
         brand_id: Brand UUID (required)
         template_id: Template UUID
         platform: Platform name (instagram, tiktok)
@@ -201,7 +201,6 @@ def create_post(
     supabase = get_supabase()
     
     post_data = {
-        'user_id': user_id,
         'brand_id': brand_id,
         'platform': platform,
         'status': status,
@@ -236,8 +235,7 @@ def create_post(
 
 def update_post(
     post_id: str,
-    updates: Dict[str, Any],
-    user_id: Optional[str] = None
+    updates: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
     Update post fields.
@@ -245,7 +243,6 @@ def update_post(
     Args:
         post_id: Post UUID
         updates: Dict of fields to update
-        user_id: Optional user_id for RLS filtering
     
     Returns:
         Updated post dict
@@ -255,14 +252,10 @@ def update_post(
     # Add updated_at timestamp
     updates['updated_at'] = datetime.now().isoformat()
     
-    query = (supabase.from_('posts')
+    response = (supabase.from_('posts')
         .update(updates)
-        .eq('id', post_id))
-    
-    if user_id:
-        query = query.eq('user_id', user_id)
-    
-    response = query.execute()
+        .eq('id', post_id)
+        .execute())
     
     if not response.data:
         raise Exception(f"Failed to update post {post_id}")
@@ -273,7 +266,6 @@ def update_post(
 def update_post_status(
     post_id: str,
     status: str,
-    user_id: Optional[str] = None,
     published_at: Optional[str] = None,
     social_post_id: Optional[str] = None,
     error_message: Optional[str] = None
@@ -285,7 +277,6 @@ def update_post_status(
     Args:
         post_id: Post UUID
         status: New status (draft, scheduled, published, failed)
-        user_id: User UUID (optional for webhook calls)
         published_at: ISO timestamp from webhook
         social_post_id: Social media post ID (Instagram, TikTok)
         error_message: Error details if status is failed
@@ -310,13 +301,7 @@ def update_post_status(
     if status == 'failed' and error_message:
         update_data['error_message'] = error_message
     
-    query = supabase.from_('posts').update(update_data).eq('id', post_id)
-    
-    # Only filter by user_id if provided (webhooks may not have it)
-    if user_id:
-        query = query.eq('user_id', user_id)
-    
-    response = query.execute()
+    response = supabase.from_('posts').update(update_data).eq('id', post_id).execute()
     
     # If post is now published, start analytics tracking
     if status == 'published':
@@ -332,8 +317,7 @@ def update_post_status(
 
 def update_post_storage_urls(
     post_id: str,
-    user_id: str,
-    slide_urls: List[str],
+    slide_urls: List[str] = None,
     thumbnail_url: Optional[str] = None
 ) -> dict:
     """
@@ -341,7 +325,6 @@ def update_post_storage_urls(
     
     Args:
         post_id: Post UUID
-        user_id: User UUID
         slide_urls: List of slide image URLs
         thumbnail_url: Optional thumbnail URL
     
@@ -351,7 +334,7 @@ def update_post_storage_urls(
     supabase = get_supabase()
     
     storage_urls = {
-        'slides': slide_urls,
+        'slides': slide_urls or [],
         'thumbnail': thumbnail_url
     }
     
@@ -361,7 +344,6 @@ def update_post_storage_urls(
             'updated_at': datetime.now().isoformat()
         })\
         .eq('id', post_id)\
-        .eq('user_id', user_id)\
         .execute()
     
     # Return the updated post if response has data
@@ -372,7 +354,6 @@ def update_post_storage_urls(
     fetch_response = supabase.from_('posts')\
         .select('*')\
         .eq('id', post_id)\
-        .eq('user_id', user_id)\
         .single()\
         .execute()
     
@@ -381,7 +362,6 @@ def update_post_storage_urls(
 
 def update_post_content(
     post_id: str,
-    user_id: str,
     content: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
@@ -389,7 +369,6 @@ def update_post_content(
     
     Args:
         post_id: Post UUID
-        user_id: User UUID
         content: PostContent dict
     
     Returns:
@@ -397,14 +376,12 @@ def update_post_content(
     """
     return update_post(
         post_id=post_id,
-        updates={'content': content},
-        user_id=user_id
+        updates={'content': content}
     )
 
 
 def update_post_metadata(
     post_id: str,
-    user_id: str,
     metadata: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
@@ -412,7 +389,6 @@ def update_post_metadata(
     
     Args:
         post_id: Post UUID
-        user_id: User UUID
         metadata: Metadata dict
     
     Returns:
@@ -420,34 +396,28 @@ def update_post_metadata(
     """
     return update_post(
         post_id=post_id,
-        updates={'metadata': metadata},
-        user_id=user_id
+        updates={'metadata': metadata}
     )
 
 
 # ==================== DELETE OPERATIONS ====================
 
-def delete_post(post_id: str, user_id: Optional[str] = None) -> bool:
+def delete_post(post_id: str) -> bool:
     """
     Delete a post.
     
     Args:
         post_id: Post UUID
-        user_id: Optional user_id for RLS filtering
     
     Returns:
         True if successful
     """
     supabase = get_supabase()
     
-    query = supabase.from_('posts')\
+    response = supabase.from_('posts')\
         .delete()\
-        .eq('id', post_id)
-    
-    if user_id:
-        query = query.eq('user_id', user_id)
-    
-    response = query.execute()
+        .eq('id', post_id)\
+        .execute()
     
     return True
 
@@ -579,13 +549,13 @@ def create_posts_bulk(posts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     return response.data
 
 
-def delete_posts_by_template(user_id: str, template_id: str) -> bool:
+def delete_posts_by_template(brand_id: str, template_id: str) -> bool:
     """
-    Delete all posts for a specific template.
+    Delete all posts for a specific template in a brand.
     Useful when deleting a template.
     
     Args:
-        user_id: User UUID
+        brand_id: Brand UUID
         template_id: Template UUID
     
     Returns:
@@ -595,23 +565,23 @@ def delete_posts_by_template(user_id: str, template_id: str) -> bool:
     
     response = supabase.from_('posts')\
         .delete()\
-        .eq('user_id', user_id)\
+        .eq('brand_id', brand_id)\
         .eq('template_id', template_id)\
         .execute()
     
     return True
 
 
-def count_posts_by_template(user_id: str, template_id: str) -> int:
+def count_posts_by_template(brand_id: str, template_id: str) -> int:
     """
-    Count total posts for a template.
+    Count total posts for a template in a brand.
     
     Args:
-        user_id: User UUID
+        brand_id: Brand UUID
         template_id: Template UUID
     
     Returns:
         Number of posts
     """
-    posts = get_posts_by_template(user_id, template_id)
+    posts = get_posts_by_template(brand_id, template_id)
     return len(posts)

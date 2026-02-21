@@ -9,14 +9,21 @@ import { Skeleton } from "../ui/skeleton";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useTemplates, useCreateTemplate, useDeleteTemplate, useTemplatesWithAnalytics } from "@/features/templates/hooks";
+import {
+  useTemplates,
+  useCreateTemplate,
+  useDeleteTemplate,
+  useTemplatesWithAnalytics,
+} from "@/features/templates/hooks";
+import { useGetTemplateUsage } from "@/features/usage/hooks";
 import TemplateCreator from "@/components/TemplateCreator/index";
 import TemplateViewSwitcher from "@/components/Templates/TemplateViewSwitcher";
 
 const TemplatesTab = ({ brandId }: { brandId: string }) => {
   const { data: templates, isLoading: templatesLoading } =
     useTemplatesWithAnalytics(brandId);
-    console.log("templates", templates)
+  const { data: templateUsage } = useGetTemplateUsage();
+  console.log("templates", templates);
   const templatesArr = templates as any[];
 
   const handleSaveTemplate = (templateData: any) => {
@@ -44,6 +51,15 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
   const createTemplateMutation = useCreateTemplate();
   const deleteTemplateMutation = useDeleteTemplate();
 
+  const templateCount = templateUsage?.template_count ?? 0;
+  const templatesRemaining = templateCount?.remaining ?? 0;
+  const templateLimit = templateUsage?.template_limit ?? 0;
+  
+  const isTemplateLimitReached =
+    templateLimit !== null &&
+    templatesRemaining !== undefined &&
+    templatesRemaining <= 0;
+
   return (
     <>
       <div>
@@ -53,12 +69,28 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
             <p className="text-muted-foreground">
               Create and manage slide templates for A/B testing
             </p>
+            {templateCount !== null && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Templates:{" "}
+                <span className="font-semibold text-foreground">
+                  {templateCount} / {templateLimit}
+                </span>
+              </p>
+            )}
           </div>
           <Button
             onClick={() => {
               setShowCreateModal(true);
             }}
-            className="bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2"
+            disabled={
+              isTemplateLimitReached || createTemplateMutation.isPending
+            }
+            title={
+              isTemplateLimitReached
+                ? "Template limit reached. Upgrade your plan to create more templates."
+                : ""
+            }
+            className="bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Image
               src="/images/icon-primary.png"
@@ -79,65 +111,6 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
           onCreateClick={() => setShowCreateModal(true)}
         />
 
-        {/* Quick Stats */}
-        <div className="mt-8 grid grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-primary mb-2">
-                {templatesArr?.filter((t: any) => t.status === "active").length ||
-                  0}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Active Templates
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-green-400 mb-2">
-                {templatesArr && templatesArr.length > 0
-                  ? (
-                      templatesArr.reduce(
-                        (sum: number, t: any) =>
-                          sum + (t.performance?.avg_engagement_rate || 0),
-                        0,
-                      ) / templatesArr.length
-                    ).toFixed(1)
-                  : "0.0"}
-                %
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Avg Engagement Rate
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-blue-400 mb-2">
-                {templatesArr?.reduce(
-                  (sum: number, t: any) =>
-                    sum + (t.performance?.total_posts || 0),
-                  0,
-                ) || 0}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Total Posts Generated
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-3xl font-bold text-yellow-400 mb-2">
-                {templatesArr?.filter((t: any) => t.status === "testing").length ||
-                  0}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                A/B Tests Running
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Template Creator Modal */}
       </div>
 
@@ -145,6 +118,11 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSave={handleSaveTemplate}
+        templateUsage={{
+          template_count: templateCount,
+          template_limit: templateLimit,
+          remaining: templatesRemaining,
+        }}
       />
     </>
   );

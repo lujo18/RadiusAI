@@ -22,9 +22,10 @@ class PostMetrics(BaseModel):
 
 class Analytics(BaseModel):
     id: str
+    team_id: str  # Team ownership (primary)
     post_id: str
     template_id: str
-    user_id: str
+    user_id: str  # Creator attribution
     platform: str  # Supabase: string
     date: str  # Supabase: string (ISO)
     metrics: dict  # Supabase: JSON

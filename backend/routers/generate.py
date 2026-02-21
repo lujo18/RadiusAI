@@ -15,7 +15,7 @@ from services.integrations.supabase.db.brand_cta import get_brand_cta
 from google.genai import types
 import json
 
-from services.usage.service import track_slides_generated
+from services.usage.service import track_slides_generated, check_generation_credits
 
 
 class GeneratePostRequest(BaseModel):
@@ -41,6 +41,11 @@ async def generate_post_content_from_prompt(
     """Generate post content using Gemini AI from a text prompt (auto layout selection)."""
     print("Request ", request)
     try:
+        # Check generation credits with grace period
+        credit_check = check_generation_credits(user_id, request.count)
+        if not credit_check["allowed"]:
+            raise HTTPException(status_code=402, detail=credit_check["message"])
+        
         # Fetch CTA if provided
         cta = None
         if request.cta_id:
@@ -62,8 +67,19 @@ async def generate_post_content_from_prompt(
         
         track_slides_generated(user_id, request.count)
         
+        # Build response with optional credit warning
+        response = {"posts": encoded_posts, "message": "Content generated successfully"}
+        if credit_check.get("will_exceed"):
+            response["credit_warning"] = credit_check["message"]
+            response["credit_info"] = {
+                "current": credit_check["current_credits"],
+                "consumed": credit_check["credits_to_consume"],
+                "projected": credit_check["projected_credits"],
+                "limit": credit_check["credit_limit"]
+            }
+        
         # FastAPI's jsonable_encoder handles nested Pydantic models automatically
-        return {"posts": encoded_posts, "message": "Content generated successfully"}
+        return response
     except Exception as e:
         logging.error(f"Error generating posts: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -76,12 +92,31 @@ async def create_post(
     """Generate post content using Gemini AI based on a predefined template."""
     
     try:
+        # Check generation credits with grace period
+        credit_check = check_generation_credits(user_id, request.count)
+        if not credit_check["allowed"]:
+            raise HTTPException(status_code=402, detail=credit_check["message"])
+        
         post_content = generate_content_with_gemini(
             request.template,
             request.brand_settings,
             request.count
         )
-        return {"postContent": post_content, "message": "Content generated successfully"}
+        
+        track_slides_generated(user_id, request.count)
+        
+        # Build response with optional credit warning
+        response = {"postContent": post_content, "message": "Content generated successfully"}
+        if credit_check.get("will_exceed"):
+            response["credit_warning"] = credit_check["message"]
+            response["credit_info"] = {
+                "current": credit_check["current_credits"],
+                "consumed": credit_check["credits_to_consume"],
+                "projected": credit_check["projected_credits"],
+                "limit": credit_check["credit_limit"]
+            }
+        
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -35,9 +35,11 @@ def generate_slideshows(
     logger.info("Prompt from template", prompt)
     
     # 1. Check usage allowance and reserve generation tokens
-    check = usage_service.check_and_consume(user_id, product_id="slides_generation", amount=count)
+    check = usage_service.check_generation_credits(user_id, slides_to_generate=count)
     if not check.get('allowed'):
-        raise RuntimeError(f"Slide generation not allowed: remaining={check.get('remaining')} limit={check.get('limit')}")
+        raise RuntimeError(f"Slide generation not allowed: projected={check.get('projected_credits')} limit={check.get('credit_limit')}")
+
+    usage_service.track_slides_generated(user_id, count=count)
 
     # 2. Generate full JSON for a post
     post_content_list = generate_slideshow_auto(
@@ -49,7 +51,7 @@ def generate_slideshows(
     
     # 2. Save all posts to Supabase (serialize PostContent to dict)
     posts = [  # Returns dicts from Supabase, not Post models
-      create_post(user_id=user_id, brand_id=brand_id, template_id=template.id, content=post_content.model_dump() if hasattr(post_content, 'model_dump') else post_content.dict()) # TODO: currently no template, default to instagram
+      create_post(brand_id=brand_id, template_id=template.id, content=post_content.model_dump() if hasattr(post_content, 'model_dump') else post_content.dict()) # TODO: currently no template, default to instagram
       for post_content in post_content_list
     ]
     
@@ -68,9 +70,9 @@ def generate_slideshows(
             # Render all slides (now happens in parallel within render_slides)
             slide_images = renderer.render_slides(post_content.slides)
             
-            # Upload images to Supabase
+            # Upload images to Supabase (using brand_id as tenant identifier for storage)
             result = upload_post_images_optimized(
-                user_id=post.get('user_id'),
+                user_id=brand_id,
                 post_id=post['id'],
                 slide_images=slide_images,
                 optimize=True
@@ -79,7 +81,6 @@ def generate_slideshows(
             # Update post with storage URLs and get the updated post back
             updated_post = update_post_storage_urls(
                 post_id=post['id'],
-                user_id=post.get('user_id'),
                 slide_urls=result["slide_urls"],
                 thumbnail_url=result["thumbnail_url"]
             )

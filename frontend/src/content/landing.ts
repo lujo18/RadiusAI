@@ -10,16 +10,16 @@ export const landingContent = {
   // HERO SECTION
   // ==========================================
   hero: {
-    badge: "🎉 Now with Gemini 2.0 Flash",
-    headline: "Create Viral Carousels in Seconds",
-    subheadline: "AI-powered Instagram & TikTok content that actually performs. Generate, A/B test, and optimize your social media on autopilot.",
+    badge: "Now with Gemini 2.0 Flash",
+    headline: "TikTok & Instagram carousel generator — create slideshows fast",
+    subheadline: "Automated TikTok slideshow automation and Instagram carousel creation with built-in A/B CTA interval testing and niche templates to boost engagement.",
     ctaPrimary: "Get Started",
     ctaSecondary: "Watch Demo",
     videoUrl: null, // Add demo video URL when ready
     features: [
-      "✓ Start creating instantly",
-      "✓ All features included",
-      "✓ Cancel anytime"
+      "Start creating instantly",
+      "All features included",
+      "Cancel anytime"
     ]
   },
 
@@ -38,36 +38,36 @@ export const landingContent = {
   // BENEFITS SECTION
   // ==========================================
   benefits: {
-    headline: "Everything you need to dominate social media",
-    subheadline: "Focus on what it helps you do, not just features",
+    headline: "Everything you need to win on TikTok & Instagram",
+    subheadline: "Built for creators who want TikTok slideshow automation, Instagram carousel templates, and reliable CTA interval testing",
     items: [
       {
-        icon: "🎨",
+        icon: "Palette",
         title: "Professional Templates",
-        description: "Choose from 50+ proven carousel templates designed to convert. No design skills needed."
+        description: "Choose from 50+ proven carousel templates (TikTok slideshows, Instagram carousels) built for specific niches. No design skills needed."
       },
       {
-        icon: "🤖",
+        icon: "Cpu",
         title: "AI Content Generation",
-        description: "Gemini 2.0 writes engaging hooks, value-packed slides, and CTAs that drive action."
+        description: "Gemini 2.0 writes engaging hooks, value-packed slides, and CTAs optimized for saves, shares, and conversions."
       },
       {
-        icon: "📊",
+        icon: "BarChart2",
         title: "Smart A/B Testing",
-        description: "Test multiple variants automatically and discover what resonates with your audience."
+        description: "Automated A/B testing with CTA interval testing so you can find the highest-performing slide order and calls-to-action."
       },
       {
-        icon: "📈",
+        icon: "TrendingUp",
         title: "Performance Analytics",
         description: "Track saves, shares, and engagement. Know exactly what's working."
       },
       {
-        icon: "⚡",
+        icon: "Zap",
         title: "Batch Generation",
         description: "Create a week's worth of content in 5 minutes. Schedule and forget."
       },
       {
-        icon: "🎯",
+        icon: "Target",
         title: "Brand Consistency",
         description: "Custom style guides ensure every post matches your visual identity perfectly."
       }
@@ -83,17 +83,17 @@ export const landingContent = {
       {
         number: 1,
         title: "Choose a Template",
-        description: "Pick from our library of high-converting carousel formats (listicles, quotes, stories, educational)"
+        description: "Pick from our library of high-converting carousel formats (TikTok slideshow, Instagram listicles, stories, educational)"
       },
       {
         number: 2,
         title: "Let AI Create",
-        description: "Enter your topic. Our AI generates slides, captions, and hashtags tailored to your brand."
+        description: "Enter your topic and target audience. Our AI generates slides, captions, and hashtags tailored to your niche and platform (TikTok, Instagram)."
       },
       {
         number: 3,
         title: "Publish & Optimize",
-        description: "Download or schedule directly. Track performance and iterate based on real data."
+        description: "Download or schedule directly. Track engagement metrics and iterate using automated performance insights and CTA testing."
       }
     ]
   },
@@ -102,8 +102,8 @@ export const landingContent = {
   // PRICING (Data comes from Stripe, copy here)
   // ==========================================
   pricing: {
-    headline: "Pricing - Why to buy/How it helps",
-    subheadline: "Transparent pricing. No hidden fees. Scale as you grow.",
+    headline: "Pricing - Plans for solo creators to agencies",
+    subheadline: "Transparent pricing for TikTok slideshow automation and enterprise carousel generation. No hidden fees. Scale as you grow.",
     ctaNote: "All plans include 7-day free trial",
     plansDescription: {
       starter: {
@@ -145,7 +145,7 @@ export const landingContent = {
   // ==========================================
   testimonials: {
     headline: "Loved by people worldwide",
-    subheadline: "See what creators are saying about ViralStack",
+    subheadline: "See what creators are saying about Radius",
     // Testimonials pulled from Supabase `testimonials` table
     // Schema: { id, name, role, quote, avatar_url, rating, created_at }
   },
@@ -155,15 +155,15 @@ export const landingContent = {
   // ==========================================
   faq: {
     headline: "Frequently Asked Questions",
-    subheadline: "Everything you need to know about ViralStack",
+    subheadline: "Everything you need to know about Radius",
     items: [
       {
         question: "Do I need design experience?",
-        answer: "Not at all! Our AI handles everything from layout to copy. You just pick a template and enter your topic. Perfect for creators who want professional results without the learning curve."
+        answer: "Not at all! Our AI handles layout, copy, and slide sequencing for TikTok slideshows and Instagram carousels. Pick a niche template and publish."
       },
       {
         question: "How does A/B testing work?",
-        answer: "You create 2-4 template variants (e.g., different hook styles). ViralStack generates content for each, tracks performance, and shows you which one performs best based on saves, shares, and engagement."
+        answer: "Create 2-4 template variants (different hooks, CTA placements, or slide orders). Radius generates each variant, runs automated tests, and highlights winners using engagement signals like saves, shares, and clicks."
       },
       {
         question: "Can I customize the templates?",
@@ -171,7 +171,7 @@ export const landingContent = {
       },
       {
         question: "What platforms does it support?",
-        answer: "Currently Instagram and TikTok carousels. We're adding LinkedIn carousels, YouTube Community posts, and Twitter threads soon."
+        answer: "TikTok slideshow automation and Instagram carousel generation are fully supported. We're expanding to LinkedIn carousels and other formats soon."
       },
       {
         question: "How do I cancel my subscription?",
@@ -179,7 +179,7 @@ export const landingContent = {
       },
       {
         question: "Do you offer refunds?",
-        answer: "Yes! If you're not satisfied within the first 7 days, we'll refund you in full. Just email support@viralstack.app."
+        answer: "Yes! If you're not satisfied within the first 7 days, we'll refund you in full. Just email support@Radius.app."
       }
     ]
   },
@@ -188,8 +188,8 @@ export const landingContent = {
   // FINAL CTA SECTION
   // ==========================================
   cta: {
-    headline: "Ready to 10x your social media output?",
-    subheadline: "Join 1,000+ creators who've automated their content pipeline",
+    headline: "Ready to automate your TikTok slideshows and Instagram carousels?",
+    subheadline: "Join creators who use automated CTA testing and niche templates to grow faster",
     ctaPrimary: "Get Started",
     ctaSecondary: "Book a Demo"
   },
@@ -198,7 +198,7 @@ export const landingContent = {
   // FOOTER
   // ==========================================
   footer: {
-    tagline: "AI-powered carousel automation for modern creators",
+    tagline: "AI-powered TikTok slideshow automation & Instagram carousel generator",
     columns: [
       {
         title: "Product",
@@ -229,11 +229,11 @@ export const landingContent = {
       }
     ],
     social: [
-      { platform: "Twitter", url: "https://twitter.com/viralstack" },
-      { platform: "Instagram", url: "https://instagram.com/viralstack" },
-      { platform: "LinkedIn", url: "https://linkedin.com/company/viralstack" }
+      { platform: "Twitter", url: "https://twitter.com/Radius" },
+      { platform: "Instagram", url: "https://instagram.com/Radius" },
+      { platform: "LinkedIn", url: "https://linkedin.com/company/Radius" }
     ],
-    copyright: `© ${new Date().getFullYear()} ViralStack. All rights reserved.`
+    copyright: `© ${new Date().getFullYear()} Radius. All rights reserved.`
   }
 };
 

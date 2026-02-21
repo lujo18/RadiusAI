@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import postGenerationService from '../services/postGenerationService';
 import type { Database } from '@/types/database';
 import type { BrandSettings } from '@/lib/validation/brandSchemas';
 import type { Post } from '@/types/types';
+import { postKeys } from '@/features/posts/hooks';
 
 export function useGeneratePost() {
   const queryClient = useQueryClient();
@@ -11,6 +13,7 @@ export function useGeneratePost() {
     mutationFn: async (params: {
       template: Database['public']['Tables']['templates']['Row'];
       brandSettings: BrandSettings;
+      brandId: string;
       count?: number;
     }) => {
       return await postGenerationService.generateFromTemplate(
@@ -19,8 +22,8 @@ export function useGeneratePost() {
         params.count
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(variables.brandId) });
     },
   });
 }
@@ -44,8 +47,8 @@ export function useGeneratePostFromPrompt() {
         params.ctaId
       );
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: postKeys.allForBrand(variables.brandId) });
     },
   });
 }

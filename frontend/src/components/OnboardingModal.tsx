@@ -16,7 +16,7 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
 
   const steps = [
     {
-      title: 'Welcome to ViralStack! 🎉',
+      title: 'Welcome to Radius! 🎉',
       description: 'You\'re all set up! Let\'s take a quick tour of what you can do.',
       content: (
         <div className="space-y-4">
@@ -135,9 +135,9 @@ export default function OnboardingModal({ isOpen, onClose }: OnboardingModalProp
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Final step - redirect to template creation
+      // Final step - redirect to overview (which redirects to team context)
       onClose();
-      router.push('/brand/templates');
+      router.push('/overview');
     }
   };
 

@@ -47,6 +47,7 @@ export function AutomationWizardStep5({ data }: Step5Props) {
       if (times.length > 0 && compareToWeekday(day) != "after") {
         for (const time of times) {
           if (!getTimeUntil(time).isPast) {
+         
             return `${dayLabels[day]} at ${convertToLocalTime(time)}`;
           }
         }

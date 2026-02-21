@@ -25,7 +25,8 @@ class VariantSetResults(BaseModel):
 
 class VariantSet(BaseModel):
     id: str
-    user_id: str
+    team_id: str  # Team ownership (primary)
+    user_id: str  # Creator attribution
     name: str
     templates: List[str]  # Template IDs
     start_date: str  # Supabase: string (ISO)
@@ -35,6 +36,7 @@ class VariantSet(BaseModel):
     results: Optional[dict] = None
 
 class CreateVariantSetRequest(BaseModel):
+    teamId: str  # NOW REQUIRED: Must specify team when creating
     name: str
     templates: List[str]
     postsPerTemplate: int = Field(ge=5, le=50)

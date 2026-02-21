@@ -15,6 +15,7 @@ export const DashboardAnalytics = ({brandId, postId} : {brandId?: string | null,
 
   const {data, isLoading, error} = useAnalytics(selectedTimeframe, selectedSection, brandId);
 
+  console.log("DATA", data)
   return (
       <section aria-labelledby="usage-overview">
 

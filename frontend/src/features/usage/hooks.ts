@@ -79,4 +79,65 @@ export const useAiCredits = () => {
   };
 };
 
+export const useGetBrandUsage = () => {
+  return useQuery({
+    queryKey: ['usage', 'brands'],
+    queryFn: async () => {
+      const res = await usageApi.getBrandUsage();
+      return res ?? { brand_count: 0, brand_limit: null, remaining: null };
+    },
+    staleTime: 30 * 1000,
+  });
+};
+
+export const useTrackBrand = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await usageApi.trackBrand();
+      return res;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['usage', 'brands'] });
+      qc.invalidateQueries({ queryKey: ['usage', 'user_activity'] });
+    },
+  });
+};
+
+export const useGetTemplateUsage = () => {
+  return useQuery({
+    queryKey: ['usage', 'templates'],
+    queryFn: async () => {
+      const res = await usageApi.getTemplateUsage();
+      return res ?? { template_count: 0, template_limit: null, remaining: null };
+    },
+    staleTime: 30 * 1000,
+  });
+};
+
+export const useTrackTemplate = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await usageApi.trackTemplate();
+      return res;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['usage', 'templates'] });
+      qc.invalidateQueries({ queryKey: ['usage', 'user_activity'] });
+    },
+  });
+};
+
+export const useGetCreditsUsage = () => {
+  return useQuery({
+    queryKey: ['usage', 'credits'],
+    queryFn: async () => {
+      const res = await usageApi.getCreditsUsage();
+      return res ?? { credits_used: 0, credits_limit: null };
+    },
+    staleTime: 30 * 1000,
+  });
+};
+
 export default useUsage;

@@ -5,14 +5,18 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FiUser } from 'react-icons/fi';
+import { FaGoogle } from 'react-icons/fa';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase/client';
+import { signInWithGoogle } from '@/lib/supabase/auth';
 import type { User } from '@supabase/supabase-js';
 
 export default function PublicNavbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   useEffect(() => {
     // Check initial session
@@ -45,6 +49,21 @@ export default function PublicNavbar() {
 
   const avatarUrl = getAvatarUrl();
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'User';
+
+  const handleGetStarted = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[Navbar] Get Started clicked - initiating Google signin');
+    setIsSigningIn(true);
+    try {
+      console.log('[Navbar] Calling signInWithGoogle...');
+      await signInWithGoogle();
+      console.log('[Navbar] Google signin initiated');
+    } catch (error) {
+      console.error('[Navbar] Google signin error:', error);
+      setIsSigningIn(false);
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b">
@@ -89,9 +108,21 @@ export default function PublicNavbar() {
               ) : (
                 <>
                   <Link href="/login" className="text-foreground/80 hover:text-foreground transition">Login</Link>
-                  <Link href="/signup" className="btn-primary">
-                    Get Started
-                  </Link>
+                  <Button 
+                    type="button"
+                    onClick={handleGetStarted}
+                    disabled={isSigningIn}
+                    className="btn-primary"
+                  >
+                    {isSigningIn ? (
+                      <span>Signing in...</span>
+                    ) : (
+                      <>
+                        <FaGoogle className="mr-2" />
+                        Get Started
+                      </>
+                    )}
+                  </Button>
                 </>
               )}
             </>
@@ -115,9 +146,21 @@ export default function PublicNavbar() {
               )}
             </Link>
           ) : (
-            <Link href="/signup" className="btn-primary text-sm px-4 py-2">
-              Get Started
-            </Link>
+            <Button 
+              type="button"
+              onClick={handleGetStarted}
+              disabled={isSigningIn}
+              className="btn-primary text-sm px-4 py-2"
+            >
+              {isSigningIn ? (
+                <span>Signing in...</span>
+              ) : (
+                <>
+                  <FaGoogle className="mr-2" />
+                  Get Started
+                </>
+              )}
+            </Button>
           )}
         </div>
       </div>

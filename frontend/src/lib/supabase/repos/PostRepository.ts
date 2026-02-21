@@ -5,12 +5,11 @@ import { AnalyticsRepository } from '@/features/analytics/repo';
 
 export class PostRepository {
   static async getPost(postId: string, userId?: string) {
-    let query = supabase
+    const { data, error } = await supabase
       .from('posts')
       .select('*')
-      .eq('id', postId);
-    if (userId) query = query.eq('user_id', userId);
-    const { data, error } = await query.single();
+      .eq('id', postId)
+      .single();
     if (error) {
       if (error.code === 'PGRST116') return null;
       throw new Error(error.message);
@@ -18,35 +17,33 @@ export class PostRepository {
     return data;
   }
 
-  static async getPosts(userId: string, status?: Database["public"]["Enums"]["post_status"], limit?: number, brandId?: string, templateId?: string) {
+  static async getPosts(brandId: string, status?: Database["public"]["Enums"]["post_status"], limit?: number, templateId?: string) {
     let query = supabase
       .from('posts')
       .select('*')
-      .eq('user_id', userId)
+      .eq('brand_id', brandId);
 
-      if (status) {
-        query = query.eq('status', status);
-      }
-      if (brandId) {
-        query = query.eq('brand_id', brandId);
-      }
-      if (templateId) {
-        query = query.eq('template_id', templateId);
-      }
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (templateId) {
+      query = query.eq('template_id', templateId);
+    }
 
-      query = query.order('created_at', { ascending: false });
-      if (limit) {
-        query = query.limit(limit);
-      }
+    query = query.order('created_at', { ascending: false });
+    if (limit) {
+      query = query.limit(limit);
+    }
 
     const { data, error } = await query;
+
     if (error) throw new Error(error.message);
+
     return data;
   }
 
   static async createPost(post: Database['public']['Tables']['posts']['Insert']) {
     // Ensure required fields are present
-    if (!post.user_id) throw new Error('user_id is required to create a post');
     if (!post.brand_id) throw new Error('brand_id is required to create a post');
     
     const { data, error } = await supabase
@@ -59,17 +56,17 @@ export class PostRepository {
   }
 
   static async updatePost(postId: string, updates: Partial<Database['public']['Tables']['posts']['Update']>, userId?: string) {
-    let query = supabase
+    const { data, error } = await supabase
       .from('posts')
       .update(updates)
-      .eq('id', postId);
-    if (userId) query = query.eq('user_id', userId);
-    const { data, error } = await query.select().single();
+      .eq('id', postId)
+      .select()
+      .single();
     if (error) throw new Error(error.message);
     return data;
   }
 
-  static async updatePostStatus(postId: string, status: Database["public"]["Enums"]["post_status"], userId: string) {
+  static async updatePostStatus(postId: string, status: Database["public"]["Enums"]["post_status"]) {
     const updateData: any = { status };
     if (status === 'posted') {
       updateData.published_time = new Date().toISOString();
@@ -77,13 +74,12 @@ export class PostRepository {
     const { error } = await supabase
       .from('posts')
       .update(updateData)
-      .eq('id', postId)
-      .eq('user_id', userId);
+      .eq('id', postId);
     if (error) throw new Error(error.message);
     return true;
   }
 
-  static async updatePostStorageUrls(postId: string, userId: string, slideUrls: string[], thumbnailUrl?: string) {
+  static async updatePostStorageUrls(postId: string, slideUrls: string[], thumbnailUrl?: string) {
     const { error } = await supabase
       .from('posts')
       .update({
@@ -92,18 +88,16 @@ export class PostRepository {
           thumbnail: thumbnailUrl || null,
         },
       })
-      .eq('id', postId)
-      .eq('user_id', userId);
+      .eq('id', postId);
     if (error) throw new Error(error.message);
     return true;
   }
 
-  static async deletePost(postId: string, userId?: string) {
-    let query = supabase
+  static async deletePost(postId: string) {
+    const query = supabase
       .from('posts')
       .delete()
       .eq('id', postId);
-    if (userId) query = query.eq('user_id', userId);
     const { error } = await query;
     if (error) throw new Error(error.message);
     return true;
@@ -112,9 +106,11 @@ export class PostRepository {
   /**
    * Return all posts for a brand with their analytics attached on the `analytics` key.
    */
-  static async getPostsWithAnalyticsByBrand(brandId: string, userId: string) {
-    const posts = await this.getPosts(userId, undefined, undefined, brandId);
+  static async getPostsWithAnalyticsByBrand(brandId: string) {
+    const posts = await this.getPosts(brandId);
+
     if (!posts || posts.length === 0) return [];
+
 
     const analytics = await AnalyticsRepository.getAnalytics({ brandId });
     const map = new Map<string, any>();
@@ -126,8 +122,8 @@ export class PostRepository {
   /**
    * Return a single post with its analytics attached as `analytics`.
    */
-  static async getPostWithAnalytics(postId: string, userId?: string) {
-    const post = await this.getPost(postId, userId);
+  static async getPostWithAnalytics(postId: string) {
+    const post = await this.getPost(postId);
     if (!post) return null;
     const analytics = await AnalyticsRepository.getPostAnalytics(postId);
     return { ...post, analytics: analytics ?? null };

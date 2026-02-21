@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { useBrandCtas } from '@/features/brand_ctas/hooks';
 import type { Database } from "@/types/database";
@@ -36,8 +36,9 @@ export type CtaNodeProps = NodeProps & {
   data: CtaNodeData;
 };
 
-export const CtaNode: React.FC<CtaNodeProps> = ({ data }) => {
+const CtaNodeComponent: React.FC<CtaNodeProps> = ({ data }) => {
   const { brandId, selectedCtaId, onCtaSelect } = data;
+
 
   const { data: ctas, isLoading, error } = useBrandCtas(brandId);
 
@@ -163,3 +164,5 @@ export const CtaNode: React.FC<CtaNodeProps> = ({ data }) => {
     </BaseNode>
   );
 };
+
+export const CtaNode = memo(CtaNodeComponent);

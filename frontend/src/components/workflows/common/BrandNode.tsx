@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { useBrand } from '@/features/brand/hooks';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +28,7 @@ type BrandSettings = {
   content_pillars?: string[];
 };
 
-export const BrandNode: React.FC<BrandNodeProps> = ({ data }) => {
+const BrandNodeComponent: React.FC<BrandNodeProps> = ({ data }) => {
   const { brandId } = data;
 
   const { data: brand, isLoading, error } = useBrand(brandId);
@@ -44,7 +44,7 @@ export const BrandNode: React.FC<BrandNodeProps> = ({ data }) => {
       <BaseNodeHeader>
         <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
           <Building2 className="w-4 h-4 text-primary" />
-          Current Brand
+          Current Brand 
         </BaseNodeHeaderTitle>
       </BaseNodeHeader>
 
@@ -135,3 +135,5 @@ export const BrandNode: React.FC<BrandNodeProps> = ({ data }) => {
     </BaseNode>
   );
 };
+
+export const BrandNode = memo(BrandNodeComponent);

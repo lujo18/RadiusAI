@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -38,6 +38,8 @@ export const TemplateTableView: React.FC<TemplateTableViewProps> = ({
   onDelete,
 }) => {
   const router = useRouter();
+  const params = useParams();
+  const teamId = (params?.teamId as string) || "";
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns: ColumnDef<Template>[] = [
@@ -174,7 +176,7 @@ export const TemplateTableView: React.FC<TemplateTableViewProps> = ({
             variant="secondary"
             size="sm"
             onClick={() =>
-              router.push(`/brand/${brandId}/template/${row.original.id}`)
+              router.push(`/${teamId}/brand/${brandId}/template/${row.original.id}`)
             }
           >
             Edit

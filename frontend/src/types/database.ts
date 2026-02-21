@@ -169,6 +169,7 @@ export type Database = {
           id: string
           late_profile_id: string
           post_count: number
+          team_id: string | null
           template_count: number
           updated_at: string
           user_id: string
@@ -181,6 +182,7 @@ export type Database = {
           id?: string
           late_profile_id: string
           post_count?: number
+          team_id?: string | null
           template_count?: number
           updated_at?: string
           user_id: string
@@ -193,11 +195,19 @@ export type Database = {
           id?: string
           late_profile_id?: string
           post_count?: number
+          team_id?: string | null
           template_count?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "brand_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_user_id_fkey"
             columns: ["user_id"]
@@ -514,7 +524,6 @@ export type Database = {
       post_analytics_history: {
         Row: {
           average_time_watched: number | null
-          brand_id: string | null
           collected_at: string
           collection_count: number | null
           comments: number | null
@@ -533,7 +542,6 @@ export type Database = {
         }
         Insert: {
           average_time_watched?: number | null
-          brand_id?: string | null
           collected_at?: string
           collection_count?: number | null
           comments?: number | null
@@ -552,7 +560,6 @@ export type Database = {
         }
         Update: {
           average_time_watched?: number | null
-          brand_id?: string | null
           collected_at?: string
           collection_count?: number | null
           comments?: number | null
@@ -633,7 +640,6 @@ export type Database = {
           storage_urls: Json
           template_id: string | null
           updated_at: string | null
-          user_id: string
           variant_set_id: string | null
         }
         Insert: {
@@ -657,7 +663,6 @@ export type Database = {
           storage_urls?: Json
           template_id?: string | null
           updated_at?: string | null
-          user_id: string
           variant_set_id?: string | null
         }
         Update: {
@@ -681,7 +686,6 @@ export type Database = {
           storage_urls?: Json
           template_id?: string | null
           updated_at?: string | null
-          user_id?: string
           variant_set_id?: string | null
         }
         Relationships: [
@@ -697,13 +701,6 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "templates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -769,6 +766,7 @@ export type Database = {
           id: string
           name: string
           number_of_images: number | null
+          team_id: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -779,6 +777,7 @@ export type Database = {
           id?: string
           name: string
           number_of_images?: number | null
+          team_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -789,10 +788,19 @@ export type Database = {
           id?: string
           name?: string
           number_of_images?: number | null
+          team_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "preset_packs_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_rate_limits: {
         Row: {
@@ -892,10 +900,45 @@ export type Database = {
         }
         Relationships: []
       }
+      team_activity: {
+        Row: {
+          id: number
+          period_end: string | null
+          period_start: string | null
+          team_id: string | null
+          updated_at: string | null
+          usage: Json | null
+        }
+        Insert: {
+          id?: number
+          period_end?: string | null
+          period_start?: string | null
+          team_id?: string | null
+          updated_at?: string | null
+          usage?: Json | null
+        }
+        Update: {
+          id?: number
+          period_end?: string | null
+          period_start?: string | null
+          team_id?: string | null
+          updated_at?: string | null
+          usage?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_activity_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_events: {
         Row: {
           actor_id: string | null
-          created_at: string
+          created_at: string | null
           event_type: string
           id: string
           payload: Json | null
@@ -903,7 +946,7 @@ export type Database = {
         }
         Insert: {
           actor_id?: string | null
-          created_at?: string
+          created_at?: string | null
           event_type: string
           id?: string
           payload?: Json | null
@@ -911,7 +954,7 @@ export type Database = {
         }
         Update: {
           actor_id?: string | null
-          created_at?: string
+          created_at?: string | null
           event_type?: string
           id?: string
           payload?: Json | null
@@ -930,41 +973,41 @@ export type Database = {
       team_members: {
         Row: {
           accepted_at: string | null
-          created_at: string
+          created_at: string | null
           email: string
           id: string
           invited_at: string | null
           invited_by: string | null
-          role: Database["public"]["Enums"]["team_member_role"]
-          status: Database["public"]["Enums"]["team_member_status"]
+          role: string
+          status: string
           team_id: string
-          updated_at: string
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
           accepted_at?: string | null
-          created_at?: string
+          created_at?: string | null
           email: string
           id?: string
           invited_at?: string | null
           invited_by?: string | null
-          role?: Database["public"]["Enums"]["team_member_role"]
-          status?: Database["public"]["Enums"]["team_member_status"]
+          role?: string
+          status?: string
           team_id: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           accepted_at?: string | null
-          created_at?: string
+          created_at?: string | null
           email?: string
           id?: string
           invited_at?: string | null
           invited_by?: string | null
-          role?: Database["public"]["Enums"]["team_member_role"]
-          status?: Database["public"]["Enums"]["team_member_status"]
+          role?: string
+          status?: string
           team_id?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -980,36 +1023,39 @@ export type Database = {
       teams: {
         Row: {
           avatar_url: string | null
-          created_at: string
+          created_at: string | null
           deleted_at: string | null
           description: string | null
           id: string
           metadata: Json | null
           name: string
+          owner_id: string
           slug: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
-          created_at?: string
+          created_at?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
           metadata?: Json | null
           name: string
+          owner_id: string
           slug: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
-          created_at?: string
+          created_at?: string | null
           deleted_at?: string | null
           description?: string | null
           id?: string
           metadata?: Json | null
           name?: string
+          owner_id?: string
           slug?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1068,6 +1114,7 @@ export type Database = {
           status: string
           style_config: Json | null
           tags: string[] | null
+          team_id: string | null
           updated_at: string
           user_id: string
         }
@@ -1084,6 +1131,7 @@ export type Database = {
           status?: string
           style_config?: Json | null
           tags?: string[] | null
+          team_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1100,6 +1148,7 @@ export type Database = {
           status?: string
           style_config?: Json | null
           tags?: string[] | null
+          team_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1116,6 +1165,13 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "templates_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
           {
@@ -1169,41 +1225,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_activity: {
-        Row: {
-          id: number
-          period_end: string | null
-          period_start: string | null
-          updated_at: string | null
-          usage: Json | null
-          user_id: string
-        }
-        Insert: {
-          id?: number
-          period_end?: string | null
-          period_start?: string | null
-          updated_at?: string | null
-          usage?: Json | null
-          user_id: string
-        }
-        Update: {
-          id?: number
-          period_end?: string | null
-          period_start?: string | null
-          updated_at?: string | null
-          usage?: Json | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_activity_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       users: {
         Row: {
           created_at: string
@@ -1217,6 +1238,7 @@ export type Database = {
           stripe_subscription_id: string | null
           subscription_plan: string | null
           subscription_status: string | null
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1231,6 +1253,7 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscription_plan?: string | null
           subscription_status?: string | null
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1245,9 +1268,18 @@ export type Database = {
           stripe_subscription_id?: string | null
           subscription_plan?: string | null
           subscription_status?: string | null
+          team_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       variant_set_stats: {
         Row: {
@@ -1351,6 +1383,7 @@ export type Database = {
           posts_per_template: number
           start_date: string
           status: string
+          team_id: string | null
           updated_at: string
           user_id: string
           winning_template_id: string | null
@@ -1366,6 +1399,7 @@ export type Database = {
           posts_per_template: number
           start_date: string
           status: string
+          team_id?: string | null
           updated_at?: string
           user_id: string
           winning_template_id?: string | null
@@ -1381,11 +1415,19 @@ export type Database = {
           posts_per_template?: number
           start_date?: string
           status?: string
+          team_id?: string | null
           updated_at?: string
           user_id?: string
           winning_template_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "variant_sets_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "variant_sets_user_id_fkey"
             columns: ["user_id"]
@@ -1407,24 +1449,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_processed_analytics: {
-        Args: {
-          p_brand_id?: string
-          p_post_id?: string
-          p_range?: string
-          p_section?: string
-          p_window_limit?: number
-        }
-        Returns: {
-          collected_at: string
-          comments: number
-          engagement_rate: number
-          impressions: number
-          likes: number
-          saves: number
-          shares: number
-        }[]
-      }
+      get_processed_analytics:
+        | {
+            Args: {
+              p_brand_id?: string
+              p_mode?: string
+              p_post_id?: string
+              p_range?: string
+              p_section?: string
+              p_window_limit?: number
+            }
+            Returns: {
+              collected_at: string
+              comments: number
+              engagement_rate: number
+              impressions: number
+              likes: number
+              saves: number
+              shares: number
+            }[]
+          }
+        | {
+            Args: {
+              p_brand_id?: string
+              p_mode?: string
+              p_post_id?: string
+              p_range?: string
+              p_section?: string
+              p_timezone?: string
+              p_window_limit?: number
+            }
+            Returns: {
+              collected_at: string
+              comments: number
+              engagement_rate: number
+              impressions: number
+              likes: number
+              saves: number
+              shares: number
+            }[]
+          }
       increment_usage_rpc: {
         Args: {
           p_amount: number

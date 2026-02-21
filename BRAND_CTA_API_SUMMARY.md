@@ -2,7 +2,7 @@
 
 ## What Was Created
 
-I've set up a complete CRUD API for managing Brand CTAs in your frontend, following SlideForge's layered architecture pattern.
+I've set up a complete CRUD API for managing Brand CTAs in your frontend, following Radius's layered architecture pattern.
 
 ### Files Created
 

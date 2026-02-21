@@ -73,7 +73,7 @@ async def main():
                 print()
             
             # Save detailed info
-            output_path = Path('c:/Users/asplo/Documents/GitHub/SlideForge/backend/tiktok_data/debug/all_scripts_info.json')
+            output_path = Path('c:/Users/asplo/Documents/GitHub/Radius/backend/tiktok_data/debug/all_scripts_info.json')
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(scripts_info, f, indent=2)
             print(f"Saved to: {output_path}")

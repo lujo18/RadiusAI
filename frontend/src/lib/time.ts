@@ -152,18 +152,28 @@ export function getTimeUntil(time24h: string): {
   const [targetHours, targetMinutes] = time24h.split(":").map(Number);
   const now = new Date();
 
-  const target = new Date();
-  target.setHours(targetHours, targetMinutes, 0, 0);
+  const target = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    targetHours,
+    targetMinutes,
+    0,
+    0,
+  );
+  // // If time has already passed today, calculate for tomorrow
+  // if (target <= now) {
+  //   target.setDate(target.getDate() + 1);
+  // }
 
-  // If time has already passed today, calculate for tomorrow
-  if (target <= now) {
-    target.setDate(target.getDate() + 1);
-  }
+  console.log("Now", now, "Target", target);
 
   const diffMs = target.getTime() - now.getTime();
   const diffMinutes = Math.floor(diffMs / 60000);
   const hours = Math.floor(diffMinutes / 60);
   const minutes = diffMinutes % 60;
+
+  console.log(target.getTime() - now.getTime(), diffMinutes, hours, minutes);
 
   return {
     hours,
@@ -259,9 +269,6 @@ export function compareToWeekday(
   return today < targetDayIndex ? "before" : "after";
 }
 
-
-
-
 export const getNextRunTimestamp = (day: string, time: string): Date => {
   const [hours, minutes] = time.split(":").map(Number);
   const dayIndex = [
@@ -276,7 +283,7 @@ export const getNextRunTimestamp = (day: string, time: string): Date => {
 
   const now = new Date();
   const currentDay = now.getDay();
-  let daysUntil = (dayIndex - currentDay + 7) % 7;
+  let daysUntil = (dayIndex - currentDay) % 7;
 
   if (
     daysUntil === 0 &&

@@ -32,7 +32,7 @@ ChatGPT Suggestions
     - Prefers shock-value hooks
     "
 
-    This is then saved in their account and SlideForge can generate templates based on this.
+    This is then saved in their account and Radius can generate templates based on this.
 
 
 

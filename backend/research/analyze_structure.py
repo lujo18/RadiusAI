@@ -4,7 +4,7 @@
 import json
 from pathlib import Path
 
-data = json.load(open('c:\\Users\\asplo\\Documents\\GitHub\\SlideForge\\backend\\tiktok_data\\debug\\raw_data.json'))
+data = json.load(open('c:\\Users\\asplo\\Documents\\GitHub\\Radius\\backend\\tiktok_data\\debug\\raw_data.json'))
 scope = data['__DEFAULT_SCOPE__']
 
 # Check webapp.biz-context - it has 47 items

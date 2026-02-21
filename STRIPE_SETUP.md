@@ -1,6 +1,6 @@
 # Stripe Setup Guide
 
-Complete guide to set up Stripe payments for SlideForge.
+Complete guide to set up Stripe payments for Radius.
 
 ## 📋 Prerequisites
 
@@ -21,7 +21,7 @@ Complete guide to set up Stripe payments for SlideForge.
 
 **Pro Plan:**
 1. Go to Products → Add Product
-2. Name: `SlideForge Pro`
+2. Name: `Radius Pro`
 3. Description: `For serious content creators`
 4. Pricing: `$29.00 USD` / `Recurring` / `Monthly`
 5. Click "Save product"
@@ -29,7 +29,7 @@ Complete guide to set up Stripe payments for SlideForge.
 
 **Agency Plan:**
 1. Products → Add Product
-2. Name: `SlideForge Agency`
+2. Name: `Radius Agency`
 3. Description: `For agencies managing multiple brands`
 4. Pricing: `$99.00 USD` / `Recurring` / `Monthly`
 5. Click "Save product"

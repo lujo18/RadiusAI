@@ -36,18 +36,20 @@ async def fetch_due_automations(batch_size: int = 50) -> List[Dict[str, Any]]:
     - is_active = true
     - next_run_at <= now()
     
+    Joins with brand table to fetch team_id.
+    
     Args:
         batch_size: Max number of automations to fetch
         
     Returns:
-        List of automation dicts
+        List of automation dicts with team_id populated
     """
     try:
         now = datetime.now(timezone.utc).isoformat()
         
         response = (
             _get_supabase().table("automations")
-            .select("*")
+            .select("*, brand:brand_id(team_id)")
             .eq("is_active", True)
             .lte("next_run_at", now)
             .limit(batch_size)
@@ -55,6 +57,10 @@ async def fetch_due_automations(batch_size: int = 50) -> List[Dict[str, Any]]:
         )
         
         if response.data:
+            # Extract team_id from nested brand object
+            for automation in response.data:
+                if isinstance(automation.get("brand"), dict):
+                    automation["team_id"] = automation["brand"].get("team_id")
             logger.info(f"Fetched {len(response.data)} due automations")
             return response.data
         
@@ -70,6 +76,7 @@ async def lock_automation_row(automation_id: UUID) -> Optional[Dict[str, Any]]:
     Lock an automation row using SELECT ... FOR UPDATE (pessimistic locking).
     
     This prevents concurrent executions of the same automation.
+    Joins with brand table to fetch team_id.
     
     Args:
         automation_id: UUID of automation to lock
@@ -80,15 +87,19 @@ async def lock_automation_row(automation_id: UUID) -> Optional[Dict[str, Any]]:
     try:
         response = (
             _get_supabase().table("automations")
-            .select("*")
+            .select("*, brand:brand_id(team_id)")
             .eq("id", str(automation_id))
             .single()
             .execute()
         )
         
         if response.data:
+            automation = response.data
+            # Extract team_id from the nested brand object
+            if isinstance(automation.get("brand"), dict):
+                automation["team_id"] = automation["brand"].get("team_id")
             logger.debug(f"Locked automation {automation_id}")
-            return response.data
+            return automation
         
         logger.warning(f"Automation {automation_id} not found for locking")
         return None
@@ -102,32 +113,59 @@ async def get_template_by_id(template_id: UUID, brand_id: UUID) -> Optional[Dict
     """
     Fetch a template by ID for a brand.
     
+    Templates are brand-level resources (not team-level).
+    
     Args:
         template_id: UUID of template
-        brand_id: UUID of brand (for RLS)
+        brand_id: UUID of brand (for RLS filtering)
         
     Returns:
         Template dict if found, None otherwise
     """
     try:
+        # Use limit(1) instead of single() to avoid "expected exactly 1 row" errors
+        # and get better visibility into what's being returned
         response = (
             _get_supabase().table("templates")
             .select("*")
             .eq("id", str(template_id))
             .eq("brand_id", str(brand_id))
-            .single()
+            .limit(1)
             .execute()
         )
         
-        if response.data:
-            logger.debug(f"Fetched template {template_id}")
-            return response.data
+        if response.data and len(response.data) > 0:
+            logger.debug(f"Fetched template {template_id} for brand {brand_id}")
+            return response.data[0]
         
-        logger.warning(f"Template {template_id} not found for brand {brand_id}")
+        # If no data returned, check if there's an error in the response
+        logger.warning(
+            f"Template {template_id} not found for brand {brand_id}. "
+            f"Query returned 0 rows. Response count: {len(response.data) if response.data else 0}"
+        )
+        
+        # DEBUG: Try fetching without brand filter to see if template exists at all
+        if str(template_id) and str(brand_id):
+            debug_response = (
+                _get_supabase().table("templates")
+                .select("id, brand_id")
+                .eq("id", str(template_id))
+                .limit(1)
+                .execute()
+            )
+            if debug_response.data and len(debug_response.data) > 0:
+                actual_brand = debug_response.data[0].get('brand_id')
+                logger.error(
+                    f"Template {template_id} exists but has brand_id={actual_brand} "
+                    f"(expected {brand_id}). Brand mismatch!"
+                )
+            else:
+                logger.error(f"Template {template_id} doesn't exist at all in database")
+        
         return None
         
     except Exception as e:
-        logger.error(f"Error fetching template {template_id}: {e}", exc_info=True)
+        logger.error(f"Error fetching template {template_id}: {type(e).__name__}: {e}", exc_info=True)
         return None
 
 

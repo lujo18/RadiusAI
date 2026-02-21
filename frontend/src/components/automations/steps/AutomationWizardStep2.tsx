@@ -3,6 +3,7 @@ import { useTemplates } from '@/features/templates/hooks';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import type { AutomationWizardData } from '../AutomationWizard';
 
 interface Step2Props {
@@ -22,6 +23,13 @@ export function AutomationWizardStep2({ data, onChange, brandId }: Step2Props) {
     onChange({
       ...data,
       templateIds: newIds,
+    });
+  };
+
+  const clearAllTemplates = () => {
+    onChange({
+      ...data,
+      templateIds: [],
     });
   };
 
@@ -85,13 +93,24 @@ export function AutomationWizardStep2({ data, onChange, brandId }: Step2Props) {
       </div>
 
       {data.templateIds.length > 0 && (
-        <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
-          <p className="text-sm font-medium">
-            Selected: {data.templateIds.length} template{data.templateIds.length !== 1 ? 's' : ''}
-          </p>
-          <p className="text-xs text-foreground/60 mt-1">
-            These templates will rotate cyclically with each automation run
-          </p>
+        <div className="space-y-2">
+          <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
+            <p className="text-sm font-medium">
+              Selected: {data.templateIds.length} template{data.templateIds.length !== 1 ? 's' : ''}
+            </p>
+            <p className="text-xs text-foreground/60 mt-1">
+              These templates will rotate cyclically with each automation run
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={clearAllTemplates}
+            className="text-destructive hover:text-destructive hover:bg-destructive/5"
+          >
+            Clear Templates
+          </Button>
         </div>
       )}
 

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-A complete automation execution and management system has been implemented across the SlideForge platform:
+A complete automation execution and management system has been implemented across the Radius platform:
 
 - **Backend:** 899 lines of FastAPI + Supabase code
 - **Frontend:** 855 lines of TypeScript data layer code

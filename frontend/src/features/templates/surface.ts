@@ -25,8 +25,8 @@ export const templateApi = {
     return await templateService.deleteTemplate(templateId);
   },
 
-  setDefaultTemplate: async (templateId: string) => {
-    return await templateService.setDefaultTemplate(templateId);
+  setDefaultTemplate: async (templateId: string, brandId: string) => {
+    return await templateService.setDefaultTemplate(templateId, brandId);
   },
 };
 

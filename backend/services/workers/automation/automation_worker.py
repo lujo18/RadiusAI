@@ -39,6 +39,12 @@ def _get_supabase():
     """Get Supabase client (lazy initialization)"""
     global _supabase
     if _supabase is None:
+        from config import Config
+        if not Config.SUPABASE_SERVICE_ROLE_KEY:
+            raise RuntimeError(
+                "SUPABASE_SERVICE_ROLE_KEY is not set. Worker cannot authenticate with Supabase. "
+                "This is required for the automation worker to function."
+            )
         _supabase = get_supabase()
     return _supabase
 
@@ -120,23 +126,34 @@ async def run_automation(automation_id: UUID) -> dict:
         template_ids = automation.get("template_ids", [])
         cta_ids = automation.get("cta_ids", [])  # CTAs are optional
         platformIds = automation.get("platforms", [])
+        team_id = automation.get("team_id")
+        brand_id = automation.get("brand_id")
+        
+        # Validate required fields early
+        if not team_id:
+            logger.error(f"Automation {automation_id} has no team_id. Automation data: {automation}")
+            raise ValueError(f"Automation {automation_id} missing team_id")
+        
+        if not template_ids:
+            logger.error(f"Automation {automation_id} has no template_ids. Automation data: {automation}")
+            raise ValueError(f"Automation {automation_id} missing template_ids")
+        
+        if not platformIds:
+            logger.error(f"Automation {automation_id} has no platforms. Automation data: {automation}")
+            raise ValueError(f"Automation {automation_id} missing platforms")
         
         platforms = []
         for i in platformIds:
             integration = getIntegrationById(i)
             if integration:
                 platforms.append(integration.platform)
+        
+        if not platforms:
+            logger.error(f"Automation {automation_id} has no valid platform integrations found. Platform IDs: {platformIds}")
+            raise ValueError(f"Automation {automation_id} platform integrations not found")
                 
-        brand_id = automation.get("brand_id")
         cursor_template_index = automation.get("cursor_template_index", 0) % max(len(template_ids), 1)
         cursor_cta_index = automation.get("cursor_cta_index", 0) % max(len(cta_ids), 1) if cta_ids else 0
-
-        # Validate required fields (templates and platforms are required, CTAs are optional)
-        if not template_ids or not platforms:
-            raise ValueError(
-                f"Automation {automation_id} missing required fields: templates={bool(template_ids)}, "
-                f"platforms={bool(platforms)}"
-            )
 
         template_id = template_ids[cursor_template_index]
         cta_id = cta_ids[cursor_cta_index] if cta_ids else None  # CTA is optional
@@ -153,7 +170,7 @@ async def run_automation(automation_id: UUID) -> dict:
             cta_dict = await get_cta_by_id(cta_id, brand_id)
 
         if not template_dict:
-            raise ValueError(f"Template {template_id} not found")
+            raise ValueError(f"Template {template_id} not found for brand {brand_id}")
         if cta_id and not cta_dict:
             raise ValueError(f"CTA {cta_id} not found")
 
@@ -189,11 +206,12 @@ async def run_automation(automation_id: UUID) -> dict:
         # Import here to avoid circular dependency
         from services.slides.slide_generation import generate_slideshows
 
-        # Convert template dict to Template model
+        # Convert template dict to Template model with all required fields
         template_model = Template(
             id=template_dict.get("id"),
-            user_id=brand_data.get("user_id"),
             name=template_dict.get("name", ""),
+            team_id=str(team_id),
+            user_id=brand_data.get("user_id", ""),
             content_rules=template_dict.get("content_rules", {}),
         )
 

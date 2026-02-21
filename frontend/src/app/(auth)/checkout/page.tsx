@@ -48,7 +48,7 @@ function CheckoutContent() {
 
         if (userData?.subscription_status === 'active' && userData?.stripe_subscription_id) {
           console.log('[Checkout] User already has active subscription - redirecting to dashboard');
-          router.push('/brand/settings?message=already_subscribed');
+          router.push('/overview?message=already_subscribed');
           return;
         }
 

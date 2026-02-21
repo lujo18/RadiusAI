@@ -12,7 +12,7 @@ class RuleType(str, Enum):
 class BaseRule(BaseModel):
     id: Optional[str]
     type: RuleType
-    metric: Optional[str] = Field(None, description="user_activity metric to check, e.g., post_count")
+    metric: Optional[str] = Field(None, description="team_activity metric to check, e.g., post_count")
     limit: Optional[int]
     window: Optional[str] = None
 
@@ -56,8 +56,8 @@ def parse_rules(raw: Any) -> Optional[RulesDocument]:
         return None
 
 
-def evaluate_rules_for_user(user_id: str, rules_doc: RulesDocument, amount: int = 1) -> Dict[str, Any]:
-    """Evaluate all rules for a user; returns aggregated result.
+def evaluate_rules_for_user(team_id: str, rules_doc: RulesDocument, amount: int = 1) -> Dict[str, Any]:
+    """Evaluate all rules for a team; returns aggregated result.
 
     Result: {allowed: bool, failures: [...], details: [...], remaining: int|null}
     """
@@ -65,7 +65,7 @@ def evaluate_rules_for_user(user_id: str, rules_doc: RulesDocument, amount: int 
     failures = []
     remaining_values: List[int] = []
 
-    ua = usage_repo.get_user_activity(user_id) or {}
+    ua = usage_repo.get_team_activity(team_id) or {}
     # Support centralized `usage` JSON column: prefer ua['usage'][metric], fall back to top-level
     usage_map = ua.get('usage') or {}
 

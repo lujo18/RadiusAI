@@ -78,7 +78,7 @@ async def make_post(request: MakePostRequest):
 @router.post("/slideshow")
 def post_slideshow(request: PostSlideshow, user_id: str = Depends(get_current_user)):
   
-  post = get_post(request.post_id, user_id)
+  post = get_post(request.post_id)
   
   if post is None:
     raise HTTPException(status_code=404, detail="Post not found")

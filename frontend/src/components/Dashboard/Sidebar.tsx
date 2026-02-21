@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/store";
 import { useBrands } from '@/features/brand/hooks';
 import { useBrandFilter } from "@/hooks/useBrandFilter";
@@ -42,7 +42,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { UsageMeter } from "@/components/billingsdk/usage-meter";
-import { useUsage } from '@/features/usage/hooks';
+import { useGetBrandUsage, useUsage } from '@/features/usage/hooks';
+import { useGetCreditsUsage } from '@/features/usage/hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -125,6 +126,7 @@ export default function DashboardSidebar({
   // Fetch user brands
   const { data: brands, isLoading: brandsLoading } = useBrands();
 
+
   // Get user initials for avatar fallback
   const getUserInitials = () => {
     if (user?.name) {
@@ -153,12 +155,14 @@ export default function DashboardSidebar({
   const displayPlan = activeBrand ? "Brand View" : "Overview";
 
   // Navigate to brand route
+  const params = useParams();
+  const teamId = params?.teamId as string;
   const handleBrandSwitch = (brandId: string | null) => {
     if (brandId === null) {
-      // Go to "All Brands" - route to /overview
-      router.push("/overview");
+      // Go to "All Brands" - route to /[teamId]/overview
+      router.push(`/${teamId}/overview`);
     } else {
-      // Go to specific brand - route to /brand/{brandId}
+      // Go to specific brand - route to /[teamId]/brand/{brandId}
       const pathSegments = pathname.split("/").filter(Boolean);
       const currentPage = pathSegments[pathSegments.length - 1];
       const isSubPage = [
@@ -169,14 +173,16 @@ export default function DashboardSidebar({
         "settings",
       ].includes(currentPage);
       router.push(
-        isSubPage ? `/brand/${brandId}/${currentPage}` : `/brand/${brandId}`,
+        isSubPage 
+          ? `/${teamId}/brand/${brandId}/${currentPage}` 
+          : `/${teamId}/brand/${brandId}`,
       );
     }
   };
 
   return (
     <>
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" variant="floating" className="list-none">
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -227,7 +233,7 @@ export default function DashboardSidebar({
 
         <SidebarFooter>
           
-            <SidebarGroupLabel>Usage</SidebarGroupLabel>
+            {/* <SidebarGroupLabel>Usage</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
                 <div className="w-full px-3">
@@ -235,7 +241,7 @@ export default function DashboardSidebar({
                 </div>
               </SidebarMenuItem>
             </SidebarMenu>
-          
+           */}
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
@@ -303,7 +309,7 @@ export default function DashboardSidebar({
                     <DropdownMenuItem
                       onClick={() => {
                         setActiveTab("style");
-                        router.push("/settings");
+                        router.push(`/${teamId}/settings`);
                       }}
                     >
                       <Settings />
@@ -311,7 +317,7 @@ export default function DashboardSidebar({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
-                        router.push("/settings/billing");
+                        router.push(`/${teamId}/settings/billing`);
                       }}
                     >
                       <CreditCard />
@@ -329,7 +335,7 @@ export default function DashboardSidebar({
           </SidebarMenu>
         </SidebarFooter>
 
-        <SidebarRail />
+      
       </Sidebar>
 
       <SidebarInset>
@@ -346,65 +352,21 @@ export default function DashboardSidebar({
 }
 
 function UsageWidget() {
-  const { data, isLoading } = useUsage();
-  const usageRow = data?.usage;
-  const limits = data?.limits || [];
-
-  const slidesUsed =
-    (usageRow?.usage && usageRow.usage.slides_generated) ||
-    usageRow?.slides_generated ||
-    0;
-
-  // find relevant product limit (product_id may be 'slides_generation' or 'slides')
-  const limitRow = limits.find(
-    (l: any) =>
-      l.product_id === "slides_generation" || l.product_id === "slides",
-  );
-  let slidesLimit: number | null = null;
-  try {
-    if (limitRow && limitRow.rules) {
-      const rules =
-        typeof limitRow.rules === "string"
-          ? JSON.parse(limitRow.rules)
-          : limitRow.rules;
-      if (
-        rules?.rules &&
-        Array.isArray(rules.rules) &&
-        rules.rules.length > 0
-      ) {
-        slidesLimit = rules.rules[0].limit ?? null;
-      } else if (rules?.limit) {
-        slidesLimit = rules.limit;
-      }
-    }
-  } catch (e) {
-    // ignore parse errors
-  }
-
-  const items = [
-    {
-      name: "Slides",
-      usage: slidesUsed || 0,
-      limit: slidesLimit || 1000,
-    },
-  ];
-
-  const periodEnd = usageRow?.period_end;
+  const { data: creditsData, isLoading} = useGetCreditsUsage();
+  
+  const creditsUsed = creditsData?.credits_used ?? 0;
+  const creditsLimit = creditsData?.credits_limit ?? null;
 
   return (
     <div>
       <UsageMeter
-        usage={items}
+        usage={[{ name: 'Credits', usage: creditsUsed, limit: creditsLimit ?? 0 }]}
         variant="linear"
         size="sm"
         progressColor="usage"
         className="p-0 border-transparent"
       />
-      {periodEnd ? (
-        <div className="text-xs text-muted-foreground mt-2">
-          Refresh: {new Date(periodEnd).toLocaleString()}
-        </div>
-      ) : null}
+    
     </div>
   );
 }

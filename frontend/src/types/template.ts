@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Zod schema for the Supabase 'templates' table
 export const TemplateSchema = z.object({
   id: z.string(),
-  user_id: z.string(),
+  user_id: z.string().optional(), // Removed from DB - tables now use brand_id only
   brand_id: z.string().nullable().optional(),
   name: z.string(),
   category: z.string(),

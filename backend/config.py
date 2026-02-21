@@ -1,8 +1,25 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Load .env from the same directory as this config.py file
-load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+# Load .env from multiple locations for robustness
+# Try: backend/.env, then ../.env, then current directory
+env_locations = [
+    os.path.join(os.path.dirname(__file__), '.env'),  # backend/.env
+    os.path.join(os.path.dirname(__file__), '..', '.env'),  # /.env (project root)
+    '.env',  # Current working directory
+]
+
+loaded = False
+for env_path in env_locations:
+    if os.path.exists(env_path):
+        print(f"Loading .env from: {os.path.abspath(env_path)}")
+        load_dotenv(env_path)
+        loaded = True
+        break
+
+if not loaded:
+    print("Warning: No .env file found in any expected location. Falling back to environment variables.")
 
 if not os.getenv("GEMINI_API_KEY"):
     raise ValueError("GEMINI_API_KEY environment variable is not set")

@@ -1,7 +1,7 @@
 # Stripe Product ID Migration
 
 ## Summary
-Updated SlideForge to use Stripe **Product IDs** instead of **Price IDs** in environment variables. This simplifies configuration and allows the code to automatically fetch the active price for each product.
+Updated Radius to use Stripe **Product IDs** instead of **Price IDs** in environment variables. This simplifies configuration and allows the code to automatically fetch the active price for each product.
 
 ## What Changed
 

@@ -44,6 +44,7 @@ def connect_social_account_to_brand(
     profile_picture_url: str | None = None,
     late_account_id: str | None = None,
     post_for_me_account_id: str | None = None,
+    user_id: str | None = None,
 ):
     """
     Connects a social media account integration to a profile in Supabase.
@@ -67,6 +68,7 @@ def connect_social_account_to_brand(
         "pfm_account_id": post_for_me_account_id,
         "username": username,
         "profile_picture_url": profile_picture_url,
+        "user_id": user_id,
         "status": "connected",
         "updated_at": now,
         "created_at": now,

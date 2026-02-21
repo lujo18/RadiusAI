@@ -1,6 +1,6 @@
 # AI Package - Gemini Integration
 
-This package contains all AI-related functionality for SlideForge's content generation system.
+This package contains all AI-related functionality for Radius's content generation system.
 
 ## 📁 Structure
 

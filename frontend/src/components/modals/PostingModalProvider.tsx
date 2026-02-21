@@ -34,7 +34,7 @@ export const PostingModalProvider = ({ children }: { children: React.ReactNode }
   const publishMutation = usePublishPost(brandId || "");
   const draftMutation = useDraftPost(brandId || "");
   const scheduleMutation = useSchedulePost(brandId || "");
-  const updatePostMutation = useUpdatePost();
+  const updatePostMutation = useUpdatePost(brandId || '');
 
   const open = (opts: OpenOptions) => {
     setPostData(opts.postData);

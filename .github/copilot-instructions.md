@@ -1,7 +1,7 @@
-# ViralStack AI Coding Instructions
+# Radius AI Coding Instructions
 
 ## Project Overview
-Radius (formerly ViralStack) is an AI-powered carousel content automation platform for social media. It uses Gemini 2.0 to generate multi-slide Instagram/TikTok carousels based on user-defined templates with A/B testing capabilities.
+Radius  is an AI-powered carousel content automation platform for social media. It uses Gemini 2.0 to generate multi-slide Instagram/TikTok carousels based on user-defined templates with A/B testing capabilities.
 
 **Architecture**: Monorepo with FastAPI backend (Python) + Next.js 14 frontend (TypeScript)
 
@@ -13,64 +13,13 @@ Radius (formerly ViralStack) is an AI-powered carousel content automation platfo
 
 ## Design System & Styling
 
-### Visual Identity (Radius "Obsidian & Pulse")
+### Visual Identity
 - **Brand Name**: Radius
-- **Color Palette**:
-   - Primary Background: `obsidian` (#0B0B0C) — Deep, modern, professional
-   - Primary Accent: `kinetic-mint` (#10B981) — Growth, momentum, vitality
-   - Secondary Accent: `electric-violet` (#8B5CF6) — Intelligence, high-end AI power
-   - Text/Surface: `ghost-white` (#F8FAFC) — High readability, crispness
-- **Typography**:
-   - Headlines: Plus Jakarta Sans (Bold, geometric, modern, expensive look)
-   - Body: Inter (sans-serif, gold standard for SaaS readability)
-
-### UI Philosophy: "The Minimalist Canvas"
-- Semi-transparent glassmorphism backgrounds with subtle blurs
-- Smooth, spring-based animations (not just flashing on screen)
-- High contrast, premium feel (no SaaS blue)
-
 
 ### UI Component Standards
 **CRITICAL**: ALL new UI components must follow these patterns from [app/page.tsx](frontend/src/app/page.tsx):
 
-1. **Background Colors**:
-   - Main pages: `bg-background`
-   - Sections: Alternate between `bg-background` and `bg-secondary`
-   - Cards: `glass-card` class (glassmorphism with `bg-card/50 backdrop-blur-md border border-border`)
-   - Inputs: `bg-background border border-border` with `focus:border-primary focus:ring-2 focus:ring-primary/20`
-
-2. **Text Colors**:
-   - Headings: `text-foreground`
-   - Body text: `text-foreground/80`
-   - Links: `text-primary hover:text-primary/80`
-   - Muted text: `text-foreground/50`
-
-3. **Buttons**:
-   - Primary: `btn-primary` or `bg-primary hover:bg-primary/80 text-background shadow-lg hover:shadow-primary/50`
-   - Secondary: `btn-secondary` or `bg-secondary hover:bg-secondary/80 border border-border backdrop-blur-md`
-   - Ghost: `btn-ghost` or `bg-transparent hover:bg-foreground/5 text-foreground/80 hover:text-foreground`
-
-4. **Layout Patterns**:
-   - Max width containers: `max-w-6xl mx-auto` or `max-w-7xl mx-auto`
-   - Padding: `px-6 py-12` or `px-8 py-20` for sections
-   - Grid layouts: `grid md:grid-cols-2 lg:grid-cols-3 gap-8`
-   - Spacing: Use `space-y-4`, `space-y-8`, `gap-4`, `gap-8` consistently
-
-5. **Split-Screen Auth Pages**:
-   - Left side: Form content with `bg-background` or dark background
-   - Right side: Gradient illustration `bg-gradient-to-br from-primary via-blue-500 to-foreground`
-   - Hidden on mobile: `hidden lg:flex` for right side
-   - Foreground text with dark inputs throughout
-
-6. **Glassmorphism Effects**:
-   - Use `glass-card` class for cards: adds backdrop blur, subtle border, and shadow
-   - Hover states: `hover:bg-foreground/10 hover:border-border/80 transition-all duration-300`
-   - Forms: Inputs with `bg-background` and subtle borders
-
-7. **Animations**:
-   - Available: `animate-pulse`, `animate-bounce`, `animate-spin-slow`, `animate-fade-in`
-   - Use sparingly on decorative elements
-   - Transitions: `transition-all duration-300` for smooth hover effects
+1. USE Shadcn, Animate-UI and all other predefined components and styling before creating new ones. Only create new ones when needed. All styling is provided in these components so custom styling (unless NEEDED) isn't necessary.
 
 ### When Creating New Pages/Components:
 1. Use standard shadcn coloring (`background`, `foreground`, `primary`, `secondary`, `card`, `border`, etc)

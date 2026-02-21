@@ -49,7 +49,7 @@ export default function FeatureLock({
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">Unlock {feature}</h3>
             <p className="text-gray-400 mb-4">
-              Subscribe to access this feature and unlock the full power of ViralStack.
+              Subscribe to access this feature and unlock the full power of Radius.
             </p>
             <Button
               onClick={() => router.push('/pricing')}

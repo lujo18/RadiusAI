@@ -2,21 +2,15 @@
 import React from "react";
 
 import { useEffect, useState } from 'react';
+import Script from 'next/script';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { FiZap, FiCheck, FiX, FiArrowRight, FiStar } from 'react-icons/fi';
+import { FiZap, FiCheck, FiX, FiArrowRight, FiStar, FiTrendingUp } from 'react-icons/fi';
 import { pricingContent } from '@/content/pricing';
 import { supabase } from '@/lib/supabase/client';
-
-interface PriceData {
-  id: string;
-  unit_amount: number;
-  currency: string;
-  recurring: {
-    interval: 'month' | 'year';
-  };
-}
+import { useAuthStore } from '@/store/authStore';
+import UpgradeFlow from '@/components/billing/UpgradeFlow';
 
 interface Testimonial {
   id: string;
@@ -29,11 +23,13 @@ interface Testimonial {
 
 export default function PricingPage() {
   const router = useRouter();
-  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const { user } = useAuthStore();
   const [prices, setPrices] = useState<any>(null);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
+  const [showUpgradeFlow, setShowUpgradeFlow] = useState(false);
+  const [currentUserPlan, setCurrentUserPlan] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if redirected due to subscription requirement
@@ -64,7 +60,29 @@ export default function PricingPage() {
       .then(res => res.json())
       .then(data => setTestimonials(data.testimonials || []))
       .catch(console.error);
-  }, []);
+
+    // Fetch current user's plan via API
+    if (user) {
+      const fetchUserPlan = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        fetch(`${apiBase}/api/users/me`, {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data?.stripe_product_id) {
+              setCurrentUserPlan(data.stripe_product_id);
+            }
+          })
+          .catch(console.error);
+      };
+      fetchUserPlan();
+    }
+  }, [user]);
 
   const handleGetStarted = async (planName: 'starter' | 'growth' | 'unlimited') => {
     setIsLoading(true);
@@ -150,8 +168,67 @@ export default function PricingPage() {
   const growthPrice = getPriceForPlan('growth');
   const unlimitedPrice = getPriceForPlan('unlimited');
 
+  // Define plan hierarchy for upgrade logic
+  const planHierarchy = ['starter', 'growth', 'unlimited'];
+  const getPlanLevel = (plan: string) => {
+    const index = planHierarchy.findIndex(p => plan.toLowerCase().includes(p));
+    return index === -1 ? -1 : index;
+  };
+
+  const isCurrentPlan = (planName: string) => {
+    if (!currentUserPlan) return false;
+    return currentUserPlan.toLowerCase().includes(planName.toLowerCase());
+  };
+
+  const isUpgrade = (planName: string) => {
+    if (!currentUserPlan) return false;
+    const currentLevel = getPlanLevel(currentUserPlan);
+    const targetLevel = getPlanLevel(planName);
+    return targetLevel > currentLevel;
+  };
+
+  const handleUpgrade = () => {
+    setShowUpgradeFlow(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Structured data for pricing/offers to help LLMs and AI crawlers */}
+      <Script id="pricing-ldjson" type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+            name: pricingContent.hero?.headline || 'SlideForge',
+            description: pricingContent.hero?.subheadline || '',
+          url: (process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com') + '/pricing',
+          offers: [
+            {
+              "@type": "Offer",
+              name: pricingContent.plans.starter.name,
+              price: 19,
+              priceCurrency: 'USD'
+            },
+            {
+              "@type": "Offer",
+              name: pricingContent.plans.growth.name,
+              price: 29,
+              priceCurrency: 'USD'
+            },
+            {
+              "@type": "Offer",
+              name: pricingContent.plans.unlimited.name,
+              price: 99,
+              priceCurrency: 'USD'
+            }
+          ]
+        })}
+      </Script>
+
+      {/* Answer-first quick summary (machine-focused, hidden visually) */}
+      <section className="sr-only" aria-label="Pricing quick answer">
+        <h1>Radius pricing — plans for solo founders with automated TikTok slideshow creation and CTA interval testing.</h1>
+        <p>Plans start at $19/month. Growth plan includes A/B CTA interval testing and niche templates to improve engagement.</p>
+      </section>
       {/* Subscription Required Alert */}
       {showSubscriptionAlert && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
@@ -186,49 +263,28 @@ export default function PricingPage() {
             {pricingContent.hero.badge}
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold font-main text-foreground mb-6">
+          <h2 className="text-5xl md:text-6xl font-bold font-main text-foreground mb-6">
             {pricingContent.hero.headline}
-          </h1>
+          </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             {pricingContent.hero.subheadline}
           </p>
         </div>
       </section>
 
-      {/* BILLING TOGGLE */}
-      <div className="flex items-center justify-center mb-12 px-6">
-        <div className="glass-card p-2 inline-flex items-center space-x-4">
-          <Button
-            onClick={() => setBillingInterval('month')}
-            className={`px-6 py-2 rounded-lg font-medium transition ${
-              billingInterval === 'month'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Monthly
-          </Button>
-          <Button
-            onClick={() => setBillingInterval('year')}
-            className={`px-6 py-2 rounded-lg font-medium transition ${
-              billingInterval === 'year'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Yearly
-            <span className="ml-2 text-xs bg-chart-4/20 text-chart-4 px-2 py-1 rounded">
-              Save 30%
-            </span>
-          </Button>
-        </div>
-      </div>
-
       {/* PRICING CARDS */}
       <section className="pb-20 px-6">
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
           {/* STARTER PLAN */}
           <div className="glass-card p-8 relative">
+            {isCurrentPlan('starter') && (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-chart-4 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                  CURRENT PLAN
+                </span>
+              </div>
+            )}
+
             <div className="mb-6">
               <h3 className="text-2xl font-bold text-foreground mb-2">{pricingContent.plans.starter.name}</h3>
               <p className="text-muted-foreground text-sm">{pricingContent.plans.starter.description}</p>
@@ -243,10 +299,10 @@ export default function PricingPage() {
 
             <Button
               onClick={() => handleGetStarted('starter')}
-              disabled={isLoading}
+              disabled={isLoading || isCurrentPlan('starter')}
               className="btn-secondary w-full mb-6 flex items-center justify-center"
             >
-              {isLoading ? 'Loading...' : 'Get Started'}
+              {isCurrentPlan('starter') ? 'Current Plan' : isLoading ? 'Loading...' : 'Get Started'}
             </Button>
 
             <ul className="space-y-3">
@@ -261,7 +317,20 @@ export default function PricingPage() {
 
           {/* GROWTH PLAN (POPULAR) */}
           <div className="glass-card p-8 relative border-2 border-primary transform md:scale-105">
-            {pricingContent.plans.growth.badge && (
+            {isCurrentPlan('growth') ? (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-chart-4 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                  CURRENT PLAN
+                </span>
+              </div>
+            ) : isUpgrade('growth') ? (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                  <FiTrendingUp className="w-3 h-3" />
+                  UPGRADE
+                </span>
+              </div>
+            ) : pricingContent.plans.growth.badge && (
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
                   {pricingContent.plans.growth.badge}
@@ -284,12 +353,28 @@ export default function PricingPage() {
             </div>
 
             <Button
-              onClick={() => handleGetStarted('growth')}
-              disabled={isLoading}
-              className="btn-primary w-full mb-6 flex items-center justify-center"
+              onClick={() => isUpgrade('growth') ? handleUpgrade() : handleGetStarted('growth')}
+              disabled={isLoading || isCurrentPlan('growth')}
+              className={`w-full mb-6 flex items-center justify-center ${
+                isUpgrade('growth')
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
+                  : 'btn-primary'
+              }`}
             >
-              {isLoading ? 'Loading...' : 'Get Started'}
+              {isCurrentPlan('growth')
+                ? 'Current Plan'
+                : isUpgrade('growth')
+                ? 'Upgrade Now'
+                : isLoading
+                ? 'Loading...'
+                : 'Get Started'}
             </Button>
+
+            {isUpgrade('growth') && (
+              <p className="text-xs text-center text-green-400 -mt-4 mb-4">
+                ⚡ Instant upgrade with prorated billing
+              </p>
+            )}
 
             <ul className="space-y-3">
               {pricingContent.plans.growth.features.map((feature, i) => (
@@ -303,7 +388,20 @@ export default function PricingPage() {
 
           {/* UNLIMITED PLAN */}
           <div className="glass-card p-8 relative">
-            {pricingContent.plans.unlimited.badge && (
+            {isCurrentPlan('unlimited') ? (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-chart-4 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                  CURRENT PLAN
+                </span>
+              </div>
+            ) : isUpgrade('unlimited') ? (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                  <FiTrendingUp className="w-3 h-3" />
+                  UPGRADE
+                </span>
+              </div>
+            ) : pricingContent.plans.unlimited.badge && (
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-chart-3 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
                   {pricingContent.plans.unlimited.badge}
@@ -326,12 +424,28 @@ export default function PricingPage() {
             </div>
 
             <Button
-              onClick={() => handleGetStarted('unlimited')}
-              disabled={isLoading}
-              className="btn-secondary w-full mb-6 flex items-center justify-center"
+              onClick={() => isUpgrade('unlimited') ? handleUpgrade() : handleGetStarted('unlimited')}
+              disabled={isLoading || isCurrentPlan('unlimited')}
+              className={`w-full mb-6 flex items-center justify-center ${
+                isUpgrade('unlimited')
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
+                  : 'btn-secondary'
+              }`}
             >
-              {isLoading ? 'Loading...' : 'Get Started'}
+              {isCurrentPlan('unlimited')
+                ? 'Current Plan'
+                : isUpgrade('unlimited')
+                ? 'Upgrade Now'
+                : isLoading
+                ? 'Loading...'
+                : 'Get Started'}
             </Button>
+
+            {isUpgrade('unlimited') && (
+              <p className="text-xs text-center text-green-400 -mt-4 mb-4">
+                ⚡ Instant upgrade with prorated billing
+              </p>
+            )}
 
             <ul className="space-y-3">
               {pricingContent.plans.unlimited.features.map((feature, i) => (
@@ -524,6 +638,13 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+
+      {/* Upgrade Flow Modal */}
+      <UpgradeFlow
+        isOpen={showUpgradeFlow}
+        onClose={() => setShowUpgradeFlow(false)}
+        trigger="paywall"
+      />
     </div>
   );
 }

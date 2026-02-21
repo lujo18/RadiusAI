@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
 
-from routers import account, post, postforme_webhook, plans_bridge, brand, generate, product_rate_limits
+from routers import account, post, postforme_webhook, plans_bridge, brand, generate, product_rate_limits, teams
 from routers import billing_service
 from routers import usage
 
@@ -99,6 +99,7 @@ except Exception as e:
     print("   Make sure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env")
 
 # Include routers
+app.include_router(teams.router)
 app.include_router(brand.router)
 app.include_router(generate.router)
 app.include_router(account.router)
