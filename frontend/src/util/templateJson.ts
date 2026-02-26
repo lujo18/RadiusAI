@@ -1134,5 +1134,62 @@ export const SYSTEM_TEMPLATES = {
         "Study tactics",
       ],
     },
+    {
+      template_id: "T-VIRAL-AUTHORITY-HACK-05",
+      name: "The Counter-Intuitive Authority List",
+      category: "reach/authority",
+      content_rules: {
+        goal: "High Saves & Shares",
+        platform_optimized: ["Instagram", "TikTok", "LinkedIn"],
+        slide_count: 7,
+        avg_performance: {
+          estimated_engagement_lift: "+60%",
+          share_rate: "Very High",
+          viral_coefficient: "High (Relatability + Curiosity Gap)",
+          benchmark: "High 'Save' to 'Like' ratio",
+        },
+        hook_style: "Authority Pattern Interrupt",
+        text_density: "Moderate (Headline + 2-3 sentences)",
+        structure: {
+          slide_1:
+            "Hook: 'Some weird [Niche] hacks [High-Authority Figure] gave me to [Dream Outcome].' Sub-text: '(From someone who struggled with [Pain Point] for [Time Period])'",
+          slide_2:
+            "1. [Hack] + 2-3 sentences explaining the counter-intuitive logic and the immediate benefit.",
+          slide_3:
+            "2. [Hack] + 2-3 sentences explaining the counter-intuitive logic and the immediate benefit.",
+          slide_4:
+            "3. [Hack] + 2-3 sentences explaining the counter-intuitive logic and the immediate benefit.",
+          slide_5:
+            "4. [Hack] + 2-3 sentences explaining the counter-intuitive logic and the immediate benefit.",
+          slide_6:
+            "5. [Hack] + 2-3 sentences explaining the counter-intuitive logic and the immediate benefit.",
+          slide_7:
+            "CTA: 'These changed everything for me. Save this for when you're [Negative State]. Which hack sounds the weirdest?'",
+        },
+        key_success_factors: [
+          "The authority figure must be relevant but slightly unexpected",
+          "The hacks must sound 'weird' or counter-intuitive initially to create curiosity.",
+          "The sub-text on Slide 1 is non-negotiable; it builds the bridge between the expert and the audience.",
+          "Each explanation must focus on 'Why it works'—logic kills skepticism.",
+          "Use 'I' and 'Me' language to keep it a personal recommendation, not a lecture.",
+        ],
+        production_notes: {
+        },
+        brand_integration_notes: {
+          tone_compatibility: "Vulnerable yet Informative",
+          risk_level:
+            "Medium (requires genuinely good 'hacks' to avoid being clickbait)",
+          suggested_brand_addition:
+            "Include a 'Logic Check' field to ensure the 2-3 sentences actually provide value.",
+        },
+      },
+      best_for: [
+        "Health & Wellness (Biohacks)",
+        "Personal Finance (Wealth-building secrets)",
+        "Career Advice (Unorthodox networking)",
+        "Relationships (Psychology tricks)",
+        "Marketing (Counter-intuitive growth hacks)",
+      ],
+    },
   ],
 };

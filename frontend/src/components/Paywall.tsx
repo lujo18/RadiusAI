@@ -229,6 +229,8 @@ export default function Paywall() {
             const isUpgrade = tier.price > currentTierPrice;
             const isDowngrade = tier.price < currentTierPrice;
 
+          
+
             return (
               <div
                 key={tier.id}

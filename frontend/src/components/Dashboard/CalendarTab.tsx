@@ -1,27 +1,59 @@
-import React, { useState } from "react";
-import { FiClock } from 'react-icons/fi';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TimeBlockScheduler } from '@/components/scheduling/TimeBlockScheduler';
+import React, { useState, useMemo } from "react";
+import { FiClock } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TimeBlockScheduler } from "@/components/scheduling/TimeBlockScheduler";
+import { useAutomations } from "@/features/automation/hooks";
 
 interface CalendarTabProps {
   upcomingPosts: any[];
   brandId?: string;
 }
 
-export default function CalendarTab({ upcomingPosts, brandId }: CalendarTabProps) {
+export default function CalendarTab({
+  upcomingPosts,
+  brandId,
+}: CalendarTabProps) {
   const [selectedDateTime, setSelectedDateTime] = useState<Date>();
+
+  // Fetch automations for the brand
+  const { data: automations = [] } = useAutomations(brandId);
+
+  // Merge all automation schedules for the brand
+  const mergedAutomationSchedule = useMemo(() => {
+    const merged: Record<string, string[]> = {};
+
+    automations.forEach((automation: any) => {
+      if (automation.schedule && typeof automation.schedule === "object") {
+        Object.entries(automation.schedule as Record<string, string[]>).forEach(
+          ([day, times]) => {
+            if (!merged[day]) {
+              merged[day] = [];
+            }
+            // Add unique times only
+            times.forEach((time: string) => {
+              if (!merged[day].includes(time)) {
+                merged[day].push(time);
+              }
+            });
+          },
+        );
+      }
+    });
+
+    return merged;
+  }, [automations]);
 
   const handleTimeSelect = (dateTime: Date) => {
     setSelectedDateTime(dateTime);
     // Could open posting modal or navigate to post creation
-    console.log('Selected time slot:', dateTime);
+    console.log("Selected time slot:", dateTime);
   };
 
   return (
     <div className="p-4">
       <h1>Content Calendar</h1>
-      
+
       <Tabs defaultValue="scheduler" className="w-full">
         {/* <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="calendar">Monthly Calendar</TabsTrigger>
@@ -37,18 +69,30 @@ export default function CalendarTab({ upcomingPosts, brandId }: CalendarTabProps
                 <Button variant="secondary">Next</Button>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-7 gap-4">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                <div key={day} className="text-center font-semibold text-gray-400 pb-2">{day}</div>
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div
+                  key={day}
+                  className="text-center font-semibold text-gray-400 pb-2"
+                >
+                  {day}
+                </div>
               ))}
-              {Array.from({ length: 30 }, (_, i) => i + 1).map(day => (
-                <div key={day} className="aspect-square bg-gray-900/50 rounded-lg p-2 hover:bg-gray-700 cursor-pointer">
+              {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
+                <div
+                  key={day}
+                  className="aspect-square bg-gray-900/50 rounded-lg p-2 hover:bg-gray-700 cursor-pointer"
+                >
                   <div className="text-sm mb-1">{day}</div>
                   {day % 7 !== 0 && (
                     <div className="space-y-1">
-                      <div className="text-xs bg-pink-500/20 text-pink-400 px-1 rounded">7 IG</div>
-                      <div className="text-xs bg-blue-500/20 text-blue-400 px-1 rounded">7 TT</div>
+                      <div className="text-xs bg-pink-500/20 text-pink-400 px-1 rounded">
+                        7 IG
+                      </div>
+                      <div className="text-xs bg-blue-500/20 text-blue-400 px-1 rounded">
+                        7 TT
+                      </div>
                     </div>
                   )}
                 </div>
@@ -65,19 +109,17 @@ export default function CalendarTab({ upcomingPosts, brandId }: CalendarTabProps
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="scheduler" className="mt-6">
-          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold mb-2">Time Block Scheduler</h2>
-              <p className="text-gray-400">Select time slots to schedule new posts or view existing scheduled content</p>
-            </div>
+          <div className="p-6">
             
+
             <TimeBlockScheduler
               selectedDateTime={selectedDateTime}
               onTimeSelect={handleTimeSelect}
               brandId={brandId}
-              className=""
+              automationSchedule={mergedAutomationSchedule}
+              
             />
           </div>
         </TabsContent>
@@ -96,8 +138,12 @@ function PostRow({ post }: any) {
         <span className="text-sm">{post.title}</span>
       </div>
       <div className="flex gap-2">
-        <Button variant="ghost" size="sm">Edit</Button>
-        <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
+        <Button variant="ghost" size="sm">
+          Edit
+        </Button>
+        <Button variant="ghost" size="sm" className="text-destructive">
+          Delete
+        </Button>
       </div>
     </div>
   );

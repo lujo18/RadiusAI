@@ -1,53 +1,29 @@
-import React from "react";
 import { useAuthStore } from '@/store/authStore';
-
-const DEFAULT_PLAN_CONFIG = {
-  plans: {
-    starter: { limits: { templates: 10, posts: 50, profiles: 1, aiGenerations: 100 } },
-    growth: { limits: { templates: 50, posts: 500, profiles: 5, aiGenerations: 1000 } },
-    unlimited: { limits: { templates: Infinity, posts: Infinity, profiles: Infinity, aiGenerations: Infinity } },
-  }
-};
+import { PLANS, toPlanKey, withinLimit, formatLimit, type PlanKey } from '@/lib/plans';
 
 export function usePlanLimits() {
   const { user } = useAuthStore();
 
-  const plan = user?.plan || 'starter';
-  const limits = (DEFAULT_PLAN_CONFIG as any).plans[plan]?.limits || (DEFAULT_PLAN_CONFIG as any).plans.starter.limits;
+  const rawPlan = user?.plan || 'starter';
+  const planKey: PlanKey = toPlanKey(rawPlan) ?? 'starter';
+  const limits = PLANS[planKey].limits;
 
-  const canCreateTemplate = (currentCount: number) => {
-    return currentCount < limits.templates;
-  };
+  const canCreateTemplate = (currentCount: number) => withinLimit(limits.templates, currentCount);
+  const canCreatePost = (currentCount: number) => withinLimit(limits.posts, currentCount);
+  const canCreateProfile = (currentCount: number) => withinLimit(limits.brands, currentCount);
+  const canGenerateAI = (currentCount: number) => withinLimit(limits.aiGenerations, currentCount);
 
-  const canCreatePost = (currentCount: number) => {
-    return currentCount < limits.posts;
-  };
+  const getRemainingTemplates = (currentCount: number) =>
+    limits.templates === Infinity ? 'unlimited' : Math.max(0, limits.templates - currentCount);
 
-  const canCreateProfile = (currentCount: number) => {
-    return currentCount < limits.profiles;
-  };
+  const getRemainingPosts = (currentCount: number) =>
+    limits.posts === Infinity ? 'unlimited' : Math.max(0, limits.posts - currentCount);
 
-  const canGenerateAI = (currentCount: number) => {
-    return currentCount < limits.aiGenerations;
-  };
-
-  const getRemainingTemplates = (currentCount: number) => {
-    if (limits.templates === Infinity) return 'unlimited';
-    return Math.max(0, limits.templates - currentCount);
-  };
-
-  const getRemainingPosts = (currentCount: number) => {
-    if (limits.posts === Infinity) return 'unlimited';
-    return Math.max(0, limits.posts - currentCount);
-  };
-
-  const getRemainingProfiles = (currentCount: number) => {
-    if (limits.profiles === Infinity) return 'unlimited';
-    return Math.max(0, limits.profiles - currentCount);
-  };
+  const getRemainingProfiles = (currentCount: number) =>
+    limits.brands === Infinity ? 'unlimited' : Math.max(0, limits.brands - currentCount);
 
   return {
-    plan,
+    plan: planKey,
     limits,
     canCreateTemplate,
     canCreatePost,

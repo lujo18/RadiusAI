@@ -104,11 +104,11 @@ export const useTrackBrand = () => {
   });
 };
 
-export const useGetTemplateUsage = () => {
+export const useGetTemplateUsage = (brandId?: string) => {
   return useQuery({
-    queryKey: ['usage', 'templates'],
+    queryKey: ['usage', 'templates', brandId],
     queryFn: async () => {
-      const res = await usageApi.getTemplateUsage();
+      const res = await usageApi.getTemplateUsage(brandId);
       return res ?? { template_count: 0, template_limit: null, remaining: null };
     },
     staleTime: 30 * 1000,

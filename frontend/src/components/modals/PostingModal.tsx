@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Calendar, Send, Save, Edit, ArrowLeft, ArrowRight } from "lucide-react";
 import {
@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostContent } from "@/lib/parseJsonColumn.supabase";
+import { useAutomations } from "@/features/automation/hooks";
 
 type PlatformIntegration = Database["public"]["Tables"]["platform_integrations"]["Row"];
 type Post = any;
@@ -48,6 +49,32 @@ export default function PostingModal({
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [step, setStep] = useState<'edit' | 'integrations' | 'schedule'>('edit');
   const [mode, setMode] = useState<PostingMode>('publish');
+  
+  // Fetch automations for the brand
+  const { data: automations = [] } = useAutomations(brandId);
+
+  // Merge all automation schedules for the brand
+  const mergedAutomationSchedule = useMemo(() => {
+    const merged: Record<string, string[]> = {};
+    
+    automations.forEach((automation: any) => {
+      if (automation.schedule && typeof automation.schedule === 'object') {
+        Object.entries(automation.schedule as Record<string, string[]>).forEach(([day, times]) => {
+          if (!merged[day]) {
+            merged[day] = [];
+          }
+          // Add unique times only
+          times.forEach((time: string) => {
+            if (!merged[day].includes(time)) {
+              merged[day].push(time);
+            }
+          });
+        });
+      }
+    });
+    
+    return merged;
+  }, [automations]);
   const [selectedDateTime, setSelectedDateTime] = useState<Date>();
 
   // Content editing state
@@ -301,6 +328,7 @@ export default function PostingModal({
                     selectedDateTime={selectedDateTime}
                     onTimeSelect={setSelectedDateTime}
                     brandId={brandId}
+                    automationSchedule={mergedAutomationSchedule}
                   />
 
                   <div className="flex justify-between items-center pt-6 border-t border-border">

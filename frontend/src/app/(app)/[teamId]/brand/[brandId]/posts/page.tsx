@@ -86,10 +86,9 @@ export default function Page({
   const router = useRouter();
   const { brandId, teamId } = React.use(params);
 
-
-  
-
   const { data, isLoading, error } = usePostsWithAnalytics(brandId);
+
+  console.log("posts", data)
 
   const ts = async () => {
     const session = await supabase.auth.getSession();

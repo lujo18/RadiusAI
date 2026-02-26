@@ -1,8 +1,16 @@
 /**
  * Pricing Page Content
- * 
- * Edit this file to update pricing page copy, features, and comparisons.
+ *
+ * Edit this file to update marketing copy, comparison tables, and FAQs.
+ *
+ * ⚠️  Plan names, features, and limits are defined in ONE place:
+ *     src/lib/plans.ts  ← edit that file, not here
+ *
+ * The `plans` key below re-exports from plans.ts so all consumers
+ * stay in sync automatically.
  */
+
+import { PLANS } from '@/lib/plans';
 
 export const pricingContent = {
   // ==========================================
@@ -15,57 +23,9 @@ export const pricingContent = {
   },
 
   // ==========================================
-  // PLANS (Prices pulled from Stripe API)
+  // PLANS — sourced from src/lib/plans.ts
   // ==========================================
-  plans: {
-    starter: {
-      name: "Starter",
-      description: "Perfect for testing and small projects",
-      badge: null,
-      features: [
-        "20 posts per month",
-        "5 template options",
-        "Basic analytics",
-        "Email support",
-        "1 brand profile",
-        "Standard quality exports"
-      ]
-    },
-    growth: {
-      name: "Growth",
-      description: "For serious creators and businesses",
-      badge: "Most Popular",
-      features: [
-        "Unlimited posts",
-        "50+ premium templates",
-        "A/B testing (3 variants)",
-        "Advanced analytics",
-        "Priority support",
-        "Custom branding",
-        "5 brand profiles",
-        "HD exports",
-        "Content calendar",
-        "Batch generation"
-      ]
-    },
-    unlimited: {
-      name: "Unlimited",
-      description: "For agencies and large teams",
-      badge: "Best Value",
-      features: [
-        "Everything in Pro",
-        "Unlimited team members",
-        "20 brand profiles",
-        "White-label exports",
-        "API access",
-        "Dedicated account manager",
-        "Custom templates",
-        "Priority processing",
-        "Advanced permissions",
-        "SSO (coming soon)"
-      ]
-    }
-  },
+  plans: PLANS,
 
   // ==========================================
   // SOCIAL PROOF

@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { templateService } from './services';
-import { useTrackTemplate } from '@/features/usage/hooks';
+import { useGetTemplateUsage, useTrackTemplate } from '@/features/usage/hooks';
 import type { Database } from '@/types/database';
 
 // Query Keys - simplified to use brandId where available
@@ -62,15 +62,14 @@ export function useTemplatesWithAnalytics(brandId: string) {
 
 export function useCreateTemplate() {
   const queryClient = useQueryClient();
-  const trackTemplateMutation = useTrackTemplate();
+  const { data: templateUsage } = useGetTemplateUsage();
 
   return useMutation({
     mutationFn: async (templateData: any) => {
       // Check and track template usage first
-      const trackResult = await trackTemplateMutation.mutateAsync();
       
-      if (!trackResult.allowed) {
-        throw new Error(trackResult.message || 'Template limit exceeded');
+      if (templateUsage?.remaining !== null && templateUsage?.remaining! <= 0) {
+        throw new Error('Template limit exceeded');
       }
 
       // If allowed, proceed with template creation

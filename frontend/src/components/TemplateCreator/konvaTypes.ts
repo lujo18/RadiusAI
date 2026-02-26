@@ -1,9 +1,8 @@
 import React from "react";
-// All types now sourced from database.ts
-import type { Tables } from '@/types/database';
+import type { Background } from '@/types/parseBackground';
 import type { TextElement, SlideDesign, AspectRatio } from './types';
 
-export type BackgroundConfig = Tables<'slide_designs'>['background'];
+export type BackgroundConfig = Background;
 export type PostSlide = {
   background: BackgroundConfig;
   elements: TextElement[];

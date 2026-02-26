@@ -36,6 +36,7 @@ class Config:
     UNSPLASH_APP_ID = os.getenv("UNSPLASH_APP_ID")
     UNSPLASH_SECRET_KEY = os.getenv("UNSPLASH_SECRET_KEY")
     UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+    RUNWARE_DEV_KEY = os.getenv("RUNWARE_DEV_KEY")
     BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
     STATE_SECRET_KEY = os.getenv("STATE_SECRET_KEY") # secure transporting data through social media oauth and back

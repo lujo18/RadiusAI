@@ -35,8 +35,8 @@ def list_products():
     """List active Stripe products and prices"""
     require_stripe_key()
     try:
-        products = stripe.Product.list(limit=50)
-        prices = stripe.Price.list(limit=200)
+        products = stripe.Product.list(active=True, limit=50)
+        prices = stripe.Price.list(active=True, limit=200)
 
         # map prices to products
         price_map = {}

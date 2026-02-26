@@ -22,7 +22,10 @@ import TemplateViewSwitcher from "@/components/Templates/TemplateViewSwitcher";
 const TemplatesTab = ({ brandId }: { brandId: string }) => {
   const { data: templates, isLoading: templatesLoading } =
     useTemplatesWithAnalytics(brandId);
-  const { data: templateUsage } = useGetTemplateUsage();
+  const { data: templateUsage } = useGetTemplateUsage(brandId);
+
+
+  console.log("template usage", templateUsage)
   console.log("templates", templates);
   const templatesArr = templates as any[];
 
@@ -52,7 +55,7 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
   const deleteTemplateMutation = useDeleteTemplate();
 
   const templateCount = templateUsage?.template_count ?? 0;
-  const templatesRemaining = templateCount?.remaining ?? 0;
+  const templatesRemaining = templateUsage?.remaining ?? 0;
   const templateLimit = templateUsage?.template_limit ?? 0;
   
   const isTemplateLimitReached =
@@ -90,13 +93,14 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
                 ? "Template limit reached. Upgrade your plan to create more templates."
                 : ""
             }
-            className="bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-primary hover:bg-primary/80 text-primary-foreground px-3 py-3 rounded-lg font-semibold transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Image
               src="/images/icon-primary.png"
               alt="Radius Logo"
               width={24}
               height={24}
+              className="dark:brightness-0"
             />
             Create Template
           </Button>

@@ -81,8 +81,7 @@ async def generate_post_content_from_prompt(
         # FastAPI's jsonable_encoder handles nested Pydantic models automatically
         return response
     except Exception as e:
-        logging.error(f"Error generating posts: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise
 
 @router.post("/post", response_model=dict)
 async def create_post(

@@ -56,11 +56,9 @@ export const SocialIntegration = ({
           }
         }}
         disabled={connecting === platformKey}
-        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-          isConnected
-            ? 'bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/20'
-            : 'bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20'
-        }`}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition`}
+
+        variant={isConnected ? "destructive" : "default"}
       >
         {connecting === platformKey ? (
           <span className="flex items-center gap-2">

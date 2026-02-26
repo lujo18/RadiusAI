@@ -2,8 +2,9 @@ import React from "react";
 import { Button } from './ui/button';
 'use client';
 
+import Link from 'next/link';
 import { ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { FiLock, FiZap } from 'react-icons/fi';
 import { useSubscriptionGuard } from '@/hooks/useSubscriptionGuard';
 
@@ -22,7 +23,8 @@ export default function FeatureLock({
   feature = 'this feature',
   showOverlay = true 
 }: FeatureLockProps) {
-  const router = useRouter();
+  const params = useParams();
+  const teamId = params?.teamId as string | undefined;
   const { isActive, isLoading } = useSubscriptionGuard();
 
   // Show loading state
@@ -52,11 +54,13 @@ export default function FeatureLock({
               Subscribe to access this feature and unlock the full power of Radius.
             </p>
             <Button
-              onClick={() => router.push('/pricing')}
+              asChild
               className="btn-primary flex items-center gap-2 mx-auto"
             >
-              <FiZap className="w-5 h-5" />
-              View Plans
+              <Link href={teamId ? `/${teamId}/settings/billing?upgrade=true` : '/pricing'}>
+                <FiZap className="w-5 h-5" />
+                View Plans
+              </Link>
             </Button>
           </div>
         </div>

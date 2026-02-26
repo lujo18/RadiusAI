@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 
 export async function middleware(request: NextRequest) {
   // Create a Supabase client configured to use cookies
@@ -90,38 +89,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Check subscription status for authenticated users accessing dashboard
-  if (isProtectedRoute && user && !hasStripeSessionId) {
-    console.log('[Middleware] Checking subscription status for user:', user.id);
-    
-    // Use service role key to query users table (RLS bypass for middleware)
-    const serviceSupabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { auth: { persistSession: false } }
-    );
-
-    const { data: userData, error: userError } = await serviceSupabase
-      .from('users')
-      .select('subscription_status')
-      .eq('id', user.id)
-      .single();
-
-    console.log('[Middleware] Subscription check:', {
-      userId: user.id,
-      subscriptionStatus: userData?.subscription_status,
-      error: userError?.message
-    });
-
-    // Block access if no active subscription (null, inactive, canceled, etc.)
-    const validStatuses = ['active', 'trialing'];
-    if (!userData?.subscription_status || !validStatuses.includes(userData.subscription_status)) {
-      console.log('[Middleware] Blocking access - no active subscription');
-      const pricingUrl = new URL('/pricing', request.url);
-      pricingUrl.searchParams.set('reason', 'subscription_required');
-      return NextResponse.redirect(pricingUrl);
-    }
-  }
+  // Subscription is enforced at the feature level (FeatureLock), not at the route level.
+  // Authenticated users without an active subscription can browse the dashboard freely.
 
   return response;
 }

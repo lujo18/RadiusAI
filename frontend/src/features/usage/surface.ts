@@ -41,8 +41,9 @@ export const usageApi = {
     return data;
   },
 
-  async getTemplateUsage() {
-    const { data } = await backendClient.get('/api/usage/templates');
+  async getTemplateUsage(brandId?: string) {
+    const params = brandId ? `?brand_id=${brandId}` : '';
+    const { data } = await backendClient.get(`/api/usage/templates${params}`);
     return data;
   },
 

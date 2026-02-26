@@ -65,15 +65,16 @@ async def fetch_platform_metrics(post_id: str) -> dict:
                 return {}
             
             # 4) Map PostForMe metrics to our schema
-            metrics_dict = item.metrics.dict()
+            # ACTUAL PostForMe response uses: like_count, comment_count, share_count, view_count
+            metrics_dict = item.metrics.dict() if hasattr(item.metrics, 'dict') else item.metrics
             
-            print("Metrics", metrics_dict)
+            logger.info(f"Raw metrics for post {post_id}: {metrics_dict}")
             
             return {
                 "likes": metrics_dict.get("like_count", 0),
                 "comments": metrics_dict.get("comment_count", 0),
                 "shares": metrics_dict.get("share_count", 0),
-                "saves": metrics_dict.get("favorites", 0),  # PostForMe uses 'favorites' for saves
+                "saves": metrics_dict.get("favorites", 0),  # May not exist in actual response
                 "impressions": metrics_dict.get("view_count", 0),
                 "total_time_watched": metrics_dict.get("total_time_watched", 0),
                 "average_time_watched": metrics_dict.get("average_time_watched", 0),
@@ -82,7 +83,7 @@ async def fetch_platform_metrics(post_id: str) -> dict:
             }
     
     except Exception as e:
-        logger.error(f"Error fetching metrics for post {post_id}: {e}")
+        logger.error(f"Error fetching metrics for post {post_id}: {e}", exc_info=True)
         return {}
 
 

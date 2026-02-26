@@ -97,19 +97,20 @@ export class AnalyticsRepository {
 
     // If brandId provided, fetch post ids for that brand and filter
     if (brandId) {
-      const { data: posts, error: postsError } = await supabase
-        .from("posts")
-        .select("id")
-        .eq("brand_id", brandId);
-      if (postsError) throw postsError;
-      const postIds = (posts || []).map((p: any) => p.id);
+      // const { data: posts, error: postsError } = await supabase
+      //   .from("posts")
+      //   .select("id")
+      //   .eq("brand_id", brandId);
+      // if (postsError) throw postsError;
+      // const postIds = (posts || []).map((p: any) => p.id);
 
-      if (postIds.length === 0) return [];
+      // if (postIds.length === 0) return [];
 
       const { data, error } = await supabase
         .from("post_analytics")
-        .select("*")
-        .in("post_id", postIds);
+        .select("*, posts!inner(id, brand_id)")
+        .eq("posts.brand_id", brandId);
+
 
       if (error) throw error;
       return data || [];

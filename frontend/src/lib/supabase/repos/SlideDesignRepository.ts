@@ -2,9 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
 import { supabase } from '../client'
 
+// NOTE: The `slide_designs` table has been removed from the schema.
+// This repository is kept as a reference but is no longer used.
+// Using `any` cast to avoid type errors on the deleted table.
+const db = supabase as any;
+
 export class SlideDesignRepository {
   static async getSlideDesign(slideDesignId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('slide_designs')
       .select('*')
       .eq('id', slideDesignId)
@@ -14,7 +19,7 @@ export class SlideDesignRepository {
   }
 
   static async getSlideDesignsByTemplate(templateId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('slide_designs')
       .select('*')
       .eq('template_id', templateId)
@@ -23,8 +28,8 @@ export class SlideDesignRepository {
     return data;
   }
 
-  static async createSlideDesign(design: Database['public']['Tables']['slide_designs']['Insert']) {
-    const { data, error } = await supabase
+  static async createSlideDesign(design: any) {
+    const { data, error } = await db
       .from('slide_designs')
       .insert([design])
       .select()
@@ -33,8 +38,8 @@ export class SlideDesignRepository {
     return data;
   }
 
-  static async updateSlideDesign(slideDesignId: string, updates: Partial<Database['public']['Tables']['slide_designs']['Update']>) {
-    const { data, error } = await supabase
+  static async updateSlideDesign(slideDesignId: string, updates: any) {
+    const { data, error } = await db
       .from('slide_designs')
       .update(updates)
       .eq('id', slideDesignId)
@@ -45,7 +50,7 @@ export class SlideDesignRepository {
   }
 
   static async deleteSlideDesign(slideDesignId: string) {
-    const { error } = await supabase
+    const { error } = await db
       .from('slide_designs')
       .delete()
       .eq('id', slideDesignId);

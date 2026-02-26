@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, startOfDay, addHours, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
-import { useScheduledPosts } from '@/features/posts/hooks';
+import { useScheduledPosts } from "@/features/posts/hooks";
 import { convertToLocalTime } from "@/lib/time";
+import {
+  CalendarEventCard,
+  EventTime,
+  EventTitle,
+} from "./calendar-event-card";
+import { cn } from "@/lib/utils";
 
 type ScheduledPost = {
   id: string;
@@ -21,46 +27,65 @@ type TimeBlockProps = {
   hour: number;
   isSelected: boolean;
   isOccupied: boolean;
+  isAutomationScheduled: boolean;
   occupiedPost?: ScheduledPost;
   onClick: (date: Date, hour: number) => void;
   disabled?: boolean;
 };
 
-const TimeBlock = ({ 
-  date, 
-  hour, 
-  isSelected, 
-  isOccupied, 
-  occupiedPost, 
-  onClick, 
-  disabled = false 
+
+
+const TimeBlock = ({
+  date,
+  hour,
+  isSelected,
+  isOccupied,
+  isAutomationScheduled,
+  occupiedPost,
+  onClick,
+  disabled = false,
 }: TimeBlockProps) => {
-  const timeString = convertToLocalTime(`${String(hour).padStart(2, '0')}:00`);
-  const shouldDisable = disabled || isOccupied;
-  
+  const timeString = convertToLocalTime(`${String(hour).padStart(2, "0")}:00`);
+  const shouldDisable = disabled || isOccupied || isAutomationScheduled;
+
   return (
-    <Card 
-      className={`
-        p-2 cursor-pointer transition-all duration-200
-        ${shouldDisable ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md hover:bg-muted/50'}
-        ${isSelected && !isOccupied ? 'ring-2 ring-primary bg-primary/10' : ''}
-        ${isOccupied ? 'bg-red-100 border-2 border-red-300 shadow-sm' : ''}
-      `}
+    <button
       onClick={() => !shouldDisable && onClick(date, hour)}
+      title={
+        isAutomationScheduled ? `Automation scheduled at ${timeString}` : ""
+      }
     >
-      <div className="text-xs font-medium">{timeString}</div>
-      {isOccupied && occupiedPost && (
-        <div className="mt-1">
-          <Badge variant="destructive" className="text-xs bg-red-600">
-            <Clock className="w-3 h-3 mr-1" />
-            Scheduled
-          </Badge>
-          <div className="text-xs text-red-700 mt-1 truncate font-medium">
-            {occupiedPost.content?.title || occupiedPost.content?.caption || 'Scheduled Post'}
-          </div>
-        </div>
-      )}
-    </Card>
+      <CalendarEventCard
+        className={`
+        cursor-pointer transition-all duration-200
+        ${shouldDisable ? "cursor-not-allowed" : " hover:bg-muted/70"}
+      `}
+        isDotted
+        eventColor={
+          isOccupied
+            ? ("primary")
+            : isAutomationScheduled
+              ? ("chart2")
+              : isSelected ? "selected" : "accent"
+        }
+
+        status={disabled ? "completed" :
+          isOccupied || isAutomationScheduled ? 
+          "idle" : "idle"
+        }
+
+    
+      >
+        <EventTitle className={cn(!isOccupied && !isAutomationScheduled && !isSelected && "opacity-30")}>
+          {isOccupied && occupiedPost
+            ? "Scheduled"
+            : isAutomationScheduled && !isOccupied
+              ? "Automation"
+              : "Open slot"}
+        </EventTitle>
+        <EventTime startTime={timeString} />
+      </CalendarEventCard>
+    </button>
   );
 };
 
@@ -68,14 +93,16 @@ type TimeBlockSchedulerProps = {
   selectedDateTime?: Date;
   onTimeSelect: (dateTime: Date) => void;
   brandId?: string;
+  automationSchedule?: Record<string, string[]>;
   className?: string;
 };
 
-export const TimeBlockScheduler = ({ 
-  selectedDateTime, 
-  onTimeSelect, 
+export const TimeBlockScheduler = ({
+  selectedDateTime,
+  onTimeSelect,
   brandId,
-  className = "" 
+  automationSchedule,
+  className = "",
 }: TimeBlockSchedulerProps) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewDays, setViewDays] = useState(7); // Number of days to show
@@ -92,11 +119,11 @@ export const TimeBlockScheduler = ({
   ]);
 
   // Fetch scheduled posts for the 30-day window
-  const { data: scheduledPosts = [], isLoading, error } = useScheduledPosts(
-    brandId,
-    fromDate,
-    toDate
-  );
+  const {
+    data: scheduledPosts = [],
+    isLoading,
+    error,
+  } = useScheduledPosts(brandId, fromDate, toDate);
 
   // Generate time slots (9 AM to 9 PM)
   const timeSlots = Array.from({ length: 13 }, (_, i) => i + 9); // 9 to 21
@@ -110,31 +137,42 @@ export const TimeBlockScheduler = ({
       const postTime = new Date(post.scheduled_time);
       // Get the hour in the user's local timezone
       const postHour = postTime.getHours();
-      const postDate = new Date(postTime.getFullYear(), postTime.getMonth(), postTime.getDate());
+      const postDate = new Date(
+        postTime.getFullYear(),
+        postTime.getMonth(),
+        postTime.getDate(),
+      );
       const targetHour = addHours(startOfDay(date), hour);
-      
+
       // Compare: same day in local timezone AND same hour (within 1 hour window)
       const isSameLocalDay = postDate.toDateString() === date.toDateString();
       const isWithinHour = Math.abs(postHour - hour) === 0;
-      
+
       return isSameLocalDay && isWithinHour;
     });
   };
 
   // Get occupied post for a time slot
-  const getOccupiedPost = (date: Date, hour: number): ScheduledPost | undefined => {
+  const getOccupiedPost = (
+    date: Date,
+    hour: number,
+  ): ScheduledPost | undefined => {
     return scheduledPosts.find((post: any) => {
       if (!post.scheduled_time) return false;
       // Convert UTC database time to local timezone
       const postTime = new Date(post.scheduled_time);
       // Get the hour in the user's local timezone
       const postHour = postTime.getHours();
-      const postDate = new Date(postTime.getFullYear(), postTime.getMonth(), postTime.getDate());
-      
+      const postDate = new Date(
+        postTime.getFullYear(),
+        postTime.getMonth(),
+        postTime.getDate(),
+      );
+
       // Compare: same day in local timezone AND same hour
       const isSameLocalDay = postDate.toDateString() === date.toDateString();
       const isWithinHour = Math.abs(postHour - hour) === 0;
-      
+
       return isSameLocalDay && isWithinHour;
     });
   };
@@ -143,7 +181,9 @@ export const TimeBlockScheduler = ({
   const isTimeSelected = (date: Date, hour: number) => {
     if (!selectedDateTime) return false;
     const targetDateTime = addHours(startOfDay(date), hour);
-    return Math.abs(selectedDateTime.getTime() - targetDateTime.getTime()) < 3600000;
+    return (
+      Math.abs(selectedDateTime.getTime() - targetDateTime.getTime()) < 3600000
+    );
   };
 
   // Check if a time slot is in the past
@@ -152,8 +192,19 @@ export const TimeBlockScheduler = ({
     return targetDateTime < new Date();
   };
 
+  // Check if a time slot is in the automation schedule
+  const isTimeInAutomationSchedule = (date: Date, hour: number) => {
+    if (!automationSchedule) return false;
+
+    const dayName = format(date, "EEEE").toLowerCase();
+    const timeString = `${String(hour).padStart(2, "0")}:00`;
+
+    const scheduledTimes = automationSchedule[dayName] || [];
+    return scheduledTimes.includes(timeString);
+  };
+
   const nextWeek = () => {
-    setCurrentDate(prev => {
+    setCurrentDate((prev) => {
       const next = addDays(prev, 7);
       // If moving beyond current 30-day window, the useMemo will trigger a new query
       return next;
@@ -161,7 +212,7 @@ export const TimeBlockScheduler = ({
   };
 
   const prevWeek = () => {
-    setCurrentDate(prev => {
+    setCurrentDate((prev) => {
       const next = addDays(prev, -7);
       // If moving beyond current 30-day window, the useMemo will trigger a new query
       return next;
@@ -173,7 +224,9 @@ export const TimeBlockScheduler = ({
     onTimeSelect(selectedTime);
   };
 
-  const days = Array.from({ length: viewDays }, (_, i) => addDays(startOfDay(currentDate), i));
+  const days = Array.from({ length: viewDays }, (_, i) =>
+    addDays(startOfDay(currentDate), i),
+  );
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -187,7 +240,9 @@ export const TimeBlockScheduler = ({
       {/* Error state */}
       {error && (
         <div className="text-center py-8">
-          <p className="text-red-600">Error loading scheduled posts: {error.message}</p>
+          <p className="text-red-600">
+            Error loading scheduled posts: {error.message}
+          </p>
         </div>
       )}
 
@@ -201,7 +256,8 @@ export const TimeBlockScheduler = ({
               Previous Week
             </Button>
             <h3 className="font-medium">
-              {format(currentDate, 'MMM d')} - {format(addDays(currentDate, viewDays - 1), 'MMM d, yyyy')}
+              {format(currentDate, "MMM d")} -{" "}
+              {format(addDays(currentDate, viewDays - 1), "MMM d, yyyy")}
             </h3>
             <Button variant="outline" size="sm" onClick={nextWeek}>
               Next Week
@@ -212,25 +268,36 @@ export const TimeBlockScheduler = ({
           {/* Time Grid */}
           <div className="grid grid-cols-8 gap-2">
             {/* Header row with time labels */}
-            <div className="font-medium text-sm text-muted-foreground">Time</div>
-            {days.map(day => (
-              <div key={day.toISOString()} className="font-medium text-sm text-center">
-                <div>{format(day, 'EEE')}</div>
-                <div className="text-xs text-muted-foreground">{format(day, 'MMM d')}</div>
+            <div className="font-medium text-sm text-muted-foreground">
+              Time
+            </div>
+            {days.map((day) => (
+              <div
+                key={day.toISOString()}
+                className="font-medium text-sm text-center"
+              >
+                <div>{format(day, "EEE")}</div>
+                <div className="text-xs text-muted-foreground">
+                  {format(day, "MMM d")}
+                </div>
               </div>
             ))}
 
             {/* Time slots */}
-            {timeSlots.map(hour => (
+            {timeSlots.map((hour) => (
               <React.Fragment key={hour}>
                 <div className="text-sm text-muted-foreground py-2">
-                  {convertToLocalTime(`${String(hour).padStart(2, '0')}:00`)}
+                  {convertToLocalTime(`${String(hour).padStart(2, "0")}:00`)}
                 </div>
-                {days.map(day => {
+                {days.map((day) => {
                   const isOccupied = isTimeOccupied(day, hour);
                   const occupiedPost = getOccupiedPost(day, hour);
                   const isSelected = isTimeSelected(day, hour);
                   const isPast = isTimeInPast(day, hour);
+                  const isAutomationScheduled = isTimeInAutomationSchedule(
+                    day,
+                    hour,
+                  );
 
                   return (
                     <TimeBlock
@@ -241,7 +308,8 @@ export const TimeBlockScheduler = ({
                       isOccupied={isOccupied}
                       occupiedPost={occupiedPost}
                       onClick={handleTimeClick}
-                      disabled={isPast || isOccupied}
+                      disabled={isPast}
+                      isAutomationScheduled={isAutomationScheduled}
                     />
                   );
                 })}
@@ -253,7 +321,8 @@ export const TimeBlockScheduler = ({
             <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
               <div className="font-medium">Selected Time:</div>
               <div className="text-sm text-muted-foreground">
-                {format(selectedDateTime, 'EEEE, MMMM d, yyyy')} at {convertToLocalTime(format(selectedDateTime, 'HH:mm'))}
+                {format(selectedDateTime, "EEEE, MMMM d, yyyy")} at{" "}
+                {convertToLocalTime(format(selectedDateTime, "HH:mm"))}
               </div>
             </div>
           )}

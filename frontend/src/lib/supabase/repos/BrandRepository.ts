@@ -19,6 +19,79 @@ export class BrandRepository {
     return data;
   }
 
+  /**
+   * Get the first brand for a team (used for onboarding redirects).
+   */
+  static async getFirstBrand(teamId: string): Promise<string | null> {
+    const { data, error } = await supabase
+      .from('brand')
+      .select('id')
+      .eq('team_id', teamId)
+      .order('created_at', { ascending: true })
+      .limit(1);
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) return null;
+    return data[0].id;
+  }
+
+  /**
+   * Auto-create a placeholder brand for a new user so they can explore the dashboard.
+   * Returns the new brand id.
+   */
+  static async createDefaultBrand(teamId: string): Promise<string> {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('Not authenticated');
+
+    // Re-check right before inserting — guards against concurrent calls
+    // (React StrictMode double-invoke, fast remounts, etc.)
+    const existing = await BrandRepository.getFirstBrand(teamId);
+    if (existing) return existing;
+
+    const displayName =
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      user.email?.split('@')[0] ||
+      'My Brand';
+
+    // We need the brand id upfront so it can live inside brand_settings too
+    const tempId = crypto.randomUUID();
+
+    const brandSettings = {
+      id: tempId,
+      brand_id: tempId,
+      name: `${displayName}'s Brand`,
+      niche: '',
+      aesthetic: '',
+      target_audience: '',
+      brand_voice: '',
+      content_pillars: [],
+      tone_of_voice: 'casual',
+      emoji_usage: 'moderate',
+      forbidden_words: [],
+      preferred_words: [],
+      hashtag_style: 'mixed',
+      hashtag_count: 10,
+      hashtags: [],
+    };
+
+    const { data, error } = await supabase
+      .from('brand')
+      .insert([{
+        id: tempId,
+        user_id: user.id,
+        team_id: teamId,
+        late_profile_id: `profile_${Date.now()}`,
+        brand_settings: brandSettings,
+        post_count: 0,
+        template_count: 0,
+      }] as any)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data.id;
+  }
+
   // Get all brands for a team
   static async getBrands(teamId: string) {
     const { data, error } = await supabase

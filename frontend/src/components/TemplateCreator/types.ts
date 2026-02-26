@@ -33,10 +33,11 @@ export function parseTextElements(json: Json): TextElement[] {
 	}
 	return [];
 }
-// All types now sourced from database.ts
-import type { Tables } from '@/types/database';
+import type { Background } from '@/types/parseBackground';
+import type { SlideDesign as LibSlideDesign } from '@/lib/slideTemplates';
 
-export type AspectRatio = Tables<'layout_configs'>['aspect_ratio'];
+/** "4:5" | "1:1" | "9:16" */
+export type AspectRatio = '4:5' | '1:1' | '9:16';
 export type TextElement = import('@/types/parseTextElement').TextElement;
-export type BackgroundConfig = Tables<'slide_designs'>['background'];
-export type SlideDesign = Tables<'slide_designs'>;
+export type BackgroundConfig = Background;
+export type SlideDesign = LibSlideDesign;

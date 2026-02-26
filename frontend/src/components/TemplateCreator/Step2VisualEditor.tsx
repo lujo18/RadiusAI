@@ -14,15 +14,17 @@ import {
 } from "react-icons/fi";
 import Image from "next/image";
 import { Stage, Layer, Rect, Text as KonvaText, Line, Group } from "react-konva";
-import type { Tables } from "@/types/database";
 import { TextElement, TextElementsArraySchema } from "@/types/parseTextElement";
 import { BackgroundSchema } from "@/types/parseBackground";
 import { z } from "zod";
-type SlideDesign = Tables<"slide_designs"> & {
+type SlideDesign = {
+  id: string;
+  name: string;
   text_elements: TextElement[];
   background: any;
+  [key: string]: any;
 };
-type AspectRatio = Tables<"layout_configs">["aspect_ratio"];
+type AspectRatio = '4:5' | '1:1' | '9:16';
 // Aspect ratios constant (define locally if missing)
 const ASPECT_RATIOS = {
   "4:5": { width: 1080, height: 1350 },

@@ -35,9 +35,6 @@ export default function AutomationPage() {
   const brandId = params?.brandId as string;
   const teamId = params?.teamId as string;
 
-  // Data fetching
-  const { data: brands } = useBrands();
-
   // State management
   const [automationWizardOpen, setAutomationWizardOpen] = useState(false);
   const [automations, setAutomations] = useState<Automation[]>([]);

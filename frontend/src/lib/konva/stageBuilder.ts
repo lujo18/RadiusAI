@@ -8,10 +8,16 @@
  */
 
 import Konva from "konva";
-import type { Tables } from '@/types/database';
-type SlideDesign = Tables<'slide_designs'>;
 import { TextElement } from '@/types/parseTextElement';
-type AspectRatio = Tables<'layout_configs'>['aspect_ratio'];
+
+/** Minimal shape needed by buildStageFromSlideDesign. */
+type SlideDesign = {
+  background?: unknown;
+  text_elements?: unknown[];
+  [key: string]: unknown;
+};
+
+type AspectRatio = '4:5' | '1:1' | '9:16';
 import { BackgroundSchema, Background } from '@/types/parseBackground';
 type PostSlide = {
   background: Background;

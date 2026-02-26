@@ -1,6 +1,5 @@
 import React from "react";
 
-import type { Tables } from "@/types/database";
 import { Background, BackgroundSchema } from "@/types/parseBackground";
 import { Card } from "../ui/card";
 import {
@@ -20,7 +19,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Button } from "../ui/button";
-type SlideDesign = Tables<"slide_designs">;
+type SlideDesign = { id: string; name: string; [key: string]: any };
 
 interface Step3SlideSequenceProps {
   slideCount: number;

@@ -283,20 +283,27 @@ def track_brand(user: str = Depends(get_current_user)):
 
 
 @router.get("/templates")
-def get_template_usage(user: str = Depends(get_current_user)):
-    """Get current template usage and limits for the authenticated user."""
+def get_template_usage(brand_id: str, user: str = Depends(get_current_user)):
+    """Get current template usage and limits for the authenticated user.
+    
+    If brand_id is provided, returns only templates for that brand.
+    Otherwise, returns all templates for the user's team.
+    """
     try:
-        result = usage_service.get_template_usage(user)
+        print(f"[ENDPOINT /api/usage/templates] user={user}, brand_id={brand_id}")
+        result = usage_service.get_template_usage(user, brand_id=brand_id)
+        print(f"[ENDPOINT /api/usage/templates] result={result}")
         # Return result even if it contains an error - let the client handle it
         # This ensures the endpoint always returns 200 with reasonable defaults
         return {
-            "template_count": result.get("template_count", []),
+            "template_count": result.get("template_count", 0),
             "template_limit": result.get("template_limit"),
             "remaining": result.get("remaining")
         }
     except HTTPException:
         raise
     except Exception as e:
+        print(f"[ENDPOINT /api/usage/templates] ERROR: {e}")
         logger.exception("Failed to get template usage")
         # Return defaults instead of 500 to prevent UI crashes
         return {
@@ -304,28 +311,6 @@ def get_template_usage(user: str = Depends(get_current_user)):
             "template_limit": None,
             "remaining": None
         }
-
-
-@router.post("/templates/track")
-def track_template(user: str = Depends(get_current_user)):
-    """Check template limit and increment template usage if allowed.
-    
-    This should be called when creating a new template.
-    Returns: {allowed: bool, template_count: int, template_limit: int|null, remaining: int|null}
-    """
-    try:
-        result = usage_service.check_and_track_template(user, amount=1)
-        if not result.get("allowed"):
-            raise HTTPException(
-                status_code=403,
-                detail=result.get("message", "Template limit exceeded")
-            )
-        return result
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception("Failed to track template")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================

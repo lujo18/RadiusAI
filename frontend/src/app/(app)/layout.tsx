@@ -5,6 +5,7 @@ import { useParams, useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store";
 import { useState, useEffect } from "react";
 import SubscriptionBanner from "@/components/SubscriptionBanner";
+import AppBanner from "@/components/AppBanner";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -46,12 +47,13 @@ import {
   Send,
 } from "lucide-react";
 import BrandSelector from "@/components/Dashboard/BrandSelector";
-import { Highlight } from '@/components/animate-ui/primitives/effects/highlight';
-import { useBrands } from '@/features/brand/hooks';
-import { useBrandFilter } from '@/hooks/useBrandFilter';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Highlight } from "@/components/animate-ui/primitives/effects/highlight";
+import { useBrands } from "@/features/brand/hooks";
+import { useBrandFilter } from "@/hooks/useBrandFilter";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useGetCreditsUsage } from "@/features/usage";
 import { Badge } from "@/components/ui/badge";
+import { AccountDropdown } from "@/components/Dashboard/AccountDropdown";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -70,15 +72,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       // Then clear local auth state
       logout();
       // Redirect to login page
-      router.push("/login");
+      router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
       // Even if Supabase signout fails, clear local state
       logout();
-      router.push("/login");
+      router.push("/");
     }
   };
-  
+
   const [notifications] = useState(2);
   const [subscriptionChecked, setSubscriptionChecked] = useState(false);
   const [activeTab, setActiveTab] = useState<
@@ -97,21 +99,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
 
   const { data: creditData } = useGetCreditsUsage();
-  const creditsRemaining = creditData?.credits_limit - creditData?.credits_used
+  const creditsRemaining = creditData?.credits_limit - creditData?.credits_used;
 
   const activeBrand = brands?.find((b: any) => b.id === activeBrandId);
-  const displayName = activeBrand ? ((activeBrand.brand_settings as any)?.name || 'Brand') : 'All Brands';
-  const displayPlan = activeBrand ? 'Brand View' : 'Overview';
+  const displayName = activeBrand
+    ? (activeBrand.brand_settings as any)?.name || "Brand"
+    : "All Brands";
+  const displayPlan = activeBrand ? "Brand View" : "Overview";
 
   const handleBrandSwitch = (brandId: string | null) => {
     if (brandId === null) {
-      router.push(teamId ? `/${teamId}/overview` : '/overview');
+      router.push(teamId ? `/${teamId}/overview` : "/overview");
     } else {
-      const pathSegments = pathname.split('/').filter(Boolean);
+      const pathSegments = pathname.split("/").filter(Boolean);
       const currentPage = pathSegments[pathSegments.length - 1];
-      const isSubPage = ['generate', 'calendar', 'templates', 'analytics', 'settings'].includes(currentPage);
-      const basePath = teamId ? `/${teamId}` : '';
-      router.push(isSubPage ? `${basePath}/brand/${brandId}/${currentPage}` : `${basePath}/brand/${brandId}`);
+      const isSubPage = [
+        "generate",
+        "calendar",
+        "templates",
+        "analytics",
+        "settings",
+      ].includes(currentPage);
+      const basePath = teamId ? `/${teamId}` : "";
+      router.push(
+        isSubPage
+          ? `${basePath}/brand/${brandId}/${currentPage}`
+          : `${basePath}/brand/${brandId}`,
+      );
     }
   };
 
@@ -161,157 +175,176 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-
   return (
-    <SidebarProvider>
-      {/** Compute default nav for top-level contexts (brand vs overview) */}
-      <PostingModalProvider>
-        <SidebarNavProvider
-          initial={(() => {
-            // Provide href as functions so resolved hrefs use the current activeBrandId and teamId
-            const basePath = teamId ? `/${teamId}` : '';
-            return [
-              {
-                title: "Overview",
-                key: "overview",
-                href: (b?: string | null) => b ? `${basePath}/brand/${b}` : `${basePath}/overview`,
-                icon: LayoutDashboard,
-              },
-              {
-                title: "Posts",
-                key: "posts",
-                href: (b?: string | null) =>
-                  b ? `${basePath}/brand/${b}/posts` : `${basePath}/overview`,
-                icon: GalleryVerticalEnd,
-              },
-              {
-                title: "Generate",
-                key: "generate",
-                href: (b?: string | null) =>
-                  b ? `${basePath}/brand/${b}/generate` : `${basePath}/overview`,
-                icon: Send,
-              },
-              {
-                title: "Calendar",
-                key: "calendar",
-                href: (b?: string | null) =>
-                  b ? `${basePath}/brand/${b}/calendar` : `${basePath}/overview`,
-                icon: Calendar,
-              },
-              {
-                title: "Templates",
-                key: "templates",
-                href: (b?: string | null) =>
-                  b ? `${basePath}/brand/${b}/templates` : `${basePath}/overview`,
-                icon: ToolCase,
-              },
-              // {
-              //   title: "Analytics",
-              //   key: "analytics",
-              //   href: (b?: string | null) =>
-              //     b ? `${basePath}/brand/${b}/analytics` : `${basePath}/overview`,
-              //   icon: BarChart3,
-              // },
-              {
-                title: "Automation",
-                key: "automation",
-                href: (b?: string | null) =>
-                  b ? `${basePath}/brand/${b}/automation` : `${basePath}/overview`,
-                icon: Zap,
-              },
-              {
-                title: "Settings",
-                key: "settings",
-                href: (b?: string | null) =>
-                  b ? `${basePath}/brand/${b}/settings` : `${basePath}/overview`,
-                icon: Cog,
-              },
-            ];
-          })()}
-        >
-          {/* Hide the sidebar for overview pages, show for brand routes */}
-          {!pathname.endsWith('/overview') || pathname.includes("/brand") ? (
-            <DashboardSidebar
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              onLogout={handleLogout}
-              header={
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                  <div className="flex w-full items-center gap-2 px-4 ">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator orientation="vertical" className="mr-2 h-4" />
+    <div>
+      <AppBanner location="(app)" />
+      <SidebarProvider>
+        {/** Compute default nav for top-level contexts (brand vs overview) */}
+        <PostingModalProvider>
+          <SidebarNavProvider
+            initial={(() => {
+              // Provide href as functions so resolved hrefs use the current activeBrandId and teamId
+              const basePath = teamId ? `/${teamId}` : "";
+              return [
+                {
+                  title: "Overview",
+                  key: "overview",
+                  href: (b?: string | null) =>
+                    b ? `${basePath}/brand/${b}` : `${basePath}/overview`,
+                  icon: LayoutDashboard,
+                },
+                {
+                  title: "Posts",
+                  key: "posts",
+                  href: (b?: string | null) =>
+                    b ? `${basePath}/brand/${b}/posts` : `${basePath}/overview`,
+                  icon: GalleryVerticalEnd,
+                },
+                {
+                  title: "Generate",
+                  key: "generate",
+                  href: (b?: string | null) =>
+                    b
+                      ? `${basePath}/brand/${b}/generate`
+                      : `${basePath}/overview`,
+                  icon: Send,
+                },
+                {
+                  title: "Calendar",
+                  key: "calendar",
+                  href: (b?: string | null) =>
+                    b
+                      ? `${basePath}/brand/${b}/calendar`
+                      : `${basePath}/overview`,
+                  icon: Calendar,
+                },
+                {
+                  title: "Templates",
+                  key: "templates",
+                  href: (b?: string | null) =>
+                    b
+                      ? `${basePath}/brand/${b}/templates`
+                      : `${basePath}/overview`,
+                  icon: ToolCase,
+                },
+                // {
+                //   title: "Analytics",
+                //   key: "analytics",
+                //   href: (b?: string | null) =>
+                //     b ? `${basePath}/brand/${b}/analytics` : `${basePath}/overview`,
+                //   icon: BarChart3,
+                // },
+                {
+                  title: "Automation",
+                  key: "automation",
+                  href: (b?: string | null) =>
+                    b
+                      ? `${basePath}/brand/${b}/automation`
+                      : `${basePath}/overview`,
+                  icon: Zap,
+                },
+                {
+                  title: "Settings",
+                  key: "settings",
+                  href: (b?: string | null) =>
+                    b
+                      ? `${basePath}/brand/${b}/settings`
+                      : `${basePath}/overview`,
+                  icon: Cog,
+                },
+              ];
+            })()}
+          >
+            {/* Hide the sidebar for overview pages, show for brand routes */}
+            {!pathname.endsWith("/overview") || pathname.includes("/brand") ? (
+              <DashboardSidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                onLogout={handleLogout}
+                header={
+                  <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                    <div className="flex w-full items-center gap-2 px-4 ">
+                      <SidebarTrigger className="-ml-1" />
+                      <Separator orientation="vertical" className="mr-2 h-4" />
 
-                    {/* Search and Notifications */}
+                      {/* Search and Notifications */}
 
-                    <div className="ml-auto flex gap-4">
-                      {creditsRemaining < 20 && (
-                        <Badge variant="outline">
-                          <span className="text-muted-foreground">Credits low: posting and automations will disable</span>
+                      <div className="ml-auto flex gap-4">
+                        {creditsRemaining < 20 && (
+                          <Badge variant="outline">
+                            <span className="text-muted-foreground">
+                              Credits low: posting and automations will disable
+                            </span>
+                          </Badge>
+                        )}
+
+                        <Badge
+                          className={`flex items-center gap-2 h-7 ${creditsRemaining < 20 && "border-destructive"}`}
+                          variant="outline"
+                        >
+                          <Bot
+                            className={
+                              creditsRemaining < 20
+                                ? `text-destructive`
+                                : `text-primary`
+                            }
+                            size={20}
+                          />
+                          {creditsRemaining}
                         </Badge>
-                      )}
 
-
-                      <Badge className={`flex items-center gap-2 h-7 ${creditsRemaining < 20 && 'border-destructive'}`}  variant="outline">
-                        <Bot className={creditsRemaining < 20 ? `text-destructive` : `text-primary`} size={20}/>
-                        {creditsRemaining}
-                      </Badge>
-                    
-                      {/* <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
+                        {/* <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
                         <FiBell className="w-5 h-5 text-foreground/80" />
                         {notifications > 0 && (
                           <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full" />
                         )}
                       </button> */}
+                      </div>
+                    </div>
+                  </header>
+                }
+              >
+                <SubscriptionBanner />
+                <SidebarInset>{children}</SidebarInset>
+              </DashboardSidebar>
+            ) : (
+              // Render children full-width when sidebar hidden (overview)
+
+              <div className="min-h-screen w-full">
+                <header className="flex h-16 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+                  <div className="flex w-full items-center gap-2 px-4">
+                    <Highlight enabled hover controlledItems mode="children">
+                      <BrandSelector
+                        brands={brands}
+                        brandsLoading={brandsLoading}
+                        activeBrandId={activeBrandId}
+                        isMobile={isMobile}
+                        displayName={displayName}
+                        displayPlan={displayPlan}
+                        handleBrandSwitch={handleBrandSwitch}
+                        onCreateBrand={() =>
+                          router.push(`/${params.teamId}/brand/generate`)
+                        }
+                      />
+                    </Highlight>
+
+                    <Separator orientation="vertical" className="mr-2 h-4" />
+
+                    {/* Search and Notifications */}
+                    <div className="ml-auto items-center gap-4">
+                      <Highlight enabled hover controlledItems mode="children">
+                        <AccountDropdown />
+                      </Highlight>
                     </div>
                   </div>
                 </header>
-              }
-            >
-              <SubscriptionBanner />
-              <SidebarInset>{children}</SidebarInset>
-            </DashboardSidebar>
-          ) : (
-            // Render children full-width when sidebar hidden (overview)
-
-            <div className="min-h-screen w-full">
-              <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex items-center gap-2 px-4">
-
-
-                  <Highlight enabled hover controlledItems mode="children">
-                    <BrandSelector
-                      brands={brands}
-                      brandsLoading={brandsLoading}
-                      activeBrandId={activeBrandId}
-                      isMobile={isMobile}
-                      displayName={displayName}
-                      displayPlan={displayPlan}
-                      handleBrandSwitch={handleBrandSwitch}
-                      onCreateBrand={() => router.push(`/${params.teamId}/brand/generate`)}
-                    />
-                  </Highlight>
-
-                  <Separator orientation="vertical" className="mr-2 h-4" />
-
-                  {/* Search and Notifications */}
-                  <div className="ml-auto flex items-center gap-4">
-                    
-
-                    {/* <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
-                      <FiBell className="w-5 h-5 text-foreground/80" />
-                      {notifications > 0 && (
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-primary-500 rounded-full" />
-                      )}
-                    </button> */}
-                  </div>
-                </div>
-              </header>
-              <SubscriptionBanner />
-              <main>{children}</main>
-            </div>
-          )}
-        </SidebarNavProvider>
-      </PostingModalProvider>
-    </SidebarProvider>
+                <SubscriptionBanner />
+                <main>{children}</main>
+              </div>
+            )}
+          </SidebarNavProvider>
+        </PostingModalProvider>
+      </SidebarProvider>
+    </div>
   );
 }

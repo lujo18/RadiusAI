@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostItem } from "@/components/items/PostItem";
 import { usePostingModal } from "@/components/modals/PostingModalProvider";
 import { useBrandIntegrations } from "@/features/brand/hooks";
+import { Badge } from "../ui/badge";
+import { AlertCircle, CheckCircle, FileWarning, List } from "lucide-react";
 
 type GenerationRequest = {
   id: string;
@@ -37,7 +39,8 @@ export function GenerationQueue({ queue }: GenerationQueueProps) {
     <Card className="min-h-svh">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">
-          Generation Queue <span className="text-secondary">({queue.length})</span>
+          Generation Queue{" "}
+          <span className="text-secondary">({queue.length})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -50,7 +53,7 @@ export function GenerationQueue({ queue }: GenerationQueueProps) {
             } else {
               sec = differenceInSeconds(
                 new Date(request.completedAt),
-                new Date(request.createdAt)
+                new Date(request.createdAt),
               );
             }
 
@@ -94,7 +97,13 @@ export function GenerationQueue({ queue }: GenerationQueueProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   {request.status === "pending" && (
-                    <span className="text-xs text-foreground/50">Queued</span>
+                    <Badge
+                      variant="secondary"
+                      className="text-xs gap-2 p-2"
+                    >
+                      <List size={16} />
+                      {request.error}
+                    </Badge>
                   )}
                   {request.status === "generating" && (
                     <span className="text-xs text-primary animate-pulse">
@@ -102,10 +111,22 @@ export function GenerationQueue({ queue }: GenerationQueueProps) {
                     </span>
                   )}
                   {request.status === "completed" && (
-                    <span className="text-xs text-green-500">✓ Done</span>
+                    <Badge
+                      variant="outline"
+                      className="border-primary text-primary text-xs gap-2 p-2"
+                    >
+                      <CheckCircle size={16} />
+                      {request.error}
+                    </Badge>
                   )}
                   {request.status === "failed" && (
-                    <span className="text-xs text-destructive">✗ Failed</span>
+                    <Badge
+                      variant="outline"
+                      className="border-destructive text-destructive text-xs gap-2 p-2"
+                    >
+                      <AlertCircle size={16} />
+                      {request.error}
+                    </Badge>
                   )}
                 </div>
               </div>

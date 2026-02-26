@@ -2,6 +2,53 @@ import { supabase } from '../client';
 
 export class TeamRepository {
   /**
+   * Create a default "My Workspace" team for a new user and add them as owner.
+   * Returns the new team id.
+   */
+  static async createDefaultTeam(): Promise<string> {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error('Not authenticated');
+
+    // Re-check right before inserting — guards against concurrent calls
+    const existingTeamId = await TeamRepository.getFirstTeam();
+    if (existingTeamId) return existingTeamId;
+
+    const displayName =
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      user.email?.split('@')[0] ||
+      'My';
+
+    const slug = `workspace-${user.id.slice(0, 8)}`;
+
+    // Create the team
+    const { data: team, error: teamError } = await supabase
+      .from('teams')
+      .insert([{ name: `${displayName}'s Workspace`, slug, owner_id: user.id }] as any)
+      .select()
+      .single();
+
+    if (teamError) throw new Error(teamError.message);
+
+    // Add user as owner member
+    const { error: memberError } = await supabase
+      .from('team_members')
+      .insert([{
+        team_id: team.id,
+        user_id: user.id,
+        email: user.email ?? '',
+        role: 'owner',
+        status: 'active',
+        accepted_at: new Date().toISOString(),
+      }] as any);
+
+    if (memberError) throw new Error(memberError.message);
+
+    return team.id;
+  }
+
+
+  /**
    * Get all teams for the current user (via team_members table)
    * Returns team_id and related team info
    */

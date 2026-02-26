@@ -2,6 +2,7 @@ import stripe
 from typing import Optional, Dict, Any
 from datetime import datetime
 
+from backend.services.integrations.supabase.db.templates import get_template_count
 from config import Config
 from services.usage import repo as usage_repo
 from services.usage import rules as usage_rules
@@ -22,8 +23,7 @@ else:
 
 def require_stripe_key():
     if not stripe.api_key:
-        raise RuntimeError("Stripe secret key not configured")
-
+        raise RuntimeError("Stripe secret key not configured")    
 
 def _get_active_subscription_for_customer(customer_id: str) -> Optional[Dict[str, Any]]:
     """Return the first active subscription for a customer, or None."""
@@ -197,11 +197,14 @@ def _get_metric_limit(product_id: Optional[str], metric_name: str) -> Optional[i
         return None
 
 
-def _get_metric_usage(team_id: str, metric_name: str) -> int:
+def _get_metric_usage(
+    team_id: str, metric_name: str, brand_id: Optional[str] = None
+) -> int:
     """
     Get current usage count for a specific metric (READ-ONLY, no writes).
 
     For brand_count and template_count: performs a COUNT query on actual resources.
+    For template_count: if brand_id is provided, counts only templates for that brand.
     For other metrics: reads from team_activity.usage.{metric_name}.
     Returns 0 if not found or error.
     """
@@ -219,21 +222,56 @@ def _get_metric_usage(team_id: str, metric_name: str) -> int:
             )
             count = result.count or 0
         elif metric_name == "template_count":
-            result = supabase.rpc(
-                "get_template_counts_by_team", 
-                {"team_id": team_id}
-            ).execute()
+            if brand_id:
+                # Count templates for specific brand
+                print(
+                    f"[DEBUG _get_metric_usage] Counting templates for brand_id: {brand_id} (type: {type(brand_id)})"
+                )
+                try:
+                    # Use limit 0 to only get count without fetching rows
+                    result = (
+                        supabase.table("template")
+                        .select("id", count="exact")
+                        .eq("brand_id", brand_id)
+                        .limit(0)
+                        .execute()
+                    )
+                    print(
+                        f"[DEBUG _get_metric_usage] Query result - count: {result.count}, status: {result.status_code if hasattr(result, 'status_code') else 'N/A'}"
+                    )
+                    if hasattr(result, "error") and result.error:
+                        print(f"[DEBUG _get_metric_usage] Query error: {result.error}")
+                    count = result.count or 0
+                except Exception as e:
+                    print(
+                        f"[DEBUG _get_metric_usage] Exception during brand query: {e}"
+                    )
+                    count = 0
+            else:
+                # Count templates for entire team
+                print(
+                    f"[DEBUG _get_metric_usage] Counting all templates for team_id: {team_id}"
+                )
+                result = supabase.rpc(
+                    "get_template_counts_by_team", {"team_id": team_id}
+                ).execute()
 
-            print("Template counts", result.data)
-            count = result.data or 0
+                print(f"[DEBUG _get_metric_usage] Team template counts: {result.data}")
+                count = result.data or 0
         else:
             # For other metrics, read from stored usage
             usage_map = _get_team_usage(team_id)
             count = int(usage_map.get(metric_name) or 0)
 
+        print(
+            f"[DEBUG _get_metric_usage] Final count for {metric_name} (brand_id={brand_id}): {count}"
+        )
         return count
     except Exception as e:
-        print(f"_get_metric_usage for {metric_name} failed: {e}")
+        print(f"[ERROR _get_metric_usage] for {metric_name} failed: {e}")
+        import traceback
+
+        traceback.print_exc()
         return 0
 
 
@@ -261,13 +299,43 @@ def _store_metric_usage(team_id: str, metric_name: str, count: int):
 # ============================================================================
 
 
-def get_metric_usage(user_id: str, metric_name: str) -> Dict[str, Any]:
+def get_metric_limit(
+    user_id: str, metric_name: str, brand_id: Optional[str] = None
+) -> int:
+    try:
+        print(f"[get_metric_usage START] metric={metric_name}, brand_id={brand_id}")
+        team_id = usage_repo.get_user_team_id(user_id)
+        if not team_id:
+            raise ValueError("The current user is not a part of a team.")
+
+        product_id = _get_user_product_id(user_id)
+        metric_limit = _get_metric_limit(product_id, metric_name)
+        
+        if not metric_limit:
+            raise ValueError("Failed to extract limit")
+            
+        return metric_limit
+    except Exception as e:
+        print(f"get_metric_usage({metric_name}) failed: {e}")
+        raise ValueError("Error getting metric limit", e)
+
+
+def get_metric_usage(
+    user_id: str, metric_name: str, brand_id: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Read current usage for a metric.
 
+    If brand_id is provided for template_count, filters templates by brand.
+    Otherwise, returns usage for the user's team.
+
     Returns: {"metric_count": int, "metric_limit": int|None, "remaining": int|None}
     """
+    import time
+
+    start = time.time()
     try:
+        print(f"[get_metric_usage START] metric={metric_name}, brand_id={brand_id}")
         team_id = usage_repo.get_user_team_id(user_id)
         if not team_id:
             return {
@@ -278,18 +346,26 @@ def get_metric_usage(user_id: str, metric_name: str) -> Dict[str, Any]:
             }
 
         product_id = _get_user_product_id(user_id)
-        metric_count_raw = _get_metric_usage(team_id, metric_name)
+        metric_count_raw = _get_metric_usage(team_id, metric_name, brand_id=brand_id)
+        elapsed = time.time() - start
+        print(
+            f"[get_metric_usage _get_metric_usage] took {elapsed:.2f}s, result={metric_count_raw}"
+        )
         # Always convert to int - sum per-brand breakdown for rate limiting display
         if isinstance(metric_count_raw, list):
-            metric_count = sum(item.get('template_count', 0) for item in metric_count_raw)
+            metric_count = sum(
+                item.get("template_count", 0) for item in metric_count_raw
+            )
         else:
             metric_count = int(metric_count_raw) if metric_count_raw else 0
-        
+
         metric_limit = _get_metric_limit(product_id, metric_name)
 
         remaining = (metric_limit - metric_count) if metric_limit is not None else None
 
-        print("metric count", metric_count)
+        print(
+            f"[get_metric_usage END] metric_count={metric_count}, metric_limit={metric_limit}, remaining={remaining}, total_time={time.time()-start:.2f}s"
+        )
 
         return {
             "metric_count": metric_count,
@@ -298,6 +374,9 @@ def get_metric_usage(user_id: str, metric_name: str) -> Dict[str, Any]:
         }
     except Exception as e:
         print(f"get_metric_usage({metric_name}) failed: {e}")
+        import traceback
+
+        traceback.print_exc()
         return {
             "metric_count": 0,
             "metric_limit": None,
@@ -336,10 +415,12 @@ def check_and_track_metric(
         metric_count_raw = _get_metric_usage(team_id, metric_name)
         # Always convert to int - sum per-brand breakdown for rate limiting display
         if isinstance(metric_count_raw, list):
-            metric_count = sum(item.get('template_count', 0) for item in metric_count_raw)
+            metric_count = sum(
+                item.get("template_count", 0) for item in metric_count_raw
+            )
         else:
             metric_count = int(metric_count_raw) if metric_count_raw else 0
-        
+
         metric_limit = _get_metric_limit(product_id, metric_name)
 
         print(
@@ -676,13 +757,13 @@ def check_generation_credits(user_id: str, slides_to_generate: int) -> Dict[str,
         if not team_id:
             # Allow generation if user not found (safety fallback)
             return {
-                "allowed": True,
+                "allowed": False,
                 "current_credits": 0,
                 "credits_to_consume": 0,
                 "projected_credits": 0,
                 "credit_limit": None,
                 "will_exceed": False,
-                "message": f"User not found, allowing generation",
+                "message": f"User not found, blocking generation",
             }
 
         # Get current credit balance
@@ -711,7 +792,7 @@ def check_generation_credits(user_id: str, slides_to_generate: int) -> Dict[str,
                     "projected_credits": projected_credits,
                     "credit_limit": None,
                     "will_exceed": False,
-                    "message": "No user found, allowing generation",
+                    "message": "No user found, blocking generation",
                 }
 
             customer_id = user_res.data[0].get("stripe_customer_id")
@@ -724,45 +805,28 @@ def check_generation_credits(user_id: str, slides_to_generate: int) -> Dict[str,
                     "projected_credits": projected_credits,
                     "credit_limit": None,
                     "will_exceed": False,
-                    "message": "No subscription, allowing generation",
+                    "message": "No subscription, blocking generation",
                 }
 
             # Get subscription and credit limit from metadata
-            sub = _get_active_subscription_for_customer(customer_id)
-            if not sub:
-                # No subscription, allow unlimited
-                return {
-                    "allowed": True,
-                    "current_credits": current_credits,
-                    "credits_to_consume": credits_to_consume,
-                    "projected_credits": projected_credits,
-                    "credit_limit": None,
-                    "will_exceed": False,
-                    "message": "No active subscription, allowing generation",
-                }
-
-            # Extract credit limit from subscription metadata
-            metadata = getattr(sub, "metadata", {}) or {}
-            credit_limit_str = metadata.get("credit_limit") or metadata.get(
-                "monthly_credits"
-            )
-            credit_limit = int(credit_limit_str) if credit_limit_str else None
-
+            credit_limit = get_metric_limit(user_id, "credits")
+            
             if not credit_limit:
                 # No limit set, allow unlimited
                 return {
-                    "allowed": True,
+                    "allowed": False,
                     "current_credits": current_credits,
                     "credits_to_consume": credits_to_consume,
                     "projected_credits": projected_credits,
                     "credit_limit": None,
                     "will_exceed": False,
-                    "message": "No credit limit set, allowing generation",
+                    "message": "No credit limit set, blocking generation",
                 }
 
             # Check against limit with grace period
             will_exceed = projected_credits > credit_limit
-            hard_block = projected_credits >= (credit_limit * 2)
+            hard_block = projected_credits >= (credit_limit * 1.1) 
+            # For 500 credits allow up to 550
 
             if hard_block:
                 # Over 2x limit - hard block
@@ -773,7 +837,7 @@ def check_generation_credits(user_id: str, slides_to_generate: int) -> Dict[str,
                     "projected_credits": projected_credits,
                     "credit_limit": credit_limit,
                     "will_exceed": True,
-                    "message": f"Generation blocked: projected credits ({projected_credits}) would exceed 2x your limit ({credit_limit * 2}). Current: {current_credits}/{credit_limit}",
+                    "message": f"Generation blocked: projected credits ({projected_credits}) would exceed 1.2x your limit ({credit_limit * 1.2}). Current: {current_credits}/{credit_limit}",
                 }
 
             if will_exceed:
@@ -805,26 +869,26 @@ def check_generation_credits(user_id: str, slides_to_generate: int) -> Dict[str,
             )
             # Fallback: allow generation if Stripe check fails
             return {
-                "allowed": True,
+                "allowed": False,
                 "current_credits": current_credits,
                 "credits_to_consume": credits_to_consume,
                 "projected_credits": projected_credits,
                 "credit_limit": None,
                 "will_exceed": False,
-                "message": "Stripe check failed, allowing generation",
+                "message": "Stripe check failed, blocking generation",
             }
 
     except Exception as e:
         print(f"check_generation_credits failed: {e}")
         # Fail open: allow generation if anything goes wrong
         return {
-            "allowed": True,
+            "allowed": False,
             "current_credits": 0,
             "credits_to_consume": 0,
             "projected_credits": 0,
             "credit_limit": None,
             "will_exceed": False,
-            "message": f"System check failed, allowing generation: {str(e)}",
+            "message": f"System check failed, blocking generation: {str(e)}",
         }
 
 
@@ -874,14 +938,22 @@ def decrement_brand(user_id: str, amount: int = 1) -> Dict[str, Any]:
 # ============================================================================
 
 
-def get_template_usage(user_id: str) -> Dict[str, Any]:
-    """Get current template usage for a user."""
-    result = get_metric_usage(user_id, "template_count")
+def get_template_usage(user_id: str, brand_id: str) -> Dict[str, Any]:
+    """Get current template usage for a user.
+
+    If brand_id is provided, returns only templates for that brand.
+    Otherwise, returns all templates for the user's team.
+    """
+    print(f"[SERVICE get_template_usage] user_id={user_id}, brand_id={brand_id}")
+    template_usage = get_template_count(brand_id)
+    
+    template_limit = get_metric_limit(user_id, "template_count", brand_id=brand_id)
+    
+    print(f"[SERVICE get_template_usage] get_metric_usage {get_template_count}/{template_limit}")
     return {
-        "template_count": result.get("metric_count"),
-        "template_limit": result.get("metric_limit"),
-        "remaining": result.get("remaining"),
-        "error": result.get("error"),
+        "template_count": template_usage,
+        "template_limit": template_limit,
+        "remaining": template_limit - template_usage,
     }
 
 

@@ -125,7 +125,12 @@ export const billingApi = {
       });
       console.log('[billingApi] getSubscription success');
       return response.data;
-    } catch (err) {
+    } catch (err: any) {
+      // 404 = user has no Stripe customer yet (no subscription) — valid state
+      if (err?.response?.status === 404) {
+        console.log('[billingApi] getSubscription: no subscription found (404)');
+        return null;
+      }
       console.error('[billingApi] getSubscription failed:', err);
       throw err;
     }

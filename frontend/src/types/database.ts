@@ -39,6 +39,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_banners: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          location: Database["public"]["Enums"]["app_banner_location"]
+          message: string
+          type: Database["public"]["Enums"]["app_banner_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          location: Database["public"]["Enums"]["app_banner_location"]
+          message: string
+          type?: Database["public"]["Enums"]["app_banner_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          location?: Database["public"]["Enums"]["app_banner_location"]
+          message?: string
+          type?: Database["public"]["Enums"]["app_banner_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       automation_runs: {
         Row: {
           automation_id: string
@@ -263,115 +293,6 @@ export type Database = {
             columns: ["brand_id"]
             isOneToOne: false
             referencedRelation: "brand"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      content_rules: {
-        Row: {
-          avoid_topics: string[] | null
-          body_style: string
-          created_at: string
-          cta_style: string
-          depth_level: string
-          format: string
-          hook_style: string
-          id: string
-          include_examples: boolean
-          include_statistics: boolean
-          must_include: string[] | null
-          personal_story: boolean
-          perspective: string
-          slide_count: number
-          subtopics: string[] | null
-          template_id: string
-          topic_focus: string
-          updated_at: string
-        }
-        Insert: {
-          avoid_topics?: string[] | null
-          body_style: string
-          created_at?: string
-          cta_style: string
-          depth_level: string
-          format: string
-          hook_style: string
-          id?: string
-          include_examples?: boolean
-          include_statistics?: boolean
-          must_include?: string[] | null
-          personal_story?: boolean
-          perspective: string
-          slide_count: number
-          subtopics?: string[] | null
-          template_id: string
-          topic_focus: string
-          updated_at?: string
-        }
-        Update: {
-          avoid_topics?: string[] | null
-          body_style?: string
-          created_at?: string
-          cta_style?: string
-          depth_level?: string
-          format?: string
-          hook_style?: string
-          id?: string
-          include_examples?: boolean
-          include_statistics?: boolean
-          must_include?: string[] | null
-          personal_story?: boolean
-          perspective?: string
-          slide_count?: number
-          subtopics?: string[] | null
-          template_id?: string
-          topic_focus?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "content_rules_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: true
-            referencedRelation: "templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      layout_configs: {
-        Row: {
-          aspect_ratio: string
-          created_at: string
-          id: string
-          slide_count: number
-          slide_design_ids: string[]
-          structure: string[]
-          template_id: string
-        }
-        Insert: {
-          aspect_ratio: string
-          created_at?: string
-          id?: string
-          slide_count: number
-          slide_design_ids?: string[]
-          structure: string[]
-          template_id: string
-        }
-        Update: {
-          aspect_ratio?: string
-          created_at?: string
-          id?: string
-          slide_count?: number
-          slide_design_ids?: string[]
-          structure?: string[]
-          template_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "layout_configs_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: true
-            referencedRelation: "templates"
             referencedColumns: ["id"]
           },
         ]
@@ -820,44 +741,6 @@ export type Database = {
         }
         Relationships: []
       }
-      slide_designs: {
-        Row: {
-          background: Json | null
-          created_at: string
-          dynamic: boolean
-          id: string
-          name: string
-          template_id: string
-          text_elements: Json
-        }
-        Insert: {
-          background?: Json | null
-          created_at?: string
-          dynamic?: boolean
-          id?: string
-          name: string
-          template_id: string
-          text_elements?: Json
-        }
-        Update: {
-          background?: Json | null
-          created_at?: string
-          dynamic?: boolean
-          id?: string
-          name?: string
-          template_id?: string
-          text_elements?: Json
-        }
-        Relationships: [
-          {
-            foreignKeyName: "slide_designs_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       system_templates: {
         Row: {
           category: string
@@ -1059,47 +942,6 @@ export type Database = {
         }
         Relationships: []
       }
-      template_performance: {
-        Row: {
-          avg_engagement_rate: number | null
-          avg_impressions: number | null
-          avg_saves: number | null
-          avg_shares: number | null
-          id: string
-          last_updated: string | null
-          template_id: string
-          total_posts: number
-        }
-        Insert: {
-          avg_engagement_rate?: number | null
-          avg_impressions?: number | null
-          avg_saves?: number | null
-          avg_shares?: number | null
-          id?: string
-          last_updated?: string | null
-          template_id: string
-          total_posts?: number
-        }
-        Update: {
-          avg_engagement_rate?: number | null
-          avg_impressions?: number | null
-          avg_saves?: number | null
-          avg_shares?: number | null
-          id?: string
-          last_updated?: string | null
-          template_id?: string
-          total_posts?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "template_performance_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: true
-            referencedRelation: "templates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       templates: {
         Row: {
           brand_id: string | null
@@ -1114,9 +956,7 @@ export type Database = {
           status: string
           style_config: Json | null
           tags: string[] | null
-          team_id: string | null
           updated_at: string
-          user_id: string
         }
         Insert: {
           brand_id?: string | null
@@ -1131,9 +971,7 @@ export type Database = {
           status?: string
           style_config?: Json | null
           tags?: string[] | null
-          team_id?: string | null
           updated_at?: string
-          user_id: string
         }
         Update: {
           brand_id?: string | null
@@ -1148,9 +986,7 @@ export type Database = {
           status?: string
           style_config?: Json | null
           tags?: string[] | null
-          team_id?: string | null
           updated_at?: string
-          user_id?: string
         }
         Relationships: [
           {
@@ -1165,20 +1001,6 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "templates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "templates_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "templates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1235,6 +1057,7 @@ export type Database = {
           is_admin: boolean
           name: string
           stripe_customer_id: string | null
+          stripe_product_id: string | null
           stripe_subscription_id: string | null
           subscription_plan: string | null
           subscription_status: string | null
@@ -1250,6 +1073,7 @@ export type Database = {
           is_admin?: boolean
           name: string
           stripe_customer_id?: string | null
+          stripe_product_id?: string | null
           stripe_subscription_id?: string | null
           subscription_plan?: string | null
           subscription_status?: string | null
@@ -1265,6 +1089,7 @@ export type Database = {
           is_admin?: boolean
           name?: string
           stripe_customer_id?: string | null
+          stripe_product_id?: string | null
           stripe_subscription_id?: string | null
           subscription_plan?: string | null
           subscription_status?: string | null
@@ -1449,46 +1274,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_processed_analytics:
-        | {
-            Args: {
-              p_brand_id?: string
-              p_mode?: string
-              p_post_id?: string
-              p_range?: string
-              p_section?: string
-              p_window_limit?: number
-            }
-            Returns: {
-              collected_at: string
-              comments: number
-              engagement_rate: number
-              impressions: number
-              likes: number
-              saves: number
-              shares: number
-            }[]
-          }
-        | {
-            Args: {
-              p_brand_id?: string
-              p_mode?: string
-              p_post_id?: string
-              p_range?: string
-              p_section?: string
-              p_timezone?: string
-              p_window_limit?: number
-            }
-            Returns: {
-              collected_at: string
-              comments: number
-              engagement_rate: number
-              impressions: number
-              likes: number
-              saves: number
-              shares: number
-            }[]
-          }
+      get_processed_analytics: {
+        Args: {
+          p_brand_id?: string
+          p_mode?: string
+          p_post_id?: string
+          p_range?: string
+          p_section?: string
+          p_timezone?: string
+          p_window_limit?: number
+        }
+        Returns: {
+          collected_at: string
+          comments: number
+          engagement_rate: number
+          impressions: number
+          likes: number
+          saves: number
+          shares: number
+        }[]
+      }
+      get_template_counts_by_team: {
+        Args: { team_id: string }
+        Returns: {
+          brand_id: string
+          template_count: number
+        }[]
+      }
       increment_usage_rpc: {
         Args: {
           p_amount: number
@@ -1509,6 +1321,8 @@ export type Database = {
       }
     }
     Enums: {
+      app_banner_location: "(marketing)" | "(app)"
+      app_banner_status: "info" | "warning" | "deal" | "maintenance"
       integration_status: "connected" | "disconnected"
       post_status:
         | "draft"
@@ -1652,6 +1466,8 @@ export const Constants = {
   },
   public: {
     Enums: {
+      app_banner_location: ["(marketing)", "(app)"],
+      app_banner_status: ["info", "warning", "deal", "maintenance"],
       integration_status: ["connected", "disconnected"],
       post_status: [
         "draft",
