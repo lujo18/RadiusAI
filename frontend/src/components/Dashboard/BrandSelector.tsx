@@ -51,7 +51,7 @@ export default function BrandSelector({
       <DropdownMenuItem
             className="p-2 flex justify-between"
             onClick={onCreateBrand}
-            disabled={brandUsage.remaining <= 0}
+            disabled={brandUsage?.remaining <= 0}
           >
             <div className="flex flex-row items-center gap-2">
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
@@ -149,7 +149,7 @@ export default function BrandSelector({
 
         <DropdownMenuSeparator />
         <HoverCard openDelay={10} closeDelay={200}>
-          {brandUsage.remaining <= 0 ? (
+          {brandUsage?.remaining <= 0 ? (
             <HoverCardTrigger>
               <CreateButton/>
             </HoverCardTrigger>

@@ -1,23 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase/client";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-// Debug: Check if env vars are set at module load
-console.log("[Webhook Init] Environment check:", {
-  hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-  hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-  serviceRoleKeyLength: process.env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
-  hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
-  hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-});
-
 // Use service role key for admin operations (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -34,7 +22,7 @@ async function updateUserSubscription(
 ) {
   console.log("[Webhook] Updating user:", userId, "with data:", data);
 
-  const { data: result, error } = await supabaseAdmin
+  const { data: result, error } = await supabase
     .from("users")
     .update(data)
     .eq("id", userId)
@@ -56,7 +44,7 @@ async function findUserByStripeIds(
 ): Promise<string | null> {
   // Try by subscription ID first
   if (subscriptionId) {
-    const { data } = await supabaseAdmin
+    const { data } = await supabase
       .from("users")
       .select("id")
       .eq("stripe_subscription_id", subscriptionId)
@@ -70,7 +58,7 @@ async function findUserByStripeIds(
 
   // Try by customer ID
   if (customerId) {
-    const { data } = await supabaseAdmin
+    const { data } = await supabase
       .from("users")
       .select("id")
       .eq("stripe_customer_id", customerId)

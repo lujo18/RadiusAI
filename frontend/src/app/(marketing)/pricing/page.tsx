@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -30,13 +30,15 @@ export default function PricingPage() {
   const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
   const [showUpgradeFlow, setShowUpgradeFlow] = useState(false);
   const [currentUserPlan, setCurrentUserPlan] = useState<string | null>(null);
+  // Guard: prevent multiple plan fetches when user reference churns during auth hydration
+  const planFetchedRef = useRef(false);
 
+  // ---- Static / one-time effects (no user dependency) ----
   useEffect(() => {
     // Check if redirected due to subscription requirement
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('reason') === 'subscription_required') {
       setShowSubscriptionAlert(true);
-      // Remove the query param from URL after reading
       window.history.replaceState({}, '', '/pricing');
     }
 
@@ -45,10 +47,8 @@ export default function PricingPage() {
     fetch(`${apiBase}/api/billing/products`)
       .then(res => res.json())
       .then(data => {
-        // transform into prices map expected by the page
         const map: Record<string, any> = {};
         (data.products || []).forEach((p: any) => {
-          // use product id or normalized name as key
           map[p.id] = { amount: p.prices?.[0]?.unit_amount || 0, productId: p.id };
         });
         setPrices(map);
@@ -60,29 +60,41 @@ export default function PricingPage() {
       .then(res => res.json())
       .then(data => setTestimonials(data.testimonials || []))
       .catch(console.error);
+  }, []);
 
-    // Fetch current user's plan via API
-    if (user) {
-      const fetchUserPlan = async () => {
+  // ---- User-dependent: fetch current subscription plan from Supabase ----
+  useEffect(() => {
+    // Only fetch once per mount regardless of how many times user reference changes
+    if (!user?.id || planFetchedRef.current) return;
+    planFetchedRef.current = true;
+
+    const fetchUserPlan = async () => {
+      try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
-        fetch(`${apiBase}/api/users/me`, {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        })
-          .then(res => res.json())
-          .then(data => {
-            if (data?.stripe_product_id) {
-              setCurrentUserPlan(data.stripe_product_id);
-            }
-          })
-          .catch(console.error);
-      };
-      fetchUserPlan();
-    }
-  }, [user]);
+        // Query the users table directly — no backend call needed
+        const { data, error } = await supabase
+          .from('users')
+          .select('subscription_plan, subscription_status')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('[Pricing] Error fetching user plan:', error.message);
+          return;
+        }
+
+        if (data?.subscription_plan) {
+          setCurrentUserPlan(data.subscription_plan);
+        }
+      } catch (err) {
+        console.error('[Pricing] Unexpected error fetching user plan:', err);
+      }
+    };
+
+    fetchUserPlan();
+  }, [user?.id]);
 
   const handleGetStarted = async (planName: 'starter' | 'growth' | 'unlimited') => {
     setIsLoading(true);

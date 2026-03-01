@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useParams } from "next/navigation";
 import { useAuthStore } from "@/store";
-import { useBrands } from '@/features/brand/hooks';
+import { useBrands } from "@/features/brand/hooks";
 import { useBrandFilter } from "@/hooks/useBrandFilter";
 import BrandSetupWizard from "@/components/Profiles/BrandSetupWizard";
 import {
@@ -42,8 +42,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { UsageMeter } from "@/components/billingsdk/usage-meter";
-import { useGetBrandUsage, useUsage } from '@/features/usage/hooks';
-import { useGetCreditsUsage } from '@/features/usage/hooks';
+import { useGetBrandUsage, useUsage } from "@/features/usage/hooks";
+import { useGetCreditsUsage } from "@/features/usage/hooks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +55,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertTriangle,
   AudioWaveform,
   BadgeCheck,
   BarChart3,
@@ -72,6 +73,7 @@ import {
   Frame,
   GalleryVerticalEnd,
   LayoutDashboard,
+  Lightbulb,
   LogOut,
   Map,
   MoreHorizontal,
@@ -89,8 +91,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "../ui/badge";
 import { useSidebarNav } from "./sidebarContext";
-import { isAdminUser, useUserProfile } from '@/features/user/hooks';
+import { isAdminUser, useUserProfile } from "@/features/user/hooks";
 import BrandSelector from "./BrandSelector";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "../ui/dialog";
+import { Card } from "../ui/card";
+import { FcIdea } from "react-icons/fc";
 
 interface SidebarWrapperProps {
   activeTab: string;
@@ -125,7 +130,6 @@ export default function DashboardSidebar({
 
   // Fetch user brands
   const { data: brands, isLoading: brandsLoading } = useBrands();
-
 
   // Get user initials for avatar fallback
   const getUserInitials = () => {
@@ -173,8 +177,8 @@ export default function DashboardSidebar({
         "settings",
       ].includes(currentPage);
       router.push(
-        isSubPage 
-          ? `/${teamId}/brand/${brandId}/${currentPage}` 
+        isSubPage
+          ? `/${teamId}/brand/${brandId}/${currentPage}`
           : `/${teamId}/brand/${brandId}`,
       );
     }
@@ -228,12 +232,35 @@ export default function DashboardSidebar({
             </SidebarMenu>
           </SidebarGroup>
           {/* Usage meter group */}
-          
+
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <Dialog>
+                  <DialogTrigger>Hello</DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      What do you need support with?
+                    </DialogHeader>
+                    <div className="flex flex-row gap-4">
+                      <Card className="items-center w-full">
+                        <AlertTriangle className="text-destructive text-xl"/>
+                        <h2>Error</h2>
+                      </Card>
+                       <Card className="items-center w-full">
+                        <Lightbulb className="text-primary text-xl"/>
+                        <h2>Idea</h2>
+                      </Card>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarContent>
 
         <SidebarFooter>
-          
-            {/* <SidebarGroupLabel>Usage</SidebarGroupLabel>
+          {/* <SidebarGroupLabel>Usage</SidebarGroupLabel>
             <SidebarMenu>
               <SidebarMenuItem>
                 <div className="w-full px-3">
@@ -334,8 +361,6 @@ export default function DashboardSidebar({
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
-
-      
       </Sidebar>
 
       <SidebarInset>
@@ -352,21 +377,22 @@ export default function DashboardSidebar({
 }
 
 function UsageWidget() {
-  const { data: creditsData, isLoading} = useGetCreditsUsage();
-  
+  const { data: creditsData, isLoading } = useGetCreditsUsage();
+
   const creditsUsed = creditsData?.credits_used ?? 0;
   const creditsLimit = creditsData?.credits_limit ?? null;
 
   return (
     <div>
       <UsageMeter
-        usage={[{ name: 'Credits', usage: creditsUsed, limit: creditsLimit ?? 0 }]}
+        usage={[
+          { name: "Credits", usage: creditsUsed, limit: creditsLimit ?? 0 },
+        ]}
         variant="linear"
         size="sm"
         progressColor="usage"
         className="p-0 border-transparent"
       />
-    
     </div>
   );
 }

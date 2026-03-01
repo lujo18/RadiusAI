@@ -4,7 +4,7 @@
  * Returns user and loading state from Supabase auth
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import type { User, Session } from '@supabase/supabase-js'
@@ -31,6 +31,8 @@ export function useAuth(options?: { requireAuth?: boolean }) {
   })
 
   const router = useRouter()
+  // Track the current userId so we don't trigger state updates for the same user
+  const currentUserIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     // Check current session
@@ -44,6 +46,7 @@ export function useAuth(options?: { requireAuth?: boolean }) {
         if (error) throw error
 
         if (session?.user) {
+          currentUserIdRef.current = session.user.id
           setAuth({
             user: session.user,
             session,
@@ -51,6 +54,7 @@ export function useAuth(options?: { requireAuth?: boolean }) {
             isAuthenticated: true,
           })
         } else {
+          currentUserIdRef.current = null
           setAuth({
             user: null,
             session: null,
@@ -65,6 +69,7 @@ export function useAuth(options?: { requireAuth?: boolean }) {
         }
       } catch (error) {
         console.error('Auth check failed:', error)
+        currentUserIdRef.current = null
         setAuth({
           user: null,
           session: null,
@@ -80,11 +85,14 @@ export function useAuth(options?: { requireAuth?: boolean }) {
 
     checkAuth()
 
-    // Subscribe to auth changes
+    // Subscribe to auth changes — skip updates if the user hasn't actually changed
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        // Avoid creating a new state reference when the same user is already set
+        if (session.user.id === currentUserIdRef.current) return
+        currentUserIdRef.current = session.user.id
         setAuth({
           user: session.user,
           session,
@@ -92,6 +100,8 @@ export function useAuth(options?: { requireAuth?: boolean }) {
           isAuthenticated: true,
         })
       } else {
+        if (currentUserIdRef.current === null) return // already signed out
+        currentUserIdRef.current = null
         setAuth({
           user: null,
           session: null,

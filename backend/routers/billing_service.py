@@ -34,6 +34,7 @@ def require_stripe_key():
 def list_products():
     """List active Stripe products and prices"""
     require_stripe_key()
+    logger.info("GETTING PRODUCTS")
     try:
         products = stripe.Product.list(active=True, limit=50)
         prices = stripe.Price.list(active=True, limit=200)
@@ -62,14 +63,16 @@ def list_products():
                 ],
             }
             output.append(item)
+            
+        print('products', output)
 
-        return {"products": output}
+        return output
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list products: {str(e)}")
 
 
 @router.get("/product")
-def get_product(product_id: str = None, productId: str = None, request: Request = None):
+def get_product(product_id: str, request: Request):
     """Fetch a Stripe product by either `product_id` or `productId` query param.
 
     Optional query param `expand` may be provided (comma-separated) to pass to Stripe retrieve.

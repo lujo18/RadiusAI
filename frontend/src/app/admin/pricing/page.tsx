@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from '@/features/plans/hooks';
-import { productRateLimitsApi } from '@/features/plans/surface';
+import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from '@/features/stripe/plans/hooks';
+import { productRateLimitsApi } from '@/features/stripe/plans/surface';
 import { useStripeProducts } from '@/features/stripe/hooksProducts';
 import {
   Card,

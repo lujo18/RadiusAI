@@ -38,38 +38,38 @@ export const landingContent = {
   // BENEFITS SECTION
   // ==========================================
   benefits: {
-    headline: "Everything you need to win on TikTok & Instagram",
-    subheadline: "Built for creators who want TikTok slideshow automation, Instagram carousel templates, and reliable CTA interval testing",
+    headline: "The Best AI TikTok Slideshow Automation & Instagram Carousel Generator",
+    subheadline: "Radius offers everything professional creators need for rapid TikTok slideshow automation, beautiful Instagram carousel templates, and reliable CTA interval testing.",
     items: [
       {
         icon: "Palette",
-        title: "Professional Templates",
-        description: "Choose from 50+ proven carousel templates (TikTok slideshows, Instagram carousels) built for specific niches. No design skills needed."
+        title: "Professional Niche Templates",
+        description: "Choose from 50+ proven carousel templates (TikTok slideshows, Instagram carousels) built for specific niches. Ranked #1 for conversion."
       },
       {
         icon: "Cpu",
-        title: "AI Content Generation",
-        description: "Gemini 2.0 writes engaging hooks, value-packed slides, and CTAs optimized for saves, shares, and conversions."
+        title: "AI Social Media Content Generation",
+        description: "Gemini 2.0 AI writes engaging hooks, value-packed slides, and CTAs optimized for saves, and shares. Your ultimate AI automation tool."
       },
       {
         icon: "BarChart2",
-        title: "Smart A/B Testing",
-        description: "Automated A/B testing with CTA interval testing so you can find the highest-performing slide order and calls-to-action."
+        title: "Automated A/B CTA Testing",
+        description: "Maximize conversion with automated A/B testing and CTA interval testing. Find the highest-performing slide order and call-to-actions effortlessly."
       },
       {
         icon: "TrendingUp",
-        title: "Performance Analytics",
-        description: "Track saves, shares, and engagement. Know exactly what's working."
+        title: "Advanced Performance Analytics",
+        description: "Track saves, shares, and true engagement metrics. Understand your social media growth and iterate on what is actually working."
       },
       {
         icon: "Zap",
-        title: "Batch Generation",
-        description: "Create a week's worth of content in 5 minutes. Schedule and forget."
+        title: "Mass Batch Generation",
+        description: "Create a week's worth of TikTok & Instagram slideshows in 5 minutes. Autopilot your content creation with our scheduled generation."
       },
       {
         icon: "Target",
-        title: "Brand Consistency",
-        description: "Custom style guides ensure every post matches your visual identity perfectly."
+        title: "Consistent Brand Identity",
+        description: "Define custom style guides ensuring every generated carousel perfectly matches your brand's unique visual typography and color palette."
       }
     ]
   },
@@ -78,22 +78,22 @@ export const landingContent = {
   // HOW IT WORKS
   // ==========================================
   howItWorks: {
-    headline: "Get started in 3 simple steps",
+    headline: "Create High-Ranking Carousels in 3 Simple Steps",
     steps: [
       {
         number: 1,
-        title: "Choose a Template",
-        description: "Pick from our library of high-converting carousel formats (TikTok slideshow, Instagram listicles, stories, educational)"
+        title: "Choose a Niche Template",
+        description: "Select from our library of high-converting carousel formats designed for TikTok slideshows, Instagram listicles, and educational posts."
       },
       {
         number: 2,
-        title: "Let AI Create",
-        description: "Enter your topic and target audience. Our AI generates slides, captions, and hashtags tailored to your niche and platform (TikTok, Instagram)."
+        title: "Let AI Automate Content",
+        description: "Enter your custom topic. Our AI instantly generates optimized slides, captions, and niche hashtags tailored precisely for TikTok and Instagram algorithms."
       },
       {
         number: 3,
-        title: "Publish & Optimize",
-        description: "Download or schedule directly. Track engagement metrics and iterate using automated performance insights and CTA testing."
+        title: "Publish, A/B Test & Scale",
+        description: "Download or schedule directly to your socials. Leverage our built-in CTA testing and analytics to rapidly multiply your engagement."
       }
     ]
   },
@@ -102,8 +102,8 @@ export const landingContent = {
   // PRICING (Data comes from Stripe, copy here)
   // ==========================================
   pricing: {
-    headline: "Pricing - Plans for solo creators to agencies",
-    subheadline: "Transparent pricing for TikTok slideshow automation and enterprise carousel generation. No hidden fees. Scale as you grow.",
+    headline: "Pricing Plans for Scalable Social Media Automation",
+    subheadline: "Transparent pricing for TikTok slideshow automation and elite Instagram carousel generation. No hidden fees. Select the AI tier that fits your agency or creator needs.",
     ctaNote: "All plans include 7-day free trial",
     plansDescription: {
       starter: {
@@ -154,8 +154,8 @@ export const landingContent = {
   // FAQ (Editable)
   // ==========================================
   faq: {
-    headline: "Frequently Asked Questions",
-    subheadline: "Everything you need to know about Radius",
+    headline: "Frequently Asked Questions About AI Carousel Automation",
+    subheadline: "Everything you need to know about setting up your TikTok and Instagram slides on autopilot.",
     items: [
       {
         question: "Do I need design experience?",

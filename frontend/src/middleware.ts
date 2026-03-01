@@ -66,9 +66,10 @@ export async function middleware(request: NextRequest) {
     userId: user?.id
   });
 
+  const isTeamRoute = /^\/(?!checkout)([^/]+)(?:\/|$)/.test(request.nextUrl.pathname);
   // Protected routes
-  const protectedRoutes = ['/overview', '/brand', '/templates', '/slides', '/checkout', '/account'];
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const otherProtectedRoutes = ['/[teamId]', '/[brandId]', '/overview', '/brand', '/templates', '/slides', '/checkout', '/account'];
+  const isProtectedRoute = isTeamRoute || otherProtectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   );
 
@@ -84,7 +85,7 @@ export async function middleware(request: NextRequest) {
   // Check if user is trying to access protected route
   if (isProtectedRoute && !user && !hasStripeSessionId) {
     console.log('[Middleware] Redirecting to login - no valid user');
-    const loginUrl = new URL('/login', request.url);
+    const loginUrl = new URL('/', request.url);
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }

@@ -12,6 +12,8 @@ import backendClient from "@/lib/api/clients/backendClient";
 import { PLANS, PLAN_ORDER, toPlanKey, isUpgrade as isPlanUpgrade, type PlanKey } from "@/lib/plans";
 import { startCheckout, switchPlan, openPortal } from "@/features/subscription/actions";
 import { cn } from "@/lib/utils";
+import { useProducts } from "@/features/stripe/products/hooks";
+import { productsApi } from "@/lib/api/client";
 
 interface Invoice {
   id: string;
@@ -49,10 +51,6 @@ async function fetchInvoices() {
   return response.data.invoices;
 }
 
-async function fetchProducts(): Promise<StripeProduct[]> {
-  const response = await backendClient.get('/api/billing/products');
-  return response.data.products || [];
-}
 
 async function fetchAvailableUpgrades(): Promise<AvailableUpgrade[]> {
   try {
@@ -86,14 +84,11 @@ export default function BillingPage() {
   const highlightUpgrade = searchParams.get('upgrade') === 'true';
   const plansRef = useRef<HTMLDivElement>(null);
 
+  const {data: products, isLoading: productsLoading, error: productsError} = useProducts();
   const { data: subscription, isLoading, error } = useSubscription();
   const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
     queryKey: ['billing', 'invoices'],
     queryFn: fetchInvoices,
-  });
-  const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ['billing', 'products'],
-    queryFn: fetchProducts,
   });
   const { data: availableUpgrades = [], isLoading: upgradesLoading } = useQuery({
     queryKey: ['billing', 'available-upgrades'],
@@ -195,6 +190,8 @@ export default function BillingPage() {
 
   // Build a map from planKey → Stripe product data
   const productByPlanKey = new Map<PlanKey, StripeProduct>();
+  console.log("PRODUCTS", products)
+  if (productsLoading) return 
   for (const p of products) {
     const key = toPlanKey(p.name);
     if (key) productByPlanKey.set(key, p);

@@ -12,7 +12,7 @@ export const productRateLimitsApi = {
   },
 
   async upsert(productId: string, rules: any) {
-    const { data } = await backendClient.post('/api/product_rate_limits', { product_id: productId, rules });
+    const { data } = await backendClient.post(`/api/product_rate_limits/${productId}`, rules);
     return data;
   },
 };

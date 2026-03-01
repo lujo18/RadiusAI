@@ -21,6 +21,7 @@ import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 import { LightRays } from "@/components/ui/light-rays";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
+import { motion } from "motion/react";
 
 interface Testimonial {
   id: string;
@@ -245,12 +246,12 @@ export default function LandingPage() {
           <Badge className="mb-12">{landingContent.hero.badge}</Badge>
 
           {/* Headline (visual) - promoted to H2 so hidden H1 remains the primary document title for machines */}
-          <h1 className="text-5xl mb-8">{landingContent.hero.headline}</h1>
+          <h2 className="text-5xl font-bold mb-8">{landingContent.hero.headline}</h2>
 
           {/* Subheadline */}
-          <h2 className="text-2xl muted mb-12">
+          <h3 className="text-2xl muted mb-12">
             {landingContent.hero.subheadline}
-          </h2>
+          </h3>
 
           {/* CTAs */}
           <div className="mb-8">
@@ -339,37 +340,50 @@ export default function LandingPage() {
       {/* ==========================================
           BENEFITS SECTION
           ========================================== */}
-      <section id="benefits" className="py-20 px-6 bg-background">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4">
+      <section id="benefits" className="py-20 px-6 relative overflow-hidden bg-background">
+        <BeamsBackground className="absolute inset-0 opacity-20" />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4 tracking-tight">
               {landingContent.benefits.headline}
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               {landingContent.benefits.subheadline}
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {landingContent.benefits.items.map((benefit, i) => {
               const IconComp = (LucideIcons as any)[benefit.icon];
               return (
-                <div
+                <motion.div
                   key={i}
-                  className="glass-card p-8 hover:scale-105 transition-transform"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="group relative bg-card/50 backdrop-blur-xl border border-border overflow-hidden rounded-2xl p-8 hover:shadow-2xl hover:border-primary/50 transition-all duration-300"
                 >
-                  <div className="text-5xl mb-4">
-                    {IconComp ? (
-                      <IconComp className="w-12 h-12 text-primary" />
-                    ) : (
-                      <div className="w-12 h-12 bg-muted-foreground/10 rounded-full" />
-                    )}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative z-10">
+                    <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                      {IconComp ? (
+                        <IconComp className="w-7 h-7 text-primary" />
+                      ) : (
+                        <div className="w-7 h-7 bg-muted-foreground/10 rounded-full" />
+                      )}
+                    </div>
+                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">{benefit.description}</p>
                   </div>
-                  <h3 className="text-xl font-bold text-foreground mb-3">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-muted-foreground">{benefit.description}</p>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -379,23 +393,104 @@ export default function LandingPage() {
       {/* ==========================================
           HOW IT WORKS
           ========================================== */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground text-center mb-16">
-            {landingContent.howItWorks.headline}
-          </h2>
+      <section className="py-24 px-6 relative border-t border-border/50">
+        <DotPattern
+          className={cn(
+            "[mask-image:radial-gradient(700px_circle_at_center,white,transparent)] opacity-30"
+          )}
+        />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground text-center mb-20 tracking-tight">
+              {landingContent.howItWorks.headline}
+            </h2>
+          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-12">
-            {landingContent.howItWorks.steps.map((step) => (
-              <div key={step.number} className="text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center text-2xl font-bold text-primary mx-auto mb-6">
-                  {step.number}
+          <div className="grid md:grid-cols-3 gap-12 relative">
+            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent -z-10" />
+            
+            {landingContent.howItWorks.steps.map((step, i) => (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                className="text-center relative"
+              >
+                <div className="w-24 h-24 rounded-2xl bg-background border border-primary/20 shadow-lg shadow-primary/10 flex items-center justify-center text-4xl font-bold text-primary mx-auto mb-8 relative group">
+                  <div className="absolute inset-0 bg-primary/10 rounded-2xl animate-ping opacity-20" />
+                  <span className="bg-gradient-to-br from-primary to-primary/50 text-transparent bg-clip-text">
+                    {step.number}
+                  </span>
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-4">
                   {step.title}
                 </h3>
-                <p className="text-muted-foreground">{step.description}</p>
-              </div>
+                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          TESTIMONIALS
+          ========================================== */}
+      <section className="py-24 px-6 relative bg-card/30">
+        <LightRays className="opacity-10" />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4 tracking-tight">
+              {landingContent.testimonials.headline}
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              {landingContent.testimonials.subheadline}
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {testimonials.slice(0, 6).map((testimonial, i) => (
+              <motion.div
+                key={testimonial.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-background/80 backdrop-blur-md border border-border/50 p-8 rounded-2xl shadow-sm hover:shadow-xl hover:border-primary/30 transition-all"
+              >
+                <div className="flex items-center mb-6">
+                  {[...Array(testimonial.rating)].map((_, j) => (
+                    <FiStar key={j} className="text-yellow-500 fill-yellow-500 w-5 h-5 mr-1" />
+                  ))}
+                </div>
+                <p className="text-foreground/90 mb-8 text-lg font-medium leading-relaxed">
+                  "{testimonial.quote}"
+                </p>
+                <div className="flex items-center mt-auto">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-primary-foreground font-bold text-xl mr-4 shadow-inner">
+                    {testimonial.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="text-foreground font-bold text-lg">
+                      {testimonial.name}
+                    </div>
+                    <div className="text-sm text-primary/80 font-medium">
+                      {testimonial.role}
+                      {testimonial.company && <span className="text-muted-foreground font-normal"> · {testimonial.company}</span>}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -404,106 +499,76 @@ export default function LandingPage() {
       {/* ==========================================
           PRICING SECTION
           ========================================== */}
-      <section id="pricing" className="py-20 px-6 bg-background">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4">
+      <section id="pricing" className="py-24 px-6 bg-background relative border-y border-border/50">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
+        <div className="max-w-4xl mx-auto relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-6 tracking-tight">
               {landingContent.pricing.headline}
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-xl text-muted-foreground mb-12">
               {landingContent.pricing.subheadline}
             </p>
-          </div>
-
-          {/* Pricing cards - Import your existing Paywall component */}
-          <div className="text-center">
             <Link
               href="/pricing"
-              className="btn-primary text-lg px-8 py-4 inline-flex items-center"
+              className="group inline-flex items-center justify-center px-10 py-5 text-xl font-bold text-primary-foreground bg-primary rounded-xl overflow-hidden relative shadow-2xl shadow-primary/20 hover:scale-105 transition-transform"
             >
-              View All Plans
-              <FiArrowRight className="ml-2" />
+              <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black" />
+              <span className="relative flex items-center">
+                View All Plans
+                <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" />
+              </span>
             </Link>
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="text-sm text-muted-foreground mt-6 font-medium">
               {landingContent.pricing.ctaNote}
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ==========================================
-          TESTIMONIALS
-          ========================================== */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4">
-              {landingContent.testimonials.headline}
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              {landingContent.testimonials.subheadline}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.slice(0, 6).map((testimonial) => (
-              <div key={testimonial.id} className="glass-card p-6">
-                {/* Rating */}
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <FiStar key={i} className="text-chart-1 fill-current" />
-                  ))}
-                </div>
-
-                {/* Quote */}
-                <p className="text-foreground/80 mb-6 italic">
-                  "{testimonial.quote}"
-                </p>
-
-                {/* Author */}
-                <div className="flex items-center">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-primary-foreground font-bold mr-3">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-foreground font-semibold">
-                      {testimonial.name}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.role}
-                      {testimonial.company && ` · ${testimonial.company}`}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* ==========================================
           FAQ SECTION
           ========================================== */}
-      <section id="faq" className="py-20 px-6 bg-background">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground text-center mb-4">
-            {landingContent.faq.headline}
-          </h2>
-          <p className="text-xl text-muted-foreground text-center mb-16">
-            {landingContent.faq.subheadline}
-          </p>
+      <section id="faq" className="py-24 px-6 bg-card/20">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6 tracking-tight">
+              {landingContent.faq.headline}
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              {landingContent.faq.subheadline}
+            </p>
+          </motion.div>
 
           <div className="space-y-4">
             {landingContent.faq.items.map((item, i) => (
-              <details key={i} className="glass-card p-6 cursor-pointer group">
-                <summary className="text-xl font-semibold text-foreground flex items-center justify-between">
+              <motion.details
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group bg-background border border-border/50 rounded-2xl p-6 cursor-pointer hover:border-primary/50 transition-colors shadow-sm"
+              >
+                <summary className="text-lg font-bold text-foreground flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
                   {item.question}
-                  <FiArrowRight className="text-primary transform group-open:rotate-90 transition-transform" />
+                  <div className="bg-primary/10 p-2 rounded-full text-primary group-open:rotate-45 transition-transform duration-300">
+                    <LucideIcons.Plus className="w-5 h-5" />
+                  </div>
                 </summary>
-                <p className="text-muted-foreground mt-4 leading-relaxed">
+                <div className="mt-6 text-muted-foreground leading-relaxed pl-2 border-l-2 border-primary/20">
                   {item.answer}
-                </p>
-              </details>
+                </div>
+              </motion.details>
             ))}
           </div>
         </div>
@@ -512,34 +577,50 @@ export default function LandingPage() {
       {/* ==========================================
           FINAL CTA SECTION
           ========================================== */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center glass-card p-12">
-          <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-6">
-            {landingContent.cta.headline}
-          </h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            {landingContent.cta.subheadline}
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              type="button"
-              onClick={handleGetStarted}
-              disabled={isSigningIn}
-              className="btn-primary text-lg px-8 py-4"
-            >
-              {isSigningIn ? (
-                <span>Signing in...</span>
-              ) : (
-                <>
-                  <FaGoogle className="mr-2" />
-                  {landingContent.cta.ctaPrimary}
-                </>
-              )}
-            </Button>
-            <Button type="button" className="btn-secondary text-lg px-8 py-4">
-              {landingContent.cta.ctaSecondary}
-            </Button>
-          </div>
+      <section className="py-32 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/10" />
+        <div className="max-w-5xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="bg-card/50 backdrop-blur-2xl border border-primary/20 rounded-[3rem] p-12 md:p-20 text-center shadow-2xl relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/30 rounded-full blur-[100px]" />
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/20 rounded-full blur-[100px]" />
+            
+            <div className="relative z-10">
+              <h2 className="text-4xl md:text-6xl font-bold font-main text-foreground mb-8 tracking-tight">
+                {landingContent.cta.headline}
+              </h2>
+              <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto">
+                {landingContent.cta.subheadline}
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <Button
+                  type="button"
+                  onClick={handleGetStarted}
+                  disabled={isSigningIn}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xl px-12 py-8 rounded-2xl shadow-xl shadow-primary/25 transition-all hover:scale-105"
+                >
+                  {isSigningIn ? (
+                    <span className="flex items-center gap-3">
+                      <Spinner className="w-5 h-5" /> Signing in...
+                    </span>
+                  ) : (
+                    <>
+                      <FaGoogle className="mr-3 w-6 h-6" />
+                      {landingContent.cta.ctaPrimary}
+                    </>
+                  )}
+                </Button>
+                <Button type="button" variant="outline" className="text-xl px-12 py-8 rounded-2xl border-2 hover:bg-secondary/50 transition-all hover:scale-105">
+                  {landingContent.cta.ctaSecondary}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>

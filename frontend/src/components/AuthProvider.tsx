@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/lib/supabase/client';
 
@@ -10,10 +10,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setSession = useAuthStore((state) => state.setSession);
   const logout = useAuthStore((state) => state.logout);
   const setLoading = useAuthStore((state) => state.setLoading);
+  // Track which userId was last applied to the store to suppress redundant updates
+  const lastUserIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     console.log('[AuthProvider] Initializing...');
     
+    const applySession = (sessionUser: any, session: any) => {
+      // Only update store when user actually changes
+      if (sessionUser?.id === lastUserIdRef.current) return;
+      lastUserIdRef.current = sessionUser?.id ?? null;
+
+      if (sessionUser) {
+        const user = {
+          id: sessionUser.id,
+          name: sessionUser.user_metadata?.name || sessionUser.email?.split('@')[0] || 'User',
+          email: sessionUser.email || '',
+          plan: 'growth' as const,
+        };
+        setUser(user);
+        setSupabaseUser(sessionUser);
+        setSession(session);
+      } else {
+        logout();
+      }
+    };
+
     // Check active session
     const checkSession = async () => {
       console.log('[AuthProvider] Checking session...');
@@ -24,49 +46,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userId: session?.user?.id,
         error: error?.message
       });
-      
-      if (session?.user) {
-        const user = {
-          id: session.user.id,
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-          email: session.user.email || '',
-          plan: 'growth' as const, // Default, will be synced from database
-        };
-        
-        console.log('[AuthProvider] Setting authenticated user:', user.id);
-        setUser(user);
-        setSupabaseUser(session.user);
-        setSession(session);
-        setLoading(false);
-      } else {
-        console.log('[AuthProvider] No session found, logging out');
-        logout();
-        setLoading(false);
-      }
+
+      applySession(session?.user ?? null, session ?? null);
+      setLoading(false);
     };
 
     checkSession();
 
-    // Listen for auth changes
+    // Listen for auth changes — only update when user actually changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('[AuthProvider] Auth state changed:', event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session?.user) {
-        const user = {
-          id: session.user.id,
-          name: session.user.user_metadata?.name || 'User',
-          email: session.user.email || '', // Ensure email is always a string
-          plan: undefined, // Changed from null to undefined
-        };
-        
-        console.log('[AuthProvider] User signed in:', user.id);
-        setUser(user);
-        setSupabaseUser(session.user);
-        setSession(session);
+        applySession(session.user, session);
       } else if (event === 'SIGNED_OUT') {
-        console.log('[AuthProvider] User signed out');
-        logout();
+        applySession(null, null);
       }
+      // TOKEN_REFRESHED and INITIAL_SESSION do not need store updates
+      // (checkSession already handled the initial state; token refresh is transparent)
     });
 
     return () => {
