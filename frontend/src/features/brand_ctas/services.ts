@@ -3,7 +3,7 @@
  * Handles business logic, validation, and error handling
  */
 
-import { brandCtasRepo } from '@/lib/supabase/repos/brandCtas';
+import { brandCtasRepo } from './repo';
 import { BrandCtaSchema } from '@/lib/validation/brandSchemas';
 import type { Database } from '@/types/database';
 
