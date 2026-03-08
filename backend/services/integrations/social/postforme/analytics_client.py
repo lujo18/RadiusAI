@@ -40,7 +40,52 @@ class PostForMeAnalyticsClient:
             PostForMeAnalyticsResponse with metrics for the matched post, or None if not found
         """
 
-        return None
+        if expand is None:
+            expand = ["metrics"]
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {POST_FOR_ME_API_KEY}",
+        }
+
+        params = {
+            "external_post_id": [social_post_id],
+            "limit": 50,
+            "expand": expand,
+        }
+
+        social_integration = getIntegrationById(platform_id)
+
+        if social_integration is None:
+            raise ValueError("No social integration found for id", platform_id)
+
+        social_account_id = social_integration.pfm_account_id
+
+        print(
+            "Getting analytics for post",
+            social_post_id,
+            " from account id",
+            social_account_id,
+        )
+
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    f"https://api.postforme.dev/v1/social-account-feeds/{social_account_id}",
+                    headers=headers,
+                    params=params,
+                )
+                response.raise_for_status()
+
+                data = response.json()
+                return PostForMeAnalyticsResponse(**data)
+
+        except httpx.HTTPError as e:
+            print(f"PostForMe API error: {e}")
+            return None
+        except Exception as e:
+            print(f"Error fetching PostForMe analytics: {e}")
+            return None
 
     # ========== DEPRECATED: Original implementation (kept for reference) ==========
     async def get_post_analytics_OLD_DEPRECATED(

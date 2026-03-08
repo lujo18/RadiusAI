@@ -39,13 +39,13 @@ async def lifespan(app: FastAPI):
     # Startup: schedule the analytics worker
     
     # TODO! UNCOMMENT WNEN PFM FIXED ANALYTICS
-    # scheduler.add_job(
-    #     lambda: asyncio.run(process_due_posts()),
-    #     CronTrigger(minute="*/5"),  # every 5 minutes
-    #     id="analytics_worker",
-    #     max_instances=1,  # avoid overlapping runs
-    #     replace_existing=True,
-    # )
+    scheduler.add_job(
+        lambda: asyncio.run(process_due_posts()),
+        CronTrigger(minute="*/5"),  # every 5 minutes
+        id="analytics_worker",
+        max_instances=1,  # avoid overlapping runs
+        replace_existing=True,
+    )
     
     # Startup: schedule the automation worker
     scheduler.add_job(

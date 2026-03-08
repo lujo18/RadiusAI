@@ -3,6 +3,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProfileRepository } from '@/lib/supabase/repos/ProfileRepository';
 import { requireUserId } from '@/lib/supabase/auth';
+import { brandService } from '../brand';
+import { useParams } from 'next/navigation';
+import { BrandRepository } from '@/lib/supabase/repos/BrandRepository';
 
 // Query Keys
 export const profileKeys = {
@@ -63,35 +66,6 @@ export function useDeleteProfile() {
     mutationFn: async (profileId: string) => {
       const userId = await requireUserId();
       return ProfileRepository.deleteProfile(profileId, userId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: profileKeys.all });
-    },
-  });
-}
-
-export function useAddIntegration() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ profileId, integration }: { profileId: string; integration: any }) => {
-      const userId = await requireUserId();
-      return ProfileRepository.createProfileIntegration(profileId, userId, integration);
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: profileKeys.all });
-      queryClient.invalidateQueries({ queryKey: profileKeys.detail(variables.profileId) });
-    },
-  });
-}
-
-export function useRemoveIntegration() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ integrationId }: { integrationId: string }) => {
-      const userId = await requireUserId();
-      return ProfileRepository.deleteProfileIntegration(integrationId, userId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.all });

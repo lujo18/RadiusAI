@@ -9,7 +9,8 @@ import { platforms } from "@/constants/platforms";
 import { SocialIntegration } from "../platform-integrations/SocialIntegration";
 import { Alert, AlertTitle } from "../ui/alert";
 import { CircleFadingArrowUpIcon, OctagonAlert } from "lucide-react";
-import { useRemoveIntegration } from '@/features/brand/hooks';
+import { useRemoveIntegration, useAddIntegration } from '@/features/brand/hooks';
+import { brandService } from "@/features/brand";
 
 interface IntegrationsListProps {
   lateProfileId: string;
@@ -30,6 +31,7 @@ export default function IntegrationsList({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const removeIntegration = useRemoveIntegration();
+  const connectIntegration = useAddIntegration();
 
   // Check for success parameter on mount
   useEffect(() => {
@@ -54,11 +56,13 @@ export default function IntegrationsList({
 
     try {
       // Call backend to start OAuth flow
-      const { authUrl } = await brandApi.startSocialConnect({
-        late_profile_id: lateProfileId,
-        brand_id: brandId,
-        platform: platformId,
-      });
+
+      const { authUrl } = await connectIntegration.mutateAsync({profileId: lateProfileId, brandId, platform:platformId})
+      // const { authUrl } = await brandService.startSocialConnect({
+      //   late_profile_id: lateProfileId,
+      //   brand_id: brandId,
+      //   platform: platformId,
+      // });
 
       // Redirect to social platform for authorization
       window.location.href = authUrl;

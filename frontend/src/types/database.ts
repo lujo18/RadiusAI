@@ -297,6 +297,51 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: number
+          reciever_id: string
+          resolved: boolean | null
+          sender_id: string
+          type: Database["public"]["Enums"]["message_types"] | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: number
+          reciever_id: string
+          resolved?: boolean | null
+          sender_id: string
+          type?: Database["public"]["Enums"]["message_types"] | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: number
+          reciever_id?: string
+          resolved?: boolean | null
+          sender_id?: string
+          type?: Database["public"]["Enums"]["message_types"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Messages_reciever_id_fkey"
+            columns: ["reciever_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_integrations: {
         Row: {
           bio: string | null
@@ -1324,6 +1369,7 @@ export type Database = {
       app_banner_location: "(marketing)" | "(app)"
       app_banner_status: "info" | "warning" | "deal" | "maintenance"
       integration_status: "connected" | "disconnected"
+      message_types: "standard" | "error" | "idea"
       post_status:
         | "draft"
         | "ready_to_review"
@@ -1469,6 +1515,7 @@ export const Constants = {
       app_banner_location: ["(marketing)", "(app)"],
       app_banner_status: ["info", "warning", "deal", "maintenance"],
       integration_status: ["connected", "disconnected"],
+      message_types: ["standard", "error", "idea"],
       post_status: [
         "draft",
         "ready_to_review",

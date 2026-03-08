@@ -1,26 +1,30 @@
 // React Query hooks for Brands
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { getCurrentUser, requireUserId } from '@/lib/supabase/auth';
-import { BrandRepository } from '@/lib/supabase/repos/BrandRepository';
-import { brandApi } from '@/lib/api/client';
-import { useTrackBrand } from '@/features/usage/hooks';
-import type { Database } from '@/types/database';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { getCurrentUser, requireUserId } from "@/lib/supabase/auth";
+import { BrandRepository } from "@/lib/supabase/repos/BrandRepository";
+import { brandApi } from "@/lib/api/client";
+import { useTrackBrand } from "@/features/usage/hooks";
+import type { Database } from "@/types/database";
+import brandService from "./services";
 
 // Query Keys
 export const brandKeys = {
-  all: () => ['brands'] as const,
-  allForTeam: (teamId: string) => ['brands', teamId] as const,
-  detail: (brandId: string) => ['brands', brandId] as const,
-  detailWithTeam: (teamId: string, brandId: string) => ['brands', teamId, brandId] as const,
+  all: () => ["brands"] as const,
+  allForTeam: (teamId: string) => ["brands", teamId] as const,
+  detail: (brandId: string) => ["brands", brandId] as const,
+  detailWithTeam: (teamId: string, brandId: string) =>
+    ["brands", teamId, brandId] as const,
+  socialConnections: (brandId: string) =>
+    ["brand-integrations", brandId] as const,
 };
 
 // ==================== QUERIES ====================
 
 export function useBrands() {
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   return useQuery({
     queryKey: brandKeys.allForTeam(teamId),
@@ -33,8 +37,8 @@ export function useBrands() {
 }
 
 export function useBrand(brandId: string) {
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   return useQuery({
     queryKey: brandKeys.detailWithTeam(teamId, brandId),
@@ -49,8 +53,8 @@ export function useBrand(brandId: string) {
 // ==================== INTEGRATIONS ====================
 
 export function useBrandIntegrations(brandId: string) {
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   return useQuery({
     queryKey: ["brand-integrations", teamId, brandId],
@@ -61,22 +65,22 @@ export function useBrandIntegrations(brandId: string) {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
- 
+
 // ==================== MUTATIONS ====================
 
 export function useCreateBrand() {
   const queryClient = useQueryClient();
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
   const trackBrandMutation = useTrackBrand();
 
   return useMutation({
     mutationFn: async (brandData: any) => {
       // Check and track brand usage first
       const trackResult = await trackBrandMutation.mutateAsync();
-      
+
       if (!trackResult.allowed) {
-        throw new Error(trackResult.message || 'Brand limit exceeded');
+        throw new Error(trackResult.message || "Brand limit exceeded");
       }
 
       // If allowed, proceed with brand creation
@@ -90,24 +94,36 @@ export function useCreateBrand() {
 
 export function useUpdateBrandSettings() {
   const queryClient = useQueryClient();
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   return useMutation({
-    mutationFn: async ({ brandId, brandSettings }: { brandId: string; brandSettings: any }) => {
-      return BrandRepository.updateBrandSettings(brandId, teamId, brandSettings);
+    mutationFn: async ({
+      brandId,
+      brandSettings,
+    }: {
+      brandId: string;
+      brandSettings: any;
+    }) => {
+      return BrandRepository.updateBrandSettings(
+        brandId,
+        teamId,
+        brandSettings,
+      );
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: brandKeys.allForTeam(teamId) });
-      queryClient.invalidateQueries({ queryKey: brandKeys.detailWithTeam(teamId, variables.brandId) });
+      queryClient.invalidateQueries({
+        queryKey: brandKeys.detailWithTeam(teamId, variables.brandId),
+      });
     },
   });
 }
 
 export function useDeleteBrand() {
   const queryClient = useQueryClient();
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   return useMutation({
     mutationFn: async (brandId: string) => {
@@ -121,30 +137,52 @@ export function useDeleteBrand() {
 
 export function useAddIntegration() {
   const queryClient = useQueryClient();
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   return useMutation({
-    mutationFn: async ({ brandId, integration }: { brandId: string; integration: any }) => {
-      return BrandRepository.createBrandIntegration(brandId, teamId, integration);
+    mutationFn: async ({
+      profileId,
+      brandId,
+      platform,
+    }: {
+      profileId: string;
+      brandId: string;
+      platform: string;
+    }) => {
+      return brandService.startSocialConnect({
+        late_profile_id: profileId,
+        brand_id: brandId,
+        platform,
+      });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: brandKeys.allForTeam(teamId) });
-      queryClient.invalidateQueries({ queryKey: brandKeys.detailWithTeam(teamId, variables.brandId) });
-      queryClient.invalidateQueries({ queryKey: ['brand-integrations', teamId, variables.brandId] });
+      const brandId = (variables as any)?.brandId as string | undefined;
+      if (brandId) {
+        queryClient.invalidateQueries({
+          queryKey: ["brand-integrations", teamId, brandId],
+        });
+      }
     },
   });
 }
 
 export function useRemoveIntegration() {
   const queryClient = useQueryClient();
-  const params = useParams()
-  const teamId = params.teamId as string
+  const params = useParams();
+  const teamId = params.teamId as string;
 
   return useMutation({
-    mutationFn: async ({ integrationId }: { integrationId: string; brandId?: string }) => {
-      if (brandApi?.disconnectSocialAccount) {
-        return brandApi.disconnectSocialAccount({ integration_id: integrationId });
+    mutationFn: async ({
+      integrationId,
+    }: {
+      integrationId: string;
+      brandId?: string;
+    }) => {
+      if (brandService?.disconnectSocialAccount) {
+        return brandService.disconnectSocialAccount({
+          integration_id: integrationId,
+        });
       }
       return BrandRepository.deleteBrandIntegration(integrationId);
     },
@@ -152,7 +190,9 @@ export function useRemoveIntegration() {
       queryClient.invalidateQueries({ queryKey: brandKeys.allForTeam(teamId) });
       const brandId = (variables as any)?.brandId as string | undefined;
       if (brandId) {
-        queryClient.invalidateQueries({ queryKey: ['brand-integrations', teamId, brandId] });
+        queryClient.invalidateQueries({
+          queryKey: ["brand-integrations", teamId, brandId],
+        });
       }
     },
   });

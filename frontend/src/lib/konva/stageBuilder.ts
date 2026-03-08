@@ -311,12 +311,12 @@ export async function buildStageForExport(
 }
 
 /**
- * Converts a Konva Stage to a Blob (PNG)
+ * Converts a Konva Stage to a Blob (WebP)
  * Works with both DOM canvas and OffscreenCanvas
  */
 export async function stageToBlob(
   stage: Konva.Stage,
-  quality: number = 1
+  quality: number = 0.85
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     try {
@@ -328,7 +328,7 @@ export async function stageToBlob(
             reject(new Error("Failed to convert stage to blob"));
           }
         },
-        mimeType: "image/png",
+        mimeType: "image/webp",
         quality,
         pixelRatio: 2,
       });

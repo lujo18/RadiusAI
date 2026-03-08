@@ -68,7 +68,6 @@ def connect_social_account_to_brand(
         "pfm_account_id": post_for_me_account_id,
         "username": username,
         "profile_picture_url": profile_picture_url,
-        "user_id": user_id,
         "status": "connected",
         "updated_at": now,
         "created_at": now,
@@ -76,18 +75,20 @@ def connect_social_account_to_brand(
 
     # Use upsert to ensure only one integration per (brand_id, platform).
     # Requires a DB unique constraint on (brand_id, platform).
+    
+    print("UPDATING SUPABASE ROW", data)
     res = (
         supabase.table("platform_integrations")
         .upsert(data, on_conflict="brand_id,platform")
         .execute()
     )
-    if getattr(res, "error", None):
-        # Fall back to insert on unexpected error
-        ins_res = supabase.table("platform_integrations").insert(data).execute()
-        print(
-            f"Connected {platform} account {late_account_id} to profile {brand_id} (insert fallback)"
-        )
-        return ins_res.data[0] if ins_res.data else None
+    # if getattr(res, "error", None):
+    #     # Fall back to insert on unexpected error
+    #     ins_res = supabase.table("platform_integrations").insert(data).execute()
+    #     print(
+    #         f"Connected {platform} account {late_account_id} to profile {brand_id} (insert fallback)"
+    #     )
+    #     return ins_res.data[0] if ins_res.data else None
 
     print(f"Upserted {platform} integration for profile {brand_id}")
     return res.data[0] if res.data else None
@@ -104,7 +105,7 @@ def update_social_account_status(
         .eq("pfm_account_id", pfm_account_id)
         .execute()
     )
-    print(f"Disconnected account {pfm_account_id}")
+    print(f"UPDATE: {status} account {pfm_account_id}")
     return res.data[0] if res.data else None
 
 

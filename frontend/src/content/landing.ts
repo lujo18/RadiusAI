@@ -1,7 +1,6 @@
 /**
  * Landing Page Content
- * 
- * Edit this file to update copy across the landing page.
+ * * Edit this file to update copy across the landing page.
  * Structure matches content.json schema for easy CMS migration.
  */
 
@@ -10,16 +9,16 @@ export const landingContent = {
   // HERO SECTION
   // ==========================================
   hero: {
-    badge: "Now with Gemini 2.0 Flash",
-    headline: "TikTok & Instagram carousel generator — create slideshows fast",
-    subheadline: "Automated TikTok slideshow automation and Instagram carousel creation with built-in A/B CTA interval testing and niche templates to boost engagement.",
-    ctaPrimary: "Get Started",
-    ctaSecondary: "Watch Demo",
+    badge: "Built for High-Signal Founders",
+    headline: "Stop Posting for Likes. Start Engineering for Customers.",
+    subheadline: "The only Social Intelligence Engine that bypasses generic AI noise to turn passive viewers into loyal customers autonomously.",
+    ctaPrimary: "Initialize Your Engine",
+    ctaSecondary: "Watch Architecture Demo",
     videoUrl: null, // Add demo video URL when ready
     features: [
-      "Start creating instantly",
-      "All features included",
-      "Cancel anytime"
+      "Expert-tuned conversion weights",
+      "Autonomous A/B optimization",
+      "Founder-led engineering"
     ]
   },
 
@@ -27,7 +26,7 @@ export const landingContent = {
   // PARTNERS / SOCIAL PROOF
   // ==========================================
   partners: {
-    headline: "Trusted by creators worldwide",
+    headline: "Powering the next generation of lean, high-revenue solo operations",
     logos: [
       // Add partner logos to Supabase Storage, reference here
       // { name: "Company", imageUrl: "..." }
@@ -38,38 +37,38 @@ export const landingContent = {
   // BENEFITS SECTION
   // ==========================================
   benefits: {
-    headline: "The Best AI TikTok Slideshow Automation & Instagram Carousel Generator",
-    subheadline: "Radius offers everything professional creators need for rapid TikTok slideshow automation, beautiful Instagram carousel templates, and reliable CTA interval testing.",
+    headline: "The Gold Standard in Autonomous Social Synthesis",
+    subheadline: "While others focus on volume, Radius focuses on liquidity. Our internal architecture is designed by growth experts to handle the heavy lifting of customer acquisition so you don't have to.",
     items: [
       {
-        icon: "Palette",
-        title: "Professional Niche Templates",
-        description: "Choose from 50+ proven carousel templates (TikTok slideshows, Instagram carousels) built for specific niches. Ranked #1 for conversion."
-      },
-      {
         icon: "Cpu",
-        title: "AI Social Media Content Generation",
-        description: "Gemini 2.0 AI writes engaging hooks, value-packed slides, and CTAs optimized for saves, and shares. Your ultimate AI automation tool."
+        title: "The Radius Context Engine™",
+        description: "Our proprietary logic doesn't just 'generate text.' It synthesizes your brand DNA into high-intent hooks and narratives that sound like a founder, not a bot."
       },
       {
         icon: "BarChart2",
-        title: "Automated A/B CTA Testing",
-        description: "Maximize conversion with automated A/B testing and CTA interval testing. Find the highest-performing slide order and call-to-actions effortlessly."
+        title: "Autonomous Revenue Loops",
+        description: "Beyond simple A/B testing, Radius runs internal simulations to identify the 'Conversion Probability' of every slide before it ever hits the feed."
       },
       {
-        icon: "TrendingUp",
-        title: "Advanced Performance Analytics",
-        description: "Track saves, shares, and true engagement metrics. Understand your social media growth and iterate on what is actually working."
+        icon: "Palette",
+        title: "Architect-Grade Design Systems",
+        description: "Move past generic templates. Access high-fidelity design frameworks engineered specifically for SaaS, E-commerce, and Digital Course conversion."
       },
       {
         icon: "Zap",
-        title: "Mass Batch Generation",
-        description: "Create a week's worth of TikTok & Instagram slideshows in 5 minutes. Autopilot your content creation with our scheduled generation."
+        title: "Zero-Prompt Intelligence",
+        description: "Stop wasting hours on prompt engineering. Radius is pre-calibrated with the top 0.1% of social sales data. One click initiates the generation cycle."
       },
       {
         icon: "Target",
-        title: "Consistent Brand Identity",
-        description: "Define custom style guides ensuring every generated carousel perfectly matches your brand's unique visual typography and color palette."
+        title: "Behavioral CTA Interval Testing",
+        description: "Automatically rotates psychological triggers and calls-to-action to find the exact friction point that turns a follower into a buyer."
+      },
+      {
+        icon: "ShieldCheck",
+        title: "Sovereign Brand Identity",
+        description: "A specialized style-guard system ensures every pixel and every word aligns with your premium market positioning, ensuring total brand trust."
       }
     ]
   },
@@ -78,22 +77,22 @@ export const landingContent = {
   // HOW IT WORKS
   // ==========================================
   howItWorks: {
-    headline: "Create High-Ranking Carousels in 3 Simple Steps",
+    headline: "Three Steps to Full-Autonomy Growth",
     steps: [
       {
         number: 1,
-        title: "Choose a Niche Template",
-        description: "Select from our library of high-converting carousel formats designed for TikTok slideshows, Instagram listicles, and educational posts."
+        title: "Calibrate Your Brand DNA",
+        description: "Input your core offer and audience. Radius maps your brand voice to our internal 'Expert-In-The-Loop' framework to ensure high-signal output."
       },
       {
         number: 2,
-        title: "Let AI Automate Content",
-        description: "Enter your custom topic. Our AI instantly generates optimized slides, captions, and niche hashtags tailored precisely for TikTok and Instagram algorithms."
+        title: "Synthesize Content Sequences",
+        description: "The Radius Engine generates a week of high-converting carousels, optimized for algorithm retention and behavioral sales psychology."
       },
       {
         number: 3,
-        title: "Publish, A/B Test & Scale",
-        description: "Download or schedule directly to your socials. Leverage our built-in CTA testing and analytics to rapidly multiply your engagement."
+        title: "Activate Autonomous Scaling",
+        description: "Deploy and let Radius monitor performance. The system learns from every save and click to refine your future content loops automatically."
       }
     ]
   },
@@ -102,39 +101,38 @@ export const landingContent = {
   // PRICING (Data comes from Stripe, copy here)
   // ==========================================
   pricing: {
-    headline: "Pricing Plans for Scalable Social Media Automation",
-    subheadline: "Transparent pricing for TikTok slideshow automation and elite Instagram carousel generation. No hidden fees. Select the AI tier that fits your agency or creator needs.",
-    ctaNote: "All plans include 7-day free trial",
+    headline: "Invest in Your Infrastructure",
+    subheadline: "Premium tools for founders who value their time at $500/hr. No fluff, just the engine. Select the tier that fits your growth trajectory.",
+    ctaNote: "Join the elite circle of autonomous creators. Upgrade or cancel anytime.",
     plansDescription: {
       starter: {
-        highlight: "Perfect for testing",
+        highlight: "For the Solo Architect",
         features: [
-          "5 posts per month",
-          "3 templates",
-          "Basic analytics",
-          "Email support"
+          "5 high-signal posts per month",
+          "Core Radius Context Engine",
+          "Basic Performance Metrics",
+          "Founder-led Support"
         ]
       },
       pro: {
-        highlight: "Most popular - For serious creators",
+        highlight: "The Standard - Most Popular",
         features: [
-          "Unlimited posts",
-          "All 50+ templates",
-          "A/B testing (3 variants)",
-          "Advanced analytics",
-          "Priority support",
-          "Custom branding"
+          "Unlimited Autonomous Generation",
+          "Full Library of Conversion Frameworks",
+          "Neural CTA Interval Testing",
+          "Advanced Revenue Analytics",
+          "Priority Engine Access",
+          "Custom Brand Vector Mapping"
         ]
       },
       agency: {
-        highlight: "For agencies & teams",
+        highlight: "For Growth Operations",
         features: [
           "Everything in Pro",
-          "5 team members",
-          "10 brand profiles",
-          "White-label exports",
-          "API access",
-          "Dedicated account manager"
+          "Multi-Brand Management (10 Profiles)",
+          "Team Collaboration (5 Members)",
+          "White-Label Exports & API Access",
+          "Dedicated Strategy Architect"
         ]
       }
     }
@@ -144,8 +142,8 @@ export const landingContent = {
   // TESTIMONIALS (Schema - actual data in Supabase)
   // ==========================================
   testimonials: {
-    headline: "Loved by people worldwide",
-    subheadline: "See what creators are saying about Radius",
+    headline: "Trusted by founders who demand precision",
+    subheadline: "See how high-value creators are offloading their growth to Radius",
     // Testimonials pulled from Supabase `testimonials` table
     // Schema: { id, name, role, quote, avatar_url, rating, created_at }
   },
@@ -154,32 +152,32 @@ export const landingContent = {
   // FAQ (Editable)
   // ==========================================
   faq: {
-    headline: "Frequently Asked Questions About AI Carousel Automation",
-    subheadline: "Everything you need to know about setting up your TikTok and Instagram slides on autopilot.",
+    headline: "The Radius Intelligence Brief",
+    subheadline: "Everything you need to know about setting up your social sales engine on autopilot.",
     items: [
       {
-        question: "Do I need design experience?",
-        answer: "Not at all! Our AI handles layout, copy, and slide sequencing for TikTok slideshows and Instagram carousels. Pick a niche template and publish."
+        question: "How is Radius different from generic AI tools?",
+        answer: "Most tools are simple 'wrappers' for generic AI. Radius is a Social Intelligence Engine built with proprietary conversion weights. We don't just 'make content'; we architect sales sequences using internal logic that generic AI cannot replicate."
       },
       {
-        question: "How does A/B testing work?",
-        answer: "Create 2-4 template variants (different hooks, CTA placements, or slide orders). Radius generates each variant, runs automated tests, and highlights winners using engagement signals like saves, shares, and clicks."
+        question: "Does this require me to be a 'Prompt Engineer'?",
+        answer: "No. Prompting is a flaw in other systems. Radius is designed to be 'Zero-Prompt.' We handle the complex engineering internally so you only have to focus on your business vision."
       },
       {
-        question: "Can I customize the templates?",
-        answer: "Absolutely! Every template is fully customizable - change colors, fonts, backgrounds, content structure. You can also create your own templates and save them for reuse."
+        question: "How does the A/B CTA testing work?",
+        answer: "Radius generates variants with different psychological triggers. Our system runs automated tests across your sequences and highlights winners using high-signal engagement data like saves and clicks."
       },
       {
         question: "What platforms does it support?",
-        answer: "TikTok slideshow automation and Instagram carousel generation are fully supported. We're expanding to LinkedIn carousels and other formats soon."
+        answer: "Currently, we provide the gold standard for TikTok slideshows and Instagram carousels. We are actively expanding our architecture to LinkedIn and other high-intent platforms."
       },
       {
-        question: "How do I cancel my subscription?",
-        answer: "Cancel anytime from your dashboard. No questions asked. You'll keep access until the end of your billing period."
+        question: "Why should I trust a solo-founder tool over a large company?",
+        answer: "Radius is a boutique engineering lab. Unlike mass-market tools built by committees, Radius is built by a single architect obsessed with conversion math—ensuring a level of quality and precision that 'factories' can't match."
       },
       {
-        question: "Do you offer refunds?",
-        answer: "Yes! If you're not satisfied within the first 7 days, we'll refund you in full. Just email support@Radius.app."
+        question: "What is your refund policy?",
+        answer: "We stand by our architecture. If you're not satisfied within the first 7 days, we'll refund you in full. Just contact the architect at support@Radius.app."
       }
     ]
   },
@@ -188,41 +186,41 @@ export const landingContent = {
   // FINAL CTA SECTION
   // ==========================================
   cta: {
-    headline: "Ready to automate your TikTok slideshows and Instagram carousels?",
-    subheadline: "Join creators who use automated CTA testing and niche templates to grow faster",
-    ctaPrimary: "Get Started",
-    ctaSecondary: "Book a Demo"
+    headline: "Ready to Install Your Autonomous Sales Force?",
+    subheadline: "Stop posting for likes. Start engineering for revenue with Radius.",
+    ctaPrimary: "Deploy Radius Now",
+    ctaSecondary: ""
   },
 
   // ==========================================
   // FOOTER
   // ==========================================
   footer: {
-    tagline: "AI-powered TikTok slideshow automation & Instagram carousel generator",
+    tagline: "The Sovereign Standard in Social Media Intelligence.",
     columns: [
       {
-        title: "Product",
+        title: "Engine",
         links: [
-          { label: "Features", href: "#benefits" },
+          { label: "Architecture", href: "#benefits" },
           { label: "Pricing", href: "#pricing" },
-          { label: "Templates", href: "/templates" },
-          { label: "Changelog", href: "/changelog" }
+          { label: "Frameworks", href: "/templates" },
+          { label: "Updates", href: "/changelog" }
         ]
       },
       {
-        title: "Resources",
+        title: "Intelligence",
         links: [
-          { label: "Documentation", href: "/docs" },
-          { label: "API", href: "/api-docs" },
-          { label: "Blog", href: "/blog" },
-          { label: "Case Studies", href: "/case-studies" }
+          { label: "Logic Documentation", href: "/docs" },
+          { label: "API Protocol", href: "/api-docs" },
+          { label: "The Founder's Blog", href: "/blog" },
+          { label: "Revenue Studies", href: "/case-studies" }
         ]
       },
       {
-        title: "Company",
+        title: "Laboratory",
         links: [
-          { label: "About", href: "/about" },
-          { label: "Contact", href: "/contact" },
+          { label: "The Vision", href: "/about" },
+          { label: "Contact Architect", href: "/contact" },
           { label: "Privacy Policy", href: "/privacy" },
           { label: "Terms of Service", href: "/terms" }
         ]
@@ -233,7 +231,7 @@ export const landingContent = {
       { platform: "Instagram", url: "https://instagram.com/Radius" },
       { platform: "LinkedIn", url: "https://linkedin.com/company/Radius" }
     ],
-    copyright: `© ${new Date().getFullYear()} Radius. All rights reserved.`
+    copyright: `© ${new Date().getFullYear()} Radius. Engineered for Excellence.`
   }
 };
 

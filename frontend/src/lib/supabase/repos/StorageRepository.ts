@@ -5,11 +5,11 @@ export class StorageRepository {
   static async uploadSlideImage(postId: string, slideIndex: number, blob: Blob): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
-    const fileName = `${user.id}/${postId}/slide-${slideIndex}.png`;
+    const fileName = `${user.id}/${postId}/slide-${slideIndex}.webp`;
     const { error: uploadError } = await supabase.storage
       .from('slides')
       .upload(fileName, blob, {
-        contentType: 'image/png',
+        contentType: 'image/webp',
         upsert: true,
       });
     if (uploadError) throw new Error(uploadError.message);
@@ -44,7 +44,7 @@ export class StorageRepository {
 
   // Get a public URL for a slide image
   static getSlideImageUrl(postId: string, slideIndex: number, userId: string): string {
-    const fileName = `${userId}/${postId}/slide-${slideIndex}.png`;
+    const fileName = `${userId}/${postId}/slide-${slideIndex}.webp`;
     const { data } = supabase.storage.from('slides').getPublicUrl(fileName);
     return data.publicUrl;
   }
@@ -53,11 +53,11 @@ export class StorageRepository {
   static async uploadThumbnail(postId: string, blob: Blob): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
-    const fileName = `${user.id}/${postId}/thumbnail.png`;
+    const fileName = `${user.id}/${postId}/thumbnail.webp`;
     const { error: uploadError } = await supabase.storage
       .from('slides')
       .upload(fileName, blob, {
-        contentType: 'image/png',
+        contentType: 'image/webp',
         upsert: true,
       });
     if (uploadError) throw new Error(uploadError.message);
@@ -85,7 +85,7 @@ export class StorageRepository {
           } else {
             reject(new Error('Failed to generate thumbnail'));
           }
-        }, 'image/png');
+        }, 'image/webp');
       };
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(firstSlideBlob);

@@ -30,26 +30,78 @@ class RulesDocument(BaseModel):
     rules: List[BaseRule] = []
 
 
+def _normalize_rules_input(raw: Any) -> Optional[Dict[str, Any]]:
+    """Normalize different rules payload shapes into {schema_version, rules}.
+
+    Supported inputs:
+    - {"schema_version": 1, "rules": [{...}]}
+    - [{...rule...}, {...rule...}]
+    - {"limits": {"post_count": 100, "credits": 500}}
+    - {"rules": [{"limits": {...}}]} (legacy nested form)
+    """
+    if raw is None:
+        return None
+
+    def _legacy_limits_to_rules(limits: Dict[str, Any]) -> List[Dict[str, Any]]:
+        normalized_rules: List[Dict[str, Any]] = []
+        for metric_name, metric_limit in (limits or {}).items():
+            if metric_limit is None:
+                continue
+            try:
+                normalized_rules.append(
+                    {
+                        "id": f"legacy-{metric_name}",
+                        "type": "fixed",
+                        "metric": str(metric_name),
+                        "limit": int(metric_limit),
+                    }
+                )
+            except Exception:
+                continue
+        return normalized_rules
+
+    if isinstance(raw, list):
+        return {"schema_version": 1, "rules": raw}
+
+    if isinstance(raw, dict):
+        schema_version = raw.get("schema_version", 1)
+
+        if "rules" in raw:
+            maybe_rules = raw.get("rules")
+            if isinstance(maybe_rules, list):
+                expanded_rules: List[Dict[str, Any]] = []
+                for item in maybe_rules:
+                    if isinstance(item, dict) and "limits" in item and isinstance(item.get("limits"), dict):
+                        expanded_rules.extend(_legacy_limits_to_rules(item.get("limits") or {}))
+                    else:
+                        expanded_rules.append(item)
+                return {"schema_version": schema_version, "rules": expanded_rules}
+            return None
+
+        if "limits" in raw and isinstance(raw.get("limits"), dict):
+            return {
+                "schema_version": schema_version,
+                "rules": _legacy_limits_to_rules(raw.get("limits") or {}),
+            }
+
+        # Single rule object fallback
+        return {"schema_version": schema_version, "rules": [raw]}
+
+    return None
+
+
 def parse_rules(raw: Any) -> Optional[RulesDocument]:
     """Parse raw JSON from `product_rate_limits.rules` into a RulesDocument.
 
     Accepts either a dict with `rules` or a list of rule dicts.
     Returns None on parse error.
     """
-    if raw is None:
-        return None
     try:
-        if isinstance(raw, list):
-            doc = RulesDocument(rules=raw)
-        elif isinstance(raw, dict):
-            # normalize
-            if 'rules' in raw:
-                doc = RulesDocument(**raw)
-            else:
-                # assume dict is single rule
-                doc = RulesDocument(rules=[raw])
-        else:
+        normalized = _normalize_rules_input(raw)
+        if not normalized:
             return None
+
+        doc = RulesDocument(**normalized)
         return doc
     except Exception as e:
         print("Failed to parse rules document", e)

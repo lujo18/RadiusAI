@@ -16,24 +16,24 @@ def upload_slide_image(
     post_id: str,
     slide_index: int,
     image_data: bytes,
-    content_type: str = "image/png"
+    content_type: str = "image/webp"
 ) -> str:
     """
-    Upload a single slide image to Supabase Storage.
+    Upload a single slide image to Supabase Storage as WebP.
     
     Args:
         user_id: User UUID
         post_id: Post UUID
         slide_index: Slide number (0-based index)
         image_data: Image file bytes
-        content_type: MIME type (default: image/png)
+        content_type: MIME type (default: image/webp)
     
     Returns:
         Public URL of uploaded image
     """
     supabase = get_supabase()
     
-    file_name = f"{user_id}/{post_id}/slide-{slide_index}.png"
+    file_name = f"{user_id}/{post_id}/slide-{slide_index}.webp"
     
     # Upload to 'slides' bucket
     response = supabase.storage.from_('slides').upload(
@@ -80,23 +80,23 @@ def upload_thumbnail(
     user_id: str,
     post_id: str,
     thumbnail_data: bytes,
-    content_type: str = "image/png"
+    content_type: str = "image/webp"
 ) -> str:
     """
-    Upload a thumbnail image.
+    Upload a thumbnail image as WebP.
     
     Args:
         user_id: User UUID
         post_id: Post UUID
         thumbnail_data: Thumbnail image bytes
-        content_type: MIME type (default: image/png)
+        content_type: MIME type (default: image/webp)
     
     Returns:
         Public URL of uploaded thumbnail
     """
     supabase = get_supabase()
     
-    file_name = f"{user_id}/{post_id}/thumbnail.png"
+    file_name = f"{user_id}/{post_id}/thumbnail.webp"
     
     response = supabase.storage.from_('slides').upload(
         path=file_name,

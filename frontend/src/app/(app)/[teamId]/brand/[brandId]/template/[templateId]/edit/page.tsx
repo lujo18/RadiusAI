@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { useTemplate, useUpdateTemplate } from "@/features/templates/hooks";
 import { DynamicJSONForm } from "@/components/TemplateCreator/DynamicJSONForm";
+import { EMPTY_CONTENT_RULES } from "@/components/TemplateCreator/emptyTemplate";
 import type { Template } from "@/components/TemplateCreator/contentTypes";
 
 export default function TemplateEditPage() {
@@ -32,7 +33,7 @@ export default function TemplateEditPage() {
     favorite: false,
     is_default: false,
     tags: [] as string[],
-    content_rules: {} as any,
+    content_rules: EMPTY_CONTENT_RULES,
     style_config: null as any,
   });
 
@@ -47,7 +48,7 @@ export default function TemplateEditPage() {
         favorite: t.favorite || false,
         is_default: t.is_default || false,
         tags: t.tags || [],
-        content_rules: t.content_rules || {},
+        content_rules: t.content_rules || EMPTY_CONTENT_RULES,
         style_config: t.style_config || null,
       });
     }
@@ -210,13 +211,11 @@ export default function TemplateEditPage() {
         </Card>
 
         {/* Content Rules */}
-        {Object.keys(formData.content_rules).length > 0 && (
-          <DynamicJSONForm
-            data={formData.content_rules}
-            onChange={(rules) => handleInputChange('content_rules', rules)}
-            title="Content Rules"
-          />
-        )}
+        <DynamicJSONForm
+          data={formData.content_rules && Object.keys(formData.content_rules).length > 0 ? formData.content_rules : EMPTY_CONTENT_RULES}
+          onChange={(rules) => handleInputChange('content_rules', rules)}
+          title="Content Rules"
+        />
 
         {/* Style Config */}
         {formData.style_config && Object.keys(formData.style_config).length > 0 && (

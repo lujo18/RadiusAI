@@ -111,22 +111,22 @@ export default function LoginPage() {
               </Button>
 
               {/* Divider */}
-              <div className="relative my-6">
+              {/* <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-4 bg-background text-muted-foreground">Or</span>
                 </div>
-              </div>
+              </div> */}
 
               {/* Email Button */}
-              <Button
+              {/* <Button
                 onClick={handleContinueWithEmail}
                 className="w-full bg-primary hover:bg-primary/80 text-primary-foreground py-3 px-4 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary/50"
               >
                 Continue with Email
-              </Button>
+              </Button> */}
             </>
           ) : (
             <>

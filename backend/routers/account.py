@@ -17,6 +17,7 @@ import os
 from datetime import datetime, timedelta
 
 from auth import get_current_user
+from backend.services.integrations.supabase.client import get_supabase
 from services.integrations.social.provider import get_social_provider
 from services.integrations.supabase.db.brand import (
     connect_social_account_to_brand,
@@ -123,13 +124,22 @@ async def get_social_connection(request: Request):
     data = await provider.save_integration(response)
     
     brand_id = data.brand_id
+    
+    supabase = get_supabase()
+
+    
+    brand = supabase.table("brand").select("*").eq("id", brand_id).execute()
+    brand = brand.data[0]
+    team = supabase.table("teams").select("*").eq("id", brand.get("team_id")).execute()
+    team = team.data[0]
+    
     platform_connected = data.platform_connected
     
     # Check required params and ensure they are all str (not None)
     if not all([brand_id, platform_connected]):
         raise HTTPException(status_code=400, detail="Missing required query parameters.")
     
-    return RedirectResponse(url=f"{Config.FRONTEND_URL}/brand/{brand_id}/settings/?platform={platform_connected}")
+    return RedirectResponse(url=f"{Config.FRONTEND_URL}/{team.get("id")}/brand/{brand_id}/settings/?platform={platform_connected}")
   
 
 @router.post("/disconnect")
@@ -141,6 +151,7 @@ async def disconnect_social(request: DisconnectSocialRequest):
 # Callback endpoint removed - Late API handles redirect directly with redirect_url parameter
 @router.get("/callback/{vs_state}")
 async def get_social_connection_state(vs_state: str, request: Request):
+    
     
     # FIXME: Integration guidance
     # code = request.query_params.get("code") 
@@ -172,7 +183,7 @@ async def get_social_connection_state(vs_state: str, request: Request):
         user_id=str(user_id),
         brand_id=str(brand_id),
         platform=str(connected),
-        late_account_id=str(profile_id),
+        post_for_me_account_id=str(profile_id),
         username=str(username)
     )
     

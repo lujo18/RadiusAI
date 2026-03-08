@@ -101,20 +101,6 @@ async def save_integration(response: dict):
                 platform_connected=profile_data["platform"],
             )
         except Exception as e:
-            # If it's a duplicate / already exists error, ignore and mark status connected
-            msg = str(e).lower()
-            if any(
-                k in msg for k in ("unique constraint", "duplicate key", "duplicate")
-            ):
-                try:
-                    update_social_account_status(profile_data["id"], "connected")
-                except Exception:
-                    # swallow secondary errors
-                    pass
-                return SaveIntegrationResponse(
-                    brand_id=profile_data["external_id"],
-                    platform_connected=profile_data["platform"],
-                )
             # For other exceptions, signal a failed platform connection so caller can redirect accordingly
             return SaveIntegrationResponse(
                 brand_id=profile_data["external_id"],
@@ -128,6 +114,8 @@ async def disconnect_integration(integration_id: str):
             f"https://api.postforme.dev/v1/social-accounts/{integration_id}/disconnect",
             headers={"Authorization": f"Bearer {POST_FOR_ME_API_KEY}"},
         )
+        
+        print("ACCOUNT DISCONNECTED", r)
 
         r.raise_for_status()
 

@@ -22,6 +22,7 @@ import { LightRays } from "@/components/ui/light-rays";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
+import { PricingCards } from "@/components/billing/PricingCards";
 
 interface Testimonial {
   id: string;
@@ -240,13 +241,15 @@ export default function LandingPage() {
           HERO SECTION
           ========================================== */}
 
-      <section className="pt-32 pb-20 px-6">
+      <section className="pt-20 pb-20 px-6">
         <div className="max-w-5xl mx-auto text-center">
           {/* Badge */}
           <Badge className="mb-12">{landingContent.hero.badge}</Badge>
 
           {/* Headline (visual) - promoted to H2 so hidden H1 remains the primary document title for machines */}
-          <h2 className="text-5xl font-bold mb-8">{landingContent.hero.headline}</h2>
+          <h2 className="text-5xl font-bold mb-8">
+            {landingContent.hero.headline}
+          </h2>
 
           {/* Subheadline */}
           <h3 className="text-2xl muted mb-12">
@@ -340,7 +343,10 @@ export default function LandingPage() {
       {/* ==========================================
           BENEFITS SECTION
           ========================================== */}
-      <section id="benefits" className="py-20 px-6 relative overflow-hidden bg-background">
+      <section
+        id="benefits"
+        className="py-20 px-6 relative overflow-hidden bg-background"
+      >
         <BeamsBackground className="absolute inset-0 opacity-20" />
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
@@ -381,7 +387,9 @@ export default function LandingPage() {
                     <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
                       {benefit.title}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed">{benefit.description}</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {benefit.description}
+                    </p>
                   </div>
                 </motion.div>
               );
@@ -396,7 +404,7 @@ export default function LandingPage() {
       <section className="py-24 px-6 relative border-t border-border/50">
         <DotPattern
           className={cn(
-            "[mask-image:radial-gradient(700px_circle_at_center,white,transparent)] opacity-30"
+            "[mask-image:radial-gradient(700px_circle_at_center,white,transparent)] opacity-30",
           )}
         />
         <div className="max-w-6xl mx-auto relative z-10">
@@ -412,7 +420,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-12 relative">
             <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent -z-10" />
-            
+
             {landingContent.howItWorks.steps.map((step, i) => (
               <motion.div
                 key={step.number}
@@ -431,7 +439,9 @@ export default function LandingPage() {
                 <h3 className="text-2xl font-bold text-foreground mb-4">
                   {step.title}
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
+                <p className="text-muted-foreground leading-relaxed">
+                  {step.description}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -470,7 +480,10 @@ export default function LandingPage() {
               >
                 <div className="flex items-center mb-6">
                   {[...Array(testimonial.rating)].map((_, j) => (
-                    <FiStar key={j} className="text-yellow-500 fill-yellow-500 w-5 h-5 mr-1" />
+                    <FiStar
+                      key={j}
+                      className="text-yellow-500 fill-yellow-500 w-5 h-5 mr-1"
+                    />
                   ))}
                 </div>
                 <p className="text-foreground/90 mb-8 text-lg font-medium leading-relaxed">
@@ -486,7 +499,12 @@ export default function LandingPage() {
                     </div>
                     <div className="text-sm text-primary/80 font-medium">
                       {testimonial.role}
-                      {testimonial.company && <span className="text-muted-foreground font-normal"> · {testimonial.company}</span>}
+                      {testimonial.company && (
+                        <span className="text-muted-foreground font-normal">
+                          {" "}
+                          · {testimonial.company}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -499,34 +517,46 @@ export default function LandingPage() {
       {/* ==========================================
           PRICING SECTION
           ========================================== */}
-      <section id="pricing" className="py-24 px-6 bg-background relative border-y border-border/50">
+      <section
+        id="pricing"
+        className="py-24 px-6 bg-background relative border-y border-border/50"
+      >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
-        <div className="max-w-4xl mx-auto relative z-10 text-center">
+        <div className="relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-6 tracking-tight">
               {landingContent.pricing.headline}
             </h2>
-            <p className="text-xl text-muted-foreground mb-12">
+            <p className="text-xl text-muted-foreground">
               {landingContent.pricing.subheadline}
             </p>
-            <Link
-              href="/pricing"
-              className="group inline-flex items-center justify-center px-10 py-5 text-xl font-bold text-primary-foreground bg-primary rounded-xl overflow-hidden relative shadow-2xl shadow-primary/20 hover:scale-105 transition-transform"
-            >
-              <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black" />
-              <span className="relative flex items-center">
-                View All Plans
-                <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
-            <p className="text-sm text-muted-foreground mt-6 font-medium">
-              {landingContent.pricing.ctaNote}
-            </p>
           </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+          >
+            <PricingCards
+              onGetStarted={(plan) => router.push(`/pricing?plan=${plan}`)}
+            />
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-center text-sm text-muted-foreground mt-10 font-medium"
+          >
+            {landingContent.pricing.ctaNote}
+          </motion.p>
         </div>
       </section>
 
@@ -589,7 +619,7 @@ export default function LandingPage() {
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/30 rounded-full blur-[100px]" />
             <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/20 rounded-full blur-[100px]" />
-            
+
             <div className="relative z-10">
               <h2 className="text-4xl md:text-6xl font-bold font-main text-foreground mb-8 tracking-tight">
                 {landingContent.cta.headline}
@@ -615,9 +645,15 @@ export default function LandingPage() {
                     </>
                   )}
                 </Button>
-                <Button type="button" variant="outline" className="text-xl px-12 py-8 rounded-2xl border-2 hover:bg-secondary/50 transition-all hover:scale-105">
-                  {landingContent.cta.ctaSecondary}
-                </Button>
+                {landingContent.cta.ctaSecondary && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-xl px-12 py-8 rounded-2xl border-2 hover:bg-secondary/50 transition-all hover:scale-105"
+                  >
+                    {landingContent.cta.ctaSecondary}
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>

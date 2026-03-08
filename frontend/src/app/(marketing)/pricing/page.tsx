@@ -11,6 +11,8 @@ import { pricingContent } from '@/content/pricing';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import UpgradeFlow from '@/components/billing/UpgradeFlow';
+import { PricingCards } from '@/components/billing/PricingCards';
+import type { PlanKey } from '@/lib/plans';
 
 interface Testimonial {
   id: string;
@@ -286,189 +288,13 @@ export default function PricingPage() {
 
       {/* PRICING CARDS */}
       <section className="pb-20 px-6">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
-          {/* STARTER PLAN */}
-          <div className="glass-card p-8 relative">
-            {isCurrentPlan('starter') && (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-chart-4 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-                  CURRENT PLAN
-                </span>
-              </div>
-            )}
-
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-foreground mb-2">{pricingContent.plans.starter.name}</h3>
-              <p className="text-muted-foreground text-sm">{pricingContent.plans.starter.description}</p>
-            </div>
-
-            <div className="mb-6">
-              <div className="flex items-baseline">
-                <span className="text-5xl font-bold text-foreground">$19</span>
-                <span className="text-muted-foreground ml-2">/month</span>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => handleGetStarted('starter')}
-              disabled={isLoading || isCurrentPlan('starter')}
-              className="btn-secondary w-full mb-6 flex items-center justify-center"
-            >
-              {isCurrentPlan('starter') ? 'Current Plan' : isLoading ? 'Loading...' : 'Get Started'}
-            </Button>
-
-            <ul className="space-y-3">
-              {pricingContent.plans.starter.features.map((feature, i) => (
-                <li key={i} className="flex items-start text-foreground">
-                  <FiCheck className="text-primary mr-3 mt-1 flex-shrink-0" />
-                  <span className="text-sm">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* GROWTH PLAN (POPULAR) */}
-          <div className="glass-card p-8 relative border-2 border-primary transform md:scale-105">
-            {isCurrentPlan('growth') ? (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-chart-4 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-                  CURRENT PLAN
-                </span>
-              </div>
-            ) : isUpgrade('growth') ? (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                  <FiTrendingUp className="w-3 h-3" />
-                  UPGRADE
-                </span>
-              </div>
-            ) : pricingContent.plans.growth.badge && (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-                  {pricingContent.plans.growth.badge}
-                </span>
-              </div>
-            )}
-
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-foreground mb-2">{pricingContent.plans.growth.name}</h3>
-              <p className="text-muted-foreground text-sm">{pricingContent.plans.growth.description}</p>
-            </div>
-
-            <div className="mb-6">
-              <div className="flex items-baseline">
-                <span className="text-5xl font-bold text-foreground">
-                  ${growthPrice?.amount?.toFixed(0) || '29'}
-                </span>
-                <span className="text-muted-foreground ml-2">/month</span>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => isUpgrade('growth') ? handleUpgrade() : handleGetStarted('growth')}
-              disabled={isLoading || isCurrentPlan('growth')}
-              className={`w-full mb-6 flex items-center justify-center ${
-                isUpgrade('growth')
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
-                  : 'btn-primary'
-              }`}
-            >
-              {isCurrentPlan('growth')
-                ? 'Current Plan'
-                : isUpgrade('growth')
-                ? 'Upgrade Now'
-                : isLoading
-                ? 'Loading...'
-                : 'Get Started'}
-            </Button>
-
-            {isUpgrade('growth') && (
-              <p className="text-xs text-center text-green-400 -mt-4 mb-4">
-                ⚡ Instant upgrade with prorated billing
-              </p>
-            )}
-
-            <ul className="space-y-3">
-              {pricingContent.plans.growth.features.map((feature, i) => (
-                <li key={i} className="flex items-start text-foreground">
-                  <FiCheck className="text-primary mr-3 mt-1 flex-shrink-0" />
-                  <span className="text-sm">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* UNLIMITED PLAN */}
-          <div className="glass-card p-8 relative">
-            {isCurrentPlan('unlimited') ? (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-chart-4 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-                  CURRENT PLAN
-                </span>
-              </div>
-            ) : isUpgrade('unlimited') ? (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
-                  <FiTrendingUp className="w-3 h-3" />
-                  UPGRADE
-                </span>
-              </div>
-            ) : pricingContent.plans.unlimited.badge && (
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-chart-3 text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
-                  {pricingContent.plans.unlimited.badge}
-                </span>
-              </div>
-            )}
-
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold text-foreground mb-2">{pricingContent.plans.unlimited.name}</h3>
-              <p className="text-muted-foreground text-sm">{pricingContent.plans.unlimited.description}</p>
-            </div>
-
-            <div className="mb-6">
-              <div className="flex items-baseline">
-                <span className="text-5xl font-bold text-foreground">
-                  ${unlimitedPrice?.amount?.toFixed(0) || '99'}
-                </span>
-                <span className="text-muted-foreground ml-2">/month</span>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => isUpgrade('unlimited') ? handleUpgrade() : handleGetStarted('unlimited')}
-              disabled={isLoading || isCurrentPlan('unlimited')}
-              className={`w-full mb-6 flex items-center justify-center ${
-                isUpgrade('unlimited')
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
-                  : 'btn-secondary'
-              }`}
-            >
-              {isCurrentPlan('unlimited')
-                ? 'Current Plan'
-                : isUpgrade('unlimited')
-                ? 'Upgrade Now'
-                : isLoading
-                ? 'Loading...'
-                : 'Get Started'}
-            </Button>
-
-            {isUpgrade('unlimited') && (
-              <p className="text-xs text-center text-green-400 -mt-4 mb-4">
-                ⚡ Instant upgrade with prorated billing
-              </p>
-            )}
-
-            <ul className="space-y-3">
-              {pricingContent.plans.unlimited.features.map((feature, i) => (
-                <li key={i} className="flex items-start text-foreground">
-                  <FiCheck className="text-primary mr-3 mt-1 flex-shrink-0" />
-                  <span className="text-sm">{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <PricingCards
+          currentUserPlan={currentUserPlan}
+          prices={prices}
+          isLoading={isLoading}
+          onGetStarted={(plan: PlanKey) => handleGetStarted(plan)}
+          onUpgrade={handleUpgrade}
+        />
       </section>
 
       {/* SOCIAL PROOF */}

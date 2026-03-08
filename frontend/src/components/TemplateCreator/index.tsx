@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { Tables } from "@/types/database";
 import Step1TemplateSelection from "./Step1TemplateSelection";
 import Step2TemplateEditor from "./Step2TemplateEditor";
+import { EMPTY_CONTENT_RULES } from "./emptyTemplate";
 import { Dialog, DialogContent } from "../animate-ui/components/radix/dialog";
 
 type CreateTemplateInput = {
@@ -165,7 +166,7 @@ export default function TemplateCreator({
       name: templateData?.name || category,
       // DELEGATE: Style config. Decide if you still want, then handle solution
       // style_config: getDefaultStyleConfig(category, templateData),
-      content_rules: templateData?.content_rules || {},
+      content_rules: templateData?.content_rules || EMPTY_CONTENT_RULES,
     }));
     setStep(2);
   };
@@ -177,6 +178,7 @@ export default function TemplateCreator({
       name: customTemplateName,
       category: "educational",
       style_config: getDefaultStyleConfig("educational"),
+      content_rules: EMPTY_CONTENT_RULES,
     }));
     setStep(2);
   };

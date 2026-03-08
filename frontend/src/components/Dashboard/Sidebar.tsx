@@ -72,8 +72,10 @@ import {
   Forward,
   Frame,
   GalleryVerticalEnd,
+  HelpCircle,
   LayoutDashboard,
   Lightbulb,
+  Loader2,
   LogOut,
   Map,
   MoreHorizontal,
@@ -93,9 +95,20 @@ import { Badge } from "../ui/badge";
 import { useSidebarNav } from "./sidebarContext";
 import { isAdminUser, useUserProfile } from "@/features/user/hooks";
 import BrandSelector from "./BrandSelector";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { Textarea } from "../ui/textarea";
 import { Card } from "../ui/card";
 import { FcIdea } from "react-icons/fc";
+import { Button } from "../ui/button";
+import { QuickMessagingDialog } from "@/features/messaging/components/QuickMessageDialog";
 
 interface SidebarWrapperProps {
   activeTab: string;
@@ -114,6 +127,10 @@ interface SidebarWrapperProps {
   children: React.ReactNode;
 }
 
+type SupportStep = 'type' | 'message';
+type SupportType = 'error' | 'idea';
+type SupportStatus = 'idle' | 'loading' | 'success' | 'error';
+
 export default function DashboardSidebar({
   activeTab,
   setActiveTab,
@@ -122,6 +139,45 @@ export default function DashboardSidebar({
   children,
 }: SidebarWrapperProps) {
   const isMobile = useIsMobile();
+
+  // Support dialog state
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportStep, setSupportStep] = useState<SupportStep>('type');
+  const [supportType, setSupportType] = useState<SupportType | null>(null);
+  const [supportMessage, setSupportMessage] = useState('');
+  const [supportStatus, setSupportStatus] = useState<SupportStatus>('idle');
+
+  const resetSupport = () => {
+    setSupportStep('type');
+    setSupportType(null);
+    setSupportMessage('');
+    setSupportStatus('idle');
+  };
+
+  const handleSupportTypeSelect = (t: SupportType) => {
+    setSupportType(t);
+    setSupportStep('message');
+  };
+
+  const handleSupportSubmit = async () => {
+    if (!supportType || !supportMessage.trim()) return;
+    setSupportStatus('loading');
+    try {
+      const res = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          type: supportType,
+          message: supportMessage.trim(),
+        }),
+      });
+      if (!res.ok) throw new Error('Request failed');
+      setSupportStatus('success');
+    } catch {
+      setSupportStatus('error');
+    }
+  };
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const supabaseUser = useAuthStore((state) => state.supabaseUser);
@@ -233,30 +289,13 @@ export default function DashboardSidebar({
           </SidebarGroup>
           {/* Usage meter group */}
 
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Dialog>
-                  <DialogTrigger>Hello</DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      What do you need support with?
-                    </DialogHeader>
-                    <div className="flex flex-row gap-4">
-                      <Card className="items-center w-full">
-                        <AlertTriangle className="text-destructive text-xl"/>
-                        <h2>Error</h2>
-                      </Card>
-                       <Card className="items-center w-full">
-                        <Lightbulb className="text-primary text-xl"/>
-                        <h2>Idea</h2>
-                      </Card>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <QuickMessagingDialog/>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
         </SidebarContent>
 
         <SidebarFooter>

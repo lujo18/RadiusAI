@@ -390,7 +390,7 @@ class SlideRenderer:
 			y += line_height
 	
 	def render_slide(self, slide_design: PostSlide) -> bytes:
-		"""Render PostSlide to PNG bytes (matches Konva's buildStageForExport)"""
+		"""Render PostSlide to WebP bytes (matches Konva's buildStageForExport)"""
 		img = Image.new('RGB', (self.width, self.height), color='#0B0B0C')
 		
 		# Background
@@ -409,9 +409,9 @@ class SlideRenderer:
 					draw = ImageDraw.Draw(img)
 					self._draw_wrapped_text(draw, el, font)
 		
-		# Output as PNG bytes
+		# Output as WebP bytes
 		buf = io.BytesIO()
-		img.save(buf, format='PNG', quality=95, optimize=True)
+		img.save(buf, format='WEBP', quality=85, method=6)
 		return buf.getvalue()
 
 	def render_slides(self, slides: List[PostSlide]) -> List[bytes]:

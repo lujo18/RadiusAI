@@ -121,6 +121,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         "settings",
       ].includes(currentPage);
       const basePath = teamId ? `/${teamId}` : "";
+      
       router.push(
         isSubPage
           ? `${basePath}/brand/${brandId}/${currentPage}`

@@ -427,10 +427,6 @@ export default function BillingPage() {
             );
           })}
         </div>
-
-        <p className="mt-4 text-xs text-center text-foreground/40">
-          All plans include a 7-day money-back guarantee. Cancel anytime.
-        </p>
       </div>
 
       {/* Payment History */}
