@@ -17,6 +17,8 @@ import os
 from datetime import datetime, timedelta
 
 from auth import get_current_user
+from backend.features.error.helper import api_error
+from backend.features.error.response import SuccessResponse
 from backend.services.integrations.supabase.client import get_supabase
 from services.integrations.social.provider import get_social_provider
 from services.integrations.supabase.db.brand import (
@@ -64,9 +66,10 @@ def validate_platform(platform: str) -> str:
     """Validate and normalize platform name"""
     platform_lower = platform.lower()
     if platform_lower not in PLATFORM_ENDPOINTS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported platform: {platform}. Supported: {list(PLATFORM_ENDPOINTS.keys())}",
+        api_error(
+            400,
+            "INVALID_PLATFORM",
+            f"Unsupported platform: {platform}. Supported: {list(PLATFORM_ENDPOINTS.keys())}",
         )
     return platform_lower
 
@@ -93,11 +96,9 @@ async def start_social_connect(
     
     platform = validate_platform(platform)
     
-    logger.info("Brandid", request.brand_id)
-    
     url = await provider.create_auth_url(platform, user_id, request.brand_id, str(request.existing_profile_id))
     
-    return url
+    return SuccessResponse(data=url)
 
     
 
@@ -137,7 +138,7 @@ async def get_social_connection(request: Request):
     
     # Check required params and ensure they are all str (not None)
     if not all([brand_id, platform_connected]):
-        raise HTTPException(status_code=400, detail="Missing required query parameters.")
+        api_error(400, "MISSING_PARAMS", "Missing required query parameters.")
     
     return RedirectResponse(url=f"{Config.FRONTEND_URL}/{team.get("id")}/brand/{brand_id}/settings/?platform={platform_connected}")
   
@@ -146,89 +147,3 @@ async def get_social_connection(request: Request):
 async def disconnect_social(request: DisconnectSocialRequest):
     integration_id = request.integration_id
     return await provider.disconnect_integration(integration_id)
-
-
-# Callback endpoint removed - Late API handles redirect directly with redirect_url parameter
-@router.get("/callback/{vs_state}")
-async def get_social_connection_state(vs_state: str, request: Request):
-    
-    
-    # FIXME: Integration guidance
-    # code = request.query_params.get("code") 
-    # platform = request.query_params.get("platform") 
-    
-    # account = exchange_code(code, platform) 
-    # save_to_db(account) 
-    
-    # return {"connected": platform, "account": account
-    
-    
-    logger.info("Successfully recieved Late social connection", request)
-    logger.info("State response", vs_state)
-    
-    payload = decode_state(vs_state)
-    
-    brand_id = payload["brandId"]
-    user_id = payload["userId"]
-    connected = request.query_params.get("connected")
-    profile_id = request.query_params.get("profileId")
-    username = request.query_params.get("username")
-    
-    # Check required params and ensure they are all str (not None)
-    if not all([brand_id, user_id, profile_id, username, connected]):
-        raise HTTPException(status_code=400, detail="Missing required query parameters.")
-
-    # Defensive: cast to str to satisfy type checker (since above check ensures not None)
-    connect_social_account_to_brand(
-        user_id=str(user_id),
-        brand_id=str(brand_id),
-        platform=str(connected),
-        post_for_me_account_id=str(profile_id),
-        username=str(username)
-    )
-    
-    return RedirectResponse(url=f"{Config.FRONTEND_URL}/brand/{brand_id}/settings/?platform={connected}")
-    
-
-@router.get("/test-connection")
-async def test_late_api_connection():
-    """
-    Test connectivity to Late API
-    Useful for debugging network/API key issues
-    """
-    if not Config.LATE_API_KEY:
-        return {
-            "success": False,
-            "message": "LATE_API_KEY not configured in environment variables",
-        }
-
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            # Test basic connectivity to Late API
-            response = await client.get(
-                "https://getlate.dev/api/v1",
-                headers={"Authorization": f"Bearer {Config.LATE_API_KEY}"},
-            )
-
-            return {
-                "success": True,
-                "message": "Successfully connected to Late API",
-                "status_code": response.status_code,
-                "api_reachable": True,
-            }
-
-    except httpx.RequestError as e:
-        return {
-            "success": False,
-            "message": f"Cannot reach Late API",
-            "error": str(e),
-            "api_reachable": False,
-            "suggestions": [
-                "Check your internet connection",
-                "Verify Late API is operational at status.getlate.dev",
-                "Check firewall/proxy settings",
-                "Verify LATE_API_KEY is correct",
-            ],
-        }
-    except Exception as e:
-        return {"success": False, "message": f"Unexpected error: {str(e)}"}

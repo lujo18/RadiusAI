@@ -82,13 +82,9 @@ CREATE TABLE public.layout_configs (
 );
 CREATE TABLE public.platform_integrations (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  user_id uuid NOT NULL,
-  profile_id uuid,
-  platform text NOT NULL CHECK (
-    platform = ANY (
-      ARRAY ['Instagram'::text, 'TikTok'::text, 'Twitter'::text, 'Facebook'::text]
-    )
-  ),
+  brand_id uuid NOT NULL,
+  user_id uuid,
+  platform text NOT NULL,
   username text NOT NULL,
   full_name text,
   profile_picture_url text,
@@ -97,12 +93,19 @@ CREATE TABLE public.platform_integrations (
   bio text,
   website_url text,
   is_business_account boolean DEFAULT false,
+  status text NOT NULL DEFAULT 'connected',
+  pfm_account_id text,
+  tiktok_open_id text,
+  tiktok_access_token text,
+  tiktok_refresh_token text,
+  tiktok_token_expires_at timestamp with time zone,
+  tiktok_refresh_expires_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
-  late_platform_id text NOT NULL,
   CONSTRAINT platform_integrations_pkey PRIMARY KEY (id),
-  CONSTRAINT platform_integrations_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
-  CONSTRAINT platform_integrations_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES public.profiles(id)
+  CONSTRAINT platform_integrations_brand_id_platform_key UNIQUE (brand_id, platform),
+  CONSTRAINT platform_integrations_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brand(id),
+  CONSTRAINT platform_integrations_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 CREATE TABLE public.post_analytics (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -181,7 +184,7 @@ CREATE TABLE public.posts (
   ),
   status text NOT NULL DEFAULT 'draft'::text CHECK (
     status = ANY (
-      ARRAY ['draft'::text, 'scheduled'::text, 'published'::text, 'failed'::text]
+      ARRAY ['draft'::text, 'scheduled'::text, 'publishing'::text, 'published'::text, 'failed'::text]
     )
   ),
   content jsonb NOT NULL,

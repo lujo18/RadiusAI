@@ -44,12 +44,10 @@ export const backendGenerationClient = {
         cta_id: payload.ctaId,
         count: payload.count,
       },
-      { headers: { Authorization: `Bearer ${session?.access_token}` } }
+      { headers: { Authorization: `Bearer ${session?.access_token}` }, timeout: 120000 }
     );
     
-    console.log('[DEBUG] API Client response received');
-    
-    return response.data?.posts || response.data;
+    return response.data;
   },
 
   async generateVariants(payload: {

@@ -41,7 +41,7 @@ export default function GeneratePage() {
   const params = useParams();
   const brandId = params?.brandId as string;
   const { queue, addToQueue, updateQueueItem } = useGenerationStore();
-  const generateMutation = useGeneratePostFromPrompt();
+  const {mutateAsync: generateFromPrompt} = useGeneratePostFromPrompt();
 
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedCta, setSelectedCta] = useState<string | null>(null);
@@ -123,7 +123,7 @@ export default function GeneratePage() {
           };
 
 
-          const posts = await generateMutation.mutateAsync({
+          const posts = await generateFromPrompt({
             template,
             brandSettings: brand.brand_settings as BrandSettings,
             brandId: selectedProfile,
@@ -131,9 +131,12 @@ export default function GeneratePage() {
             count: 1,
           });
 
-
-          // Posts are already saved by the backend
-          setGeneratedPosts((prev) => [...prev, ...posts]);
+          if (!Array.isArray(posts)) {
+            setGeneratedPosts((prev) => [...prev, posts]);
+          }
+          else {
+            setGeneratedPosts((prev) => [...prev, ...posts]);
+          }
 
           updateQueueItem(requestId, {
             status: "completed",
@@ -165,7 +168,7 @@ export default function GeneratePage() {
         });
       }
     })();
-  }, [selectedTemplate, selectedProfile, selectedCta, templates, brands, generateMutation, addToQueue, updateQueueItem, setGeneratedPosts]);
+  }, [selectedTemplate, selectedProfile, selectedCta, templates, brands, generateFromPrompt, addToQueue, updateQueueItem, setGeneratedPosts]);
 
   if (templatesLoading || brandsLoading) {
     return (

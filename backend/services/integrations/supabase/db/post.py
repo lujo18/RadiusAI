@@ -5,6 +5,7 @@ Mirrors frontend PostRepository pattern.
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from backend.features.error.helper import api_error
 from models.slide import PostContent
 from services.integrations.supabase.client import get_supabase
 from models.post import Post, CreatePostRequest, UpdatePostRequest
@@ -50,13 +51,10 @@ def get_post_by_external_id(external_post_id: str) -> Optional[Dict[str, Any]]:
     try:
         response = supabase.from_('posts').select('*').eq('external_post_id', external_post_id).single().execute()
     except Exception as e:
-        # Supabase/PostgREST will raise when .single() finds 0 rows (PGRST116).
-        # Treat 'no rows' as not-found and return None; re-raise unexpected errors.
         msg = str(e)
         if 'Cannot coerce the result to a single JSON object' in msg or 'PGRST116' in msg:
             return None
-        # Log and re-raise other exceptions so callers can handle them
-        raise
+        api_error(500, "DB_ERROR", f"Failed to fetch post by external id {external_post_id}: {msg}")
 
     if not response.data:
         return None
@@ -180,7 +178,8 @@ def create_post(
     status: str = "draft",
     scheduled_time: Optional[str] = None,
     variant_set_id: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None,
+    automation_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Create a new post.
@@ -218,6 +217,10 @@ def create_post(
     
     if variant_set_id:
         post_data['variant_set_id'] = variant_set_id
+
+    if automation_id:
+        post_data['automation_id'] = automation_id
+        post_data['is_automated'] = True
     
     
     response = supabase.from_('posts')\
@@ -226,7 +229,7 @@ def create_post(
         
     
     if not response.data:
-        raise Exception("Failed to create post")
+        api_error(500, "DB_WRITE_FAILED", "Failed to create post")
     
     return response.data[0]
 
@@ -258,7 +261,7 @@ def update_post(
         .execute())
     
     if not response.data:
-        raise Exception(f"Failed to update post {post_id}")
+        api_error(500, "DB_WRITE_FAILED", f"Failed to update post {post_id}")
     
     return response.data[0]
 
@@ -303,6 +306,9 @@ def update_post_status(
     
     response = supabase.from_('posts').update(update_data).eq('id', post_id).execute()
     
+    if not response.data:
+        api_error(404, "POST_NOT_FOUND", f"Post {post_id} not found or update failed")
+
     # If post is now published, start analytics tracking
     if status == 'published':
         try:
@@ -414,10 +420,13 @@ def delete_post(post_id: str) -> bool:
     """
     supabase = get_supabase()
     
-    response = supabase.from_('posts')\
-        .delete()\
-        .eq('id', post_id)\
-        .execute()
+    try:
+        response = supabase.from_('posts')\
+            .delete()\
+            .eq('id', post_id)\
+            .execute()
+    except Exception as e:
+        api_error(500, "DB_WRITE_FAILED", f"Failed to delete post {post_id}: {e}")
     
     return True
 

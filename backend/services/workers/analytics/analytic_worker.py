@@ -2,6 +2,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
+from backend.services.integrations.social.provider import get_social_provider
 from services.integrations.supabase.client import get_supabase
 from services.integrations.social.postforme.analytics_client import (
     get_postforme_analytics_client,
@@ -147,6 +148,8 @@ async def process_due_posts():
         logger.error(f"Error in process_due_posts: {e}")
 
 
+provider = get_social_provider()
+
 async def process_single_post(track_row: dict, post_row: dict):
     """
     Process analytics collection for a single post:
@@ -161,6 +164,9 @@ async def process_single_post(track_row: dict, post_row: dict):
     post_id = track_row["post_id"]
     brand_id = post_row.get("brand_id")
     platform = post_row.get("platform", "")
+    external_id = post_row.get("external_post_id")
+    platform_ids = post_row.get("platform_ids")
+    platform_id = platform_ids[0]
     
     logger.info(
         f"[DEBUG] process_single_post started: post_id={post_id}, "
@@ -179,7 +185,9 @@ async def process_single_post(track_row: dict, post_row: dict):
 
     try:
         # 1) Fetch metrics from PostForMe API
-        metrics = await fetch_platform_metrics(post_id)
+        # metrics = await fetch_platform_metrics(post_id)
+        
+        metrics = await provider.get_post_metrics(external_id, platform_id)
         
         if not metrics:
             logger.warning(f"No metrics fetched for post {post_id}, skipping analytics update")

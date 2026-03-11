@@ -83,6 +83,16 @@ export function AutomationWizardStep5({ data }: Step5Props) {
               </span>
             </div>
           )}
+          <div className="flex justify-between py-2 border-b border-border/50">
+            <span className="text-foreground/60">Posting mode</span>
+            <span className="font-medium">
+              {!data.postAutomatically
+                ? 'Save in Radius (manual publish)'
+                : data.postAsDraft
+                  ? 'Auto → TikTok draft'
+                  : 'Auto → publish directly'}
+            </span>
+          </div>
         </div>
       </div>
 

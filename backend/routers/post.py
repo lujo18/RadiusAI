@@ -3,6 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Literal
 
+from backend.features.error.helper import api_error
+from backend.features.error.response import SuccessResponse
 from models.post import Post
 from models.user import BrandSettings
 from services.integrations.social.provider import get_social_provider
@@ -33,8 +35,8 @@ class MakePostRequest(BaseModel):
   scheduled_at: Optional[str] = None  # ISO timestamp for scheduled posts
   
 
-@router.post("/")
-async def make_post(request: MakePostRequest):
+@router.post("/", response_model=SuccessResponse)
+async def make_post(request: MakePostRequest, current_user=Depends(get_current_user)):
   """
   Create/publish/schedule a post via social provider.
   
@@ -46,31 +48,26 @@ async def make_post(request: MakePostRequest):
     - "draft": Save as draft 
     - "scheduled": Schedule for future posting (requires scheduled_at)
   """
-  try:
-    if request.mode == "scheduled" and not request.scheduled_at:
-      raise HTTPException(status_code=400, detail="scheduled_at is required for scheduled mode")
-    
-    # Call the appropriate method based on mode
-    if request.mode == "publish":
-      res = await provider.publish_post(request.brand_id, request.platforms, request.post_id)
-    elif request.mode == "draft":
-      res = await provider.draft_post(request.brand_id, request.platforms, request.post_id)
-    elif request.mode == "scheduled":
-      res = await provider.schedule_post(
-        request.brand_id, 
-        request.platforms, 
-        request.post_id, 
-        request.scheduled_at
-      )
-    else:
-      raise HTTPException(status_code=400, detail=f"Invalid mode: {request.mode}")
-    
-    logger.info(f"Successfully {request.mode} post {request.post_id} to platforms {request.platforms}")
-    return res
-    
-  except Exception as e:
-    logger.error(f"Failed to {request.mode} post {request.post_id}: {str(e)}")
-    raise HTTPException(status_code=500, detail=f"Failed to {request.mode} post: {str(e)}")
+  if request.mode == "scheduled" and not request.scheduled_at:
+    api_error(400, "MISSING_SCHEDULED_AT", "scheduled_at is required for scheduled mode")
+  
+  if request.mode not in ("publish", "draft", "scheduled"):
+    api_error(400, "INVALID_MODE", f"Invalid mode: {request.mode}")
+
+  if request.mode == "publish":
+    res = await provider.publish_post(request.brand_id, request.platforms, request.post_id)
+  elif request.mode == "draft":
+    res = await provider.draft_post(request.brand_id, request.platforms, request.post_id)
+  else:
+    res = await provider.schedule_post(
+      request.brand_id,
+      request.platforms,
+      request.post_id,
+      request.scheduled_at,
+    )
+
+  logger.info(f"Successfully {request.mode} post {request.post_id} to platforms {request.platforms}")
+  return res
 
 
 # DELEGATE: SAVE THIS, adapt the postforme implementation to work in unison with late
@@ -81,7 +78,7 @@ def post_slideshow(request: PostSlideshow, user_id: str = Depends(get_current_us
   post = get_post(request.post_id)
   
   if post is None:
-    raise HTTPException(status_code=404, detail="Post not found")
+    api_error(404, "POST_NOT_FOUND", "Post not found")
   if isinstance(post, dict):
     post = Post(**post)
 

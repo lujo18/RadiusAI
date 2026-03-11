@@ -4,6 +4,7 @@ from typing import List, Protocol, Any
 
 from pydantic import BaseModel
 
+from backend.features.error.response import SuccessResponse
 from models.post import Post
 
 class CreateAuthUrlResponse(BaseModel):
@@ -58,7 +59,7 @@ class SocialProvider(Protocol):
         """
         ...
         
-    async def disconnect_integration(self, integration_id: str) -> bool:
+    async def disconnect_integration(self, integration_id: str) -> SuccessResponse:
         ...
 
     async def publish_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
@@ -108,3 +109,7 @@ class SocialProvider(Protocol):
         """
         ...
     # Add more methods as needed, documenting each for clarity
+    
+    
+    async def get_post_metrics(self, post_id: str):
+        ...

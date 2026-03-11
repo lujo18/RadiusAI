@@ -32,9 +32,7 @@ export default function TeamLayout({
 
   // Handle team changes - update Zustand store
   useEffect(() => {
-    if (team) {
-      setCurrentTeam(team)
-    }
+    setCurrentTeam(team ?? null)
   }, [team, setCurrentTeam])
 
   // Handle access denied - redirect to first available team

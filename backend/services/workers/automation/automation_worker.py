@@ -223,6 +223,7 @@ async def run_automation(automation_id: UUID) -> dict:
             brand_settings=brand_settings,
             count=1,
             cta=cta_dict,
+            automation_id=str(automation_id),
         )
 
         if not posts:
@@ -235,26 +236,35 @@ async def run_automation(automation_id: UUID) -> dict:
 
         logger.info(f"Generated post {post_id} with {len(slide_urls)} slides")
 
-        # Step 6: Post to all platforms via PostForMe
-        logger.info(f"Posting to platforms: {platforms}")
+        # Step 6: Post to platforms (conditional on post_automatically flag)
+        post_automatically = automation.get("post_automatically", False)
+        post_as_draft = automation.get("post_as_draft", False)
 
-        from services.integrations.social.postforme.social_account import make_post
-        
-        
+        if not post_automatically:
+            # Leave the post saved inside Radius — user will review and publish manually.
+            logger.info(
+                f"Automation {automation_id}: post_automatically=False — "
+                f"post {post_id} saved in Radius for manual publishing"
+            )
+        else:
+            publish_mode = "draft" if post_as_draft else "publish"
+            logger.info(f"Posting to platforms: {platforms} (mode={publish_mode})")
 
-        for platform in platforms:
-            try:
-                print(f"Posting to {platform} with brand {brand_id} post id {post_id}")
-                await make_post(
-                    brand_id=str(brand_id),
-                    platforms=[platform],  # PostForMe expects a list
-                    post_id=post_id
-                )
-                run_result["platforms_used"].append(platform)
-            except Exception as e:
-                logger.error(f"Failed to post to {platform}: {e}", exc_info=True)
-                # Don't fail entire automation if one platform fails
-                # Just log and continue to next platform
+            from services.integrations.social.postforme.social_account import make_post
+
+            for platform in platforms:
+                try:
+                    print(f"Posting to {platform} with brand {brand_id} post id {post_id} mode {publish_mode}")
+                    await make_post(
+                        brand_id=str(brand_id),
+                        platforms=[platform],  # PostForMe expects a list
+                        post_id=post_id,
+                        mode=publish_mode,
+                    )
+                    run_result["platforms_used"].append(platform)
+                except Exception as e:
+                    logger.error(f"Failed to post to {platform}: {e}", exc_info=True)
+                    # Don't fail entire automation if one platform fails
 
         # Step 7: Insert automation_runs record
         await insert_automation_run(

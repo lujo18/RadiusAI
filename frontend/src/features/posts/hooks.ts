@@ -68,6 +68,19 @@ export function usePost(postId: string) {
 
 // ==================== POSTS + ANALYTICS ====================
 
+export function usePostsByAutomation(automationId?: string | null, brandId?: string | null) {
+  return useQuery({
+    queryKey: ['posts', 'automation', automationId ?? null] as const,
+    queryFn: async () => {
+      if (!automationId || !brandId) return [];
+      const res = await postSurface.getPostsByAutomation(automationId, brandId);
+      return res ?? [];
+    },
+    enabled: !!automationId && !!brandId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
 export function usePostsWithAnalytics(brandId?: string | null) {
   return useQuery({
     queryKey: ['postsWithAnalytics', 'brand', brandId ?? null] as const,

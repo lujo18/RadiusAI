@@ -16,8 +16,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AutomationWizard } from "@/components/automations/AutomationWizard";
 import type { AutomationWizardData } from "@/components/automations/AutomationWizard";
+import { AutomationPostsTab } from "@/components/automations/AutomationPostsTab";
 import { convertToLocalTime } from "@/lib/time";
 
 type Automation = Database["public"]["Tables"]["automations"]["Row"] & {
@@ -215,6 +217,8 @@ export default function AutomationDetailPage() {
                 templateIds: automation.template_ids || [],
                 ctaIds: automation.cta_ids || [],
                 platforms: (automation.platforms as Array<'instagram' | 'tiktok' | 'facebook' | 'linkedin'>) || [],
+                postAutomatically: automation.post_automatically ?? false,
+                postAsDraft: automation.post_as_draft ?? false,
                 schedule: (automation.schedule as Record<string, string[]>) || {},
                 nextRunAt: automation.next_run_at,
               }}
@@ -222,7 +226,14 @@ export default function AutomationDetailPage() {
           </CardContent>
         </Card>
       ) : (
-        <>
+        <Tabs defaultValue="overview">
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="posts">Posts</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
+          <>
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             {/* Templates */}
@@ -391,7 +402,17 @@ export default function AutomationDetailPage() {
               Delete
             </Button>
           </div>
-        </>
+          </>
+          </TabsContent>
+
+          <TabsContent value="posts">
+            <AutomationPostsTab
+              automationId={automationId}
+              brandId={brandId}
+              teamId={teamId}
+            />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

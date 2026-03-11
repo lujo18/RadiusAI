@@ -1,6 +1,8 @@
 # backend/services/integrations/postforme/provider.py
 
 from typing import List
+from backend.features.error.response import SuccessResponse
+from backend.services.analytics_service import get_post_analytics
 from models.post import Post
 from services.integrations.social.social_provider import CreateAuthUrlResponse, SaveIntegrationResponse, SocialProvider
 from .social_account import (
@@ -21,7 +23,7 @@ class PostForMeProvider(SocialProvider):
     async def save_integration(self, response: dict) -> SaveIntegrationResponse:
         return await save_integration(response)
         
-    async def disconnect_integration(self, integration_id: str) -> bool:
+    async def disconnect_integration(self, integration_id: str) -> SuccessResponse:
         return await disconnect_integration(integration_id)    
     
     async def publish_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
@@ -35,3 +37,6 @@ class PostForMeProvider(SocialProvider):
     
     def get_profile(self, account_id: str) -> dict: ...
         
+        
+    async def get_post_metrics(self, post_id: str):
+        return await get_post_analytics(post_id)

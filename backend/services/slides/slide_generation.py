@@ -20,7 +20,8 @@ def generate_slideshows(
   template: Template,
   brand_settings: BrandSettings,
   count: int = 1,
-  cta: dict = None
+  cta: dict = None,
+  automation_id: str = None,
 ):
     """
     Generate slideshow content using Gemini 2.0 Flash.
@@ -51,7 +52,7 @@ def generate_slideshows(
     
     # 2. Save all posts to Supabase (serialize PostContent to dict)
     posts = [  # Returns dicts from Supabase, not Post models
-      create_post(brand_id=brand_id, template_id=template.id, content=post_content.model_dump() if hasattr(post_content, 'model_dump') else post_content.dict()) # TODO: currently no template, default to instagram
+      create_post(brand_id=brand_id, template_id=template.id, content=post_content.model_dump() if hasattr(post_content, 'model_dump') else post_content.dict(), automation_id=automation_id) # TODO: currently no template, default to instagram
       for post_content in post_content_list
     ]
     

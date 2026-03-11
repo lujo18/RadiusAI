@@ -62,7 +62,7 @@ def generate_slideshow_auto(
     # meta-llama/llama-4-maverick-17b-128e-instruct (preview model)
 
     response = groq.chat.completions.create(
-        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
@@ -77,7 +77,7 @@ def generate_slideshow_auto(
         top_p=0.9,
         presence_penalty=0.1,
         frequency_penalty=0.1,
-        max_completion_tokens=2048,
+        max_completion_tokens=3072,
         # reasoning_effort="medium",
         
         response_format={

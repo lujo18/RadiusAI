@@ -1,4 +1,5 @@
 from typing import Optional
+from backend.features.error.helper import api_error
 from services.integrations.supabase.client import get_supabase
 
 
@@ -29,5 +30,7 @@ def get_brand_cta(cta_id: str) -> Optional[dict]:
         
         return None
     except Exception as e:
-        print(f"Error fetching CTA {cta_id}: {str(e)}")
-        return None
+        msg = str(e)
+        if 'PGRST116' in msg or 'Cannot coerce' in msg:
+            return None
+        api_error(500, "DB_ERROR", f"Error fetching CTA {cta_id}: {msg}")

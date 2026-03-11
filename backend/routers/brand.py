@@ -4,6 +4,7 @@ import logging
 import json
 
 from auth import get_current_user
+from backend.features.error.helper import api_error
 from models.user import BrandSettings
 from services.genai.client import client
 from google.genai import types
@@ -41,7 +42,7 @@ async def create_profile_api(
   current_user: dict = Depends(get_current_user)
 ):
   # Placeholder create-profile endpoint (implementation commented earlier)
-  raise HTTPException(status_code=501, detail="Not implemented")
+  api_error(501, "NOT_IMPLEMENTED", "Not implemented")
 
 
 class GenerateBrandRequest(BaseModel):
@@ -64,7 +65,7 @@ async def generate_brand_settings(
 
 	except Exception as e:
 		logging.error("Error generating brand settings: %s", e, exc_info=True)
-		raise HTTPException(status_code=500, detail=str(e))
+		api_error(500, "GENERATION_FAILED", str(e))
 
 # class ConnectSocialRequest(BaseModel):
 #   late_profile_id: str

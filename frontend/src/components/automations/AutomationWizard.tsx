@@ -41,6 +41,10 @@ export interface AutomationWizardData {
   // Step 4: Accounts (Platforms)
   platforms: Array<"instagram" | "tiktok" | "facebook" | "linkedin">;
 
+  // Posting behaviour
+  postAutomatically: boolean;
+  postAsDraft: boolean;
+
   // Step 5: Schedule - per-weekday times
   schedule: {
     [key: string]: string[]; // { "Monday": ["09:00", "14:00"], "Tuesday": ["09:00"], ... }
@@ -86,6 +90,8 @@ export function AutomationWizard({
           templateIds: initialData.templateIds,
           ctaIds: initialData.ctaIds,
           platforms: initialData.platforms,
+          postAutomatically: initialData.postAutomatically ?? false,
+          postAsDraft: initialData.postAsDraft ?? false,
           schedule: initialData.schedule,
           nextRunAt: initialData.nextRunAt,
         }
@@ -96,6 +102,8 @@ export function AutomationWizard({
           templateIds: [],
           ctaIds: [],
           platforms: [],
+          postAutomatically: false,
+          postAsDraft: false,
           schedule: {
             monday: [],
             tuesday: [],
@@ -166,6 +174,8 @@ export function AutomationWizard({
       template_ids: wizardData.templateIds,
       cta_ids: wizardData.ctaIds,
       platforms: wizardData.platforms,
+      post_automatically: wizardData.postAutomatically,
+      post_as_draft: wizardData.postAsDraft,
       schedule: wizardData.schedule,
       next_run_at: nextRunAt?.toISOString() || new Date().toISOString(),
     } as any;

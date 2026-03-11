@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 
+from backend.features.error.helper import api_error
 from services.integrations.supabase.client import get_supabase
 
 
@@ -10,13 +11,14 @@ def get_user_team_id(user_id: str) -> Optional[str]:
     try:
         res = supabase.table('users').select('team_id').eq('id', user_id).single().execute()
         if getattr(res, 'error', None):
-            print(f"get_user_team_id error for {user_id}", res.error)
-            return None
+            api_error(500, "DB_ERROR", f"Failed to fetch user {user_id}: {res.error}")
         data = getattr(res, 'data', None)
         return data.get('team_id') if data else None
     except Exception as e:
-        print(f"get_user_team_id failed for {user_id}", e)
-        return None
+        msg = str(e)
+        if 'PGRST116' in msg or 'Cannot coerce' in msg:
+            return None
+        api_error(500, "DB_ERROR", f"get_user_team_id failed for {user_id}: {msg}")
 
 
 def increment_usage_via_rpc(team_id: str, metric: str, amount: int = 1, period_start: Optional[str] = None, period_end: Optional[str] = None, event_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -50,8 +52,7 @@ def get_team_activity(team_id: str) -> Optional[Dict[str, Any]]:
     supabase = get_supabase()
     res = supabase.table("team_activity").select("*").eq("team_id", team_id).execute()
     if getattr(res, "error", None):
-        print("Error reading team_activity", res.error)
-        return None
+        api_error(500, "DB_ERROR", f"Error reading team_activity: {res.error}")
     data = res.data or []
     if len(data) == 0:
         return None
@@ -69,8 +70,7 @@ def get_team_activity_for_period(team_id: str, period_start: str, period_end: st
         .execute()
     )
     if getattr(res, "error", None):
-        print("Error reading team_activity for period", res.error)
-        return None
+        api_error(500, "DB_ERROR", f"Error reading team_activity for period: {res.error}")
     data = res.data or []
     if len(data) == 0:
         return None
@@ -124,10 +124,7 @@ def upsert_team_activity(team_id: str, period_start: str, period_end: str, post_
 
         return res.data[0] if getattr(res, "data", None) else {}
     except Exception as e:
-        print("Failed to upsert team_activity", e)
-        # best-effort insert
-        ins = supabase.table("team_activity").insert(payload).execute()
-        return ins.data[0] if getattr(ins, "data", None) else {}
+        api_error(500, "DB_ERROR", f"Failed to upsert team_activity: {e}")
 
 
 def set_team_activity_period(team_id: str, period_start: str, period_end: str) -> Optional[Dict[str, Any]]:
@@ -140,8 +137,7 @@ def set_team_activity_period(team_id: str, period_start: str, period_end: str) -
     now = datetime.utcnow().isoformat()
     res = supabase.table("team_activity").update({"period_start": period_start, "period_end": period_end, "updated_at": now}).eq("id", existing.get("id")).execute()
     if getattr(res, "error", None):
-        print("Error updating team_activity period", res.error)
-        return None
+        api_error(500, "DB_ERROR", f"Error updating team_activity period: {res.error}")
     return res.data[0] if getattr(res, "data", None) else None
 
 
@@ -171,8 +167,7 @@ def increment_usage_field(team_id: str, field: str, amount: int = 1) -> Optional
     updates["updated_at"] = now
     res = supabase.table("team_activity").update(updates).eq("id", existing.get("id")).execute()
     if getattr(res, "error", None):
-        print("Error incrementing usage field", res.error)
-        return None
+        api_error(500, "DB_ERROR", f"Error incrementing usage field: {res.error}")
     return res.data[0] if getattr(res, "data", None) else None
 
 
@@ -237,12 +232,10 @@ def increment_credits(team_id: str, credit_type: str, amount: int = 1) -> Option
         try:
             res = supabase.table("team_activity").update(updates).eq("id", existing.get("id")).execute()
             if getattr(res, "error", None):
-                print("increment_credits update error", res.error)
-                return None
+                api_error(500, "DB_ERROR", f"increment_credits update error: {res.error}")
             return res.data[0] if getattr(res, "data", None) else None
         except Exception as e:
-            print("increment_credits failed update", e)
-            return None
+            api_error(500, "DB_ERROR", f"increment_credits failed update: {e}")
     
     # Create new row with credits
     payload = {
@@ -259,12 +252,10 @@ def increment_credits(team_id: str, credit_type: str, amount: int = 1) -> Option
     try:
         res = supabase.table("team_activity").insert(payload).execute()
         if getattr(res, "error", None):
-            print("increment_credits insert error", res.error)
-            return None
+            api_error(500, "DB_ERROR", f"increment_credits insert error: {res.error}")
         return res.data[0] if getattr(res, "data", None) else None
     except Exception as e:
-        print("increment_credits failed insert", e)
-        return None
+        api_error(500, "DB_ERROR", f"increment_credits failed insert: {e}")
 
 
 def set_product_rate_limit(product_id: str, rules: Any) -> Optional[Dict[str, Any]]:
@@ -278,12 +269,10 @@ def set_product_rate_limit(product_id: str, rules: Any) -> Optional[Dict[str, An
         # upsert on product_id
         res = supabase.table("product_rate_limits").upsert(payload, on_conflict="product_id").execute()
         if getattr(res, "error", None):
-            print("set_product_rate_limit upsert error", res.error)
-            return None
+            api_error(500, "DB_ERROR", f"set_product_rate_limit upsert error: {res.error}")
         return res.data[0] if getattr(res, "data", None) else None
     except Exception as e:
-        print("set_product_rate_limit failed", e)
-        return None
+        api_error(500, "DB_ERROR", f"set_product_rate_limit failed: {e}")
 
 
 def increment_or_create_usage(team_id: str, metric: str, amount: int = 1, period_start: Optional[str] = None, period_end: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -313,12 +302,10 @@ def increment_or_create_usage(team_id: str, metric: str, amount: int = 1, period
         try:
             res = supabase.table("team_activity").update(updates).eq("id", existing.get("id")).execute()
             if getattr(res, "error", None):
-                print("increment_or_create_usage update error", res.error)
-                return None
+                api_error(500, "DB_ERROR", f"increment_or_create_usage update error: {res.error}")
             return res.data[0] if getattr(res, "data", None) else None
         except Exception as e:
-            print("increment_or_create_usage failed update", e)
-            return None
+            api_error(500, "DB_ERROR", f"increment_or_create_usage failed update: {e}")
 
     # create new row
     payload = {
@@ -334,8 +321,7 @@ def increment_or_create_usage(team_id: str, metric: str, amount: int = 1, period
     try:
         res = supabase.table("team_activity").insert(payload).execute()
         if getattr(res, "error", None):
-            print("increment_or_create_usage insert error", res.error)
-            return None
+            api_error(500, "DB_ERROR", f"increment_or_create_usage update error: {res.error}")
         return res.data[0] if getattr(res, "data", None) else None
     except Exception as e:
         print("increment_or_create_usage failed insert", e)

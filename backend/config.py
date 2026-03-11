@@ -40,6 +40,10 @@ class Config:
     BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
     STATE_SECRET_KEY = os.getenv("STATE_SECRET_KEY") # secure transporting data through social media oauth and back
+    # TikTok Direct API credentials
+    TIKTOK_CLIENT_KEY = os.getenv("TIKTOK_CLIENT_KEY")
+    TIKTOK_CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET")
+    TIKTOK_REDIRECT_URI = os.getenv("TIKTOK_REDIRECT_URI", "http://localhost:8000/api/social/callback")
     # Stripe configuration (optional but required for billing endpoints)
     # Support both STRIPE_SECRET_KEY and legacy/alternate name STRIPE_API_KEY
     STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY") or os.getenv("STRIPE_API_KEY")

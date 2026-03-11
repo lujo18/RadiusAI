@@ -2,6 +2,7 @@ import stripe
 from typing import Optional, Dict, Any
 from datetime import datetime
 
+from backend.features.error.helper import api_error
 from backend.services.integrations.supabase.db.templates import get_template_count
 from config import Config
 from services.usage import repo as usage_repo
@@ -161,40 +162,36 @@ def _get_metric_limit(product_id: Optional[str], metric_name: str) -> Optional[i
     Returns None if no limit configured.
     """
     if not product_id:
-        return None
+        raise api_error(status_code=400, code="GET_PRODUCT_RATE_FAILED", message="Invalid plan id.")
 
-    try:
-        rate = usage_repo.get_product_rate_limit(product_id)
-        if not rate:
-            return None
+    rate = usage_repo.get_product_rate_limit(product_id)
+    if not rate:
+        raise api_error(status_code=400, code="GET_PRODUCT_RATE_FAILED", message="The current plan does not have a valid rate limit.")
 
-        raw_rules = rate.get("rules")
-        if not raw_rules:
-            return None
 
-        # Check for limits.{metric_name} structure
-        if isinstance(raw_rules, dict) and "limits" in raw_rules:
-            limits = raw_rules["limits"]
-            if isinstance(limits, dict) and metric_name in limits:
-                limit_val = limits[metric_name]
-                if limit_val is not None:
-                    return int(limit_val)
+    raw_rules = rate.get("rules")
+    if not raw_rules:
+        raise api_error(status_code=400, code="GET_PRODUCT_RATE_FAILED", message="The current plan does not have any rules defined.")
 
-        # Fallback to legacy rules parsing
-        rules_doc = usage_rules.parse_rules(raw_rules)
-        if rules_doc and hasattr(rules_doc, "rules"):
-            for rule in rules_doc.rules:
-                if rule.metric == metric_name and rule.limit is not None:
-                    return int(rule.limit)
 
-        return None
+    print(f"metric limit values: {product_id} {metric_name}")
 
-    except Exception as e:
-        print(f"_get_metric_limit({metric_name}): {e}")
-        import traceback
+    # Check for limits.{metric_name} structure
+    if isinstance(raw_rules, dict) and "limits" in raw_rules:
+        limits = raw_rules["limits"]
+        if isinstance(limits, dict) and metric_name in limits:
+            limit_val = limits[metric_name]
+            if limit_val is not None:
+                return int(limit_val)
 
-        traceback.print_exc()
-        return None
+    # Fallback to legacy rules parsing
+    rules_doc = usage_rules.parse_rules(raw_rules)
+    if rules_doc and hasattr(rules_doc, "rules"):
+        for rule in rules_doc.rules:
+            if rule.metric == metric_name and rule.limit is not None:
+                return int(rule.limit)
+
+    return None
 
 
 def _get_metric_usage(
@@ -306,18 +303,19 @@ def get_metric_limit(
         print(f"[get_metric_usage START] metric={metric_name}, brand_id={brand_id}")
         team_id = usage_repo.get_user_team_id(user_id)
         if not team_id:
-            raise ValueError("The current user is not a part of a team.")
+            raise api_error(status_code=400, code="NO_TEAM_FOUND", message="The current user is not a part of a team.")
 
         product_id = _get_user_product_id(user_id)
         metric_limit = _get_metric_limit(product_id, metric_name)
         
         if not metric_limit:
-            raise ValueError("Failed to extract limit")
-            
+            raise api_error(status_code=400, code="NO_LIMIT_FOUND", message="Unable to find usage limit for period.")
+
         return metric_limit
     except Exception as e:
         print(f"get_metric_usage({metric_name}) failed: {e}")
-        raise ValueError("Error getting metric limit", e)
+        raise api_error(status_code=400, code="GET_LIMIT_FAILED", message=f"Get limit error: {e}")
+
 
 
 def get_metric_usage(
@@ -946,6 +944,7 @@ def get_template_usage(user_id: str, brand_id: str) -> Dict[str, Any]:
     """
     print(f"[SERVICE get_template_usage] user_id={user_id}, brand_id={brand_id}")
     template_usage = get_template_count(brand_id)
+
     
     template_limit = get_metric_limit(user_id, "template_count", brand_id=brand_id)
     

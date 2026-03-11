@@ -21,7 +21,7 @@ const brandService = {
       existing_profile_id: late_profile_id,
       brand_id,
     });
-    return resp.data as { authUrl: string; platform: string; message: string };
+    return resp.data;
   },
 
   /**

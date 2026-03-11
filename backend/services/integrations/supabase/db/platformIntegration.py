@@ -1,4 +1,5 @@
 from typing import List, Optional
+from backend.features.error.helper import api_error
 from models.platform_integration import PlatformIntegration
 from services.integrations.supabase.client import get_supabase
 
@@ -18,8 +19,10 @@ def getIntegrationById(integration_id: str) -> Optional[PlatformIntegration]:
             return PlatformIntegration(**response.data)
         return None
     except Exception as e:
-        print(f"Error fetching integration {integration_id}: {e}")
-        return None
+        msg = str(e)
+        if 'PGRST116' in msg or 'Cannot coerce' in msg:
+            return None
+        api_error(500, "DB_ERROR", f"Error fetching integration {integration_id}: {msg}")
 
 
 def getIntegrationsByBrandId(brand_id: str) -> List[PlatformIntegration]:
@@ -36,8 +39,7 @@ def getIntegrationsByBrandId(brand_id: str) -> List[PlatformIntegration]:
             return [PlatformIntegration(**item) for item in response.data]
         return []
     except Exception as e:
-        print(f"Error fetching integrations for brand {brand_id}: {e}")
-        return []
+        api_error(500, "DB_ERROR", f"Error fetching integrations for brand {brand_id}: {e}")
 
 
 def getIntegrationsByPlatform(brand_id: str, platform: str) -> List[PlatformIntegration]:
@@ -55,8 +57,7 @@ def getIntegrationsByPlatform(brand_id: str, platform: str) -> List[PlatformInte
             return [PlatformIntegration(**item) for item in response.data]
         return []
     except Exception as e:
-        print(f"Error fetching {platform} integrations for brand {brand_id}: {e}")
-        return []
+        api_error(500, "DB_ERROR", f"Error fetching {platform} integrations for brand {brand_id}: {e}")
 
 
 def createIntegration(integration: PlatformIntegration) -> Optional[PlatformIntegration]:
@@ -71,10 +72,9 @@ def createIntegration(integration: PlatformIntegration) -> Optional[PlatformInte
         )
         if response.data:
             return PlatformIntegration(**response.data[0])
-        return None
+        api_error(500, "DB_WRITE_FAILED", "Failed to create integration: no data returned")
     except Exception as e:
-        print(f"Error creating integration: {e}")
-        return None
+        api_error(500, "DB_ERROR", f"Error creating integration: {e}")
 
 
 def updateIntegration(integration_id: str, updates: dict) -> Optional[PlatformIntegration]:
@@ -89,10 +89,9 @@ def updateIntegration(integration_id: str, updates: dict) -> Optional[PlatformIn
         )
         if response.data:
             return PlatformIntegration(**response.data[0])
-        return None
+        api_error(500, "DB_WRITE_FAILED", f"Failed to update integration {integration_id}: no data returned")
     except Exception as e:
-        print(f"Error updating integration {integration_id}: {e}")
-        return None
+        api_error(500, "DB_ERROR", f"Error updating integration {integration_id}: {e}")
 
 
 def deleteIntegration(integration_id: str) -> bool:
@@ -107,5 +106,4 @@ def deleteIntegration(integration_id: str) -> bool:
         )
         return True
     except Exception as e:
-        print(f"Error deleting integration {integration_id}: {e}")
-        return False
+        api_error(500, "DB_ERROR", f"Error deleting integration {integration_id}: {e}")

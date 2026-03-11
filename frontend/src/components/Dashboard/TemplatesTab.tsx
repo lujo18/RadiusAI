@@ -22,7 +22,7 @@ import TemplateViewSwitcher from "@/components/Templates/TemplateViewSwitcher";
 const TemplatesTab = ({ brandId }: { brandId: string }) => {
   const { data: templates, isLoading: templatesLoading } =
     useTemplatesWithAnalytics(brandId);
-  const { data: templateUsage } = useGetTemplateUsage(brandId);
+  const { data: templateUsage, error: templateUsageError } = useGetTemplateUsage(brandId);
 
 
   console.log("template usage", templateUsage)
@@ -78,6 +78,9 @@ const TemplatesTab = ({ brandId }: { brandId: string }) => {
                 <span className="font-semibold text-foreground">
                   {templateCount} / {templateLimit}
                 </span>
+                {templateUsageError && (
+                  <Badge variant={"destructive"}>{templateUsageError.message}</Badge>
+                )}
               </p>
             )}
           </div>

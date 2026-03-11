@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import { surfaceAPI } from '@/lib/api/client'
 import { Team, TeamDetail, TeamMember } from '@/types/team'
+import { teamsSurface } from '@/features/teams/surface'
 
 const TEAMS_QUERY_KEYS = {
   all: ['teams'] as const,
@@ -25,7 +26,7 @@ export function useUserTeams() {
   return useQuery<Team[]>({
     queryKey: TEAMS_QUERY_KEYS.list(),
     queryFn: async () => {
-      const response = await surfaceAPI.teams.listUserTeams()
+      const response = await teamsSurface.listUserTeams()
       return response.data || []
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -41,9 +42,10 @@ export function useUserTeams() {
 export function useTeam(teamId?: string) {
   return useQuery<TeamDetail>({
     queryKey: TEAMS_QUERY_KEYS.detail(teamId || ''),
-    queryFn: async () => {
+    queryFn: async (): Promise<TeamDetail> => {
       if (!teamId) throw new Error('Team ID required')
-      const response = await surfaceAPI.teams.getTeam(teamId)
+      const response = await teamsSurface.getTeam(teamId)
+      if (!response.data) throw new Error('Team not found')
       return response.data
     },
     enabled: !!teamId,

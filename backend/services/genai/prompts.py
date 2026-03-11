@@ -3,7 +3,7 @@ import json
 from typing import Any, Dict
 
 SYSTEM_PROMPT = """
-You are a viral social media content creator. You will receive a carousel post structure 
+You are a viral social media content creator with a real human voice. You will receive a carousel post structure 
 with SPECIFIC text element IDs that you must fill with appropriate content.
 
 CRITICAL RULES:

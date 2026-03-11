@@ -3,118 +3,9 @@
 
 import { supabase } from '@/lib/supabase/client'
 import backendClient from '@/lib/api/clients/backendClient'
+import { TeamsRepository } from '@/features/teams/repo';
+import { get } from 'http';
 
-// Teams API implementation - directly queries Supabase
-const teamsApiImpl = {
-  async listUserTeams() {
-    console.log('[teamsApi] listUserTeams called');
-    try {
-      // Get user's teams they're a member of
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
-      if (authError) {
-        console.error('[teamsApi] Auth error:', authError);
-        return { data: [] }
-      }
-
-      if (!user) {
-        console.debug('[teamsApi] No authenticated user');
-        return { data: [] }
-      }
-
-      console.log('[teamsApi] Fetching teams for user:', user.id)
-
-      // Query 1: Teams where user is the owner
-      const { data: ownedTeams, error: ownedError } = await supabase
-        .from('teams')
-        .select('*')
-        .eq('owner_id', user.id)
-        .is('deleted_at', null)
-        .order('created_at', { ascending: false })
-
-      if (ownedError) {
-        console.warn('[teamsApi] Error fetching owned teams:', ownedError);
-      } else {
-        console.debug('[teamsApi] Found', (ownedTeams || []).length, 'owned teams');
-      }
-
-      // Query 2: Teams where user is a member
-      const { data: memberTeams, error: memberError } = await supabase
-        .from('team_members')
-        .select('team_id')
-        .eq('user_id', user.id)
-        .in('status', ['active', 'pending'])
-
-      if (memberError) {
-        console.warn('[teamsApi] Error fetching member teams:', memberError);
-      } else {
-        console.debug('[teamsApi] Found', (memberTeams || []).length, 'team memberships');
-      }
-
-      // Get the team details for member teams
-      let memberTeamDetails: any[] = []
-      if (memberTeams && memberTeams.length > 0) {
-        const teamIds = memberTeams.map(m => m.team_id)
-        console.debug('[teamsApi] Fetching details for member team IDs:', teamIds)
-        
-        const { data: teams, error: teamsError } = await supabase
-          .from('teams')
-          .select('*')
-          .in('id', teamIds)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false })
-
-        if (teamsError) {
-          console.warn('[teamsApi] Error fetching member team details:', teamsError);
-        } else {
-          memberTeamDetails = teams || []
-          console.debug('[teamsApi] Fetched details for', memberTeamDetails.length, 'member teams');
-        }
-      }
-
-      // Combine and deduplicate teams
-      const teamMap = new Map()
-      ;(ownedTeams || []).forEach(t => teamMap.set(t.id, t))
-      memberTeamDetails.forEach(t => teamMap.set(t.id, t))
-      
-      const allTeams = Array.from(teamMap.values())
-      console.log('[teamsApi] Returning', allTeams.length, 'total teams for user', user.id)
-      
-      return { data: allTeams }
-    } catch (err) {
-      console.error('[teamsApi] Exception in listUserTeams:', err)
-      return { data: [], error: err }
-    }
-  },
-
-  async getTeam(teamId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('teams')
-        .select('*, team_members(*)')
-        .eq('id', teamId)
-        .is('deleted_at', null)
-        .single()
-
-      if (error) {
-        console.error('Error fetching team:', error)
-        return { data: null, error }
-      }
-      return { data }
-    } catch (err) {
-      console.error('Error in getTeam:', err)
-      return { data: null, error: err }
-    }
-  },
-
-  async createTeam(_data?: any) { throw new Error('teamsApi.createTeam not yet implemented'); },
-  async updateTeam(_teamId?: string, _updates?: any) { throw new Error('teamsApi.updateTeam not yet implemented'); },
-  async deleteTeam(_teamId?: string) { throw new Error('teamsApi.deleteTeam not yet implemented'); },
-  async inviteTeamMember(_teamId?: string, _data?: any) { throw new Error('teamsApi.inviteTeamMember not yet implemented'); },
-  async updateTeamMemberRole(_teamId?: string, _memberId?: string, _data?: any) { throw new Error('teamsApi.updateTeamMemberRole not yet implemented'); },
-  async removeTeamMember(_teamId?: string, _memberId?: string) { throw new Error('teamsApi.removeTeamMember not yet implemented'); },
-  async getTeamEvents(_teamId?: string, _limit?: number) { throw new Error('teamsApi.getTeamEvents not yet implemented'); },
-}
 
 export const billingApi = {
   async getBilling() { throw new Error('billingApi.getBilling shim called'); },
@@ -278,7 +169,6 @@ export const contentApi = {
   async deletePostWithSlides(_postId?: string) { throw new Error('contentApi.deletePostWithSlides shim called'); },
 };
 
-export const teamsApi = teamsApiImpl;
 
 export const productsApi = {
   async list() { throw new Error('productsApi shim called'); },
@@ -298,7 +188,6 @@ const apiClient: any = {
   brand: brandApi,
   post: postApi,
   content: contentApi,
-  teams: teamsApi,
   products: productsApi,
 };
 

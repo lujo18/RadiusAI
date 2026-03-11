@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from auth import get_current_user
+from backend.features.error.helper import api_error
 from services.usage import repo as usage_repo
 from services.usage import service as usage_service
 from services.integrations.supabase.client import get_supabase
@@ -44,14 +45,15 @@ def get_usage(user: str = Depends(get_current_user)):
         
         team_id = usage_repo.get_user_team_id(user)
         if not team_id:
-            raise HTTPException(status_code=404, detail="User not found or not associated with team")
+            api_error(status_code=404, code="TEAM_NOT_FOUND", message="User not found or not associated with team")
         
         # Read usage (team_activity) row
         row = usage_repo.get_team_activity(team_id)
 
         # Ensure we always return an object for usage so frontend doesn't get null
         if not row:
-            row = {"team_id": team_id, "usage": {}, "period_start": None, "period_end": None}
+            api_error(status_code=404, code="USAGE_NOT_FOUND", message="Team usage does not exist")
+            # row = {"team_id": team_id, "usage": {}, "period_start": None, "period_end": None}
 
         # Determine the team owner so we can find the owner's subscription/product
         supabase = get_supabase()
@@ -121,7 +123,8 @@ def get_usage(user: str = Depends(get_current_user)):
 
                             if product_id and isinstance(product_id, str):
                                 product_ids.append(product_id)
-                except Exception:
+                except Exception as exc:
+                    api_error(status_code=400, code="STRIPE_ERROR", message=str(exc))
                     # swallow errors from Stripe calls - we'll fall back to returning usage only
                     product_ids = []
 
@@ -138,17 +141,17 @@ def get_usage(user: str = Depends(get_current_user)):
                         except Exception:
                             pass
                     limits_rows.append(pr)
-            except Exception:
-                continue
+            except Exception as e:
+                api_error(status_code=400, code="FAILED_RATE_LIMIT_QUERY", message=str(e))
+                
 
         # If no specific limits found, return empty list rather than all limits
         print("out", {"usage": row, "limits": limits_rows})
         return {"usage": row, "limits": limits_rows}
-    except HTTPException:
-        raise
     except Exception as e:
         logger.exception("Failed to fetch usage")
-        raise HTTPException(status_code=500, detail=str(e))
+        api_error(status_code=500, code="FAILED_FETCHING_USAGE", message=str(e))
+
 
 
 @router.post("/consume")
@@ -290,6 +293,7 @@ def get_template_usage(brand_id: str, user: str = Depends(get_current_user)):
     Otherwise, returns all templates for the user's team.
     """
     try:
+        logger.info("Brandid", brand_id)
         print(f"[ENDPOINT /api/usage/templates] user={user}, brand_id={brand_id}")
         result = usage_service.get_template_usage(user, brand_id=brand_id)
         print(f"[ENDPOINT /api/usage/templates] result={result}")
@@ -300,8 +304,9 @@ def get_template_usage(brand_id: str, user: str = Depends(get_current_user)):
             "template_limit": result.get("template_limit"),
             "remaining": result.get("remaining")
         }
-    except HTTPException:
-        raise
+    except HTTPException as he:
+        raise api_error(status_code=400, code="GET_USAGE_ERROR", message=f"Get template usage error: {he}")
+
     except Exception as e:
         print(f"[ENDPOINT /api/usage/templates] ERROR: {e}")
         logger.exception("Failed to get template usage")

@@ -12,6 +12,18 @@ export const postSurface = {
     return await PostRepository.getPost(postId);
   },
 
+  async getPostsByAutomation(automationId: string, brandId: string) {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('automation_id', automationId)
+      .eq('brand_id', brandId)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    const ids = (data ?? []).map((p: any) => p.id as string);
+    return PostRepository.getPostsByIds(ids);
+  },
+
   async getPosts(filters?: {
     status?: string;
     brandId?: string;

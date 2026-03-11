@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PostContent } from "@/lib/parseJsonColumn.supabase";
 import { useAutomations } from "@/features/automation/hooks";
+import { Alert } from "../ui/alert";
 
 type PlatformIntegration = Database["public"]["Tables"]["platform_integrations"]["Row"];
 type Post = any;
@@ -34,6 +35,7 @@ type PostingModalProps = {
   integrations?: PlatformIntegration[];
   onPost: (integrationIds: string[], mode: PostingMode, scheduledAt?: Date, updatedContent?: any) => Promise<void> | void;
   posting?: boolean;
+  errors: {publish: any, draft: any, schedule: any, updatePost: any}
 };
 
 export default function PostingModal({
@@ -44,6 +46,7 @@ export default function PostingModal({
   integrations = [],
   onPost,
   posting = false,
+  errors
 }: PostingModalProps) {
   const connected = integrations.filter((i) => i && i.status === "connected");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -148,6 +151,8 @@ export default function PostingModal({
       hashtags: editableHashtags,
       platform_captions: platformCaptions,
     };
+
+    console.log("POST", ids, postingMode, selectedDateTime, updatedContent)
 
     await onPost(ids, postingMode, selectedDateTime, updatedContent);
   };
@@ -352,6 +357,18 @@ export default function PostingModal({
                 </div>
               )}
             </div>
+
+
+            {!!(errors.publish || errors.draft || errors.schedule || errors.updatePost) && (
+              <div className="px-6 pb-6">
+                <Alert variant="destructive">
+                  <p className="text-sm">
+                    {(errors.publish || errors.draft || errors.schedule || errors.updatePost as any)?.message
+                      || "An error occurred. Please try again."}
+                  </p>
+                </Alert>
+              </div>
+            )}
           </DialogContent>
         </div>
       </DialogPortal>

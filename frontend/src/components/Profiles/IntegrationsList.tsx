@@ -3,14 +3,17 @@ import { FiInstagram, FiTwitter } from "react-icons/fi";
 import { SiTiktok, SiFacebook } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { brandApi } from '@/lib/api/client';
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Database } from "@/types/database";
 import { platforms } from "@/constants/platforms";
 import { SocialIntegration } from "../platform-integrations/SocialIntegration";
 import { Alert, AlertTitle } from "../ui/alert";
-import { CircleFadingArrowUpIcon, OctagonAlert } from "lucide-react";
+import { Check, CircleFadingArrowUpIcon, OctagonAlert } from "lucide-react";
 import { useRemoveIntegration, useAddIntegration } from '@/features/brand/hooks';
 import { brandService } from "@/features/brand";
+import { Card } from "../ui/card";
+import { Badge } from "../ui/badge";
 
 interface IntegrationsListProps {
   lateProfileId: string;
@@ -25,15 +28,18 @@ export default function IntegrationsList({
 }: IntegrationsListProps) {
   const safeIntegrations = integrations ?? [];
   const searchParams = useSearchParams();
+  const params = useParams();
+  const teamId = params?.teamId as string;
+  const queryClient = useQueryClient();
   const [connecting, setConnecting] = useState<string | null>(null);
   const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const removeIntegration = useRemoveIntegration();
-  const connectIntegration = useAddIntegration();
+  const {mutateAsync: removeIntegration, error: removeError} = useRemoveIntegration();
+  const {mutateAsync: connectIntegration, error: connectError} = useAddIntegration();
 
-  // Check for success parameter on mount
+  // After OAuth callback, immediately refetch integrations so the UI updates
   useEffect(() => {
     const platform = searchParams.get("platform");
 
@@ -42,13 +48,18 @@ export default function IntegrationsList({
         `${platform.charAt(0).toUpperCase() + platform.slice(1)} connected successfully!`,
       );
 
+      // Invalidate so TanStack Query refetches right away
+      queryClient.invalidateQueries({
+        queryKey: ["brand-integrations", teamId, brandId],
+      });
+
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(null), 5000);
 
       // Remove query parameters from URL
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, [searchParams]);
+  }, [searchParams, queryClient, teamId, brandId]);
 
   const handleConnect = async (platformId: string) => {
     setConnecting(platformId);
@@ -57,15 +68,9 @@ export default function IntegrationsList({
     try {
       // Call backend to start OAuth flow
 
-      const { authUrl } = await connectIntegration.mutateAsync({profileId: lateProfileId, brandId, platform:platformId})
-      // const { authUrl } = await brandService.startSocialConnect({
-      //   late_profile_id: lateProfileId,
-      //   brand_id: brandId,
-      //   platform: platformId,
-      // });
-
+      const { data } = await connectIntegration({profileId: lateProfileId, brandId, platform:platformId})
       // Redirect to social platform for authorization
-      window.location.href = authUrl;
+      window.location.href = data.authUrl;
     } catch (err) {
       console.error("Failed to start OAuth:", err);
       setError(
@@ -79,7 +84,7 @@ export default function IntegrationsList({
     setDisconnecting(integrationId);
     setError(null);
     try {
-      await removeIntegration.mutateAsync({ integrationId, brandId });
+      await removeIntegration({ integrationId, brandId });
       setSuccessMessage('Account disconnected');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
@@ -101,10 +106,10 @@ export default function IntegrationsList({
       )}
 
       {/* Error Message */}
-      {error && (
+      {!!(removeError || connectError) && (
         <Alert variant={"destructive"}>
           <OctagonAlert className="size-4" />
-          <AlertTitle>{error}</AlertTitle>
+          <AlertTitle>{JSON.stringify(connectError)}{JSON.stringify(removeError)}</AlertTitle>
         </Alert>
       )}
 
@@ -121,12 +126,12 @@ export default function IntegrationsList({
       </div>
 
       {safeIntegrations.length > 0 && (
-        <div className="mt-8 p-4 bg-chart-4/10 border border-chart-4/20 rounded-lg">
-          <p className="text-sm text-green-400">
-            ✓ {safeIntegrations.length} account
+        <Badge variant={"outline"} className="text-primary">
+        
+            {safeIntegrations.length} account
             {safeIntegrations.length !== 1 ? "s" : ""} connected
-          </p>
-        </div>
+          
+        </Badge>
       )}
     </div>
   );

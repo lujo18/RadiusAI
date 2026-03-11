@@ -4,6 +4,7 @@ import os
 
 from .late.provider import LateProvider
 from .postforme.provider import PostForMeProvider
+from .tiktok.provider import TikTokProvider
 # from ..custom.social_account import CustomProvider
 
 def get_social_provider():
@@ -13,6 +14,6 @@ def get_social_provider():
         return PostForMeProvider()
     if provider_name == "late":
       return LateProvider()
-    # elif provider_name == "custom":
-    #     return CustomProvider()
+    if provider_name == "native":
+        return TikTokProvider()
     raise ValueError("Unknown social provider")

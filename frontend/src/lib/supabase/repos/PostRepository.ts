@@ -56,6 +56,7 @@ export class PostRepository {
   }
 
   static async updatePost(postId: string, updates: Partial<Database['public']['Tables']['posts']['Update']>, userId?: string) {
+    console.log("updated content", updates)
     const { data, error } = await supabase
       .from('posts')
       .update(updates)
@@ -101,6 +102,28 @@ export class PostRepository {
     const { error } = await query;
     if (error) throw new Error(error.message);
     return true;
+  }
+
+  /**
+   * Return posts whose IDs are in the given list, with analytics attached.
+   */
+  static async getPostsByIds(postIds: string[]) {
+    if (postIds.length === 0) return [];
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .in('id', postIds)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    const posts = data || [];
+    // Fetch analytics for these specific posts
+    const { data: analyticsData } = await supabase
+      .from('post_analytics')
+      .select('*')
+      .in('post_id', postIds);
+    const map = new Map<string, any>();
+    (analyticsData || []).forEach((a: any) => map.set(a.post_id, a));
+    return posts.map((p: any) => ({ ...p, analytics: map.get(p.id) ?? null }));
   }
 
   /**
