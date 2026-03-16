@@ -126,6 +126,35 @@ export const brandCtaService = {
       throw error;
     }
   },
+
+  /**
+   * Set the CTA image URL (after uploading to R2)
+   */
+  async setCtaImage(ctaId: string, imageUrl: string): Promise<BrandCtaRow> {
+    try {
+      return await brandCtasRepo.update(ctaId, {
+        metadata: { cta_image: imageUrl },
+      } as BrandCtaUpdate);
+    } catch (error) {
+      console.error('Error setting CTA image:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Remove the CTA image URL
+   */
+  async removeCtaImage(ctaId: string): Promise<BrandCtaRow> {
+    try {
+      return await brandCtasRepo.update(ctaId, {
+        metadata: { cta_image: null },
+      } as BrandCtaUpdate);
+    } catch (error) {
+      console.error('Error removing CTA image:', error);
+      throw error;
+    }
+  },
+
 };
 
 export default brandCtaService;

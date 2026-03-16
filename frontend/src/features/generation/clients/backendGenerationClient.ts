@@ -3,6 +3,7 @@ import type { Database } from '@/types/database';
 import type { BrandSettings } from '@/lib/validation/brandSchemas';
 import type { Post } from '@/types/types';
 import { supabase } from '@/lib/supabase/client';
+import backendClient from '@/lib/api/clients/backendClient';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -76,6 +77,14 @@ export const backendGenerationClient = {
       `${API_BASE}/api/brand/generate`,
       { guideline_prompt: guideline },
       { headers: { Authorization: `Bearer ${session?.access_token}` } }
+    );
+    return response.data;
+  },
+
+  async generateTemplateFromPrompt(prompt: string): Promise<any> {
+    const response = await backendClient.post(
+      `/api/template/generate`,
+      { guideline_prompt: prompt },
     );
     return response.data;
   },

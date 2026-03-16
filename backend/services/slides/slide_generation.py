@@ -32,8 +32,6 @@ def generate_slideshows(
     # Convert content_rules dict to string for prompt
     prompt = json.dumps(template.content_rules)
     
-    logger.info("Prompt from template", prompt)
-    
     # 1. Check usage allowance and reserve generation tokens
     check = usage_service.check_generation_credits(user_id, slides_to_generate=count)
     if not check.get('allowed'):

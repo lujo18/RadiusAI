@@ -174,3 +174,47 @@ export function useDuplicateBrandCta() {
     },
   });
 }
+
+/**
+ * Set CTA image after upload
+ */
+export function useSetCtaImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation<BrandCtaRow, unknown, { ctaId: string; imageUrl: string }>({
+    mutationFn: ({ ctaId, imageUrl }) =>
+      brandCtaApi.setImage(ctaId, imageUrl),
+
+    onSuccess: (updatedCta) => {
+      queryClient.setQueryData(brandCtaKeys.detail(updatedCta.id), updatedCta);
+      queryClient.invalidateQueries({ queryKey: brandCtaKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: brandCtaKeys.list(updatedCta.brand_id) });
+    },
+
+    onError: (error) => {
+      console.error('Failed to set CTA image:', error);
+    },
+  });
+}
+
+/**
+ * Remove CTA image
+ */
+export function useRemoveCtaImage() {
+  const queryClient = useQueryClient();
+
+  return useMutation<BrandCtaRow, unknown, { ctaId: string }>({
+    mutationFn: ({ ctaId }) =>
+      brandCtaApi.removeImage(ctaId),
+
+    onSuccess: (updatedCta) => {
+      queryClient.setQueryData(brandCtaKeys.detail(updatedCta.id), updatedCta);
+      queryClient.invalidateQueries({ queryKey: brandCtaKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: brandCtaKeys.list(updatedCta.brand_id) });
+    },
+
+    onError: (error) => {
+      console.error('Failed to remove CTA image:', error);
+    },
+  });
+}

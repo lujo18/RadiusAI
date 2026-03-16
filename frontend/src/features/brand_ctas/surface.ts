@@ -36,6 +36,14 @@ export const brandCtaApi = {
 
   duplicate: (ctaId: string, targetBrandId: string) =>
     brandCtaService.duplicateCta(ctaId, targetBrandId),
+
+  // Image operations
+  setImage: (ctaId: string, imageUrl: string) =>
+    brandCtaService.setCtaImage(ctaId, imageUrl),
+
+  removeImage: (ctaId: string) =>
+    brandCtaService.removeCtaImage(ctaId),
+
 };
 
 export default brandCtaApi;

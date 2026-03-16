@@ -19,11 +19,19 @@ import type { StyleConfig } from "./styleConfigTypes";
 import { Dialog } from "@/components/animate-ui/components/radix/dialog";
 
 export type TemplateCategory =
-  | "listicle"
-  | "quote"
-  | "story"
   | "educational"
-  | "comparison";
+  | "transformation"
+  | "myth-busting"
+  | "comparison"
+  | "authority"
+  | "lifestyle"
+  | "community"
+  | "curation"
+  | "utility"
+  | "growth"
+  | "reach"
+  | "pattern"
+  | "checklist";
 
 interface CreateTemplateInput {
   name: string;
@@ -56,7 +64,7 @@ export default function TemplateCreatorModal({
 }: TemplateCreatorProps) {
   const [formData, setFormData] = useState<CreateTemplateInput>({
     name: existingTemplate?.name || "",
-    category: existingTemplate?.category || "listicle",
+    category: existingTemplate?.category || "educational",
     status: existingTemplate?.status || "active",
     favorite: existingTemplate?.favorite || false,
     is_default: existingTemplate?.is_default || false,
@@ -136,11 +144,19 @@ export default function TemplateCreatorModal({
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="listicle">Listicle</SelectItem>
-                    <SelectItem value="quote">Quote</SelectItem>
-                    <SelectItem value="story">Story</SelectItem>
                     <SelectItem value="educational">Educational</SelectItem>
+                    <SelectItem value="transformation">Transformation</SelectItem>
+                    <SelectItem value="myth-busting">Myth-Busting</SelectItem>
                     <SelectItem value="comparison">Comparison</SelectItem>
+                    <SelectItem value="authority">Authority</SelectItem>
+                    <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                    <SelectItem value="community">Community</SelectItem>
+                    <SelectItem value="curation">Curation</SelectItem>
+                    <SelectItem value="utility">Utility</SelectItem>
+                    <SelectItem value="growth">Growth</SelectItem>
+                    <SelectItem value="reach">Reach</SelectItem>
+                    <SelectItem value="pattern">Pattern</SelectItem>
+                    <SelectItem value="checklist">Checklist</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

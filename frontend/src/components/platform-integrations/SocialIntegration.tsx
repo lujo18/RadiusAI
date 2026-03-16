@@ -48,7 +48,7 @@ export const SocialIntegration = ({
       <Button
         onClick={() => {
           if (isConnected && integration) {
-            const accountId = integration.pfm_account_id || integration.late_account_id;
+            const accountId = integration.pfm_account_id;
             if (!accountId) return
             handleDisconnect(accountId);
           } else {

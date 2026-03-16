@@ -34,7 +34,11 @@ def generate_slideshow_auto(
     layout_options = get_all_layout_schemas()
     prompt = _generate_prompt(layout_options, slideshowGoals, brandSettings, count, template_structure=None, cta=cta)
 
-    logger.info("FULL PROMPT:", prompt)
+    prompt = " ".join(prompt.split())
+
+    print("System PROMPT:", SYSTEM_PROMPT)
+
+    print("FULL PROMPT:", prompt)
     
     # tokens = client.models.count_tokens(model="gemini-2.0-flash", contents=prompt).total_tokens
 
@@ -62,7 +66,7 @@ def generate_slideshow_auto(
     # meta-llama/llama-4-maverick-17b-128e-instruct (preview model)
 
     response = groq.chat.completions.create(
-        model="meta-llama/llama-4-maverick-17b-128e-instruct",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "system",
@@ -73,55 +77,60 @@ def generate_slideshow_auto(
                 "content": prompt,
             },
         ],
-        temperature=0.4,
-        top_p=0.9,
-        presence_penalty=0.1,
-        frequency_penalty=0.1,
-        max_completion_tokens=2048,
+        temperature=0.6,
+        top_p=0.95,
+        presence_penalty=0.4,
+        frequency_penalty=0.3,
+        max_completion_tokens=6000,
         # reasoning_effort="medium",
-        
         response_format={
             "type": "json_schema",
             "json_schema": {
-                "name": "carousel_array",
+                "name": "carousel_response",
                 "schema": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "slides": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "slide_number": {"type": "integer"},
-                                        "layout_type": {"type": "string"},
-                                        "text_elements": {
+                    "type": "object",
+                    "properties": {
+                        "variations": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "slides": {
+                                        "type": "array",
+                                        "items": {
                                             "type": "object",
-                                            "additionalProperties": {"type": "string"},
+                                            "properties": {
+                                                "slide_number": {"type": "integer"},
+                                                "layout_type": {"type": "string"},
+                                                "text_elements": {
+                                                    "type": "object",
+                                                    "additionalProperties": {"type": "string"},
+                                                },
+                                            },
+                                            "required": [
+                                                "slide_number",
+                                                "layout_type",
+                                                "text_elements",
+                                            ],
                                         },
                                     },
-                                    "required": [
-                                        "slide_number",
-                                        "layout_type",
-                                        "text_elements",
-                                    ],
+                                    "caption": {"type": "string"},
+                                    "hashtags": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
+                                    "background_query": {"type": "string"},
                                 },
+                                "required": [
+                                    "slides",
+                                    "caption",
+                                    "hashtags",
+                                    "background_query",
+                                ],
                             },
-                            "caption": {"type": "string"},
-                            "hashtags": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                            "background_query": {"type": "string"},
                         },
-                        "required": [
-                            "slides",
-                            "caption",
-                            "hashtags",
-                            "background_query",
-                        ],
                     },
+                    "required": ["variations"],
                 },
             },
         },
@@ -141,13 +150,12 @@ def generate_slideshow_auto(
         raise ValueError("No response_text received from Gemini/Groq API.")
 
     generated_data = json.loads(response_text.strip())
-    
 
-    # Ensure response is an array
+    # Unwrap from the required root object wrapper
     if isinstance(generated_data, dict):
-        # Check if it has a wrapping key with array data
-        if "items" in generated_data:
-            # Extract array from "items" wrapper
+        if "variations" in generated_data:
+            generated_data = generated_data["variations"]
+        elif "items" in generated_data:
             generated_data = generated_data["items"]
         elif "slides" in generated_data:
             # Single carousel object, wrap it in array
@@ -182,19 +190,6 @@ def _generate_prompt(
     template_structure: dict = None,
     cta: Optional[dict] = None,
 ):
-    # Build template enforcement section
-    template_section = ""
-    if template_structure:
-        template_section = f"""
-MANDATORY TEMPLATE STRUCTURE (Follow exactly as specified):
-{template_structure}
-
-YOU MUST:
-1. Follow this structure exactly - do not invent slides or reorder
-2. Generate content that FULFILLS each slide's purpose
-3. For Slide 1 hook: Use quantity-based format (e.g., "3 Ways to...", "5 Prompts for...", "7 Tips for...")
-4. Make each subsequent slide deliver on the promise made in Slide 1
-"""
 
     # Build CTA override section if provided
     cta_section = ""
@@ -203,54 +198,56 @@ YOU MUST:
         cta_url = cta.get('cta_url', '')
         logger.info(f"Injecting CTA - Text: {cta_text}, URL: {cta_url}")
         cta_section = f"""
-*** PRIORITY CTA OVERRIDE ***
+### LAST SLIDE CTA:
 Final slide MUST include this exact CTA: "{cta_text}"
 CTA URL: {cta_url if cta_url else 'N/A'}
 Do NOT replace or modify this CTA text."""
 
+
     return f""" 
-SLIDESHOW STRUCTURE:
+### CORE TASK:
+Design a Tiktok slideshow using the following brand and contraints.
+
+### BRAND GUARDRAILS (JSON):
+{brand}
+
+### SLIDESHOW BLUEPRINT (JSON):
 {slideshowGoals}
 
-{template_section}{cta_section}
+{cta_section}
 
-BRAND VOICE:
-Niche: {brand.niche}
-Aesthetic: {brand.aesthetic}
-Tone: {brand.tone_of_voice}
-Emojis: {brand.emoji_usage}
-Forbidden words: {', '.join(brand.forbidden_words) if brand.forbidden_words else 'None'}
-Preferred phrases: {', '.join(brand.preferred_words) if brand.preferred_words else 'None'}
+### TECHNICAL JSON SPECIFICATIONS
 
-AVAILABLE LAYOUTS (choose optimal layout per slide):
+#### AVAILABLE LAYOUTS (choose optimal layout per slide):
 {layout_options}
 
-CRITICAL CONTENT RULES:
+#### CRITICAL CONTENT RULES:
 - Fill ALL text element IDs - no placeholders
-- Use standard ASCII only (no unicode, em-dashes)
-- Add \n between list items for proper formatting
 - Generate ORIGINAL content - never copy template labels as text
 - Keep background_query SHORT: 2-3 words only
 
-OUTPUT FORMAT - Return array of {count} variation(s):
-[
-  {{
-    "slides": [
-      {{
-        "slide_number": 1,
-        "layout_type": "hook",
-        "text_elements": {{
-          "text-1767736354031": "Hook text following the template structure"
+#### OUTPUT FORMAT - Return a JSON object with a "variations" key containing an array of {count} variation(s):
+{{
+  "variations": [
+    {{
+      "slides": [
+        {{
+          "slide_number": 1,
+          "layout_type": "hook",
+          "text_elements": {{
+            "text-1": "Hook text following the template structure"
+          }}
         }}
-      }}
-    ],
-    "caption": "Authentic caption related to content",
-    "hashtags": ["hashtag1", "hashtag2"],
-    "background_query": "2-3 words describing an image related to content"
-  }}
-]
+      ],
+      "caption": "Authentic caption related to content",
+      "hashtags": ["hashtag1", "hashtag2"],
+      "background_query": "2-3 words describing an image related to content"
+    }}
+  ]
+}}
 
-Output only valid JSON array.
+Output only valid JSON object.
+If the JSON value doesn't contain \\n\\n where there are more than 2 sentaces, it is a failed generation. Re-calculate the structure now
 """
 
 
@@ -263,12 +260,17 @@ def _convert_to_post_content(generated: dict) -> PostContent:
 
     post_slides = []
 
+    background_query = generated.get("background_query", None)
+    
+    if not background_query:
+        ValueError("No backgrounds were added to post")
+
     logger.info(
-        f"Generated data: {generated['background_query']}, {len(generated['slides'])} slides"
+        f"Generated data: {background_query}, {len(generated['slides'])} slides"
     )
 
     backgroundUrls = queryUnsplashUrls(
-        generated["background_query"], len(generated["slides"])
+        background_query, len(generated["slides"])
     )
 
     if backgroundUrls is None or len(backgroundUrls) == 0:

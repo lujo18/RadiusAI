@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 backend_dir = Path(__file__).parent
 sys.path.insert(0, str(backend_dir))
 
-from routers import account, post, postforme_webhook, plans_bridge, brand, generate, product_rate_limits, teams
+from routers import account, post, postforme_webhook, plans_bridge, brand, generate, product_rate_limits, teams, template
 from routers import billing_service
 from routers import usage
 
@@ -111,6 +111,7 @@ app.include_router(postforme_webhook.router)  # Register PostForMe webhook
 app.include_router(billing_service.router)
 app.include_router(usage.router)
 app.include_router(product_rate_limits.router)
+app.include_router(template.router)
 
 security = HTTPBearer()
 
