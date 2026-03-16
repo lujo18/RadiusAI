@@ -264,7 +264,7 @@ export function AutomationWizard({
         </div>
 
         {/* Step Content */}
-        <div className="min-h-[300px] py-6">
+        <div className="min-h-75 py-6">
           {currentStep === 0 && (
             <AutomationWizardStep1 data={wizardData} onChange={setWizardData} />
           )}

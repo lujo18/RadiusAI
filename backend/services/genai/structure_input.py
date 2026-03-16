@@ -30,9 +30,7 @@ def build_gemini_slide_structure(
     for element in design.elements:
       if element.type == "text":
         text_elements[element.id] = {
-          "content": element.content,  # Placeholder for generated text
-          "role": None, # TODO: Determine role (could be passed from frontend)
-          "constraints": None # TODO: Add any constraints like character limits
+          "content": element.content
         }
         
         

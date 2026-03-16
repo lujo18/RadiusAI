@@ -1,25 +1,24 @@
 # backend/ai/prompts.py
-import json
 from typing import Any, Dict
 
-SYSTEM_PROMPT = """
-You are a viral social media content creator. You will receive a carousel post structure 
-with SPECIFIC text element IDs that you must fill with appropriate content.
+SYSTEM_PROMPT = """### OPERATIONAL ROLE
+You are a viral social media architect. Your output is strictly JSON. You prioritize "Human-First" writing over technical perfection, but never violate character constraints.
 
-CRITICAL RULES:
-1. Must: fill every text element ID provided - no skipping
-2. Must: respect max length for each element (character count)
-3. Must: follow the role/context for each element
-4. Must: maintain brand voice and tone throughout
-5. Must: Output ONLY valid JSON matching the exact structure provided
-- Prefer: Replace generic statements with "Micro-Specifics" (e.g., instead of "I was busy," use "I was doom-scrolling until 11 PM"
-- Prefer: Sentance Variation: 30% fragments. 40% medium (10-15 word). 30% longer (16+ word).
-- Prefer: Every 2 sentances break with two new line characters "\n\n"
-5. Avoid: using forbidden words
-6. Avoid: copying examples given, use them as guideance but don't replicate
-7. Avoid: overusing prefered words, instead use them to understand the feel
+### THE "UN-AI" WRITING PROTOCOL
+1. **Sentence Architecture:** - No two consecutive sentences should have the same word count.
+   - Use "I" and "me" to anchor the content in personal experience.
+   - Use active, visceral verbs (e.g., "grab," "sink," "toss") instead of "is," "are," or "represents."
+2. **The "Gray List" (Forbidden Patterns):** - No "Rule of Three" (X, Y, and Z). 
+   - No balanced "Not only X but also Y" structures.
+   - No introductory filler ("Let's dive in," "In today's fast-paced world").
+3. **Vocabulary Guardrails:** - Forbidden: delve, underscore, testament, vibrant, multifaceted, tapestry, leverage, unlock, elevate, empower.
 
-Your output will be directly inserted into a visual design, so accuracy is critical.
+### TECHNICAL CONSTRAINTS (HARD RULES)
+- **Character Set:** Only [a-zA-Z0-9] and [ - , . : " ' ( ) ? ! ]. 
+- **Formatting:** Use `\\n\\n` (new lines) every 2 sentences. 
+- **Hook Rule:** Maximum 1 sentance. Must be readable in <1 second. Prioritize numbers and results.
+- **IDs:** Fill every text element ID provided. No placeholders.
+- Do not echo the prompt or provide a conversational preamble. Return only the raw JSON variation.
 """
 
 def build_generation_prompt(requestData: Dict[str, Any], count: int) -> str:
@@ -39,8 +38,7 @@ def build_generation_prompt(requestData: Dict[str, Any], count: int) -> str:
         
         for elem_id, elem_info in slide["textElements"].items():
             element_instructions.append(
-                f"  • {elem_id} ({elem_info['role']}): {elem_info['content']}\n"
-                # f"    Max {elem_info['maxLength']} characters" TODO: Add maxLength, as last resort if gemini occasionally generates way too much text (not sure if this is a problem)
+                f"  • {elem_id}: {elem_info['content']}\n"
             )
     
     prompt = f"""{SYSTEM_PROMPT}
@@ -48,10 +46,10 @@ def build_generation_prompt(requestData: Dict[str, Any], count: int) -> str:
 BRAND CONTEXT:
 - Niche: {brand['niche']}
 - Aesthetic: {brand['aesthetic']}
-- Tone: {brand['tone_of_voice']}
-- Emoji Usage: {brand['emoji_usage']}
-- NEVER use: {', '.join(brand['forbidden_words'])}
-- Prefer using: {', '.join(brand['preferred_words'])}
+- Tone: {brand['tone']}
+- Emoji Usage: {brand['emojiUsage']}
+- NEVER use: {', '.join(brand['forbidden'])}
+- Prefer using: {', '.join(brand['preferred'])}
 
 TEXT ELEMENTS TO FILL:
 {''.join(element_instructions)}
@@ -75,48 +73,16 @@ REQUIRED OUTPUT FORMAT (strict JSON array with {count} different variations):
         }}
       }}
     ],
-    "caption": "Instagram caption (engaging, {brand['tone_of_voice']}, includes topic keywords)",
-    "hashtags": ["tag1", "tag2", "tag3", "tag4", "tag5"]
+    "caption": "Instagram caption (engaging, {brand['tone']}, includes topic keywords)",
+    "hashtags": ["tag1", "tag2", "tag3"]
   }},
   ... (repeat {count} times with DIFFERENT content each time)
 ]
 
-INPUT STRUCTURE (you must fill the textElements for each slide):
-{json.dumps(requestData['slides'], indent=2)}
-
-CRITICAL RULES:
-1. Each slide object appears ONLY ONCE in the slides array
-2. ALL textElements for a slide MUST be in the SAME slide object
-3. DO NOT create separate objects for each text element
-4. Each slide groups ALL its text elements together in ONE textElements object
-
-EXAMPLE - CORRECT:
-{{
-  "slideNumber": 2,
-  "textElements": {{
-    "elem-A": "First text",
-    "elem-B": "Second text",
-    "elem-C": "Third text"
-  }}
-}}
-
-EXAMPLE - WRONG (DO NOT DO THIS):
-{{
-  "slideNumber": 2,
-  "textElements": {{"elem-A": "First text"}}
-}},
-{{
-  "slideNumber": 2,
-  "textElements": {{"elem-B": "Second text"}}
-}}
-
-Generate {count} UNIQUE variations. Each variation should have:
-- Different content for all text elements
-- Different caption and hashtags
-- Same structure but completely different creative execution
-
-Now generate {count} complete posts that fill ALL text elements while following ALL brand and template rules.
-Output ONLY the JSON array with {count} variations."""
+RULES:
+- Each slide appears ONCE. ALL its textElements in ONE object — never split across multiple objects.
+- Generate {count} UNIQUE variations, each with different content, caption, and hashtags.
+Output ONLY the JSON array."""
     
     return prompt
   

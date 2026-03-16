@@ -118,12 +118,18 @@ export default function Step2TemplateEditor({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="educational">Educational</SelectItem>
-                      <SelectItem value="listicle">Listicle</SelectItem>
-                      <SelectItem value="story">Story Arc</SelectItem>
-                      <SelectItem value="comparison">Comparison</SelectItem>
-                      <SelectItem value="quote">Bold Quotes</SelectItem>
                       <SelectItem value="transformation">Transformation</SelectItem>
                       <SelectItem value="myth-busting">Myth-Busting</SelectItem>
+                      <SelectItem value="comparison">Comparison</SelectItem>
+                      <SelectItem value="authority">Authority</SelectItem>
+                      <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                      <SelectItem value="community">Community</SelectItem>
+                      <SelectItem value="curation">Curation</SelectItem>
+                      <SelectItem value="utility">Utility</SelectItem>
+                      <SelectItem value="growth">Growth</SelectItem>
+                      <SelectItem value="reach">Reach</SelectItem>
+                      <SelectItem value="pattern">Pattern</SelectItem>
+                      <SelectItem value="checklist">Checklist</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

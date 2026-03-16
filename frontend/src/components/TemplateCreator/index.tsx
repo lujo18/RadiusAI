@@ -7,6 +7,8 @@ import Step1TemplateSelection from "./Step1TemplateSelection";
 import Step2TemplateEditor from "./Step2TemplateEditor";
 import { EMPTY_CONTENT_RULES } from "./emptyTemplate";
 import { Dialog, DialogContent } from "../animate-ui/components/radix/dialog";
+import { templateGenerationService } from "@/features/generation/services/templateGenerationService";
+import { useToast } from "@/hooks/use-toast";
 
 type CreateTemplateInput = {
   name: string;
@@ -36,11 +38,13 @@ export default function TemplateCreator({
   brandId,
   templateUsage,
 }: TemplateCreatorProps) {
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedSystemTemplate, setSelectedSystemTemplate] = useState<
     string | null
   >(null);
-  const [templateMode, setTemplateMode] = useState<"system" | "custom" | null>(
+  const [templateMode, setTemplateMode] = useState<"system" | "custom" | "ai" | null>(
     null,
   );
   const [customTemplateName, setCustomTemplateName] = useState("");
@@ -183,6 +187,45 @@ export default function TemplateCreator({
     setStep(2);
   };
 
+  const handleAiGenerateTemplate = async (prompt: string) => {
+    setIsGenerating(true);
+    try {
+      const generatedTemplate = await templateGenerationService.generateFromPrompt(prompt);
+      
+      setTemplateMode("ai");
+      setFormData((prev) => ({
+        ...prev,
+        name: generatedTemplate.name || "AI Generated Template",
+        category: generatedTemplate.category || "educational",
+        style_config: generatedTemplate.style_config || getDefaultStyleConfig(generatedTemplate.category || "educational"),
+        content_rules: {
+          goal: generatedTemplate.logic_engine?.goal || "",
+          narrative_flow: generatedTemplate.logic_engine?.narrative_flow || "",
+          psychological_trigger: generatedTemplate.logic_engine?.psychological_trigger || "",
+          pacing_style: generatedTemplate.logic_engine?.pacing_style || "",
+          hook_style: generatedTemplate.content_blueprint?.hook_strategy || "",
+          structure: generatedTemplate.content_blueprint?.structure || {},
+          writing_constraints: generatedTemplate.content_blueprint?.writing_constraints || {},
+        },
+      }));
+      setStep(2);
+      
+      toast({
+        title: "Template Generated!",
+        description: "AI has created a structure based on your description.",
+      });
+    } catch (error: any) {
+      console.error("AI Generation failed:", error);
+      toast({
+        title: "Generation Failed",
+        description: error.response?.data?.detail || "Could not generate template. Please try again or use a system template.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleBack = () => {
     setStep(1);
     setSelectedSystemTemplate(null);
@@ -219,6 +262,8 @@ export default function TemplateCreator({
           <Step1TemplateSelection
             onSelectSystemTemplate={handleSelectSystemTemplate}
             onCreateCustomTemplate={handleCreateCustomTemplate}
+            onAiGenerateTemplate={handleAiGenerateTemplate}
+            isGenerating={isGenerating}
             customTemplateName={customTemplateName}
             setCustomTemplateName={setCustomTemplateName}
             onClose={onClose}

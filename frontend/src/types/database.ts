@@ -135,6 +135,8 @@ export type Database = {
           name: string
           next_run_at: string
           platforms: string[]
+          post_as_draft: boolean | null
+          post_automatically: boolean | null
           schedule: Json
           template_ids: string[]
           updated_at: string | null
@@ -155,6 +157,8 @@ export type Database = {
           name: string
           next_run_at: string
           platforms: string[]
+          post_as_draft?: boolean | null
+          post_automatically?: boolean | null
           schedule: Json
           template_ids: string[]
           updated_at?: string | null
@@ -175,6 +179,8 @@ export type Database = {
           name?: string
           next_run_at?: string
           platforms?: string[]
+          post_as_draft?: boolean | null
+          post_automatically?: boolean | null
           schedule?: Json
           template_ids?: string[]
           updated_at?: string | null
@@ -352,14 +358,15 @@ export type Database = {
           full_name: string | null
           id: string
           is_business_account: boolean | null
-          late_access_token: string | null
-          late_account_id: string | null
-          late_expires_in: string | null
-          late_refresh_token: string | null
           pfm_account_id: string | null
           platform: string
           profile_picture_url: string | null
           status: Database["public"]["Enums"]["integration_status"]
+          tiktok_access_token: string | null
+          tiktok_open_id: string | null
+          tiktok_refresh_expires_at: string | null
+          tiktok_refresh_token: string | null
+          tiktok_token_expires_at: string | null
           updated_at: string
           user_id: string | null
           username: string
@@ -374,14 +381,15 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_business_account?: boolean | null
-          late_access_token?: string | null
-          late_account_id?: string | null
-          late_expires_in?: string | null
-          late_refresh_token?: string | null
           pfm_account_id?: string | null
           platform: string
           profile_picture_url?: string | null
           status?: Database["public"]["Enums"]["integration_status"]
+          tiktok_access_token?: string | null
+          tiktok_open_id?: string | null
+          tiktok_refresh_expires_at?: string | null
+          tiktok_refresh_token?: string | null
+          tiktok_token_expires_at?: string | null
           updated_at?: string
           user_id?: string | null
           username: string
@@ -396,14 +404,15 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_business_account?: boolean | null
-          late_access_token?: string | null
-          late_account_id?: string | null
-          late_expires_in?: string | null
-          late_refresh_token?: string | null
           pfm_account_id?: string | null
           platform?: string
           profile_picture_url?: string | null
           status?: Database["public"]["Enums"]["integration_status"]
+          tiktok_access_token?: string | null
+          tiktok_open_id?: string | null
+          tiktok_refresh_expires_at?: string | null
+          tiktok_refresh_token?: string | null
+          tiktok_token_expires_at?: string | null
           updated_at?: string
           user_id?: string | null
           username?: string
@@ -587,6 +596,7 @@ export type Database = {
       posts: {
         Row: {
           analytics_last_sync: string | null
+          automation_id: string | null
           brand_id: string | null
           content: Json
           created_at: string
@@ -595,7 +605,6 @@ export type Database = {
           external_post_id: string | null
           generation_prompt: string | null
           id: string
-          is_automated: boolean | null
           metadata: Json | null
           platform: string
           platform_captions: Json | null
@@ -610,6 +619,7 @@ export type Database = {
         }
         Insert: {
           analytics_last_sync?: string | null
+          automation_id?: string | null
           brand_id?: string | null
           content: Json
           created_at?: string
@@ -618,7 +628,6 @@ export type Database = {
           external_post_id?: string | null
           generation_prompt?: string | null
           id?: string
-          is_automated?: boolean | null
           metadata?: Json | null
           platform: string
           platform_captions?: Json | null
@@ -633,6 +642,7 @@ export type Database = {
         }
         Update: {
           analytics_last_sync?: string | null
+          automation_id?: string | null
           brand_id?: string | null
           content?: Json
           created_at?: string
@@ -641,7 +651,6 @@ export type Database = {
           external_post_id?: string | null
           generation_prompt?: string | null
           id?: string
-          is_automated?: boolean | null
           metadata?: Json | null
           platform?: string
           platform_captions?: Json | null
@@ -655,6 +664,13 @@ export type Database = {
           variant_set_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "posts_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "posts_brand_id_fkey"
             columns: ["brand_id"]
@@ -955,6 +971,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           id: string
+          is_public: boolean
           metadata: Json | null
           name: string
           owner_id: string
@@ -967,6 +984,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           metadata?: Json | null
           name: string
           owner_id: string
@@ -979,6 +997,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           id?: string
+          is_public?: boolean
           metadata?: Json | null
           name?: string
           owner_id?: string

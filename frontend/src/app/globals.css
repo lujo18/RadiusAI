@@ -189,8 +189,9 @@ body {
 
   html {
     scrollbar-width: thin; /* 'auto' | 'thin' | 'none' */
-    scrollbar-color: var(--accent) var(--background); /* thumb track */
+    scrollbar-color: var(--color-accent) transparent; /* thumb track */
     scrollbar-gutter: stable;
+
   }
 
   ::-webkit-scrollbar {

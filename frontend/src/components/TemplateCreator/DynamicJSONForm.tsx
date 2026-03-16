@@ -215,7 +215,7 @@ const Field: React.FC<FieldProps> = ({ fieldName, value, onChange, depth }) => {
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive flex-shrink-0 mt-1"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0 mt-1"
                   onClick={() => onChange(arr.filter((_, i) => i !== idx))}
                   title="Remove item"
                 >
