@@ -1,6 +1,7 @@
 import json
 import logging
 from typing import Dict, Optional
+from backend.util.llm_output_sanitizer import sanitize_text
 from models.slide import LayoutConfig, PostContent
 from models.user import BrandSettings
 from models import Template
@@ -173,8 +174,10 @@ def generate_slideshow_auto(
     if not isinstance(generated_data, list):
         raise ValueError("Gemini response must be an array of post variations")
 
+    cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None) 
+    print("CTA IMAGE OVERRIDE: ", cta_image_url)
     post_contents = [
-        _convert_to_post_content(generated_post) for generated_post in generated_data
+        _convert_to_post_content(generated_post, cta_image_override=cta_image_url) for generated_post in generated_data
     ]
 
     logger.info(f"Converted {len(post_contents)} posts successfully")
@@ -251,7 +254,7 @@ If the JSON value doesn't contain \\n\\n where there are more than 2 sentaces, i
 """
 
 
-def _convert_to_post_content(generated: dict) -> PostContent:
+def _convert_to_post_content(generated: dict, cta_image_override: str | None) -> PostContent:
     """
     Convert a single Gemini-generated post into PostContent structure.
     Maps generated text back to slide elements.
@@ -279,6 +282,11 @@ def _convert_to_post_content(generated: dict) -> PostContent:
     # If we got fewer URLs than slides, extend with the last URL as fallback
     while len(backgroundUrls) < len(generated["slides"]):
         backgroundUrls.append(backgroundUrls[-1] if backgroundUrls else None)
+        
+    last_slide_index = len(generated['slides']) - 1
+    # Replace last image with CTA IMAGE OVERIDE
+    if cta_image_override and last_slide_index >= 0:
+        backgroundUrls[last_slide_index] = cta_image_override
 
     for gen_slide in generated["slides"]:
         slide_num = gen_slide["slide_number"]
@@ -292,7 +300,7 @@ def _convert_to_post_content(generated: dict) -> PostContent:
             # Fill element with Gemini's content
             # Handle both dash and underscore formats (Gemini is inconsistent)
             element_id = element["id"]
-            content = gen_slide["text_elements"].get(element_id)
+            content = sanitize_text(gen_slide["text_elements"].get(element_id))
 
             # Fallback: try with underscore if dash version not found
             if content is None:

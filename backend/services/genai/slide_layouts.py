@@ -42,7 +42,7 @@ SLIDE_CONSTANTS: dict[str, TextElement] = {
     "header_text": {
         "id": "text-1767736354031",
         "type": "text",
-        "content": "Header text here",
+        "content": "Header text here. Introduce content, (100 character hard limit)",
         "font_size": 55,
         "font_family": "Tiktok Sans",
         "font_style": "bold",
@@ -63,7 +63,7 @@ SLIDE_CONSTANTS: dict[str, TextElement] = {
     "body_text": {
         "id": "text-1767738943620",
         "type": "text",
-        "content": "Body text here",
+        "content": "Body text here. Elaborate on content. (800 character hard limit)",
         "font_size": 48,
         "font_family": "Tiktok Sans",
         "font_style": "normal",
@@ -91,7 +91,7 @@ SLIDE_LAYOUTS: dict[str, SlideLayout] = {
             {
                 "id": "text-1767736354031",
                 "type": "text",
-                "content": "Hook text here",
+                "content": "Hook text here.",
                 "font_size": 48,
                 "font_family": "Tiktok Sans",
                 "font_style": "bold",

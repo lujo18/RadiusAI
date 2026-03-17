@@ -1,15 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { UploadDropzone } from '@/components/ui/upload-dropzone';
-import { useUploadFiles } from '@better-upload/client';
+import React, { useState } from "react";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UploadDropzone } from "@/components/ui/upload-dropzone";
+import { useUploadFiles } from "@better-upload/client";
 import {
   useBrandCtas,
   useCreateBrandCta,
@@ -18,9 +24,9 @@ import {
   useToggleBrandCtaStatus,
   useSetCtaImage,
   useRemoveCtaImage,
-} from '@/features/brand_ctas/hooks';
-import { Plus, Trash2, Edit2, Check, X, ImageIcon } from 'lucide-react';
-
+} from "@/features/brand_ctas/hooks";
+import { Plus, Trash2, Edit2, Check, X, ImageIcon } from "lucide-react";
+import CtaImageDropzone from "@/features/brand_ctas/components/CtaImageDropzone";
 
 export default function CTAPage() {
   const params = useParams();
@@ -29,12 +35,13 @@ export default function CTAPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    label: '',
-    cta_text: '',
-    cta_url: '',
-    category: '',
-    cta_type: '',
+    label: "",
+    cta_text: "",
+    cta_url: "",
+    category: "",
+    cta_type: "",
   });
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
 
   // Queries & Mutations
   const { data: ctas, isLoading, error } = useBrandCtas(brandId);
@@ -43,11 +50,10 @@ export default function CTAPage() {
   const { mutate: deleteCta, isPending: isDeletePending } = useDeleteBrandCta();
   const { mutate: toggleStatus } = useToggleBrandCtaStatus();
 
-
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.label || !formData.cta_text) {
-      alert('Label and CTA Text are required');
+      alert("Label and CTA Text are required");
       return;
     }
 
@@ -60,16 +66,24 @@ export default function CTAPage() {
           cta_url: formData.cta_url || undefined,
           category: formData.category || undefined,
           is_active: true,
-          ...(pendingImageUrl ? { metadata: { cta_image: pendingImageUrl } } : {}),
+          ...(pendingImageUrl
+            ? { metadata: { cta_image: pendingImageUrl } }
+            : {}),
         },
       },
       {
         onSuccess: () => {
-          setFormData({ label: '', cta_text: '', cta_url: '', category: '', cta_type: '' });
+          setFormData({
+            label: "",
+            cta_text: "",
+            cta_url: "",
+            category: "",
+            cta_type: "",
+          });
           setPendingImageUrl(null);
           setIsCreating(false);
         },
-      }
+      },
     );
   };
 
@@ -88,9 +102,15 @@ export default function CTAPage() {
       {
         onSuccess: () => {
           setEditingId(null);
-          setFormData({ label: '', cta_text: '', cta_url: '', category: '', cta_type: ''});
+          setFormData({
+            label: "",
+            cta_text: "",
+            cta_url: "",
+            category: "",
+            cta_type: "",
+          });
         },
-      }
+      },
     );
   };
 
@@ -99,18 +119,25 @@ export default function CTAPage() {
     setFormData({
       label: cta.label,
       cta_text: cta.cta_text,
-      cta_url: cta.cta_url || '',
-      category: cta.category || '',
-      cta_type: cta.cta_type || '',
+      cta_url: cta.cta_url || "",
+      category: cta.category || "",
+      cta_type: cta.cta_type || "",
     });
   };
 
   const handleCancel = () => {
     setEditingId(null);
     setIsCreating(false);
-    setPendingImageUrl(null);
-    setFormData({ label: '', cta_text: '', cta_url: '', category: '', cta_type: ''});
+    setFormData({
+      label: "",
+      cta_text: "",
+      cta_url: "",
+      category: "",
+      cta_type: "",
+    });
   };
+
+
 
   if (isLoading) {
     return (
@@ -207,38 +234,11 @@ export default function CTAPage() {
                 <label className="text-sm font-medium text-ghost-white">
                   CTA Image
                 </label>
-                {pendingImageUrl ? (
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
-                      <Image
-                        src={pendingImageUrl}
-                        alt="CTA image preview"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPendingImageUrl(null)}
-                      className="gap-2"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      Remove
-                    </Button>
-                  </div>
-                ) : (
-                  <UploadDropzone
-                    control={createUploadControl}
-                    accept="image/*"
-                    description={{
-                      fileTypes: "images",
-                      maxFileSize: "5 MB",
-                      maxFiles: 1,
-                    }}
-                  />
-                )}
+                <CtaImageDropzone
+                  type="create"
+                  pendingImageUrl={pendingImageUrl}
+                  setPendingImageUrl={setPendingImageUrl}
+                />
               </div>
 
               <div className="flex gap-2 pt-4">
@@ -365,46 +365,12 @@ export default function CTAPage() {
                       <label className="text-sm font-medium text-ghost-white">
                         CTA Image
                       </label>
-                      {(cta.metadata as Record<string, unknown> | null)
-                        ?.cta_image ? (
-                        <div className="flex items-center gap-3">
-                          <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
-                            <Image
-                              src={
-                                (cta.metadata as Record<string, string>)
-                                  .cta_image
-                              }
-                              alt={`${cta.label} CTA image`}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeCtaImage({ ctaId: cta.id })}
-                            className="gap-2"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Remove
-                          </Button>
-                        </div>
-                      ) : (
-                        <UploadDropzone
-                          control={editUploadControl}
-                          accept="image/*"
-                          description={{
-                            fileTypes: "images",
-                            maxFileSize: "5 MB",
-                            maxFiles: 1,
-                          }}
-                          uploadOverride={(files, opts) => {
-                            setUploadingCtaId(cta.id);
-                            editUploadControl.upload(files, opts);
-                          }}
-                        />
-                      )}
+                      <CtaImageDropzone
+                        type="update"
+                        cta={cta}
+                        pendingImageUrl={pendingImageUrl}
+                        setPendingImageUrl={setPendingImageUrl}
+                      />
                     </div>
 
                     <div className="flex gap-2 pt-4">
@@ -484,51 +450,14 @@ export default function CTAPage() {
                       {/* CTA Image */}
                       <div>
                         <p className="text-xs text-ghost-white/50 uppercase tracking-wide mb-2">
-                          CTA Image
+                          CTA Image 
                         </p>
-                        {(cta.metadata as Record<string, unknown> | null)
-                          ?.cta_image ? (
-                          <div className="flex items-start gap-3">
-                            <div className="relative w-24 h-24 rounded-md overflow-hidden border border-border">
-                              <Image
-                                src={
-                                  (cta.metadata as Record<string, string>)
-                                    .cta_image
-                                }
-                                alt={`${cta.label} CTA image`}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                if (confirm("Remove this CTA image?")) {
-                                  removeCtaImage({ ctaId: cta.id });
-                                }
-                              }}
-                              className="gap-2"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Remove
-                            </Button>
-                          </div>
-                        ) : (
-                          <UploadDropzone
-                            control={editUploadControl}
-                            accept="image/*"
-                            description={{
-                              fileTypes: "images",
-                              maxFileSize: "5 MB",
-                              maxFiles: 1,
-                            }}
-                            uploadOverride={(files, opts) => {
-                              setUploadingCtaId(cta.id);
-                              editUploadControl.upload(files, opts);
-                            }}
-                          />
-                        )}
+                        <CtaImageDropzone
+                          type="update"
+                          cta={cta}
+                          pendingImageUrl={pendingImageUrl}
+                          setPendingImageUrl={setPendingImageUrl}
+                        />
                       </div>
                     </div>
 
@@ -585,4 +514,3 @@ export default function CTAPage() {
     </div>
   );
 }
-

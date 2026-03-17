@@ -158,65 +158,70 @@ class SlideRenderer:
 	def _apply_background(self, img: Image.Image, bg_config: BackgroundConfig) -> None:
 		"""Apply background matching Konva's behavior"""
 		if bg_config.type == 'solid' and bg_config.color:
-			from PIL import ImageColor
-			color = ImageColor.getrgb(bg_config.color)
-			ImageDraw.Draw(img).rectangle([(0, 0), (self.width, self.height)], fill=color)
+				from PIL import ImageColor
+				color = ImageColor.getrgb(bg_config.color)
+				ImageDraw.Draw(img).rectangle([(0, 0), (self.width, self.height)], fill=color)
 		elif bg_config.type == 'gradient' and bg_config.gradient_colors:
-			# Gradient with angle support (like Konva)
-			import math
-			from PIL import ImageColor
-			
-			color1 = ImageColor.getrgb(bg_config.gradient_colors[0])
-			color2 = ImageColor.getrgb(bg_config.gradient_colors[1])
-			angle = bg_config.gradient_angle or 0
-			
-			# Convert angle to radians for gradient calculation (matching Konva)
-			radians = math.radians(angle)
-			
-			# Simple vertical gradient (can be enhanced for angles)
-			for y in range(self.height):
-				ratio = y / self.height
-				r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
-				g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
-				b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
-				ImageDraw.Draw(img).line([(0, y), (self.width, y)], fill=(r, g, b))
+				# Gradient with angle support (like Konva)
+				import math
+				from PIL import ImageColor
+				
+				color1 = ImageColor.getrgb(bg_config.gradient_colors[0])
+				color2 = ImageColor.getrgb(bg_config.gradient_colors[1])
+				angle = bg_config.gradient_angle or 0
+				
+				# Convert angle to radians for gradient calculation (matching Konva)
+				radians = math.radians(angle)
+				
+				# Simple vertical gradient (can be enhanced for angles)
+				for y in range(self.height):
+						ratio = y / self.height
+						r = int(color1[0] * (1 - ratio) + color2[0] * ratio)
+						g = int(color1[1] * (1 - ratio) + color2[1] * ratio)
+						b = int(color1[2] * (1 - ratio) + color2[2] * ratio)
+						ImageDraw.Draw(img).line([(0, y), (self.width, y)], fill=(r, g, b))
 		elif bg_config.type == 'image' and bg_config.image_url:
-			# Load and paste background image (fill height, crop width if needed)
-			try:
-				from PIL import Image as PILImage
-				from PIL import Image as PILImageModule
+				# Load and paste background image with "cover" behavior
+				try:
+						from PIL import Image as PILImage
+						from PIL import Image as PILImageModule
 
-				img_bytes = self._fetch_image_with_retry(bg_config.image_url)
-				bg_img = PILImage.open(img_bytes).convert('RGBA')
-				bg_w, bg_h = bg_img.size
-				target_w, target_h = self.width, self.height
-				# Always fill the height, crop width if needed
-				scale = target_h / bg_h
-				new_w = int(bg_w * scale)
-				new_h = target_h
-				bg_img = bg_img.resize((new_w, new_h), PILImageModule.Resampling.LANCZOS)
-				# Center and crop horizontally if needed
-				if new_w > target_w:
-					left = (new_w - target_w) // 2
-					right = left + target_w
-					bg_img = bg_img.crop((left, 0, right, new_h))
-					paste_x = 0
-				else:
-					paste_x = (target_w - new_w) // 2
-				paste_y = 0
-				temp_bg = Image.new('RGBA', (target_w, target_h), (0, 0, 0, 255))
-				temp_bg.paste(bg_img, (paste_x, paste_y), bg_img)
-				# Add subtle overlay for text readability (matching Konva's 0.3 opacity)
-				overlay = Image.new('RGBA', (target_w, target_h), (0, 0, 0, 77))  # 77 = 30% of 255
-				temp_bg.paste(overlay, (0, 0), overlay)
-				img.paste(temp_bg.convert('RGB'), (0, 0))
-			except Exception as e:
-				print(f"[Background] Failed to load background image after retries: {e}")
-				# Fallback to dark gradient (more interesting than solid gray)
-				self._apply_background(img, BackgroundConfig(
-					type='gradient',
-					gradient_colors=['#1a1a2e', '#16213e']
-				))
+						img_bytes = self._fetch_image_with_retry(bg_config.image_url)
+						bg_img = PILImage.open(img_bytes).convert('RGBA')
+						bg_w, bg_h = bg_img.size
+						target_w, target_h = self.width, self.height
+
+						# COVER LOGIC: Calculate scale to fill the entire target area
+						scale = max(target_w / bg_w, target_h / bg_h)
+						new_w = int(bg_w * scale)
+						new_h = int(bg_h * scale)
+						
+						# Resize using Lanczos for high quality
+						bg_img = bg_img.resize((new_w, new_h), PILImageModule.Resampling.LANCZOS)
+						
+						# Center crop the resized image to fit target dimensions exactly
+						left = (new_w - target_w) // 2
+						top = (new_h - target_h) // 2
+						right = left + target_w
+						bottom = top + target_h
+						bg_img = bg_img.crop((left, top, right, bottom))
+
+						# Create canvas and paste cropped image
+						temp_bg = Image.new('RGBA', (target_w, target_h), (0, 0, 0, 255))
+						temp_bg.paste(bg_img, (0, 0), bg_img)
+						
+						# Add subtle overlay for text readability (30% opacity)
+						overlay = Image.new('RGBA', (target_w, target_h), (0, 0, 0, 120))
+						temp_bg.paste(overlay, (0, 0), overlay)
+						
+						img.paste(temp_bg.convert('RGB'), (0, 0))
+				except Exception as e:
+						print(f"[Background] Failed to load background image after retries: {e}")
+						# Fallback to dark gradient
+						self._apply_background(img, BackgroundConfig(
+								type='gradient',
+								gradient_colors=['#1a1a2e', '#16213e']
+						))
 
 	def _get_wrapped_lines(self, text: str, font: ImageFont.FreeTypeFont, max_width: int) -> list:
 		"""Helper to wrap text into lines, respecting explicit \n breaks"""
