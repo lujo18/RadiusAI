@@ -8,7 +8,7 @@ type BrandCtaUpdate = Database['public']['Tables']['brand_ctas']['Update'];
 const TABLE = 'cta_images';
 
 export class BrandCtaImageRepo {
-  const myBucket = supabase.storage.from('my-bucket-name');
+  myBucket = supabase.storage.from('my-bucket-name');
 
   table = TABLE;
 
@@ -89,5 +89,5 @@ export class BrandCtaImageRepo {
   }
 }
 
-export const brandCtasRepo = new BrandCtasRepo();
+export const brandCtasRepo = new BrandCtaImageRepo();
 export default brandCtasRepo;

@@ -214,12 +214,20 @@ Design a Tiktok slideshow using the following brand and contraints.
 ### BRAND GUARDRAILS (JSON):
 {brand}
 
+## HOW TO READ EACH SLIDE
+- stage: the psychological role of this slide
+- format_spec: your writing instruction. Execute it. Do not copy it as content.
+- word_count: maximum words for this slide's text content
+- output_mode:
+  - WRITE FREELY: write original content within the format_spec direction
+  - FOLLOW EXACTLY: reproduce the structure in format_spec precisely, with real content filled in
+
 ### SLIDESHOW BLUEPRINT (JSON):
 {slideshowGoals}
 
 {cta_section}
 
-### TECHNICAL JSON SPECIFICATIONS
+## TECHNICAL JSON SPECIFICATIONS
 
 #### AVAILABLE LAYOUTS (choose optimal layout per slide):
 {layout_options}
@@ -238,7 +246,7 @@ Design a Tiktok slideshow using the following brand and contraints.
           "slide_number": 1,
           "layout_type": "hook",
           "text_elements": {{
-            "text-1": "Hook text following the template structure"
+            "text-id": "Hook text following the template structure"
           }}
         }}
       ],
@@ -250,7 +258,6 @@ Design a Tiktok slideshow using the following brand and contraints.
 }}
 
 Output only valid JSON object.
-If the JSON value doesn't contain \\n\\n where there are more than 2 sentaces, it is a failed generation. Re-calculate the structure now
 """
 
 

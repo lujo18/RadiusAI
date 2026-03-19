@@ -802,6 +802,39 @@ export type Database = {
         }
         Relationships: []
       }
+      stock_packs: {
+        Row: {
+          bucket_directory: string | null
+          created_at: string
+          description: string | null
+          id: number
+          image_count: number | null
+          name: string | null
+          tags: string[] | null
+          thumbnail_urls: string[] | null
+        }
+        Insert: {
+          bucket_directory?: string | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_count?: number | null
+          name?: string | null
+          tags?: string[] | null
+          thumbnail_urls?: string[] | null
+        }
+        Update: {
+          bucket_directory?: string | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_count?: number | null
+          name?: string | null
+          tags?: string[] | null
+          thumbnail_urls?: string[] | null
+        }
+        Relationships: []
+      }
       system_templates: {
         Row: {
           category: string

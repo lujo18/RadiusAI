@@ -1,4 +1,9 @@
-﻿"use client";
+#!/usr/bin/env python3
+# Write Step2TemplateEditor.tsx file
+
+output_path = r'c:\Users\asplo\Projects\Main\SlideForge\frontend\src\components\TemplateCreator\Step2TemplateEditor.tsx'
+
+content = '''"use client";
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -100,7 +105,7 @@ export default function Step2TemplateEditor({
 
   return (
     <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
-      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Header */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-background shrink-0">
         <Button
           variant="ghost"
@@ -118,11 +123,11 @@ export default function Step2TemplateEditor({
         </h1>
       </div>
 
-      {/* â”€â”€ Body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Body */}
       <div className="flex-1 overflow-y-auto">
         <div className="grid lg:grid-cols-[320px_1fr] gap-0 min-h-full">
 
-          {/* Left column â€” meta / settings */}
+          {/* Left column - meta / settings */}
           <div className="p-6 space-y-4 border-r border-border lg:overflow-y-auto">
             {/* Basic Info */}
             <Card>
@@ -235,25 +240,88 @@ export default function Step2TemplateEditor({
             </Card>
           </div>
 
-          {/* Right column â€” content rules */}
-          <div className="p-6">
-            <DynamicJSONForm
-              data={contentRules}
-              onChange={(rules) => onInputChange("content_rules", rules)}
-              title="Content Rules"
-            />
+          {/* Right column - content rules */}
+          <div className="p-6 space-y-4">
+            {/* Mode toggle */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-semibold text-foreground">Content Rules</h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 gap-1.5 text-xs"
+                onClick={() => setRawMode((p) => !p)}
+              >
+                {rawMode ? (
+                  <><LayoutList className="w-3.5 h-3.5" /> Visual Editor</>
+                ) : (
+                  <><Braces className="w-3.5 h-3.5" /> Raw JSON</>
+                )}
+              </Button>
+            </div>
+
+            {rawMode ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={rawJson}
+                  onChange={(e) => handleRawChange(e.target.value)}
+                  spellCheck={false}
+                  rows={28}
+                  className={cn(
+                    "font-mono text-xs resize-none",
+                    jsonError && "border-destructive focus-visible:ring-destructive"
+                  )}
+                  placeholder={`Paste any JSON object here, e.g. {"slides": [...]}`}
+                />
+                {jsonError && (
+                  <p className="flex items-center gap-1.5 text-xs text-destructive">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {jsonError}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Any valid JSON object structure is accepted - old and new schemas both work.
+                </p>
+              </div>
+            ) : (
+              <>
+                {Object.keys(contentRules).length === 0 ? (
+                  <Card>
+                    <CardContent className="py-10 flex flex-col items-center gap-3 text-center">
+                      <Braces className="w-8 h-8 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">No content rules yet.</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setRawMode(true)}
+                      >
+                        <Braces className="w-3.5 h-3.5" />
+                        Paste JSON to get started
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <DynamicJSONForm
+                    data={contentRules}
+                    onChange={(rules) => onInputChange("content_rules", rules)}
+                  />
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      {/* Footer */}
       <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-background shrink-0">
         <p className="text-sm text-muted-foreground">
           {isTemplateCreation && templateUsage?.template_limit !== null && (
             <>
               Templates used:{" "}
               <span className="font-semibold text-foreground">
-                {templateUsage?.template_count ?? 0} / {templateUsage?.template_limit ?? "âˆž"}
+                {templateUsage?.template_count ?? 0} / {templateUsage?.template_limit ?? "\u221e"}
               </span>
             </>
           )}
@@ -269,7 +337,7 @@ export default function Step2TemplateEditor({
           </Button>
           <Button
             onClick={onSave}
-            disabled={isLoading || !formData.name.trim() || isTemplateLimitReached}
+            disabled={isLoading || !formData.name.trim() || isTemplateLimitReached || !!jsonError}
             title={
               isTemplateLimitReached
                 ? "Template limit reached. Upgrade your plan to create more."
@@ -285,4 +353,9 @@ export default function Step2TemplateEditor({
     </div>
   );
 }
+'''
 
+with open(output_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print(f"File written successfully to {output_path}")

@@ -25,8 +25,66 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Trash2, ChevronDown, ChevronRight, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ─── Known enum fields ────────────────────────────────────────────────────
+const ENUM_OPTIONS: Record<string, string[]> = {
+  template_format: [
+    "listicle", "step_by_step", "journal_prompts", "before_after",
+    "quote_carousel", "faq", "ranking_countdown", "myth_busting",
+    "affirmations", "framework",
+  ],
+  content_mode: ["STRUCTURAL", "GENERATIVE"],
+  output_mode: ["FOLLOW_EXACTLY", "FREE_WRITE"],
+  goal: ["saves", "shares", "comments", "follows"],
+  psychological_trigger: [
+    "Loss Aversion", "Curiosity Gap", "Social Proof",
+    "Identity Affirmation", "FOMO",
+  ],
+  pacing_style: ["Slow Build", "Rapid Fire", "Data Dump", "Reveal Sequence"],
+  required_rhythm: ["Short-Short-Long", "All Short", "Varied"],
+  category: [
+    "educational", "transformation", "myth-busting", "comparison",
+    "authority", "lifestyle", "utility", "growth",
+  ],
+};
+
+// ─── Array helpers ─────────────────────────────────────────────────────────
+
+/** Build a blank sibling item matching the structure of an existing object. */
+function cloneBlank(obj: Record<string, unknown>, newIndex: number): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === "slide_number" && typeof value === "number") {
+      result[key] = newIndex;
+    } else if (Array.isArray(value)) {
+      result[key] = [];
+    } else if (typeof value === "object" && value !== null) {
+      result[key] = cloneBlank(value as Record<string, unknown>, newIndex);
+    } else if (typeof value === "boolean") {
+      result[key] = false;
+    } else if (typeof value === "number") {
+      result[key] = 0;
+    } else {
+      result[key] = "";
+    }
+  }
+  return result;
+}
+
+function getNewArrayItem(arr: unknown[]): unknown {
+  const first = arr.find((item) => typeof item === "object" && item !== null && !Array.isArray(item));
+  if (first) return cloneBlank(first as Record<string, unknown>, arr.length + 1);
+  return "";
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -171,7 +229,7 @@ const Field: React.FC<FieldProps> = ({ fieldName, value, onChange, depth }) => {
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0 ml-auto"
-            onClick={() => onChange([...arr, ""])}
+            onClick={() => onChange([...arr, getNewArrayItem(arr)])}
             title="Add item"
           >
             <Plus className="w-3 h-3" />
@@ -185,44 +243,81 @@ const Field: React.FC<FieldProps> = ({ fieldName, value, onChange, depth }) => {
                 No items yet — click + to add one
               </p>
             )}
-            {arr.map((item, idx) => (
-              <div key={idx} className="flex items-start gap-2">
-                <div className="flex-1">
-                  {typeof item === "object" && item !== null ? (
-                    <Field
-                      fieldName={`Item ${idx + 1}`}
-                      value={item}
-                      onChange={(v) => {
-                        const next = [...arr];
-                        next[idx] = v;
-                        onChange(next);
-                      }}
-                      depth={depth + 1}
-                    />
-                  ) : (
-                    <LeafStringInput
-                      value={item as string}
-                      onChange={(v) => {
-                        const next = [...arr];
-                        next[idx] = v;
-                        onChange(next);
-                      }}
-                      placeholder={`Item ${idx + 1}`}
-                    />
+            {arr.map((item, idx) => {
+              const isSlideObj =
+                typeof item === "object" &&
+                item !== null &&
+                !Array.isArray(item) &&
+                ("slide_number" in (item as object) || "stage" in (item as object));
+              const slideItem = isSlideObj ? (item as Record<string, unknown>) : null;
+              const slideSummary = slideItem
+                ? [
+                    slideItem.slide_number !== undefined ? `Slide ${slideItem.slide_number}` : null,
+                    slideItem.stage ? String(slideItem.stage) : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                : null;
+
+              return (
+                <div key={idx} className="rounded-md border border-border overflow-hidden">
+                  {isSlideObj && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 border-b border-border">
+                      <Layers className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs font-medium text-foreground flex-1">{slideSummary}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => onChange(arr.filter((_, i) => i !== idx))}
+                        title="Remove slide"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   )}
+                  <div className={cn("flex items-start gap-2", isSlideObj ? "p-3" : "")}>
+                    <div className="flex-1">
+                      {typeof item === "object" && item !== null ? (
+                        <Field
+                          fieldName={isSlideObj ? "" : `Item ${idx + 1}`}
+                          value={item}
+                          onChange={(v) => {
+                            const next = [...arr];
+                            next[idx] = v;
+                            onChange(next);
+                          }}
+                          depth={depth + 1}
+                        />
+                      ) : (
+                        <LeafStringInput
+                          value={item as string}
+                          onChange={(v) => {
+                            const next = [...arr];
+                            next[idx] = v;
+                            onChange(next);
+                          }}
+                          placeholder={`Item ${idx + 1}`}
+                        />
+                      )}
+                    </div>
+                    {!isSlideObj && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0 mt-1"
+                        onClick={() => onChange(arr.filter((_, i) => i !== idx))}
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0 mt-1"
-                  onClick={() => onChange(arr.filter((_, i) => i !== idx))}
-                  title="Remove item"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -272,25 +367,27 @@ const Field: React.FC<FieldProps> = ({ fieldName, value, onChange, depth }) => {
 
     return (
       <div className="space-y-1.5">
-        <button
-          type="button"
-          className="flex items-center gap-2 text-left w-full group"
-          onClick={() => setExpanded((p) => !p)}
-        >
-          {expanded ? (
-            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
-          )}
-          <Label className="text-sm font-medium cursor-pointer group-hover:text-primary transition-colors">
-            {humanize(fieldName)}
-          </Label>
-          <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-            {entries.length} field{entries.length !== 1 ? "s" : ""}
-          </Badge>
-        </button>
-        {expanded && (
-          <div className="pl-4 border-l-2 border-border space-y-3">
+        {fieldName !== "" && (
+          <button
+            type="button"
+            className="flex items-center gap-2 text-left w-full group"
+            onClick={() => setExpanded((p) => !p)}
+          >
+            {expanded ? (
+              <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            )}
+            <Label className="text-sm font-medium cursor-pointer group-hover:text-primary transition-colors">
+              {humanize(fieldName)}
+            </Label>
+            <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+              {entries.length} field{entries.length !== 1 ? "s" : ""}
+            </Badge>
+          </button>
+        )}
+        {(expanded || fieldName === "") && (
+          <div className={cn("space-y-3", fieldName !== "" && "pl-4 border-l-2 border-border")}>
             {entries.map(([k, v]) => (
               <Field
                 key={k}
@@ -325,6 +422,29 @@ const Field: React.FC<FieldProps> = ({ fieldName, value, onChange, depth }) => {
       <div className="space-y-1">
         <Label className="text-sm">{humanize(fieldName)}</Label>
         <LeafNumberInput value={value as number} onChange={(v) => onChange(v)} />
+      </div>
+    );
+  }
+
+  // ── Enum / Select ──────────────────────────────────────────────────────
+  const enumOptions = ENUM_OPTIONS[fieldName];
+  if (enumOptions) {
+    const strVal = isNull ? "" : (value as string);
+    return (
+      <div className="space-y-1">
+        <Label className="text-sm">{humanize(fieldName)}</Label>
+        <Select value={strVal} onValueChange={(v) => onChange(v)}>
+          <SelectTrigger className="h-9 text-sm">
+            <SelectValue placeholder={`Select ${humanize(fieldName).toLowerCase()}…`} />
+          </SelectTrigger>
+          <SelectContent>
+            {enumOptions.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     );
   }

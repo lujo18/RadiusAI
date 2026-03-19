@@ -40,7 +40,7 @@ class SlideLayout(TypedDict):
 
 SLIDE_CONSTANTS: dict[str, TextElement] = {
     "header_text": {
-        "id": "text-1767736354031",
+        "id": "header-text",
         "type": "text",
         "content": "Header text here. Introduce content, (100 character hard limit)",
         "font_size": 55,
@@ -61,7 +61,7 @@ SLIDE_CONSTANTS: dict[str, TextElement] = {
         "line_height": 1.3,
     },
     "body_text": {
-        "id": "text-1767738943620",
+        "id": "body-text",
         "type": "text",
         "content": "Body text here. Elaborate on content. (800 character hard limit)",
         "font_size": 48,
@@ -89,7 +89,7 @@ SLIDE_LAYOUTS: dict[str, SlideLayout] = {
         "name": "hook",
         "text_elements": [
             {
-                "id": "text-1767736354031",
+                "id": "hook-text",
                 "type": "text",
                 "content": "Hook text here.",
                 "font_size": 48,
