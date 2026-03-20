@@ -1,0 +1,59 @@
+[build]
+  command = "npm run build"
+  functions = "netlify/functions"
+  publish = ".next"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Redirect all trailing slashes to non-trailing
+[[redirects]]
+  from = "/*/"
+  to = "/:splat"
+  status = 301
+  force = false
+
+# Handle Next.js rewrites for API proxying (optional - for local dev)
+[[redirects]]
+  from = "/api/brand/*"
+  to = "https://api.useradius.app/brand/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/generate/*"
+  to = "https://api.useradius.app/generate/:splat"
+  status = 200
+  force = true
+
+# SPA routing - catch all other routes and return index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[context.production]
+  command = "npm run build"
+  
+[context.production.environment]
+  NEXT_PUBLIC_API_URL = "https://api.useradius.app"
+  NEXT_PUBLIC_BASE_URL = "https://useradius.app"
+  NODE_VERSION = "20"
+  NODE_ENV = "production"
+
+[context.deploy-preview]
+  command = "npm run build"
+
+[context.deploy-preview.environment]
+  NEXT_PUBLIC_API_URL = "https://api-preview.useradius.app"
+  NEXT_PUBLIC_BASE_URL = "https://preview-useradius.app"
+  NODE_VERSION = "20"
+
+[context.branch-deploy]
+  command = "npm run build"
+
+[context.branch-deploy.environment]
+  NODE_VERSION = "20"
