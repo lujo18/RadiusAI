@@ -77,6 +77,31 @@ export class TeamsRepository {
     return memberTeams;
   }
 
+  /**
+   * Get a public team by ID without authentication
+   * Used for TikTok review and public team access
+   * Only returns teams where is_public = true
+   */
+  static async getPublicTeam(teamId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('id', teamId)
+        .eq('is_public', true)
+        .is('deleted_at', null)
+        .single()
+
+      if (error) {
+        console.log('Error fetching public team:', error)
+        return { data: null, error }
+      }
+      return { data }
+    } catch (err) {
+      console.error('Error in getPublicTeam:', err)
+      return { data: null, error: err }
+    }
+  }
 
 }
 

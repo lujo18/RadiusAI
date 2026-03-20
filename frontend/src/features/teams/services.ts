@@ -13,8 +13,11 @@ export const teamsApi = {
     async getTeamByMemberId(userId: string) {
       return await TeamsRepository.getTeamByMemberId(userId);
     },
+
+    async getPublicTeam(teamId: string) {
+      return await TeamsRepository.getPublicTeam(teamId);
+    },
   
-    
     async listUserTeams() {
       console.log('[teamsApi] listUserTeams called');
       try {

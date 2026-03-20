@@ -8,6 +8,12 @@ export const teamsSurface = {
     return result as { data: TeamDetail | null }
   },
 
+  getPublicTeam: async (teamId: string): Promise<{ data: TeamDetail | null }> => {
+    console.log('[teamsSurface] getPublicTeam', { teamId })
+    const result = await teamsApi.getPublicTeam(teamId)
+    return result as { data: TeamDetail | null }
+  },
+
   listUserTeams: async (): Promise<{ data: Team[] }> => {
     console.log('[teamsSurface] listUserTeams')
     const result = await teamsApi.listUserTeams()

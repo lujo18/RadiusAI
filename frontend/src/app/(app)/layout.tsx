@@ -130,20 +130,34 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated - UNLESS they're accessing a public team
   useEffect(() => {
     console.log("[App Layout] Auth check:", {
       isLoading,
       isAuthenticated,
       hasUser: !!user,
       userId: user?.id,
+      pathname,
     });
 
     if (!isLoading && !isAuthenticated) {
-      console.log("[App Layout] Not authenticated - redirecting to login");
+      // Check if this is a public team route (pattern: /:teamId/...)
+      const pathSegments = pathname.split("/").filter(Boolean);
+      const isTeamRoute = pathSegments.length > 0;
+      const potentialTeamId = pathSegments[0];
+      
+      // Allow unauthenticated access to potential public team routes
+      // The [teamId] layout will handle validation
+      if (isTeamRoute && potentialTeamId) {
+        console.log("[App Layout] Potential public team access:", potentialTeamId);
+        // Don't redirect - let [teamId] layout handle public team validation
+        return;
+      }
+      
+      console.log("[App Layout] Not authenticated and not a team route - redirecting to login");
       router.push("/login");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, pathname]);
 
   // Check subscription status (show banner instead of redirecting)
   useEffect(() => {
@@ -156,11 +170,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       setSubscriptionChecked(true);
     } else if (!isLoading && !isAuthenticated) {
-      // Not authenticated at all - redirect to login
-      console.log("[App Layout] Not authenticated - redirecting to login");
-      router.push("/login");
+      // Check if this is a potential public team route
+      const pathSegments = pathname.split("/").filter(Boolean);
+      const isTeamRoute = pathSegments.length > 0;
+      const potentialTeamId = pathSegments[0];
+      
+      if (isTeamRoute && potentialTeamId) {
+        // Could be a public team - let [teamId] layout handle validation
+        console.log("[App Layout] Unauthenticated - allowing public team validation");
+        setSubscriptionChecked(true);
+      } else {
+        // Not authenticated and not a team route - redirect to login
+        console.log("[App Layout] Not authenticated and not a team route - redirecting to login");
+        router.push("/login");
+      }
     }
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isAuthenticated, isLoading, user, router, pathname]);
 
   if (isLoading || (isAuthenticated && !subscriptionChecked)) {
     console.log("[App Layout] Showing loading screen");
