@@ -5,7 +5,7 @@
   publish = ".next"
   
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
   NODE_ENV = "production"
 
 [[redirects]]
@@ -46,7 +46,7 @@
 [context.production.environment]
   NEXT_PUBLIC_API_URL = "https://api.useradius.app"
   NEXT_PUBLIC_BASE_URL = "https://useradius.app"
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
   NODE_ENV = "production"
 
 [context.deploy-preview]
@@ -55,10 +55,10 @@
 [context.deploy-preview.environment]
   NEXT_PUBLIC_API_URL = "https://api-preview.useradius.app"
   NEXT_PUBLIC_BASE_URL = "https://preview-useradius.app"
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
 
 [context.branch-deploy]
   command = "rm -rf .next node_modules && npm install && npm run build"
 
 [context.branch-deploy.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
