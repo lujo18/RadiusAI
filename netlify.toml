@@ -2,7 +2,7 @@
   base = "frontend"
   command = "rm -rf .next node_modules && npm install && npm run build"
   functions = "netlify/functions"
-  publish = "frontend/.next"
+  publish = ".next"
   
 [build.environment]
   NODE_VERSION = "20"
