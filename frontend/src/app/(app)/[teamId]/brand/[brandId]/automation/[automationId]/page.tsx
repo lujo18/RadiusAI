@@ -219,6 +219,15 @@ export default function AutomationDetailPage() {
                 platforms: (automation.platforms as Array<'instagram' | 'tiktok' | 'facebook' | 'linkedin'>) || [],
                 postAutomatically: automation.post_automatically ?? false,
                 postAsDraft: automation.post_as_draft ?? false,
+                tiktokDisclosure: {
+                  is_ai_generated: automation.is_ai_generated ?? false,
+                  brand_content_toggle: automation.brand_content_toggle ?? false,
+                  brand_organic_toggle: automation.brand_organic_toggle ?? false,
+                  disable_duet: automation.disable_duet ?? false,
+                  disable_stitch: automation.disable_stitch ?? false,
+                  disable_comment: automation.disable_comment ?? false,
+                  privacy_level: (automation.privacy_level as "PUBLIC" | "MUTUAL_FOLLOW_FRIENDS" | "SELF_ONLY") || "PUBLIC",
+                },
                 schedule: (automation.schedule as Record<string, string[]>) || {},
                 nextRunAt: automation.next_run_at,
               }}

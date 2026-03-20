@@ -18,12 +18,14 @@ import { AutomationWizardStep2 } from "./steps/AutomationWizardStep2";
 import { AutomationWizardStep3CTA } from "./steps/AutomationWizardStep3CTA";
 import { AutomationWizardStep3 } from "./steps/AutomationWizardStep3";
 import { AutomationWizardStep4 } from "./steps/AutomationWizardStep4";
-import { AutomationWizardStep5 } from "./steps/AutomationWizardStep5";
+import { AutomationWizardStep5TikTokDisclosure } from "./steps/AutomationWizardStep5TikTokDisclosure";
+import { AutomationWizardStep6 } from "./steps/AutomationWizardStep6";
 import {
   compareToWeekday,
   getNextRunTimestamp,
   getTimeUntil,
 } from "@/lib/time";
+import type { TikTokDisclosureSettings } from "@/components/modals/TikTokDisclosureOptions";
 
 type AutomationInsert = Database["public"]["Tables"]["automations"]["Insert"];
 
@@ -45,7 +47,10 @@ export interface AutomationWizardData {
   postAutomatically: boolean;
   postAsDraft: boolean;
 
-  // Step 5: Schedule - per-weekday times
+  // Step 5: TikTok Disclosure Options
+  tiktokDisclosure: TikTokDisclosureSettings;
+
+  // Step 6: Schedule - per-weekday times
   schedule: {
     [key: string]: string[]; // { "Monday": ["09:00", "14:00"], "Tuesday": ["09:00"], ... }
   };
@@ -66,6 +71,7 @@ const STEPS = [
   "Templates",
   "CTAs",
   "Accounts",
+  "TikTok Options",
   "Schedule",
   "Confirm",
 ];
@@ -92,6 +98,15 @@ export function AutomationWizard({
           platforms: initialData.platforms,
           postAutomatically: initialData.postAutomatically ?? false,
           postAsDraft: initialData.postAsDraft ?? false,
+          tiktokDisclosure: initialData.tiktokDisclosure || {
+            is_ai_generated: false,
+            brand_content_toggle: false,
+            brand_organic_toggle: false,
+            disable_duet: false,
+            disable_stitch: false,
+            disable_comment: false,
+            privacy_level: "PUBLIC",
+          },
           schedule: initialData.schedule,
           nextRunAt: initialData.nextRunAt,
         }
@@ -104,6 +119,15 @@ export function AutomationWizard({
           platforms: [],
           postAutomatically: false,
           postAsDraft: false,
+          tiktokDisclosure: {
+            is_ai_generated: false,
+            brand_content_toggle: false,
+            brand_organic_toggle: false,
+            disable_duet: false,
+            disable_stitch: false,
+            disable_comment: false,
+            privacy_level: "PUBLIC",
+          },
           schedule: {
             monday: [],
             tuesday: [],
@@ -178,6 +202,14 @@ export function AutomationWizard({
       post_as_draft: wizardData.postAsDraft,
       schedule: wizardData.schedule,
       next_run_at: nextRunAt?.toISOString() || new Date().toISOString(),
+      // TikTok disclosure settings
+      is_ai_generated: wizardData.tiktokDisclosure.is_ai_generated,
+      brand_content_toggle: wizardData.tiktokDisclosure.brand_content_toggle,
+      brand_organic_toggle: wizardData.tiktokDisclosure.brand_organic_toggle,
+      disable_duet: wizardData.tiktokDisclosure.disable_duet,
+      disable_stitch: wizardData.tiktokDisclosure.disable_stitch,
+      disable_comment: wizardData.tiktokDisclosure.disable_comment,
+      privacy_level: wizardData.tiktokDisclosure.privacy_level,
     } as any;
 
     if (isEditMode && initialData?.id) {
@@ -229,13 +261,15 @@ export function AutomationWizard({
         return true;
       case 3: // Platforms
         return wizardData.platforms.length > 0;
-      case 4: // Schedule
+      case 4: // TikTok Disclosure
+        return true;
+      case 5: // Schedule
         // Check if at least one day has at least one time
         const hasSchedule = Object.values(wizardData.schedule).some(
           (times) => Array.isArray(times) && times.length > 0,
         );
         return hasSchedule;
-      case 5: // Confirm
+      case 6: // Confirm
         return true;
       default:
         return false;
@@ -298,7 +332,10 @@ export function AutomationWizard({
           {currentStep === 4 && (
             <AutomationWizardStep4 data={wizardData} onChange={setWizardData} />
           )}
-          {currentStep === 5 && <AutomationWizardStep5 data={wizardData} />}
+          {currentStep === 5 && (
+            <AutomationWizardStep5TikTokDisclosure data={wizardData} onChange={setWizardData} />
+          )}
+          {currentStep === 6 && <AutomationWizardStep6 data={wizardData} onChange={setWizardData} />}
         </div>
 
         {/* Navigation Buttons */}

@@ -33,6 +33,7 @@ class MakePostRequest(BaseModel):
   post_id: str
   mode: Literal["publish", "draft", "scheduled"] = "publish"
   scheduled_at: Optional[str] = None  # ISO timestamp for scheduled posts
+  tiktok_disclosure_options: Optional[dict] = None  # TikTok disclosure settings
   
 
 @router.post("/", response_model=SuccessResponse)
@@ -55,7 +56,7 @@ async def make_post(request: MakePostRequest, current_user=Depends(get_current_u
     api_error(400, "INVALID_MODE", f"Invalid mode: {request.mode}")
 
   if request.mode == "publish":
-    res = await provider.publish_post(request.brand_id, request.platforms, request.post_id)
+    res = await provider.publish_post(request.brand_id, request.platforms, request.post_id, request.tiktok_disclosure_options)
   elif request.mode == "draft":
     res = await provider.draft_post(request.brand_id, request.platforms, request.post_id)
   else:

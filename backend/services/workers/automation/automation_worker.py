@@ -252,6 +252,17 @@ async def run_automation(automation_id: UUID) -> dict:
 
             from services.integrations.social.postforme.social_account import make_post
 
+            # Extract TikTok disclosure options from automation row
+            tiktok_disclosure_options = {
+                "is_ai_generated": automation.get("is_ai_generated", False),
+                "brand_content_toggle": automation.get("brand_content_toggle", False),
+                "brand_organic_toggle": automation.get("brand_organic_toggle", False),
+                "disable_duet": automation.get("disable_duet", False),
+                "disable_stitch": automation.get("disable_stitch", False),
+                "disable_comment": automation.get("disable_comment", False),
+                "privacy_level": automation.get("privacy_level", "PUBLIC"),
+            }
+
             for platform in platforms:
                 try:
                     print(f"Posting to {platform} with brand {brand_id} post id {post_id} mode {publish_mode}")
@@ -260,6 +271,7 @@ async def run_automation(automation_id: UUID) -> dict:
                         platforms=[platform],  # PostForMe expects a list
                         post_id=post_id,
                         mode=publish_mode,
+                        tiktok_disclosure_options=tiktok_disclosure_options,
                     )
                     run_result["platforms_used"].append(platform)
                 except Exception as e:

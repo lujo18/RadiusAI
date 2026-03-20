@@ -11,6 +11,7 @@ import {
 } from "@/components/animate-ui/primitives/radix/dialog";
 import { PostSlidePreview } from "@/components/post/PostSlidePreview";
 import { PostContentEditor } from "@/components/post/PostContentEditor";
+import { TikTokDisclosureOptions, type TikTokDisclosureSettings } from "@/components/modals/TikTokDisclosureOptions";
 import { TimeBlockScheduler } from "@/components/scheduling/TimeBlockScheduler";
 import { SocialItem } from "@/components/platform-integrations/SocialItem";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,7 +34,7 @@ type PostingModalProps = {
   postData: Post;
   brandId: string;
   integrations?: PlatformIntegration[];
-  onPost: (integrationIds: string[], mode: PostingMode, scheduledAt?: Date, updatedContent?: any) => Promise<void> | void;
+  onPost: (integrationIds: string[], mode: PostingMode, scheduledAt?: Date, updatedContent?: any, tiktokDisclosure?: TikTokDisclosureSettings) => Promise<void> | void;
   posting?: boolean;
   errors: {publish: any, draft: any, schedule: any, updatePost: any}
 };
@@ -85,6 +86,17 @@ export default function PostingModal({
   const [editableCaption, setEditableCaption] = useState(content?.caption || '');
   const [editableHashtags, setEditableHashtags] = useState<string[]>(content?.hashtags || []);
   const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
+
+  // TikTok disclosure settings
+  const [tiktokDisclosure, setTikTokDisclosure] = useState<TikTokDisclosureSettings>({
+    is_ai_generated: false,
+    brand_content_toggle: false,
+    brand_organic_toggle: false,
+    disable_duet: false,
+    disable_stitch: false,
+    disable_comment: false,
+    privacy_level: "PUBLIC",
+  });
 
 
 
@@ -154,7 +166,7 @@ export default function PostingModal({
 
     console.log("POST", ids, postingMode, selectedDateTime, updatedContent)
 
-    await onPost(ids, postingMode, selectedDateTime, updatedContent);
+    await onPost(ids, postingMode, selectedDateTime, updatedContent, tiktokDisclosure);
   };
 
   const canProceedFromEdit = () => {
@@ -231,6 +243,18 @@ export default function PostingModal({
                       }
                       selectedPlatforms={getSelectedPlatforms()}
                     />
+
+                    {/* TikTok Disclosure Options */}
+                    <div className="mt-8 pt-8 border-t border-border">
+                      <h4 className="text-sm font-semibold mb-4">TikTok Options</h4>
+                      <p className="text-xs text-muted-foreground mb-6">
+                        Configure content disclosure and engagement settings for TikTok. These options apply only if TikTok is selected in the next step.
+                      </p>
+                      <TikTokDisclosureOptions
+                        settings={tiktokDisclosure}
+                        onChange={setTikTokDisclosure}
+                      />
+                    </div>
 
                     <div className="mt-6 flex justify-end">
                       <Button 

@@ -141,6 +141,13 @@ export type Database = {
           template_ids: string[]
           updated_at: string | null
           user_timezone: string | null
+          is_ai_generated: boolean | null
+          brand_content_toggle: boolean | null
+          brand_organic_toggle: boolean | null
+          disable_duet: boolean | null
+          disable_stitch: boolean | null
+          disable_comment: boolean | null
+          privacy_level: string | null
         }
         Insert: {
           brand_id: string
@@ -163,6 +170,13 @@ export type Database = {
           template_ids: string[]
           updated_at?: string | null
           user_timezone?: string | null
+          is_ai_generated?: boolean | null
+          brand_content_toggle?: boolean | null
+          brand_organic_toggle?: boolean | null
+          disable_duet?: boolean | null
+          disable_stitch?: boolean | null
+          disable_comment?: boolean | null
+          privacy_level?: string | null
         }
         Update: {
           brand_id?: string
@@ -185,6 +199,13 @@ export type Database = {
           template_ids?: string[]
           updated_at?: string | null
           user_timezone?: string | null
+          is_ai_generated?: boolean | null
+          brand_content_toggle?: boolean | null
+          brand_organic_toggle?: boolean | null
+          disable_duet?: boolean | null
+          disable_stitch?: boolean | null
+          disable_comment?: boolean | null
+          privacy_level?: string | null
         }
         Relationships: [
           {
@@ -435,6 +456,7 @@ export type Database = {
           collected_at: string | null
           collection_count: number | null
           comments: number | null
+          created_at: string | null
           current_interval: string | null
           engagement_rate: number | null
           id: string
@@ -447,6 +469,7 @@ export type Database = {
           saves: number
           shares: number
           total_time_watched: number | null
+          updated_at: string | null
         }
         Insert: {
           average_time_watched?: number | null
@@ -454,6 +477,7 @@ export type Database = {
           collected_at?: string | null
           collection_count?: number | null
           comments?: number | null
+          created_at?: string | null
           current_interval?: string | null
           engagement_rate?: number | null
           id?: string
@@ -466,6 +490,7 @@ export type Database = {
           saves?: number
           shares?: number
           total_time_watched?: number | null
+          updated_at?: string | null
         }
         Update: {
           average_time_watched?: number | null
@@ -473,6 +498,7 @@ export type Database = {
           collected_at?: string | null
           collection_count?: number | null
           comments?: number | null
+          created_at?: string | null
           current_interval?: string | null
           engagement_rate?: number | null
           id?: string
@@ -485,6 +511,7 @@ export type Database = {
           saves?: number
           shares?: number
           total_time_watched?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -500,55 +527,52 @@ export type Database = {
         Row: {
           average_time_watched: number | null
           collected_at: string
-          collection_count: number | null
-          comments: number | null
+          collection_count: number
+          comments: number
+          created_at: string
           current_interval: string | null
           engagement_rate: number | null
           id: string
-          impressions: number | null
-          likes: number | null
+          impressions: number
+          likes: number
           new_followers: number | null
-          platform_id: string | null
           post_id: string
-          raw_payload: Json | null
-          saves: number | null
-          shares: number | null
+          saves: number
+          shares: number
           total_time_watched: number | null
         }
         Insert: {
           average_time_watched?: number | null
           collected_at?: string
-          collection_count?: number | null
-          comments?: number | null
+          collection_count?: number
+          comments?: number
+          created_at?: string
           current_interval?: string | null
           engagement_rate?: number | null
           id?: string
-          impressions?: number | null
-          likes?: number | null
+          impressions?: number
+          likes?: number
           new_followers?: number | null
-          platform_id?: string | null
           post_id: string
-          raw_payload?: Json | null
-          saves?: number | null
-          shares?: number | null
+          saves?: number
+          shares?: number
           total_time_watched?: number | null
         }
         Update: {
           average_time_watched?: number | null
           collected_at?: string
-          collection_count?: number | null
-          comments?: number | null
+          collection_count?: number
+          comments?: number
+          created_at?: string
           current_interval?: string | null
           engagement_rate?: number | null
           id?: string
-          impressions?: number | null
-          likes?: number | null
+          impressions?: number
+          likes?: number
           new_followers?: number | null
-          platform_id?: string | null
           post_id?: string
-          raw_payload?: Json | null
-          saves?: number | null
-          shares?: number | null
+          saves?: number
+          shares?: number
           total_time_watched?: number | null
         }
         Relationships: [
@@ -564,24 +588,33 @@ export type Database = {
       post_tracking_metadata: {
         Row: {
           collection_count: number
-          current_interval: Database["public"]["Enums"]["post_tracking_interval"]
+          created_at: string
+          current_interval: string
+          id: string
           last_collected_at: string | null
           next_collection_at: string
           post_id: string
+          updated_at: string
         }
         Insert: {
           collection_count?: number
-          current_interval: Database["public"]["Enums"]["post_tracking_interval"]
+          created_at?: string
+          current_interval: string
+          id?: string
           last_collected_at?: string | null
           next_collection_at: string
           post_id: string
+          updated_at?: string
         }
         Update: {
           collection_count?: number
-          current_interval?: Database["public"]["Enums"]["post_tracking_interval"]
+          created_at?: string
+          current_interval?: string
+          id?: string
           last_collected_at?: string | null
           next_collection_at?: string
           post_id?: string
+          updated_at?: string
         }
         Relationships: [
           {

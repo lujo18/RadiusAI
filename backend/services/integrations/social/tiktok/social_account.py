@@ -226,6 +226,7 @@ async def make_post(
     mode: Literal["draft", "scheduled", "publish"] = "publish",
     scheduled_at: Optional[str] = None,
     post_type: Literal["slideshow", "video"] = "slideshow",
+    tiktok_disclosure_options: Optional[dict] = None,
 ) -> SuccessResponse:
     """
     Route a post to the appropriate TikTok publishing function.
@@ -282,9 +283,25 @@ async def make_post(
         else:
             from .publish.slideshow import publish_slideshow
 
-            result = await publish_slideshow(
-                client=client, raw_post=raw_post, post_id=post_id
-            )
+            # Build kwargs with disclosure options if provided
+            slideshow_kwargs = {
+                "client": client,
+                "raw_post": raw_post,
+                "post_id": post_id,
+            }
+            
+            if tiktok_disclosure_options:
+                slideshow_kwargs.update({
+                    "privacy_level": tiktok_disclosure_options.get("privacy_level", "PUBLIC"),
+                    "disable_duet": tiktok_disclosure_options.get("disable_duet", False),
+                    "disable_stitch": tiktok_disclosure_options.get("disable_stitch", False),
+                    "disable_comment": tiktok_disclosure_options.get("disable_comment", False),
+                    "brand_content_toggle": tiktok_disclosure_options.get("brand_content_toggle", False),
+                    "brand_organic_toggle": tiktok_disclosure_options.get("brand_organic_toggle", False),
+                    "is_ai_generated": tiktok_disclosure_options.get("is_ai_generated", False),
+                })
+
+            result = await publish_slideshow(**slideshow_kwargs)
 
         results.append(result)
 
@@ -295,8 +312,8 @@ async def draft_post(brand_id: str, platforms: List[str], post_id: str) -> Succe
     return await make_post(brand_id, platforms, post_id, mode="draft")
 
 
-async def publish_post(brand_id: str, platforms: List[str], post_id: str) -> SuccessResponse:
-    return await make_post(brand_id, platforms, post_id, mode="publish")
+async def publish_post(brand_id: str, platforms: List[str], post_id: str, tiktok_disclosure_options: dict = None) -> SuccessResponse:
+    return await make_post(brand_id, platforms, post_id, mode="publish", tiktok_disclosure_options=tiktok_disclosure_options)
 
 
 async def schedule_post(

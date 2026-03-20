@@ -59,9 +59,9 @@ class TikTokProvider(SocialProvider):
         return await disconnect_integration(integration_id)
 
     async def publish_post(
-        self, brand_id: str, platforms: List[str], post_id: str
+        self, brand_id: str, platforms: List[str], post_id: str, tiktok_disclosure_options: dict = None
     ) -> SuccessResponse:
-        return await publish_post(brand_id, platforms, post_id)
+        return await publish_post(brand_id, platforms, post_id, tiktok_disclosure_options=tiktok_disclosure_options)
 
     async def draft_post(
         self, brand_id: str, platforms: List[str], post_id: str

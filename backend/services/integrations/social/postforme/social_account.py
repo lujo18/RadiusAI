@@ -132,6 +132,7 @@ async def make_post(
     post_id: str,
     mode: Literal["draft", "scheduled", "publish"] = "publish",
     scheduled_at: Optional[str] = None,
+    tiktok_disclosure_options: Optional[dict] = None,
 ):
     """Create / schedule / publish a post via PostForMe.
 
@@ -139,6 +140,15 @@ async def make_post(
       - 'draft' : mark post as draft
       - 'scheduled' : set scheduled_time + status
       - 'publish' : call PostForMe and update external ids + status
+    
+    tiktok_disclosure_options: Optional dict with TikTok disclosure settings:
+      - is_ai_generated: bool
+      - brand_content_toggle: bool
+      - brand_organic_toggle: bool
+      - disable_duet: bool
+      - disable_stitch: bool
+      - disable_comment: bool
+      - privacy_level: str ("PUBLIC", "MUTUAL_FOLLOW_FRIENDS", "SELF_ONLY")
     """
 
     raw_post = get_post(post_id)
@@ -200,22 +210,43 @@ async def make_post(
 
     print("organized hastags")
 
+    # Build TikTok configuration with disclosure options
+    tiktok_config = {
+        "caption": f"{caption} {hashtags}".strip(),
+        "title": caption,
+        "privacy_status": "public",
+        "allow_comment": True,
+        "allow_duet": True,
+        "allow_stitch": True,
+        "disclose_your_brand": False,
+        "disclose_branded_content": False,
+        "is_ai_generated": False,
+        "is_draft": mode == "draft",
+    }
+    
+    # Override with disclosure options if provided
+    if tiktok_disclosure_options:
+        tiktok_config["is_ai_generated"] = tiktok_disclosure_options.get("is_ai_generated", False)
+        tiktok_config["disclose_branded_content"] = tiktok_disclosure_options.get("brand_content_toggle", False)
+        tiktok_config["disclose_your_brand"] = tiktok_disclosure_options.get("brand_organic_toggle", False)
+        tiktok_config["allow_duet"] = not tiktok_disclosure_options.get("disable_duet", False)
+        tiktok_config["allow_stitch"] = not tiktok_disclosure_options.get("disable_stitch", False)
+        tiktok_config["allow_comment"] = not tiktok_disclosure_options.get("disable_comment", False)
+        
+        # Map privacy level
+        privacy_level = tiktok_disclosure_options.get("privacy_level", "PUBLIC")
+        if privacy_level == "MUTUAL_FOLLOW_FRIENDS":
+            tiktok_config["privacy_status"] = "friends"
+        elif privacy_level == "SELF_ONLY":
+            tiktok_config["privacy_status"] = "self"
+        else:
+            tiktok_config["privacy_status"] = "public"
+
     payload = {
         "caption": caption,
         "scheduled_at": scheduled_at,
         "platform_configurations": {
-            "tiktok": {
-                "caption": f"{caption} {hashtags}".strip(),
-                "title": caption,
-                "privacy_status": "public",
-                "allow_comment": True,
-                "allow_duet": True,
-                "allow_stitch": True,
-                "disclose_your_brand": False,
-                "disclose_branded_content": False,
-                "is_ai_generated": False,
-                "is_draft": mode == "draft",
-            }
+            "tiktok": tiktok_config
         },
         "media": media_urls,
         "social_accounts": pfm_account_ids,
