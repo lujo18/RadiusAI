@@ -10,13 +10,6 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Redirect trailing slashes to non-trailing
-[[redirects]]
-  from = "/*/"
-  to = "/:splat"
-  status = 301
-  force = false
-
 # Proxy to external API
 [[redirects]]
   from = "/api/brand/*"
