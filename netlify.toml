@@ -1,26 +1,23 @@
 [build]
   base = "frontend"
-  command = "rm -rf .next node_modules && npm install --include=dev && npm run build"
-  functions = "netlify/functions"
+  command = "npm run build"
   publish = ".next"
-  
+
 [build.environment]
   NODE_VERSION = "22"
   NODE_ENV = "production"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
-# Redirect all trailing slashes to non-trailing
+# Redirect trailing slashes to non-trailing
 [[redirects]]
   from = "/*/"
   to = "/:splat"
   status = 301
   force = false
 
-# Handle Next.js rewrites for API proxying
+# Proxy to external API
 [[redirects]]
   from = "/api/brand/*"
   to = "https://api.useradius.app/brand/:splat"
@@ -33,32 +30,16 @@
   status = 200
   force = true
 
-# SPA routing - catch all other routes and return index.html
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
-
-[context.production]
-  command = "rm -rf .next node_modules && npm install --include=dev && npm run build"
-  
 [context.production.environment]
   NEXT_PUBLIC_API_URL = "https://api.useradius.app"
   NEXT_PUBLIC_BASE_URL = "https://useradius.app"
   NODE_VERSION = "22"
   NODE_ENV = "production"
 
-[context.deploy-preview]
-  command = "rm -rf .next node_modules && npm install --include=dev && npm run build"
-
 [context.deploy-preview.environment]
   NEXT_PUBLIC_API_URL = "https://api-preview.useradius.app"
   NEXT_PUBLIC_BASE_URL = "https://preview-useradius.app"
   NODE_VERSION = "22"
-
-[context.branch-deploy]
-  command = "rm -rf .next node_modules && npm install --include=dev && npm run build"
 
 [context.branch-deploy.environment]
   NODE_VERSION = "22"
