@@ -31,9 +31,6 @@ services:
   - key: POST_FOR_ME_API_KEY
     scope: RUN_TIME
     value: ${POST_FOR_ME_API_KEY}
-  - key: LATE_API_KEY
-    scope: RUN_TIME
-    value: ${LATE_API_KEY}
   - key: GROQ_API_KEY
     scope: RUN_TIME
     value: ${GROQ_API_KEY}
