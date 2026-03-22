@@ -40,6 +40,7 @@ backendClient.interceptors.response.use(
 
     if (err.response?.status === 401) {
       // Unauthorized - clear session and redirect to login
+      console.log("Not authorized error: ", err.response)
       supabase.auth.signOut();
       window.location.href = '/login';
       throw (payload ?? err.response.data) as APIError;

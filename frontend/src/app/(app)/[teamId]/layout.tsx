@@ -124,7 +124,7 @@ export default function TeamLayout({
 
   if (!user && !publicTeam) {
     // User not authenticated at all
-    router.push('/auth/login')
+    router.push('/login')
     return null
   }
 
