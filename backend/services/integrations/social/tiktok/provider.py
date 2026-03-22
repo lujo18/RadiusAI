@@ -86,4 +86,6 @@ class TikTokProvider(SocialProvider):
 
 
     async def get_post_metrics(self, post_id: str):
-        return await 
+        raise NotImplementedError(
+            "Analytics are handled separately by tiktok/analytics/client.py"
+        )
