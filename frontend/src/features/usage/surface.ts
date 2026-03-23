@@ -52,8 +52,9 @@ export const usageApi = {
     return data;
   },
 
-  async getCreditsUsage() {
-    const { data } = await backendClient.get('/api/usage/credits');
+  async getCreditsUsage(teamId?: string) {
+    const params = teamId ? `?team_id=${teamId}` : '';
+    const { data } = await backendClient.get(`/api/usage/credits${params}`);
     return data;
   },
 };

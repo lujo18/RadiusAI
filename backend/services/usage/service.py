@@ -986,13 +986,22 @@ def decrement_template(user_id: str, amount: int = 1) -> Dict[str, Any]:
 # ============================================================================
 
 
-def get_credits_usage(user_id: str) -> Dict[str, Any]:
-    """Get current credits usage and limit for a user.
+def get_credits_usage(user_id: Optional[str], team_id: Optional[str] = None) -> Dict[str, Any]:
+    """Get current credits usage and limit for a user or a specific team.
+
+    Args:
+        user_id: Optional user ID (used to get product limits). Can be None for public team access.
+        team_id: Optional specific team ID to fetch credits for. If not provided, uses user's team (requires user_id).
 
     Returns: {"credits_used": int, "credits_limit": int|None}
     """
     try:
-        team_id = usage_repo.get_user_team_id(user_id)
+        # If team_id not provided, get from user
+        if not team_id:
+            if not user_id:
+                return {"credits_used": 0, "credits_limit": None, "error": "No team_id or user_id provided"}
+            team_id = usage_repo.get_user_team_id(user_id)
+        
         if not team_id:
             return {"credits_used": 0, "credits_limit": None, "error": "User not found"}
 
@@ -1001,9 +1010,11 @@ def get_credits_usage(user_id: str) -> Dict[str, Any]:
         credits_obj = usage_map.get("credits") or {}
         credits_used = int(credits_obj.get("total") or 0)
 
-        # Get credits limit from product
-        product_id = _get_user_product_id(user_id)
-        credits_limit = _get_metric_limit(product_id, "credits")
+        # Get credits limit from product (only if we have a user_id)
+        credits_limit = None
+        if user_id:
+            product_id = _get_user_product_id(user_id)
+            credits_limit = _get_metric_limit(product_id, "credits")
 
         return {"credits_used": credits_used, "credits_limit": credits_limit}
 

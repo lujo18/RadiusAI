@@ -1,12 +1,14 @@
 import './tw-animate.css';
 import '@/app/globals.css';
-import React from "react";
+import React, { Suspense } from "react";
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 
 import { AuthProvider } from "@/components/AuthProvider";
 import { QueryProvider } from "@/components/QueryProvider";
 import { ThemeProvider } from "@/components/provider/theme-provider";
+import { PublicTeamProvider } from "@/hooks/usePublicTeam";
+import { PublicTeamInitializer } from "@/components/PublicTeamInitializer";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -36,14 +38,19 @@ export default function RootLayout({
         {/* App name is Radius everywhere */}
         <QueryProvider>
           <AuthProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-            </ThemeProvider>
+            <Suspense fallback={null}>
+              <PublicTeamProvider>
+                <PublicTeamInitializer />
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="system"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  {children}
+                </ThemeProvider>
+              </PublicTeamProvider>
+            </Suspense>
           </AuthProvider>
         </QueryProvider>
       </body>

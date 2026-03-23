@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 import logging
 from pydantic import BaseModel
-from typing import Optional
-from auth import get_current_user
+from typing import Optional, Union
+from auth import get_current_user, get_current_user_or_public_team, PublicTeamAccess
+from services.usage.credit_guard import check_credits_allowed
 from backend.features.error.helper import api_error
 from backend.features.error.response import SuccessResponse
 from services.genai.gemini_service import generate_content_with_gemini
@@ -38,9 +39,12 @@ router = APIRouter(prefix="/api/generate", tags=["generate"])
 @router.post("/post/auto", response_model=SuccessResponse)
 async def generate_post_content_from_prompt(
     request: GeneratePostAutoRequest,
-    user_id: str = Depends(get_current_user)
+    access: Union[str, PublicTeamAccess] = Depends(get_current_user_or_public_team)
 ):
     """Generate post content using Gemini AI from a text prompt (auto layout selection)."""
+    # Credit-consuming operation - block for public/demo teams
+    user_id = check_credits_allowed(access, "generate content")
+    
     print("Request ", request)
     # Check generation credits with grace period
     credit_check = check_generation_credits(user_id, request.count)
@@ -84,9 +88,12 @@ async def generate_post_content_from_prompt(
 @router.post("/post", response_model=SuccessResponse)
 async def create_post(
     request: GeneratePostRequest,
-    user_id: str = Depends(get_current_user)
+    access: Union[str, PublicTeamAccess] = Depends(get_current_user_or_public_team)
 ):
     """Generate post content using Gemini AI based on a predefined template."""
+    # Credit-consuming operation - block for public/demo teams
+    user_id = check_credits_allowed(access, "generate content")
+    
     # Check generation credits with grace period
     credit_check = check_generation_credits(user_id, request.count)
     if not credit_check["allowed"]:

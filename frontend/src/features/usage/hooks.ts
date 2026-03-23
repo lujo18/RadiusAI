@@ -129,11 +129,11 @@ export const useTrackTemplate = () => {
   });
 };
 
-export const useGetCreditsUsage = () => {
+export const useGetCreditsUsage = (teamId?: string) => {
   return useQuery({
-    queryKey: ['usage', 'credits'],
+    queryKey: ['usage', 'credits', teamId],
     queryFn: async () => {
-      const res = await usageApi.getCreditsUsage();
+      const res = await usageApi.getCreditsUsage(teamId);
       return res ?? { credits_used: 0, credits_limit: null };
     },
     staleTime: 30 * 1000,

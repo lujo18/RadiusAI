@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Union
 
 from backend.features.error.helper import api_error
 from backend.features.error.response import SuccessResponse
@@ -10,8 +10,8 @@ from models.user import BrandSettings
 from services.integrations.social.provider import get_social_provider
 from services.integrations.supabase.db.post import get_post
 from services.profile.connect_account import connect_social
-
-from auth import get_current_user
+from auth import get_current_user, get_current_user_or_public_team, PublicTeamAccess
+from services.usage.credit_guard import check_credits_allowed
 from services.profile.post import (
     send_post,
 )  # Assuming auth is set up in backend/auth.py
@@ -37,18 +37,22 @@ class MakePostRequest(BaseModel):
   
 
 @router.post("/", response_model=SuccessResponse)
-async def make_post(request: MakePostRequest, current_user=Depends(get_current_user)):
+async def make_post(request: MakePostRequest, access: Union[str, PublicTeamAccess] = Depends(get_current_user_or_public_team)):
   """
   Create/publish/schedule a post via social provider.
   
   Args:
     request: Contains brand_id, platforms, post_id, mode, and optional scheduled_at
+    access: Either user_id (authenticated) or PublicTeamAccess (demo)
     
   Modes:
-    - "publish": Immediately publish the post
-    - "draft": Save as draft 
-    - "scheduled": Schedule for future posting (requires scheduled_at)
+    - "publish": Immediately publish the post (requires credits)
+    - "draft": Save as draft (requires credits)
+    - "scheduled": Schedule for future posting (requires credits, requires scheduled_at)
   """
+  # Credit-consuming operation - block for public/demo teams
+  _ = check_credits_allowed(access, "publish posts")
+  
   if request.mode == "scheduled" and not request.scheduled_at:
     api_error(400, "MISSING_SCHEDULED_AT", "scheduled_at is required for scheduled mode")
   

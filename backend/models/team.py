@@ -33,6 +33,7 @@ class Team(BaseModel):
     description: Optional[str] = None
     avatar_url: Optional[str] = None
     metadata: Optional[dict] = None
+    is_public: bool = False  # Whether this team is publicly accessible
     created_at: str
     updated_at: str
     deleted_at: Optional[str] = None

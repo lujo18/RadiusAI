@@ -1,9 +1,9 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 
-from auth import get_current_user
+from auth import get_current_user, get_current_user_or_public_team, PublicTeamAccess
 from backend.features.error.helper import api_error
 from services.usage import repo as usage_repo
 from services.usage import service as usage_service
@@ -377,13 +377,35 @@ def debug_template_check(user: str = Depends(get_current_user)):
 # ============================================================================
 
 @router.get("/credits")
-def get_credits_usage(user: str = Depends(get_current_user)):
-    """Get current credits usage and limit for the authenticated user.
+def get_credits_usage(access: Union[str, PublicTeamAccess] = Depends(get_current_user_or_public_team)):
+    """Get current credits usage and limit for the authenticated user or a public team.
+    
+    Supports both authenticated users and public team access via team_id query param.
+    
+    Query params:
+        team_id (optional): Public team ID. If provided and team is public, returns that team's credits.
     
     Returns: {credits_used: int, credits_limit: int|null}
     """
+    print(f"\n📊 GET /api/usage/credits endpoint called")
+    print(f"   Access: {access}")
+    
     try:
-        result = usage_service.get_credits_usage(user)
+        # Handle both authenticated users and public team access
+        if isinstance(access, PublicTeamAccess):
+            team_id = access.team_id
+            user_id = None
+            print(f"   Using public team: {team_id}")
+        else:
+            user_id = access
+            team_id = usage_repo.get_user_team_id(user_id)
+            print(f"   Using authenticated user: {user_id}, team: {team_id}")
+            if not team_id:
+                api_error(status_code=404, code="TEAM_NOT_FOUND", message="User not found or not associated with team")
+        
+        result = usage_service.get_credits_usage(user_id, team_id)
+        print(f"   Result: {result}")
+        
         # Return result even if it contains an error - let the client handle it
         # This ensures the endpoint always returns 200 with reasonable defaults
         return {
@@ -394,6 +416,7 @@ def get_credits_usage(user: str = Depends(get_current_user)):
         raise
     except Exception as e:
         logger.exception("Failed to get credits usage")
+        print(f"   ❌ Exception: {e}")
         # Return defaults instead of 500 to prevent UI crashes
         return {
             "credits_used": 0,

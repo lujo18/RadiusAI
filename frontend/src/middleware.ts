@@ -76,15 +76,24 @@ export async function middleware(request: NextRequest) {
   // Allow Stripe success redirects to pass through (they'll handle auth client-side)
   const hasStripeSessionId = request.nextUrl.searchParams.has('session_id');
   
+  // Extract teamId from URL path: /[teamId]/... routes can be public
+  let teamIdFromPath: string | null = null;
+  const pathSegments = request.nextUrl.pathname.split('/').filter(Boolean);
+  if (pathSegments.length > 0) {
+    teamIdFromPath = pathSegments[0];
+  }
+  
   console.log('[Middleware] Route protection check:', {
     isProtectedRoute,
     hasStripeSessionId,
-    willRedirect: isProtectedRoute && !user && !hasStripeSessionId
+    teamIdFromPath,
+    willRedirect: isProtectedRoute && !user && !hasStripeSessionId && !teamIdFromPath
   });
   
   // Check if user is trying to access protected route
-  if (isProtectedRoute && !user && !hasStripeSessionId) {
-    console.log('[Middleware] Redirecting to login - no valid user');
+  // Allow if: authenticated user OR Stripe session redirect OR team ID in path (potential public team)
+  if (isProtectedRoute && !user && !hasStripeSessionId && !teamIdFromPath) {
+    console.log('[Middleware] Redirecting to login - no valid user or public team');
     const loginUrl = new URL('/', request.url);
     loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
