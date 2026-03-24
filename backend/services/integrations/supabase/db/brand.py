@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Literal
+import uuid
 
 from models.platform_integration import PlatformIntegration
 from models.user import BrandSettings
@@ -54,44 +55,42 @@ def connect_social_account_to_brand(
       brand_id (str): The profile's late_profile_id.
       platform (str): The social media platform (e.g., 'instagram', 'tiktok').
       late_account_id (str): The social account's unique ID.
-      access_token (str): OAuth access token.
-      refresh_token (str, optional): OAuth refresh token.
-      expires_at (datetime, optional): Token expiration time.
+      post_for_me_account_id: PostForMe account ID
+      username (str): Social account username
+      profile_picture_url (str, optional): Profile picture URL
     """
     supabase = get_supabase()
     now = datetime.now().isoformat()
 
     data = {
+        "id": str(uuid.uuid4()),  # Generate UUID for new rows (required for upsert insert)
         "brand_id": brand_id,
         "platform": platform,
-        "late_account_id": late_account_id,
         "pfm_account_id": post_for_me_account_id,
         "username": username,
         "profile_picture_url": profile_picture_url,
         "status": "connected",
+        "user_id": user_id,  # Include user_id if provided
         "updated_at": now,
         "created_at": now,
     }
 
     # Use upsert to ensure only one integration per (brand_id, platform).
     # Requires a DB unique constraint on (brand_id, platform).
-    
-    print("UPDATING SUPABASE ROW", data)
-    res = (
-        supabase.table("platform_integrations")
-        .upsert(data, on_conflict="brand_id,platform")
-        .execute()
-    )
-    # if getattr(res, "error", None):
-    #     # Fall back to insert on unexpected error
-    #     ins_res = supabase.table("platform_integrations").insert(data).execute()
-    #     print(
-    #         f"Connected {platform} account {late_account_id} to profile {brand_id} (insert fallback)"
-    #     )
-    #     return ins_res.data[0] if ins_res.data else None
 
-    print(f"Upserted {platform} integration for profile {brand_id}")
-    return res.data[0] if res.data else None
+    print("UPDATING SUPABASE ROW", data)
+    try:
+        res = (
+            supabase.table("platform_integrations")
+            .upsert(data, on_conflict="brand_id,platform")
+            .execute()
+        )
+        print(f"Upserted {platform} integration for profile {brand_id}")
+        return res.data[0] if res.data else None
+    except Exception as e:
+        print(f"Error upserting integration: {e}")
+        print(f"Data that failed: {data}")
+        raise
 
 
 def update_social_account_status(

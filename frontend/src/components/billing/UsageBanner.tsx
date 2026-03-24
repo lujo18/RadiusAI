@@ -51,7 +51,7 @@ export default function UsageBanner({ className, compact = false }: UsageBannerP
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as UsageData;
         setUsage(data);
       }
     } catch (err) {

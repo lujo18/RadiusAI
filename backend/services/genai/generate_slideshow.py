@@ -1,6 +1,8 @@
 import json
 import logging
 from typing import Dict, Optional
+from backend.services.stock_packs.getPhotos import queryStockPackUrls
+from backend.util.llm_output_sanitizer import sanitize_text
 from models.slide import LayoutConfig, PostContent
 from models.user import BrandSettings
 from models import Template
@@ -16,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_slideshow_auto(
-    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1, cta: Optional[dict] = None
+    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1, cta: Optional[dict] = None, stock_pack_directory: str | None = None
 ):
     """
     Generate complete TikTok slideshow with layout selection and content.
@@ -29,7 +31,6 @@ def generate_slideshow_auto(
     Returns:
         Gemini response with structured slideshow data
     """
-    logger.info("Made it to generate_slideshow_auto")
 
     layout_options = get_all_layout_schemas()
     prompt = _generate_prompt(layout_options, slideshowGoals, brandSettings, count, template_structure=None, cta=cta)
@@ -173,8 +174,10 @@ def generate_slideshow_auto(
     if not isinstance(generated_data, list):
         raise ValueError("Gemini response must be an array of post variations")
 
+    cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None) 
+    print("CTA IMAGE OVERRIDE: ", cta_image_url)
     post_contents = [
-        _convert_to_post_content(generated_post) for generated_post in generated_data
+        _convert_to_post_content(generated_post, cta_image_override=cta_image_url, stock_pack_directory=stock_pack_directory) for generated_post in generated_data
     ]
 
     logger.info(f"Converted {len(post_contents)} posts successfully")
@@ -211,12 +214,20 @@ Design a Tiktok slideshow using the following brand and contraints.
 ### BRAND GUARDRAILS (JSON):
 {brand}
 
+## HOW TO READ EACH SLIDE
+- stage: the psychological role of this slide
+- format_spec: your writing instruction. Execute it. Do not copy it as content.
+- word_count: maximum words for this slide's text content
+- output_mode:
+  - WRITE FREELY: write original content within the format_spec direction
+  - FOLLOW EXACTLY: reproduce the structure in format_spec precisely, with real content filled in
+
 ### SLIDESHOW BLUEPRINT (JSON):
 {slideshowGoals}
 
 {cta_section}
 
-### TECHNICAL JSON SPECIFICATIONS
+## TECHNICAL JSON SPECIFICATIONS
 
 #### AVAILABLE LAYOUTS (choose optimal layout per slide):
 {layout_options}
@@ -235,7 +246,7 @@ Design a Tiktok slideshow using the following brand and contraints.
           "slide_number": 1,
           "layout_type": "hook",
           "text_elements": {{
-            "text-1": "Hook text following the template structure"
+            "text-id": "Hook text following the template structure"
           }}
         }}
       ],
@@ -247,11 +258,10 @@ Design a Tiktok slideshow using the following brand and contraints.
 }}
 
 Output only valid JSON object.
-If the JSON value doesn't contain \\n\\n where there are more than 2 sentaces, it is a failed generation. Re-calculate the structure now
 """
 
 
-def _convert_to_post_content(generated: dict) -> PostContent:
+def _convert_to_post_content(generated: dict, cta_image_override: str | None, stock_pack_directory:str|None) -> PostContent:
     """
     Convert a single Gemini-generated post into PostContent structure.
     Maps generated text back to slide elements.
@@ -269,9 +279,14 @@ def _convert_to_post_content(generated: dict) -> PostContent:
         f"Generated data: {background_query}, {len(generated['slides'])} slides"
     )
 
-    backgroundUrls = queryUnsplashUrls(
-        background_query, len(generated["slides"])
-    )
+    if stock_pack_directory:
+        backgroundUrls = queryStockPackUrls(
+            stock_pack_directory, len(generated["slides"])
+        )
+    else: 
+        backgroundUrls = queryUnsplashUrls(
+            background_query, len(generated["slides"])
+        )
 
     if backgroundUrls is None or len(backgroundUrls) == 0:
         raise ValueError("Failed to retrieve background images from Unsplash")
@@ -279,6 +294,11 @@ def _convert_to_post_content(generated: dict) -> PostContent:
     # If we got fewer URLs than slides, extend with the last URL as fallback
     while len(backgroundUrls) < len(generated["slides"]):
         backgroundUrls.append(backgroundUrls[-1] if backgroundUrls else None)
+        
+    last_slide_index = len(generated['slides']) - 1
+    # Replace last image with CTA IMAGE OVERIDE
+    if cta_image_override and last_slide_index >= 0:
+        backgroundUrls[last_slide_index] = cta_image_override
 
     for gen_slide in generated["slides"]:
         slide_num = gen_slide["slide_number"]
@@ -292,7 +312,7 @@ def _convert_to_post_content(generated: dict) -> PostContent:
             # Fill element with Gemini's content
             # Handle both dash and underscore formats (Gemini is inconsistent)
             element_id = element["id"]
-            content = gen_slide["text_elements"].get(element_id)
+            content = sanitize_text(gen_slide["text_elements"].get(element_id))
 
             # Fallback: try with underscore if dash version not found
             if content is None:

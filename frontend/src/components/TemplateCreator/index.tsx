@@ -193,20 +193,18 @@ export default function TemplateCreator({
       const generatedTemplate = await templateGenerationService.generateFromPrompt(prompt);
       
       setTemplateMode("ai");
+
+      // Preserve the full generated structure in content_rules so all dynamic
+      // properties (logic_engine, content_blueprint, slides, etc.) are editable.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { name, category, template_id, ...contentFields } = generatedTemplate;
+
       setFormData((prev) => ({
         ...prev,
         name: generatedTemplate.name || "AI Generated Template",
         category: generatedTemplate.category || "educational",
         style_config: generatedTemplate.style_config || getDefaultStyleConfig(generatedTemplate.category || "educational"),
-        content_rules: {
-          goal: generatedTemplate.logic_engine?.goal || "",
-          narrative_flow: generatedTemplate.logic_engine?.narrative_flow || "",
-          psychological_trigger: generatedTemplate.logic_engine?.psychological_trigger || "",
-          pacing_style: generatedTemplate.logic_engine?.pacing_style || "",
-          hook_style: generatedTemplate.content_blueprint?.hook_strategy || "",
-          structure: generatedTemplate.content_blueprint?.structure || {},
-          writing_constraints: generatedTemplate.content_blueprint?.writing_constraints || {},
-        },
+        content_rules: contentFields,
       }));
       setStep(2);
       

@@ -62,7 +62,7 @@ export default function UpgradeFlow({ isOpen, onClose, trigger = 'manual', messa
         throw new Error('Failed to fetch upgrade options');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { upgrades?: UpgradePlan[] };
       setAvailablePlans(data.upgrades || []);
     } catch (err) {
       console.error('Error fetching upgrades:', err);
@@ -99,7 +99,7 @@ export default function UpgradeFlow({ isOpen, onClose, trigger = 'manual', messa
         }),
       });
 
-      const result = await response.json();
+      const result = (await response.json()) as { detail?: string; message?: string };
 
       if (!response.ok) {
         throw new Error(result.detail || 'Failed to upgrade');

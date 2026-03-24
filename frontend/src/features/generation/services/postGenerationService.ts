@@ -32,7 +32,8 @@ export const postGenerationService = {
     brandSettings: BrandSettings,
     brandId: string,
     count: number = 1,
-    ctaId?: string
+    ctaId?: string,
+    stock_pack_directory?: string
   ): Promise<Post[]> {
     return await backendGenerationClient.generatePostsFromPrompt({
       template,
@@ -40,6 +41,7 @@ export const postGenerationService = {
       brandId,
       count,
       ctaId,
+      stock_pack_directory,
     });
   },
 

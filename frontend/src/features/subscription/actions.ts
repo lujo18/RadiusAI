@@ -98,11 +98,11 @@ export async function startCheckout(
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    const body = (await res.json().catch(() => ({}))) as { detail?: string };
     throw new Error(body?.detail || 'checkout_failed');
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as { url?: string };
   if (!data.url) throw new Error('checkout_no_url');
 
   window.location.href = data.url;
@@ -129,7 +129,7 @@ export async function switchPlan(priceId: string, productId: string): Promise<vo
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    const body = (await res.json().catch(() => ({}))) as { detail?: string };
     throw new Error(body?.detail || 'switch_failed');
   }
 }
@@ -155,11 +155,11 @@ export async function openPortal(): Promise<void> {
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
+    const body = (await res.json().catch(() => ({}))) as { detail?: string };
     throw new Error(body?.detail || 'portal_failed');
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as { url?: string };
   if (!data.url) throw new Error('portal_no_url');
 
   window.open(data.url, '_blank');

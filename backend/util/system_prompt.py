@@ -27,7 +27,7 @@ CONTENT RULES:
 - Avoid: Forbidden words entirely - swap with brand alternatives
 - Avoid: Copying template language or meta-text in slides
 - Avoid: Formulaic transitions or predictable structure
-- Avoid: Emojis, em-dashes, special characters, or unicode symbols
+- NEVER USE: Emojis, em-dashes, special characters, or unicode symbols
 
 FORMATTING FOR LISTS:
 - Use numbered items: 1. item\n2. item\n3. item (with \n between each)

@@ -129,12 +129,12 @@ export default function LandingPage() {
   useEffect(() => {
     fetch("/api/metrics")
       .then((res) => res.json())
-      .then((data) => setMetrics(data))
+      .then((data) => setMetrics(data as DynamicMetrics))
       .catch(console.error);
 
     fetch("/api/testimonials")
       .then((res) => res.json())
-      .then((data) => setTestimonials(data.testimonials || []))
+      .then((data) => setTestimonials((data as { testimonials?: Testimonial[] }).testimonials || []))
       .catch(console.error);
   }, []);
 

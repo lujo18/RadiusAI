@@ -1,15 +1,16 @@
 ﻿"use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Braces, LayoutList, AlertCircle } from "lucide-react";
 import { DynamicJSONForm } from "./DynamicJSONForm";
-import { EMPTY_CONTENT_RULES } from "./emptyTemplate";
+import { cn } from "@/lib/utils";
 
 interface Step2TemplateEditorProps {
   formData: {
@@ -46,6 +47,41 @@ export default function Step2TemplateEditor({
     templateUsage?.template_limit !== null &&
     (templateUsage?.remaining ?? 0) <= 0;
 
+  const [rawMode, setRawMode] = useState(false);
+  const [rawJson, setRawJson] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
+
+  // Sync rawJson when switching to raw mode
+  useEffect(() => {
+    if (rawMode) {
+      setRawJson(
+        JSON.stringify(
+          formData.content_rules && Object.keys(formData.content_rules).length > 0
+            ? formData.content_rules
+            : {},
+          null,
+          2
+        )
+      );
+      setJsonError(null);
+    }
+  }, [rawMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleRawChange = (text: string) => {
+    setRawJson(text);
+    try {
+      const parsed = JSON.parse(text);
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        setJsonError(null);
+        onInputChange("content_rules", parsed);
+      } else {
+        setJsonError("Root value must be a JSON object {}");
+      }
+    } catch {
+      setJsonError("Invalid JSON - fix syntax errors to save");
+    }
+  };
+
   const handleTagsChange = (value: string) => {
     const tags = value
       .split(",")
@@ -54,13 +90,13 @@ export default function Step2TemplateEditor({
     onInputChange("tags", tags);
   };
 
-  // If content_rules is empty/null, seed with the empty template so all
-  // fields show up as editable inputs right away.
+  // Use whatever is in content_rules - no forced empty structure
   const contentRules =
     formData.content_rules &&
-    Object.keys(formData.content_rules).length > 0
-      ? formData.content_rules
-      : EMPTY_CONTENT_RULES;
+    typeof formData.content_rules === "object" &&
+    !Array.isArray(formData.content_rules)
+      ? (formData.content_rules as Record<string, unknown>)
+      : {};
 
   return (
     <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
@@ -158,7 +194,7 @@ export default function Step2TemplateEditor({
                     id="tpl-tags"
                     value={formData.tags.join(", ")}
                     onChange={(e) => handleTagsChange(e.target.value)}
-                    placeholder="trending, viral, seasonalâ€¦"
+                    placeholder="trending, viral, seasonal..."
                     disabled={isLoading}
                     className="h-9"
                   />

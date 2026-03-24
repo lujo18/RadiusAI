@@ -83,7 +83,7 @@ function CheckoutContent() {
           }),
         });
 
-        const data = await res.json();
+        const data = (await res.json()) as { url?: string };
 
         console.log('[Checkout] Stripe API response:', { hasUrl: !!data.url });
 

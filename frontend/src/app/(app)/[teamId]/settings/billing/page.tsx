@@ -62,7 +62,7 @@ async function fetchAvailableUpgrades(): Promise<AvailableUpgrade[]> {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) return [];
-    const data = await res.json();
+    const data = (await res.json()) as { upgrades?: AvailableUpgrade[] };
     return data.upgrades || [];
   } catch {
     return [];

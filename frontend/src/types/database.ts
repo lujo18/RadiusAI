@@ -138,6 +138,7 @@ export type Database = {
           post_as_draft: boolean | null
           post_automatically: boolean | null
           schedule: Json
+          stock_pack_directory: string | null
           template_ids: string[]
           updated_at: string | null
           user_timezone: string | null
@@ -160,6 +161,7 @@ export type Database = {
           post_as_draft?: boolean | null
           post_automatically?: boolean | null
           schedule: Json
+          stock_pack_directory?: string | null
           template_ids: string[]
           updated_at?: string | null
           user_timezone?: string | null
@@ -182,6 +184,7 @@ export type Database = {
           post_as_draft?: boolean | null
           post_automatically?: boolean | null
           schedule?: Json
+          stock_pack_directory?: string | null
           template_ids?: string[]
           updated_at?: string | null
           user_timezone?: string | null
@@ -799,6 +802,39 @@ export type Database = {
           product_id?: string
           rules?: Json | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      stock_packs: {
+        Row: {
+          bucket_directory: string | null
+          created_at: string
+          description: string | null
+          id: number
+          image_count: number | null
+          name: string | null
+          tags: string[] | null
+          thumbnail_urls: string[] | null
+        }
+        Insert: {
+          bucket_directory?: string | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_count?: number | null
+          name?: string | null
+          tags?: string[] | null
+          thumbnail_urls?: string[] | null
+        }
+        Update: {
+          bucket_directory?: string | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_count?: number | null
+          name?: string | null
+          tags?: string[] | null
+          thumbnail_urls?: string[] | null
         }
         Relationships: []
       }
