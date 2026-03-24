@@ -10,8 +10,8 @@ export const stockPackApi = {
     return await StockPackService.getPackThumbnails(packIds);
   },
 
-  getPackImages: async (packId: string): Promise<StockPackImage[]> => {
-    return await StockPackService.getPackImages(packId);
+  getPackImages: async (bucketDirectory: string): Promise<StockPackImage[]> => {
+    return await StockPackService.getPackImages(bucketDirectory);
   },
 };
 

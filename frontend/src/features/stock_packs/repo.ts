@@ -16,6 +16,8 @@ export class StockPacksRepo {
       console.error('[StockPackRepo.list]', errorMsg, error);
       throw new Error(`Failed to list Stock Packs: ${errorMsg}`);
     }
+
+    console.log("STOCK PACKS", data)
     return data as StockPackRow[];
   }
 }

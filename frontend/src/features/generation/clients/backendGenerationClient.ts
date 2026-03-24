@@ -32,6 +32,7 @@ export const backendGenerationClient = {
     brandId: string;
     count: number;
     ctaId?: string;
+    stock_pack_directory?: string;
   }): Promise<Post[]> {
     const { data: { session } } = await supabase.auth.getSession();
     
@@ -43,6 +44,7 @@ export const backendGenerationClient = {
         brand_settings: payload.brandSettings,
         brand_id: payload.brandId,
         cta_id: payload.ctaId,
+        stock_pack_directory: payload.stock_pack_directory,
         count: payload.count,
       },
       { headers: { Authorization: `Bearer ${session?.access_token}` } }

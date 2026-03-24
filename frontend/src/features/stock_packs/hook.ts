@@ -27,11 +27,11 @@ export function useStockPackThumbnails(packIds: string[]) {
   });
 }
 
-export function useStockPackImages(packId: string | null) {
+export function useStockPackImages(bucketDirectory: string | null) {
   return useQuery({
-    queryKey: stockPackKeys.images(packId ?? ''),
-    queryFn: () => stockPackApi.getPackImages(packId!),
-    enabled: !!packId,
+    queryKey: stockPackKeys.images(bucketDirectory ?? ''),
+    queryFn: () => stockPackApi.getPackImages(bucketDirectory!),
+    enabled: !!bucketDirectory,
     staleTime: STOCK_PACK_STALE_TIME,
   });
 }

@@ -129,6 +129,7 @@ export default function GeneratePage() {
             brandSettings: brand.brand_settings as BrandSettings,
             brandId: selectedProfile,
             ctaId: selectedCta || undefined,
+            stock_pack_directory: selectedPackId || undefined,
             count: 1,
           });
 

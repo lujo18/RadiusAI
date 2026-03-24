@@ -37,6 +37,7 @@ export function useGeneratePostFromPrompt() {
       brandSettings: BrandSettings;
       brandId: string;
       ctaId?: string;
+      stock_pack_directory?: string;
       count?: number;
     }) => {
       return await postGenerationService.generateFromTemplateAuto(
@@ -44,7 +45,8 @@ export function useGeneratePostFromPrompt() {
         params.brandSettings,
         params.brandId,
         params.count,
-        params.ctaId
+        params.ctaId,
+        params.stock_pack_directory
       );
     },
     onSuccess: (data, variables) => {

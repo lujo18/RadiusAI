@@ -17,15 +17,37 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // Takes singular "key" param and returns that images blob
+    if (url.pathname === "/file") {
+      const key = url.searchParams.get("key");
+      if (!key) return new Response("No key", { status: 400 });
+
+      const object = await env.MY_BUCKET.get(key);
+      if (!object) return new Response("No object", { status: 404 });
+
+      return new Response(object.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type":
+            object.httpMetadata?.contentType ?? "application/octet-stream",
+          "Cache-Control": "public, max-age=31536000, immutable",
+          ETag: object.etag,
+        },
+      });
+    }
+
     // Query params
-    const prefix = url.searchParams.get("prefix") ?? "";   // "folder/subfolder/"
+    const prefix = url.searchParams.get("prefix") ?? ""; // "folder/subfolder/"
     const cursor = url.searchParams.get("cursor") ?? undefined;
-    const limit  = Math.min(parseInt(url.searchParams.get("limit") ?? "50"), 200);
+    const limit = Math.min(
+      parseInt(url.searchParams.get("limit") ?? "50"),
+      200,
+    );
 
     try {
       const listed = await env.MY_BUCKET.list({
         prefix,
-        delimiter: "/",   // treat "/" as a directory separator
+        delimiter: "/", // treat "/" as a directory separator
         cursor,
         limit,
       });
@@ -33,16 +55,17 @@ export default {
       const body = {
         // "Files" at this level
         objects: listed.objects.map((obj) => ({
-          key:          obj.key,
-          size:         obj.size,
+          
+          key: obj.key,
+          size: obj.size,
           lastModified: obj.uploaded,
-          etag:         obj.etag,
+          etag: obj.etag,
         })),
         // "Directories" at this level (common prefixes)
         directories: listed.delimitedPrefixes,
         // Pagination
-        nextCursor:   listed.truncated ? listed.cursor : null,
-        truncated:    listed.truncated,
+        nextCursor: listed.truncated ? listed.cursor : null,
+        truncated: listed.truncated,
       };
 
       return new Response(JSON.stringify(body), {

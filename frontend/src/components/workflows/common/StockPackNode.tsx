@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 
 export interface StockPackNodeData {
   selectedPackId?: string;
-  onPackSelect?: (packId: string | null) => void;
+  onPackSelect?: (bucketDirectory: string | null) => void;
 }
 
 export type StockPackNodeProps = NodeProps & {
@@ -28,17 +28,17 @@ const StockPackNodeComponent: React.FC<StockPackNodeProps> = ({ data }) => {
   const { data: packs = [], isLoading, error } = useStockPacks();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const handlePackSelect = (packName: string) => {
-    // Find the pack by name to get its ID
-    const pack = packs.find((p) => p.name === packName);
-    if (pack && onPackSelect) {
-      onPackSelect(pack.id);
+  const handlePackSelect = (bucketDirectory: string) => {
+    if (onPackSelect) {
+      onPackSelect(bucketDirectory);
     }
     setDialogOpen(false);
   };
 
-  const selectedPack = packs.find((p) => p.id === selectedPackId);
-  const activePacks = packs.filter((p) => p.is_active);
+  const selectedPack = selectedPackId 
+    ? packs.find((p) => String(p.id) === selectedPackId || p.bucket_directory === selectedPackId)
+    : null;
+  const activePacks = packs; // All packs from the API are considered active
 
   return (
     <BaseNode className="w-80">

@@ -1,6 +1,7 @@
 import json
 import logging
 from typing import Dict, Optional
+from backend.services.stock_packs.getPhotos import queryStockPackUrls
 from backend.util.llm_output_sanitizer import sanitize_text
 from models.slide import LayoutConfig, PostContent
 from models.user import BrandSettings
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def generate_slideshow_auto(
-    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1, cta: Optional[dict] = None
+    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1, cta: Optional[dict] = None, stock_pack_directory: str | None = None
 ):
     """
     Generate complete TikTok slideshow with layout selection and content.
@@ -30,7 +31,6 @@ def generate_slideshow_auto(
     Returns:
         Gemini response with structured slideshow data
     """
-    logger.info("Made it to generate_slideshow_auto")
 
     layout_options = get_all_layout_schemas()
     prompt = _generate_prompt(layout_options, slideshowGoals, brandSettings, count, template_structure=None, cta=cta)
@@ -177,7 +177,7 @@ def generate_slideshow_auto(
     cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None) 
     print("CTA IMAGE OVERRIDE: ", cta_image_url)
     post_contents = [
-        _convert_to_post_content(generated_post, cta_image_override=cta_image_url) for generated_post in generated_data
+        _convert_to_post_content(generated_post, cta_image_override=cta_image_url, stock_pack_directory=stock_pack_directory) for generated_post in generated_data
     ]
 
     logger.info(f"Converted {len(post_contents)} posts successfully")
@@ -261,7 +261,7 @@ Output only valid JSON object.
 """
 
 
-def _convert_to_post_content(generated: dict, cta_image_override: str | None) -> PostContent:
+def _convert_to_post_content(generated: dict, cta_image_override: str | None, stock_pack_directory:str|None) -> PostContent:
     """
     Convert a single Gemini-generated post into PostContent structure.
     Maps generated text back to slide elements.
@@ -279,9 +279,14 @@ def _convert_to_post_content(generated: dict, cta_image_override: str | None) ->
         f"Generated data: {background_query}, {len(generated['slides'])} slides"
     )
 
-    backgroundUrls = queryUnsplashUrls(
-        background_query, len(generated["slides"])
-    )
+    if stock_pack_directory:
+        backgroundUrls = queryStockPackUrls(
+            stock_pack_directory, len(generated["slides"])
+        )
+    else: 
+        backgroundUrls = queryUnsplashUrls(
+            background_query, len(generated["slides"])
+        )
 
     if backgroundUrls is None or len(backgroundUrls) == 0:
         raise ValueError("Failed to retrieve background images from Unsplash")

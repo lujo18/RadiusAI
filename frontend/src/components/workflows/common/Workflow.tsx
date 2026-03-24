@@ -14,7 +14,7 @@ type WorkflowProps = {
     selectedPackId: string | null;
     onTemplateSelect: (templateId: string | null) => void;
     onCtaSelect: (ctaId: string | null) => void;
-    onPackSelect: (packId: string | null) => void;
+    onPackSelect: (bucketDirectory: string | null) => void;
     handleGenerate: () => void;
   };
 

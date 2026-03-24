@@ -138,6 +138,7 @@ export type Database = {
           post_as_draft: boolean | null
           post_automatically: boolean | null
           schedule: Json
+          stock_pack_directory: string | null
           template_ids: string[]
           updated_at: string | null
           user_timezone: string | null
@@ -160,6 +161,7 @@ export type Database = {
           post_as_draft?: boolean | null
           post_automatically?: boolean | null
           schedule: Json
+          stock_pack_directory?: string | null
           template_ids: string[]
           updated_at?: string | null
           user_timezone?: string | null
@@ -182,6 +184,7 @@ export type Database = {
           post_as_draft?: boolean | null
           post_automatically?: boolean | null
           schedule?: Json
+          stock_pack_directory?: string | null
           template_ids?: string[]
           updated_at?: string | null
           user_timezone?: string | null

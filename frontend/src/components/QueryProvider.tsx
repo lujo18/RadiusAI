@@ -6,6 +6,15 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
 
+// This code is only for TypeScript
+declare global {
+  interface Window {
+    __TANSTACK_QUERY_CLIENT__:
+      import("@tanstack/query-core").QueryClient;
+  }
+}
+
+
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -30,6 +39,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         },
       })
   );
+
+  // This code is for all users
+  if (typeof window !== 'undefined') {
+    window.__TANSTACK_QUERY_CLIENT__ = queryClient;
+  }
 
   const [persister] = useState(
     () =>
