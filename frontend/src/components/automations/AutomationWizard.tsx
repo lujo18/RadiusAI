@@ -18,6 +18,7 @@ import { AutomationWizardStep2 } from "./steps/AutomationWizardStep2";
 import { AutomationWizardStep3CTA } from "./steps/AutomationWizardStep3CTA";
 import { AutomationWizardStep3 } from "./steps/AutomationWizardStep3";
 import { AutomationWizardStep4 } from "./steps/AutomationWizardStep4";
+import { AutomationWizardStep5StockPack } from "./steps/AutomationWizardStep5StockPack";
 import { AutomationWizardStep5 } from "./steps/AutomationWizardStep5";
 import {
   compareToWeekday,
@@ -41,7 +42,10 @@ export interface AutomationWizardData {
   // Step 4: Accounts (Platforms)
   platforms: Array<"instagram" | "tiktok" | "facebook" | "linkedin">;
 
-  // Step 5: Schedule - per-weekday times
+  // Step 5: Stock Pack Selection
+  stockPackDirectory: string | null;
+
+  // Step 6: Schedule - per-weekday times
   schedule: {
     [key: string]: string[]; // { "Monday": ["09:00", "14:00"], "Tuesday": ["09:00"], ... }
   };
@@ -62,6 +66,7 @@ const STEPS = [
   "Templates",
   "CTAs",
   "Accounts",
+  "Stock Pack",
   "Schedule",
   "Confirm",
 ];
@@ -86,6 +91,7 @@ export function AutomationWizard({
           templateIds: initialData.templateIds,
           ctaIds: initialData.ctaIds,
           platforms: initialData.platforms,
+          stockPackDirectory: initialData.stockPackDirectory || null,
           schedule: initialData.schedule,
           nextRunAt: initialData.nextRunAt,
         }
@@ -96,6 +102,7 @@ export function AutomationWizard({
           templateIds: [],
           ctaIds: [],
           platforms: [],
+          stockPackDirectory: null,
           schedule: {
             monday: [],
             tuesday: [],
@@ -166,6 +173,7 @@ export function AutomationWizard({
       template_ids: wizardData.templateIds,
       cta_ids: wizardData.ctaIds,
       platforms: wizardData.platforms,
+      stock_pack_directory: wizardData.stockPackDirectory,
       schedule: wizardData.schedule,
       next_run_at: nextRunAt?.toISOString() || new Date().toISOString(),
     } as any;
@@ -219,13 +227,15 @@ export function AutomationWizard({
         return true;
       case 3: // Platforms
         return wizardData.platforms.length > 0;
-      case 4: // Schedule
+      case 4: // Stock Pack (optional)
+        return true;
+      case 5: // Schedule
         // Check if at least one day has at least one time
         const hasSchedule = Object.values(wizardData.schedule).some(
           (times) => Array.isArray(times) && times.length > 0,
         );
         return hasSchedule;
-      case 5: // Confirm
+      case 6: // Confirm
         return true;
       default:
         return false;
@@ -286,9 +296,15 @@ export function AutomationWizard({
             <AutomationWizardStep3 data={wizardData} onChange={setWizardData} />
           )}
           {currentStep === 4 && (
+            <AutomationWizardStep5StockPack
+              data={wizardData}
+              onChange={setWizardData}
+            />
+          )}
+          {currentStep === 5 && (
             <AutomationWizardStep4 data={wizardData} onChange={setWizardData} />
           )}
-          {currentStep === 5 && <AutomationWizardStep5 data={wizardData} />}
+          {currentStep === 6 && <AutomationWizardStep5 data={wizardData} />}
         </div>
 
         {/* Navigation Buttons */}

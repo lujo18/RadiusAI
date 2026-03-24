@@ -142,7 +142,7 @@ export default function Paywall() {
         }),
       });
 
-      const { url } = await response.json();
+      const { url } = (await response.json()) as { url?: string };
 
       if (url) {
         window.location.href = url;
@@ -170,7 +170,7 @@ export default function Paywall() {
         }),
       });
 
-      const { url } = await response.json();
+      const { url } = (await response.json()) as { url?: string };
 
       if (url) {
         window.location.href = url;

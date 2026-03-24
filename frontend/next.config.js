@@ -8,6 +8,11 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'pub-a6c7227464b441469db7279bf1d9551d.r2.dev',
+        pathname: '/**',
+      },
     ],
   },
   async rewrites() {

@@ -53,10 +53,10 @@ export default function ConnectSocialPage() {
         throw new Error('Failed to start OAuth flow');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { authUrl?: string };
 
       // Redirect user to social platform for authorization
-      window.location.href = data.authUrl;
+      window.location.href = data.authUrl || '';
     } catch (err) {
       console.error('OAuth start failed:', err);
       setError(

@@ -30,6 +30,7 @@ class GeneratePostAutoRequest(BaseModel):
     brand_id: str
     count: int = 1
     cta_id: Optional[str] = None
+    stock_pack_directory: Optional[str] = None
 
 router = APIRouter(prefix="/api/generate", tags=["generate"])
 
@@ -59,7 +60,8 @@ async def generate_post_content_from_prompt(
             template=request.template,
             brand_settings=request.brand_settings,
             count=request.count,
-            cta=cta
+            cta=cta,
+            stock_pack_directory=request.stock_pack_directory
         )
         
         encoded_posts = jsonable_encoder(posts)

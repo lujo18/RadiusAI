@@ -50,7 +50,7 @@ export default function PricingPage() {
       .then(res => res.json())
       .then(data => {
         const map: Record<string, any> = {};
-        (data.products || []).forEach((p: any) => {
+        ((data as any).products || []).forEach((p: any) => {
           map[p.id] = { amount: p.prices?.[0]?.unit_amount || 0, productId: p.id };
         });
         setPrices(map);
@@ -60,7 +60,7 @@ export default function PricingPage() {
     // Fetch testimonials
     fetch('/api/testimonials')
       .then(res => res.json())
-      .then(data => setTestimonials(data.testimonials || []))
+      .then(data => setTestimonials((data as any).testimonials || []))
       .catch(console.error);
   }, []);
 

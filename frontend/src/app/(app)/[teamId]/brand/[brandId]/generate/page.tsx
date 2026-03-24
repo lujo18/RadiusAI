@@ -45,6 +45,7 @@ export default function GeneratePage() {
 
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedCta, setSelectedCta] = useState<string | null>(null);
+  const [selectedPackId, setSelectedPackId] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<string>(brandId || "");
 
   // Auto-set selectedProfile when brandId changes
@@ -128,6 +129,7 @@ export default function GeneratePage() {
             brandSettings: brand.brand_settings as BrandSettings,
             brandId: selectedProfile,
             ctaId: selectedCta || undefined,
+            stock_pack_directory: selectedPackId || undefined,
             count: 1,
           });
 
@@ -189,8 +191,10 @@ export default function GeneratePage() {
           brandId={brandId}
           selectedTemplateId={selectedTemplate}
           selectedCtaId={selectedCta}
+          selectedPackId={selectedPackId}
           onTemplateSelect={setSelectedTemplate}
           onCtaSelect={setSelectedCta}
+          onPackSelect={setSelectedPackId}
           handleGenerate={handleGenerate}
         />
 

@@ -16,8 +16,28 @@ from services.integrations.supabase.db.brand import (
     get_social_accounts,
     update_social_account_status,
 )
+from services.integrations.supabase.client import get_supabase
 
 POST_FOR_ME_API_KEY = Config.POST_FOR_ME_API_KEY
+
+
+def _get_user_id_from_brand(brand_id: str) -> Optional[str]:
+    """Look up the user_id from a brand_id (profile id)"""
+    try:
+        supabase = get_supabase()
+        res = (
+            supabase.table("profiles")
+            .select("user_id")
+            .eq("late_profile_id", brand_id)
+            .single()
+            .execute()
+        )
+        if res.data:
+            return res.data.get("user_id")
+        return None
+    except Exception as e:
+        print(f"Error looking up user_id for brand {brand_id}: {e}")
+        return None
 
 
 async def create_auth_url(platform: str, external_id: str) -> CreateAuthUrlResponse:
@@ -88,12 +108,20 @@ async def save_integration(response: dict):
         print("External Id", profile_data["external_id"])
 
         try:
+            # Look up user_id from brand_id
+            brand_id = profile_data["external_id"]
+            user_id = _get_user_id_from_brand(brand_id)
+
+            if not user_id:
+                print(f"Warning: Could not find user_id for brand {brand_id}")
+
             connect_social_account_to_brand(
-                brand_id=profile_data["external_id"],
+                brand_id=brand_id,
                 platform=profile_data["platform"],
                 post_for_me_account_id=profile_data["id"],
                 username=profile_data["username"],
                 profile_picture_url=profile_data["profile_photo_url"],
+                user_id=user_id,
             )
 
             return SaveIntegrationResponse(
@@ -101,6 +129,7 @@ async def save_integration(response: dict):
                 platform_connected=profile_data["platform"],
             )
         except Exception as e:
+            print(f"Error saving integration: {e}")
             # For other exceptions, signal a failed platform connection so caller can redirect accordingly
             return SaveIntegrationResponse(
                 brand_id=profile_data["external_id"],

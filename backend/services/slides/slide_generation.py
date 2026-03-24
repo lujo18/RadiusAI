@@ -1,5 +1,6 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Optional
 from models.slide import PostContent
 from models.template import Template
 from models.user import BrandSettings
@@ -20,7 +21,8 @@ def generate_slideshows(
   template: Template,
   brand_settings: BrandSettings,
   count: int = 1,
-  cta: dict = None
+  cta: dict = None,
+  stock_pack_directory: Optional[str] = None
 ):
     """
     Generate slideshow content using Gemini 2.0 Flash.
@@ -44,7 +46,8 @@ def generate_slideshows(
         slideshowGoals=prompt,
         brandSettings=brand_settings,
         count=count,
-        cta=cta
+        cta=cta,
+        stock_pack_directory=stock_pack_directory
     )
     
     # 2. Save all posts to Supabase (serialize PostContent to dict)
@@ -60,7 +63,6 @@ def generate_slideshows(
     def process_post(post):
         """Process a single post: render slides, upload to storage, update DB"""
         try:
-            logger.info(f"Processing post: {post['id']}")
             
             # Convert dict to PostContent Pydantic model
             post_content = PostContent(**post['content'])

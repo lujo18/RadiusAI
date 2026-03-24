@@ -110,6 +110,7 @@ async def run_automation(automation_id: UUID) -> dict:
         "template_id_used": None,
         "cta_id_used": None,
         "platforms_used": [],
+        "stock_pack_directory": None
     }
 
     try:
@@ -128,6 +129,7 @@ async def run_automation(automation_id: UUID) -> dict:
         platformIds = automation.get("platforms", [])
         team_id = automation.get("team_id")
         brand_id = automation.get("brand_id")
+        stock_pack_directory = automation.get("stock_pack_directory")
         
         # Validate required fields early
         if not team_id:
@@ -223,6 +225,7 @@ async def run_automation(automation_id: UUID) -> dict:
             brand_settings=brand_settings,
             count=1,
             cta=cta_dict,
+            stock_pack_directory=stock_pack_directory
         )
 
         if not posts:
