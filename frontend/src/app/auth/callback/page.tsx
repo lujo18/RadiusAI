@@ -15,6 +15,17 @@ export default function AuthCallbackPage() {
     // Handle OAuth callback
     const handleCallback = async () => {
       console.log('OAuth callback - getting session...');
+
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          console.error('Auth callback exchange error:', exchangeError);
+          router.push('/login?error=auth_failed');
+          return;
+        }
+      }
+
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -64,7 +75,7 @@ export default function AuthCallbackPage() {
     };
 
     handleCallback();
-  }, [router]);
+  }, [router, login]);
 
   return (
     <div className="min-h-screen bg-dark-600 flex items-center justify-center">

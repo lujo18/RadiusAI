@@ -25,37 +25,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Plus, Trash2, ChevronDown, ChevronRight, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// ─── Known enum fields ────────────────────────────────────────────────────
-const ENUM_OPTIONS: Record<string, string[]> = {
-  template_format: [
-    "listicle", "step_by_step", "journal_prompts", "before_after",
-    "quote_carousel", "faq", "ranking_countdown", "myth_busting",
-    "affirmations", "framework",
-  ],
-  content_mode: ["STRUCTURAL", "GENERATIVE"],
-  output_mode: ["FOLLOW_EXACTLY", "FREE_WRITE"],
-  goal: ["saves", "shares", "comments", "follows"],
-  psychological_trigger: [
-    "Loss Aversion", "Curiosity Gap", "Social Proof",
-    "Identity Affirmation", "FOMO",
-  ],
-  pacing_style: ["Slow Build", "Rapid Fire", "Data Dump", "Reveal Sequence"],
-  required_rhythm: ["Short-Short-Long", "All Short", "Varied"],
-  category: [
-    "educational", "transformation", "myth-busting", "comparison",
-    "authority", "lifestyle", "utility", "growth",
-  ],
-};
 
 // ─── Array helpers ─────────────────────────────────────────────────────────
 
@@ -422,29 +393,6 @@ const Field: React.FC<FieldProps> = ({ fieldName, value, onChange, depth }) => {
       <div className="space-y-1">
         <Label className="text-sm">{humanize(fieldName)}</Label>
         <LeafNumberInput value={value as number} onChange={(v) => onChange(v)} />
-      </div>
-    );
-  }
-
-  // ── Enum / Select ──────────────────────────────────────────────────────
-  const enumOptions = ENUM_OPTIONS[fieldName];
-  if (enumOptions) {
-    const strVal = isNull ? "" : (value as string);
-    return (
-      <div className="space-y-1">
-        <Label className="text-sm">{humanize(fieldName)}</Label>
-        <Select value={strVal} onValueChange={(v) => onChange(v)}>
-          <SelectTrigger className="h-9 text-sm">
-            <SelectValue placeholder={`Select ${humanize(fieldName).toLowerCase()}…`} />
-          </SelectTrigger>
-          <SelectContent>
-            {enumOptions.map((opt) => (
-              <SelectItem key={opt} value={opt}>
-                {opt}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
     );
   }

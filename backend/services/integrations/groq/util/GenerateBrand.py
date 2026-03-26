@@ -8,6 +8,11 @@ You are a Brand Strategist. Your task is to transform the user's specific guidel
 - You MUST use the niche and topics provided by the user. 
 - Do NOT invent a new industry. 
 - Create a name that is creative and relevant to the user's input.
+- INFER reading_level from target audience + niche. Examples:
+  - "Wellness/mental health, young professionals" → "conversational"
+  - "B2B SaaS, CTOs/founders" → "expert"
+  - "Gen Z fitness/lifestyle" → "high school"
+  - "Personal development, all ages" → "conversational"
 - Return ONLY valid JSON.
 """
 
@@ -32,6 +37,7 @@ SAMPLE OUTPUT (exact shape and types expected):
   "aesthetic": str "minimal, high-contrast, muted pastels",
   "target_audience": str "young professionals seeking low-effort premium self-care; pain points: time, price sensitivity",
   "brand_voice": str "friendly-expert",
+  "reading_level": str "conversational",
   "content_pillars": str[] ["how-to", "product-benefits", "customer-stories"],
   "tone_of_voice": str "professional",
   "emoji_usage": str "minimal",

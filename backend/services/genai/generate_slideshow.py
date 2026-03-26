@@ -7,6 +7,7 @@ from models.slide import LayoutConfig, PostContent
 from models.user import BrandSettings
 from models import Template
 from services.genai.prompts import SYSTEM_PROMPT
+from services.genai.gpt_oss_prompts import assemble_generation_prompt
 from services.integrations.groq.client import groq
 from services.usage.service import track_slides_generated
 from .client import client
@@ -192,73 +193,49 @@ def _generate_prompt(
     count: int = 1,
     template_structure: dict = None,
     cta: Optional[dict] = None,
+    classifier_context: Optional[Dict] = None,
 ):
-
-    # Build CTA override section if provided
-    cta_section = ""
+    """
+    Build complete generation prompt using modular injection architecture.
+    
+    Per GPT-OSS 120B docs: Static content first (caching optimization),
+    dynamic content last (task-specific data).
+    
+    Components (in order):
+    1. SYSTEM ROLE - persona, reasoning effort, constraints
+    2. BRAND GUIDELINES - brand voice and rules
+    3. TEMPLATE ARCHITECTURE - slide structure
+    4. TEXT OUTPUT SCHEMA - layout definitions
+    5. CTA OVERRIDES - if provided
+    6. INPUT TOPIC - user goal and instructions
+    
+    Args:
+        layout_options: Slide layout definitions
+        slideshowGoals: Template structure (JSON string)
+        brand: BrandSettings with voice/tone info
+        count: Number of variations to generate
+        template_structure: Unused (for backward compat)
+        cta: Optional CTA override
+        classifier_context: Template format, niche, content_mode, etc.
+    
+    Returns:
+        Complete prompt string for Groq/GPT-OSS 120B
+    """
     if cta:
-        cta_text = cta.get('cta_text', '')
-        cta_url = cta.get('cta_url', '')
-        logger.info(f"Injecting CTA - Text: {cta_text}, URL: {cta_url}")
-        cta_section = f"""
-### LAST SLIDE CTA:
-Final slide MUST include this exact CTA: "{cta_text}"
-CTA URL: {cta_url if cta_url else 'N/A'}
-Do NOT replace or modify this CTA text."""
-
-
-    return f""" 
-### CORE TASK:
-Design a Tiktok slideshow using the following brand and contraints.
-
-### BRAND GUARDRAILS (JSON):
-{brand}
-
-## HOW TO READ EACH SLIDE
-- stage: the psychological role of this slide
-- format_spec: your writing instruction. Execute it. Do not copy it as content.
-- word_count: maximum words for this slide's text content
-- output_mode:
-  - WRITE FREELY: write original content within the format_spec direction
-  - FOLLOW EXACTLY: reproduce the structure in format_spec precisely, with real content filled in
-
-### SLIDESHOW BLUEPRINT (JSON):
-{slideshowGoals}
-
-{cta_section}
-
-## TECHNICAL JSON SPECIFICATIONS
-
-#### AVAILABLE LAYOUTS (choose optimal layout per slide):
-{layout_options}
-
-#### CRITICAL CONTENT RULES:
-- Fill ALL text element IDs - no placeholders
-- Generate ORIGINAL content - never copy template labels as text
-- Keep background_query SHORT: 2-3 words only
-
-#### OUTPUT FORMAT - Return a JSON object with a "variations" key containing an array of {count} variation(s):
-{{
-  "variations": [
-    {{
-      "slides": [
-        {{
-          "slide_number": 1,
-          "layout_type": "hook",
-          "text_elements": {{
-            "text-id": "Hook text following the template structure"
-          }}
-        }}
-      ],
-      "caption": "Authentic caption related to content",
-      "hashtags": ["hashtag1", "hashtag2"],
-      "background_query": "2-3 words describing an image related to content"
-    }}
-  ]
-}}
-
-Output only valid JSON object.
-"""
+        logger.info(f"Injecting CTA - Text: {cta.get('cta_text', '')}, URL: {cta.get('cta_url', '')}")
+    
+    # Use new modular component builders
+    prompt = assemble_generation_prompt(
+        layout_options=layout_options,
+        slideshow_goals=slideshowGoals,
+        brand=brand,
+        topic=slideshowGoals,  # Topic is embedded in slideshowGoals JSON
+        count=count,
+        cta=cta,
+        classifier_context=classifier_context,
+    )
+    
+    return prompt
 
 
 def _convert_to_post_content(generated: dict, cta_image_override: str | None, stock_pack_directory:str|None) -> PostContent:

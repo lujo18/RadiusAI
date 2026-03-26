@@ -375,6 +375,7 @@ export default function AutomationDetailPage() {
           platforms: (automation.platforms as Array<"instagram" | "tiktok" | "facebook" | "linkedin">) || [],
           schedule: (automation.schedule as Record<string, string[]>) || {},
           nextRunAt: automation.next_run_at,
+          stockPackDirectory: automation.stock_pack_directory || null,
         }}
       />
     </div>

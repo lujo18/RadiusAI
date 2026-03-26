@@ -119,10 +119,14 @@ export const getCurrentSession = async (): Promise<Session | null> => {
  * Sign out
  */
 export const logOut = async (): Promise<void> => {
-  const { error } = await supabase.auth.signOut();
-  
-  if (error) {
-    throw new Error(error.message || 'Failed to sign out');
+  const { error: globalError } = await supabase.auth.signOut({ scope: 'global' });
+
+  // If global revocation fails (network/session edge cases), still clear local auth state.
+  if (globalError) {
+    const { error: localError } = await supabase.auth.signOut({ scope: 'local' });
+    if (localError) {
+      throw new Error(localError.message || globalError.message || 'Failed to sign out');
+    }
   }
 };
 

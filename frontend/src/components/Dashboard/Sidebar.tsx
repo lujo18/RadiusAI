@@ -391,7 +391,7 @@ export default function DashboardSidebar({
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onLogout}>
+                  <DropdownMenuItem onSelect={onLogout}>
                     <LogOut />
                     Log out
                   </DropdownMenuItem>

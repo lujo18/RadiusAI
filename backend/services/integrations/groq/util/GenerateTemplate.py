@@ -150,6 +150,7 @@ CLASSIFIER_USER_PROMPT = """User request: {REQUEST}"""
 def _validate_and_fix_template(template: dict) -> None:
     """
     Validate and fix template structure issues.
+    Enforces: 4-7 total slides (Hook=first, CTA=last)
     Raises ValueError if validation fails.
     """
     # Fix malformed template_format (e.g., "listicle|STRUCTURAL" -> "listicle")
@@ -171,6 +172,20 @@ def _validate_and_fix_template(template: dict) -> None:
 
     # Validate and fix slides
     slides = template.get("content_blueprint", {}).get("slides", [])
+    total_slide_count = len(slides)
+    
+    # CRITICAL: Enforce 4-7 slide maximum (Hook + CTA included)
+    if total_slide_count > 7:
+        raise ValueError(
+            f"Generated template has {total_slide_count} slides, exceeds 7-slide maximum. "
+            f"Total must be 4-7 (includes HOOK + CTA). Reduce item_count or structure complexity."
+        )
+    if total_slide_count < 4:
+        raise ValueError(
+            f"Generated template has {total_slide_count} slides, below 4-slide minimum. "
+            f"Total must be 4-7 (includes HOOK + CTA). Increase item_count or add stages."
+        )
+    
     for i, slide in enumerate(slides):
         # Ensure format_spec is never empty
         if not slide.get("format_spec") or slide["format_spec"].strip() == "":
@@ -206,6 +221,16 @@ def generate_template(guideline_prompt: str):
     classifier_output = json.loads(classification_res)
     # Preserve the user's original request in the classifier output
     classifier_output["original_request"] = guideline_prompt
+    
+    # CRITICAL: Enforce 4-7 total slides by capping item_count per format
+    # Rule: Total = HOOK(1) + Items + Other Stages + CTA(1) <= 7
+    # So: Items + Other Stages <= 5
+    fmt = classifier_output.get("template_format", "listicle")
+    overhead = FORMAT_CONFIG[fmt].get("_overhead", 2)  # Default HOOK + CTA
+    max_item_count = max(2, 7 - overhead)  # Minimum 2 content items
+    item_count = classifier_output.get("item_count", 5)
+    if item_count > max_item_count:
+        classifier_output["item_count"] = max_item_count
 
     generator_prompt = _build_template_prompt(classifier_output)
 
@@ -278,6 +303,7 @@ def generate_template(guideline_prompt: str):
 FORMAT_CONFIG = {
     "journal_prompts": {
         "content_mode": "GENERATIVE",
+        "_overhead": 3,  # HOOK, INTRO, CTA
         "stage_sequence": lambda n: ["HOOK", "INTRO"] + [f"PROMPT_{i}" for i in range(1, n+1)] + ["CTA"],
         "content_mode_instruction": (
             "Journal prompts are generative content. format_spec provides guidance for what to generate.\n"
@@ -288,6 +314,7 @@ FORMAT_CONFIG = {
     },
     "affirmations": {
         "content_mode": "GENERATIVE",
+        "_overhead": 2,  # HOOK, CTA
         "stage_sequence": lambda n: ["HOOK"] + [f"AFFIRMATION_{i}" for i in range(1, n+1)] + ["CTA"],
         "content_mode_instruction": (
             "Affirmations are generative content. format_spec provides guidance for what to generate.\n"
@@ -298,6 +325,7 @@ FORMAT_CONFIG = {
     },
     "quote_carousel": {
         "content_mode": "GENERATIVE",
+        "_overhead": 3,  # HOOK, REFLECTION, CTA
         "stage_sequence": lambda n: ["HOOK"] + [f"QUOTE_{i}" for i in range(1, n+1)] + ["REFLECTION", "CTA"],
         "content_mode_instruction": (
             "Quotes are generative content. format_spec provides guidance for what to generate.\n"
@@ -308,6 +336,7 @@ FORMAT_CONFIG = {
     },
     "faq": {
         "content_mode": "GENERATIVE",
+        "_overhead": 2,  # HOOK, CTA
         "stage_sequence": lambda n: ["HOOK"] + [f"QA_{i}" for i in range(1, n+1)] + ["CTA"],
         "content_mode_instruction": (
             "FAQ content is generative. format_spec provides guidance for what to generate.\n"
@@ -318,6 +347,7 @@ FORMAT_CONFIG = {
     },
     "listicle": {
         "content_mode": "STRUCTURAL",
+        "_overhead": 2,  # HOOK, CTA
         "stage_sequence": lambda n: ["HOOK"] + [f"ITEM_{i}" for i in range(1, n+1)] + ["CTA"],
         "content_mode_instruction": (
             "Listicles are numbered lists. Each ITEM slide is ONE list item.\n\n"
@@ -331,6 +361,7 @@ FORMAT_CONFIG = {
     },
     "step_by_step": {
         "content_mode": "STRUCTURAL",
+        "_overhead": 4,  # HOOK, CONTEXT, PROOF, CTA
         "stage_sequence": lambda n: ["HOOK", "CONTEXT"] + [f"STEP_{i}" for i in range(1, n+1)] + ["PROOF", "CTA"],
         "content_mode_instruction": (
             "Step-by-step guides show sequential actions.\n\n"
@@ -343,6 +374,7 @@ FORMAT_CONFIG = {
     },
     "before_after": {
         "content_mode": "STRUCTURAL",
+        "_overhead": 5,  # HOOK, BEFORE, TURNING_POINT, AFTER, CTA (fixed 5 slides)
         "stage_sequence": lambda _: ["HOOK", "BEFORE", "TURNING_POINT", "AFTER", "CTA"],
         "content_mode_instruction": (
             "Before/After format shows transformation.\n\n"
@@ -354,6 +386,7 @@ FORMAT_CONFIG = {
     },
     "myth_busting": {
         "content_mode": "STRUCTURAL",
+        "_overhead": 3,  # HOOK, PROOF, CTA (each myth/truth pair counts as items)
         "stage_sequence": lambda n: ["HOOK"] + sum([[f"MYTH_{i}", f"TRUTH_{i}"] for i in range(1, n+1)], []) + ["PROOF", "CTA"],
         "content_mode_instruction": (
             "Myth-busting format pairs false beliefs with corrections.\n\n"
@@ -365,6 +398,7 @@ FORMAT_CONFIG = {
     },
     "ranking_countdown": {
         "content_mode": "STRUCTURAL",
+        "_overhead": 3,  # HOOK, REVEAL, CTA
         "stage_sequence": lambda n: ["HOOK"] + [f"RANK_{i}" for i in range(n, 0, -1)] + ["REVEAL", "CTA"],
         "content_mode_instruction": (
             "Countdown format builds suspense by revealing ranks from lowest to highest.\n\n"

@@ -23,6 +23,7 @@ class BrandSettings(BaseModel):
     # Voice & style (optional with defaults)
     tone_of_voice: Optional[str] = "casual"
     emoji_usage: Optional[Literal["none", "minimal", "moderate", "heavy"]] = "moderate"
+    reading_level: Optional[str] = None  # "7th grade", "conversational", "expert", etc. (inferred by brand generator)
     forbidden_words: Optional[List[str]] = None
     preferred_words: Optional[List[str]] = None
 
