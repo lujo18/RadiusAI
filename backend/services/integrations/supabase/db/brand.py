@@ -2,9 +2,9 @@ from datetime import datetime
 from typing import List, Literal
 import uuid
 
-from models.platform_integration import PlatformIntegration
-from models.user import BrandSettings
-from services.integrations.supabase.client import get_supabase
+from app.features.integrations.schemas import PlatformIntegration
+from app.features.user.schemas import BrandSettings
+from app.features.integrations.supabase.client import get_supabase
 
 
 def create_supabase_brand(

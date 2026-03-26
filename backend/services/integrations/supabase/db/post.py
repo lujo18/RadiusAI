@@ -5,10 +5,10 @@ Mirrors frontend PostRepository pattern.
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from models.slide import PostContent
-from services.integrations.supabase.client import get_supabase
-from models.post import Post, CreatePostRequest, UpdatePostRequest
-from services.workers.analytics import create_analytic_tracker
+from app.features.posts.schemas import PostContent
+from app.features.integrations.supabase.client import get_supabase
+from app.features.posts.schemas import Post, CreatePostRequest, UpdatePostRequest
+from app.features.analytics.service import create_analytic_tracker
 
 
 # ==================== READ OPERATIONS ====================

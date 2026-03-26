@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useTemplates } from "@/features/templates/hooks";
 import { useBrand } from "@/features/brand/hooks";
 import { useBrandCtas } from "@/features/brand_ctas/hooks";
@@ -27,7 +27,7 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 import { Item, ItemTitle } from "@/components/ui/item";
-import { StockPacksDialog } from "@/features/stock_packs/components";
+import { StockPackDialog } from "@/features/stock_packs/components";
 import { useRouter } from "next/navigation";
 
 type BrandCta = Database["public"]["Tables"]["brand_ctas"]["Row"];
@@ -58,6 +58,7 @@ export function SettingsPanel({
   isGenerating = false,
 }: SettingsPanelProps) {
   const router = useRouter();
+  const [stockPackDialogOpen, setStockPackDialogOpen] = useState(false);
   const { data: templates, isLoading: templatesLoading } = useTemplates(brandId);
   const { data: brand, isLoading: brandLoading } = useBrand(brandId);
   const { data: ctas, isLoading: ctasLoading } = useBrandCtas(brandId);
@@ -395,13 +396,15 @@ export function SettingsPanel({
             </div>
           ) : (
             <div className="space-y-3">
-              <StockPacksDialog
+              <StockPackDialog
+                open={stockPackDialogOpen}
+                onOpenChange={setStockPackDialogOpen}
                 setSelectedPack={(bucketDirectory) => onPackSelect(bucketDirectory)}
               >
                 <button className="w-full px-3 py-2 rounded-md border border-primary bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors">
                   {selectedPack ? "Change Pack" : "Select a Pack"}
                 </button>
-              </StockPacksDialog>
+              </StockPackDialog>
 
               {selectedPack && (
                 <>

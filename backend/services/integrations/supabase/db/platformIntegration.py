@@ -1,6 +1,6 @@
 from typing import List, Optional
-from models.platform_integration import PlatformIntegration
-from services.integrations.supabase.client import get_supabase
+from app.features.integrations.schemas import PlatformIntegration
+from app.features.integrations.supabase.client import get_supabase
 
 
 def getIntegrationById(integration_id: str) -> Optional[PlatformIntegration]:

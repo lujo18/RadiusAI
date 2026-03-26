@@ -1,5 +1,5 @@
-import './tw-animate.css';
-import '@/app/globals.css';
+import "./tw-animate.css";
+import "@/app/globals.css";
 import React from "react";
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
@@ -7,7 +7,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { QueryProvider } from "@/components/QueryProvider";
 import { ThemeProvider } from "@/components/provider/theme-provider";
-
+import { PostHogProvider } from "@/lib/posthog/provider";
 
 const inter = Inter({ subsets: ["latin"] });
 // const main = Plus_Jakarta_Sans({
@@ -31,21 +31,24 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/images/favicon.png" type="image/png" />
       </head>
-      <body className={`${inter.className} font-sans antialiased`}> {/**${main.variable} */}
-       
+      <body className={`${inter.className} font-sans antialiased`}>
+        {" "}
+        {/**${main.variable} */}
         {/* App name is Radius everywhere */}
-        <QueryProvider>
-          <AuthProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-            </ThemeProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <PostHogProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+              </ThemeProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

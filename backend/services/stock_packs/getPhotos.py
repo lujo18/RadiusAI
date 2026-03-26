@@ -1,5 +1,5 @@
 
-from backend.util.stockPacks.manifest import getStockImage
+from app.shared.utils.stockPacks.manifest import getStockImage
 
 
 standard_layout = ["ac", "as"]

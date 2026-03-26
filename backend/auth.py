@@ -67,16 +67,3 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> str:
     except jwt.InvalidTokenError as e:
         print(f"   ❌ Invalid token: {e}")
         raise HTTPException(status_code=401, detail=f"Invalid token: {str(e)}")
-
-
-async def get_optional_user(authorization: Optional[str] = Header(None)) -> Optional[str]:
-    """
-    Optional authentication - returns user_id if valid token, None otherwise
-    """
-    if not authorization:
-        return None
-    
-    try:
-        return await get_current_user(authorization)
-    except HTTPException:
-        return None

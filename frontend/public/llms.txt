@@ -1,11 +1,18 @@
 # llms.txt - prioritized pages for AI crawlers
-# Generated: 2026-02-17
-# Format: <priority> <path> <notes>
-1 / "Primary landing page - Radius product overview and hero claims"
+# Radius: #1 AI TikTok Slideshow & Instagram Carousel Generator
+# Generated: 2026-03-26
+
+# Key Features:
+- TikTok Slideshow Automation
+- AI Instagram Carousel Generator
+- Automated A/B CTA Testing
+- Niche Templates for Social Media Growth
+
+1 / "Primary landing page - Radius product overview and hero claims for TikTok/Instagram automation"
 1 /pricing "Pricing and offers; contains structured offers and comparison table"
-2 /#benefits "Benefits and product claims with templates and benchmarks"
-2 /#how-it-works "Answer-first workflow and step-by-step usage"
-3 /#faq "Frequently asked questions (FAQ) — key Q/A for LLM extraction"
-3 /pricing#comparison "Feature comparison table and plan differences"
+2 /#benefits "Benefits and product claims with templates and benchmarks for AI social content"
+2 /#how-it-works "Answer-first workflow: DNA calibration, AI sequences, and Scale Activation"
+3 /#faq "Frequently asked questions (FAQ) — key Q/A for LLM extraction on AI carousel tools"
+3 /pricing#comparison "Feature comparison table and plan differences for creators"
 
 # End of file

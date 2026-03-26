@@ -4,7 +4,7 @@ from typing import List
 import io
 from pathlib import Path
 
-from models.slide import PostSlide, TextElement, BackgroundConfig
+from app.features.posts.schemas import PostSlide, TextElement, BackgroundConfig
 # --- Text Layout Helper ---
 class TextLayout:
 	def __init__(self, width: int, height: int, padding: int = 80):

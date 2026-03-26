@@ -10,9 +10,9 @@ export const landingContent = {
   // ==========================================
   hero: {
     badge: "Built for High-Signal Founders",
-    headline: "Stop Posting for Likes. Start Engineering for Customers.",
-    subheadline: "The only Social Intelligence Engine that bypasses generic AI noise to turn passive viewers into loyal customers autonomously.",
-    ctaPrimary: "Initialize Your Engine",
+    headline: "Stop Posting for Likes. Engineering for Customers Is Now Autonomic.",
+    subheadline: "Radius is the #1 Social Intelligence Engine that bypasses generic AI noise. Transform passive viewers into loyal customers with TikTok slideshow automation and Instagram carousel generation designed for growth.",
+    ctaPrimary: "Initialize Your Growth Engine",
     ctaSecondary: "Watch Architecture Demo",
     videoUrl: null, // Add demo video URL when ready
     features: [
@@ -77,22 +77,22 @@ export const landingContent = {
   // HOW IT WORKS
   // ==========================================
   howItWorks: {
-    headline: "Three Steps to Full-Autonomy Growth",
+    headline: "Automate Carousel Creation in Three Steps",
     steps: [
       {
         number: 1,
         title: "Calibrate Your Brand DNA",
-        description: "Input your core offer and audience. Radius maps your brand voice to our internal 'Expert-In-The-Loop' framework to ensure high-signal output."
+        description: "Input your core offer and niche. Our AI slideshow engine maps your brand voice to ensure high-signal output for TikTok and Instagram."
       },
       {
         number: 2,
-        title: "Synthesize Content Sequences",
-        description: "The Radius Engine generates a week of high-converting carousels, optimized for algorithm retention and behavioral sales psychology."
+        title: "Synthesize AI Sequences",
+        description: "The Radius Engine generates a week of high-converting social media carousels, optimized for algorithm retention and behavioral sales psychology."
       },
       {
         number: 3,
-        title: "Activate Autonomous Scaling",
-        description: "Deploy and let Radius monitor performance. The system learns from every save and click to refine your future content loops automatically."
+        title: "Activate Scaling & A/B Testing",
+        description: "Deploy and let Radius monitor performance. The system uses automated A/B CTA testing to refine your future content loops automatically."
       }
     ]
   },
@@ -152,32 +152,32 @@ export const landingContent = {
   // FAQ (Editable)
   // ==========================================
   faq: {
-    headline: "The Radius Intelligence Brief",
-    subheadline: "Everything you need to know about setting up your social sales engine on autopilot.",
+    headline: "The Social Media Automation Brief",
+    subheadline: "Everything you need to know about setting up your AI carousel generator and slideshow engine.",
     items: [
       {
         question: "How is Radius different from generic AI tools?",
-        answer: "Most tools are simple 'wrappers' for generic AI. Radius is a Social Intelligence Engine built with proprietary conversion weights. We don't just 'make content'; we architect sales sequences using internal logic that generic AI cannot replicate."
+        answer: "Most tools are simple 'wrappers' for generic AI. Radius is a Social Intelligence Engine with built-in TikTok slideshow automation and Instagram carousel generation. We don't just 'make content'; we architect sales sequences using internal logic that generic AI cannot replicate."
       },
       {
-        question: "Does this require me to be a 'Prompt Engineer'?",
-        answer: "No. Prompting is a flaw in other systems. Radius is designed to be 'Zero-Prompt.' We handle the complex engineering internally so you only have to focus on your business vision."
+        question: "Is this the best AI carousel maker for TikTok?",
+        answer: "Radius is engineered specifically for high-conversion niches. By combining niche templates with automated A/B CTA testing, it provides a level of quality and precision that standard AI carousel makers can't match."
       },
       {
-        question: "How does the A/B CTA testing work?",
-        answer: "Radius generates variants with different psychological triggers. Our system runs automated tests across your sequences and highlights winners using high-signal engagement data like saves and clicks."
+        question: "How does the automated A/B CTA testing work?",
+        answer: "Radius generates variants with different psychological triggers. Our system runs automated tests across your sequences—perfect for finding the best call-to-action for your TikTok and Instagram slides."
       },
       {
         question: "What platforms does it support?",
-        answer: "Currently, we provide the gold standard for TikTok slideshows and Instagram carousels. We are actively expanding our architecture to LinkedIn and other high-intent platforms."
+        answer: "Currently, we provide the gold standard for TikTok slideshows and Instagram carousels. We are actively expanding our AI content automation to LinkedIn and other high-intent platforms."
       },
       {
         question: "Why should I trust a solo-founder tool over a large company?",
-        answer: "Radius is a boutique engineering lab. Unlike mass-market tools built by committees, Radius is built by a single architect obsessed with conversion math—ensuring a level of quality and precision that 'factories' can't match."
+        answer: "Radius is a boutique engineering lab. Unlike mass-market tools, Radius is built by a solo architect obsessed with the math of social media automation—ensuring a level of precision that content 'factories' can't match."
       },
       {
-        question: "What is your refund policy?",
-        answer: "We stand by our architecture. If you're not satisfied within the first 7 days, we'll refund you in full. Just contact the architect at support@Radius.app."
+        question: "Can I cancel my social media automation subscription anytime?",
+        answer: "Yes. We stand by our architecture. If you're not satisfied within the first 7 days, we'll refund you in full. Just contact the architect at support@Radius.app."
       }
     ]
   },

@@ -14,11 +14,11 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from services.integrations.supabase.db.platformIntegration import getIntegrationById
-from services.integrations.supabase.client import get_supabase
-from models.slide import PostContent
-from models.template import Template
-from models.user import BrandSettings
+from app.features.integrations.supabase.db.platformIntegration import getIntegrationById
+from app.features.integrations.supabase.client import get_supabase
+from app.features.posts.schemas import PostContent
+from app.features.templates.schemas import Template
+from app.features.user.schemas import BrandSettings
 
 from .helpers import (
     fetch_due_automations,
@@ -206,7 +206,7 @@ async def run_automation(automation_id: UUID) -> dict:
         logger.info(f"Generating slideshow for automation {automation_id}")
 
         # Import here to avoid circular dependency
-        from services.slides.slide_generation import generate_slideshows
+        from app.features.posts.service import generate_slideshows
 
         # Convert template dict to Template model with all required fields
         template_model = Template(
@@ -241,7 +241,7 @@ async def run_automation(automation_id: UUID) -> dict:
         # Step 6: Post to all platforms via PostForMe
         logger.info(f"Posting to platforms: {platforms}")
 
-        from services.integrations.social.postforme.social_account import make_post
+        from app.features.integrations.social.service import make_post
         
         
 

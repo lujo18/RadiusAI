@@ -21,9 +21,6 @@ for env_path in env_locations:
 if not loaded:
     print("Warning: No .env file found in any expected location. Falling back to environment variables.")
 
-if not os.getenv("GEMINI_API_KEY"):
-    raise ValueError("GEMINI_API_KEY environment variable is not set")
-
 class Config:
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -33,6 +30,8 @@ class Config:
     SUPABASE_URL = os.getenv("SUPABASE_URL")
     SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    
     UNSPLASH_APP_ID = os.getenv("UNSPLASH_APP_ID")
     UNSPLASH_SECRET_KEY = os.getenv("UNSPLASH_SECRET_KEY")
     UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")

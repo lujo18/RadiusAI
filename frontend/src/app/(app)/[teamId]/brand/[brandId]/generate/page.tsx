@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useTemplates } from "@/features/templates/hooks";
 import { useBrands } from "@/features/brand/hooks";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGenerationStore } from "@/store/generationStore";
 import type { BrandSettings } from "@/components/TemplateCreator/contentTypes";
 import type { Database } from "@/types/database";
@@ -11,8 +12,6 @@ import type { Database } from "@/types/database";
 import { PostContent } from "@/lib/parseJsonColumn.supabase";
 import { Post } from "@/types/types";
 import { useGeneratePostFromPrompt } from '@/features/generation/hooks';
-import { Background, ReactFlow } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
 import { SettingsPanel } from "@/components/generation/SettingsPanel";
 import { GenerationQueuePanel } from "@/components/generation/GenerationQueuePanel";
 
@@ -180,49 +179,34 @@ export default function GeneratePage() {
   }
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* ReactFlow background layer */}
-      <div className="absolute inset-0 z-0">
-        <ReactFlow 
-          defaultViewport={{ x: 0, y: 0, zoom: 0.95 }} 
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background />
-        </ReactFlow>
+    <div className="w-full h-full flex flex-col bg-background">
+      {/* Header */}
+      <div className="border-b border-border/50 px-6 py-4">
+        <h1 className="text-3xl font-bold font-main">Generate Post</h1>
+        <p className="text-sm text-muted-foreground mt-1">Build your carousel with our AI generation tool</p>
       </div>
 
-      {/* Main content overlay */}
-      <div className="relative z-10 h-full w-full flex flex-col">
-        {/* Header */}
-        <div className="border-b border-border/50 px-6 py-4">
-          <h1 className="text-3xl font-bold font-main">Generate Post</h1>
-          <p className="text-sm text-muted-foreground mt-1">Configure your settings on the left, monitor generation progress on the right</p>
+      {/* Main Layout: Left sidebar + Right output */}
+      <div className="flex-1 overflow-hidden flex">
+        {/* Left Sidebar: Workflow */}
+        <div className="w-80 border-r border-border/50 overflow-y-auto bg-card/30">
+          <SettingsPanel
+            brandId={brandId}
+            selectedTemplateId={selectedTemplate}
+            selectedCtaId={selectedCta}
+            selectedPackId={selectedPackId}
+            selectedProfile={selectedProfile}
+            onTemplateSelect={setSelectedTemplate}
+            onCtaSelect={setSelectedCta}
+            onPackSelect={setSelectedPackId}
+            onGenerateClick={handleGenerate}
+            isGenerating={generateMutation.isPending}
+          />
         </div>
 
-        {/* Two-column layout */}
+        {/* Right Content: Output Preview */}
         <div className="flex-1 overflow-hidden">
-          <div className="h-full grid grid-cols-1 md:grid-cols-[40%_60%] gap-4 p-6">
-            {/* Left Column: Settings */}
-            <div className="overflow-y-auto pr-2">
-              <SettingsPanel
-                brandId={brandId}
-                selectedTemplateId={selectedTemplate}
-                selectedCtaId={selectedCta}
-                selectedPackId={selectedPackId}
-                selectedProfile={selectedProfile}
-                onTemplateSelect={setSelectedTemplate}
-                onCtaSelect={setSelectedCta}
-                onPackSelect={setSelectedPackId}
-                onGenerateClick={handleGenerate}
-                isGenerating={generateMutation.isPending}
-              />
-            </div>
-
-            {/* Right Column: Output & History */}
-            <div className="overflow-y-auto">
-              <GenerationQueuePanel queue={queue} />
-            </div>
-          </div>
+          <GenerationQueuePanel queue={queue} />
         </div>
       </div>
     </div>

@@ -16,25 +16,33 @@ export default function AuthCallbackPage() {
     const handleCallback = async () => {
       console.log('OAuth callback - getting session...');
 
-      const code = new URLSearchParams(window.location.search).get('code');
-      if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-        if (exchangeError) {
-          console.error('Auth callback exchange error:', exchangeError);
+      const fullUrl = window.location.href;
+
+      // Call server-side exchange route which uses cookie-backed server client
+      try {
+        const res = await fetch('/api/auth/exchange', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: fullUrl }),
+        });
+
+        const payload = await res.json();
+        if (!res.ok) {
+          console.error('Auth callback exchange error (server):', payload);
           router.push('/login?error=auth_failed');
           return;
         }
-      }
 
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Auth callback error:', error);
-        router.push('/login?error=auth_failed');
-        return;
-      }
+        // After successful server-side exchange, the client can retrieve session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (session && session.user) {
+        if (sessionError) {
+          console.error('Auth callback error:', sessionError);
+          router.push('/login?error=auth_failed');
+          return;
+        }
+
+        if (session && session.user) {
         console.log('Session found, user:', session.user.id);
         
         // Set auth store with session data
@@ -72,6 +80,11 @@ export default function AuthCallbackPage() {
       } else {
         router.push('/login');
       }
+    } catch (err) {
+      console.error('Auth callback unexpected error:', err);
+      router.push('/login?error=auth_failed');
+      return;
+    }
     };
 
     handleCallback();

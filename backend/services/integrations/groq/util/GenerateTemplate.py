@@ -1,6 +1,6 @@
 import json
 
-from backend.services.genai.prompts import build_generation_prompt
+from app.features.generate.genai.prompts import build_generation_prompt
 
 # Import groq client lazily inside the function to avoid heavy network or setup at import-time
 

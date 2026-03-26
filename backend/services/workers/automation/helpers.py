@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 
-from services.integrations.supabase.client import get_supabase
+from app.features.integrations.supabase.client import get_supabase
 
 logger = logging.getLogger(__name__)
 # Initialize Supabase lazily (when first needed) instead of at module import time

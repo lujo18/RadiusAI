@@ -21,8 +21,27 @@ import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
 import { LightRays } from "@/components/ui/light-rays";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+
+// Hook: detect OS/browser preference for reduced motion
+function usePrefersReducedMotion() {
+  const [prefersReduced, setPrefersReduced] = React.useState(false);
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setPrefersReduced(!!mq.matches);
+    update();
+    if (mq.addEventListener) mq.addEventListener("change", update);
+    else mq.addListener(update as any);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", update);
+      else mq.removeListener(update as any);
+    };
+  }, []);
+  return prefersReduced;
+}
 import { PricingCards } from "@/components/billing/PricingCards";
+import { TextAnimate } from "@/components/ui/text-animate";
 
 interface Testimonial {
   id: string;
@@ -46,6 +65,10 @@ export default function LandingPage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [redirectAttempted, setRedirectAttempted] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+
+  // Respect user's reduced-motion preference and provide a will-change hint
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const motionHint = prefersReducedMotion ? undefined : { willChange: "transform, opacity" };
 
   const handleGetStarted = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -221,70 +244,118 @@ export default function LandingPage() {
         })}
       </Script>
 
-      {/* Answer-first short claim to help LLMs and visual search parse intent */}
       <section
         aria-hidden={false}
         className="sr-only"
         aria-label="Quick answer"
       >
         <h1>
-          Radius: TikTok slideshow automation for solo founders — automates
-          carousel creation, niche templates, and CTA interval testing.
+          Radius: #1 AI TikTok slideshow automation and Instagram carousel generator for solo founders.
         </h1>
         <p>
-          Automating TikTok slideshows results in an average engagement rate of
-          7.5% for accounts with fewer than 100,000 followers and enables fast,
-          testable CTAs for higher conversions.
+          Automate carousel creation and niche templates with built-in A/B CTA testing. Radius turns passive viewers into customers with high-signal content sequences.
         </p>
       </section>
       {/* ==========================================
           HERO SECTION
           ========================================== */}
 
-      <section className="pt-20 pb-20 px-6">
-        <div className="max-w-5xl mx-auto text-center">
+      <section className="pt-32 pb-20 px-6 overflow-hidden">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
           {/* Badge */}
-          <Badge className="mb-12">{landingContent.hero.badge}</Badge>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            style={motionHint}
+          >
+            <Badge className="mb-12 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors cursor-default">
+              {landingContent.hero.badge}
+            </Badge>
+          </motion.div>
 
-          {/* Headline (visual) - promoted to H2 so hidden H1 remains the primary document title for machines */}
-          <h2 className="text-5xl font-bold mb-8">
+          {/* Headline (visual) */}
+          <TextAnimate
+            as="h2"
+            by="word"
+            animation="blurInUp"
+            className="text-5xl md:text-7xl font-bold mb-8 leading-[1.1] tracking-tight text-foreground"
+          >
             {landingContent.hero.headline}
-          </h2>
+          </TextAnimate>
 
           {/* Subheadline */}
-          <h3 className="text-2xl muted mb-12">
+          <motion.h3 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed"
+            style={motionHint}
+          >
             {landingContent.hero.subheadline}
-          </h3>
+          </motion.h3>
 
           {/* CTAs */}
-          <div className="mb-8">
-            <div className="mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+            className="mb-16"
+            style={motionHint}
+          >
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
               <Button
                 type="button"
                 onClick={handleGetStarted}
                 disabled={isSigningIn}
-                className="btn-primary text-lg px-8 py-4"
+                size="lg"
+                className="w-full sm:w-auto text-lg px-10 py-7 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95 group"
               >
                 {isSigningIn ? (
-                  <span>Signing in...</span>
+                  <Spinner className="mr-2" />
                 ) : (
-                  <>
-                    <FaGoogle className="mr-2" />
-                    {landingContent.hero.ctaPrimary}
-                  </>
+                  <FaGoogle className="mr-3 group-hover:rotate-12 transition-transform" />
                 )}
+                {isSigningIn ? 'Initialising...' : landingContent.hero.ctaPrimary}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto text-lg px-10 py-7 rounded-full border-border hover:bg-muted transition-all"
+              >
+                {landingContent.hero.ctaSecondary || 'Watch Demo'}
               </Button>
             </div>
+            
             {/* Features */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mb-8 muted">
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm font-medium text-muted-foreground">
               {landingContent.hero.features.map((feature, i) => (
-                <span key={i}>{feature}</span>
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.8 + (i * 0.1) }}
+                  className="flex items-center"
+                >
+                  <FiCheck className="mr-2 text-primary" />
+                  {feature}
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Product Screenshot/Video Placeholder */}
-          <div className="relative">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 40 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="relative rounded-3xl overflow-hidden border border-border/50 bg-background/50 backdrop-blur-sm p-2 shadow-2xl"
+            style={motionHint}
+          >
             <HeroVideoDialog
               className="block dark:hidden"
               animationStyle="top-in-bottom-out"
@@ -299,43 +370,46 @@ export default function LandingPage() {
               thumbnailSrc="https://startup-template-sage.vercel.app/hero-dark.png"
               thumbnailAlt="Hero Video"
             />
-          </div>
+          </motion.div>
 
           {/* Dynamic Metrics */}
-          {metrics && (
-            <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-foreground mb-2">
-                  {metrics.totalUsers.toLocaleString()}+
-                </div>
-                <div className="text-muted-foreground">Active Users</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-foreground mb-2">
-                  {metrics.postsGenerated.toLocaleString()}+
-                </div>
-                <div className="text-muted-foreground">Posts Generated</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-foreground mb-2">
-                  {metrics.templatesAvailable}+
-                </div>
-                <div className="text-muted-foreground">Templates</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">
-                  {metrics.avgEngagementIncrease}
-                </div>
-                <div className="text-muted-foreground">Avg. Engagement ↑</div>
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {metrics && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, delay: 0.4 }}
+                className="mt-24 grid grid-cols-2 lg:grid-cols-4 gap-12 max-w-4xl mx-auto border-t border-border/30 pt-16"
+                style={motionHint}
+              >
+                {[
+                  { label: "Active Users", value: `${metrics.totalUsers.toLocaleString()}+` },
+                  { label: "Posts Generated", value: `${metrics.postsGenerated.toLocaleString()}+` },
+                  { label: "Expert Templates", value: metrics.templatesAvailable },
+                  { label: "Avg. Engagement ↑", value: metrics.avgEngagementIncrease, highlight: true }
+                ].map((stat, idx) => (
+                  <div key={idx} className="text-center group">
+                    <div className={cn(
+                      "text-4xl md:text-5xl font-bold mb-3 transition-transform group-hover:-translate-y-1 duration-300",
+                      stat.highlight ? "text-primary" : "text-foreground"
+                    )}>
+                      {stat.value}
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         <LightRays />
         <DotPattern
           glow={true}
           className={cn(
-            "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
+            "[mask-image:radial-gradient(800px_circle_at_center,white,transparent)] opacity-40",
           )}
         />
       </section>
@@ -354,6 +428,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
+            style={motionHint}
           >
             <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4 tracking-tight">
               {landingContent.benefits.headline}
@@ -374,6 +449,7 @@ export default function LandingPage() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
                   className="group relative bg-card/50 backdrop-blur-xl border border-border overflow-hidden rounded-2xl p-8 hover:shadow-2xl hover:border-primary/50 transition-all duration-300"
+                  style={motionHint}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <div className="relative z-10">
@@ -412,6 +488,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
+            style={motionHint}
           >
             <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground text-center mb-20 tracking-tight">
               {landingContent.howItWorks.headline}
@@ -429,6 +506,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.2 }}
                 className="text-center relative"
+                style={motionHint}
               >
                 <div className="w-24 h-24 rounded-2xl bg-background border border-primary/20 shadow-lg shadow-primary/10 flex items-center justify-center text-4xl font-bold text-primary mx-auto mb-8 relative group">
                   <div className="absolute inset-0 bg-primary/10 rounded-2xl animate-ping opacity-20" />
@@ -459,6 +537,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
+            style={motionHint}
           >
             <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-4 tracking-tight">
               {landingContent.testimonials.headline}
@@ -477,6 +556,7 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 className="bg-background/80 backdrop-blur-md border border-border/50 p-8 rounded-2xl shadow-sm hover:shadow-xl hover:border-primary/30 transition-all"
+                style={motionHint}
               >
                 <div className="flex items-center mb-6">
                   {[...Array(testimonial.rating)].map((_, j) => (
@@ -528,6 +608,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
+            style={motionHint}
           >
             <h2 className="text-4xl md:text-5xl font-bold font-main text-foreground mb-6 tracking-tight">
               {landingContent.pricing.headline}
@@ -542,6 +623,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
+            style={motionHint}
           >
             <PricingCards
               onGetStarted={(plan) => router.push(`/pricing?plan=${plan}`)}
@@ -615,6 +697,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             className="bg-card/50 backdrop-blur-2xl border border-primary/20 rounded-[3rem] p-12 md:p-20 text-center shadow-2xl relative overflow-hidden"
+            style={motionHint}
           >
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
             <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/30 rounded-full blur-[100px]" />

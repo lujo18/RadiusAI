@@ -8,8 +8,15 @@ import { PostItem } from "@/components/items/PostItem";
 import { usePostingModal } from "@/components/modals/PostingModalProvider";
 import { useBrandIntegrations } from "@/features/brand/hooks";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle, FileWarning, List } from "lucide-react";
+import { AlertCircle, CheckCircle, FileWarning, List, ChevronDown } from "lucide-react";
 import { SlideCarouselEditor } from "./SlideCarouselEditor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type GenerationRequest = {
   id: string;
@@ -45,6 +52,7 @@ function PostFromGenerate({ post }: { post: any }) {
 
 export function GenerationQueuePanel({ queue }: GenerationQueuePanelProps) {
   const [now, setNow] = useState(new Date());
+  const [selectedPostIndex, setSelectedPostIndex] = useState<string>("0");
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -61,22 +69,58 @@ export function GenerationQueuePanel({ queue }: GenerationQueuePanelProps) {
       .map((request) => request.result![0]);
   }, [queue]);
 
+  // Get the currently selected post
+  const selectedPost = useMemo(() => {
+    const index = parseInt(selectedPostIndex, 10);
+    return completedPosts[index] || null;
+  }, [completedPosts, selectedPostIndex]);
+
+  // Reset selected index if it's out of bounds
+  useEffect(() => {
+    if (parseInt(selectedPostIndex, 10) >= completedPosts.length) {
+      setSelectedPostIndex("0");
+    }
+  }, [completedPosts.length, selectedPostIndex]);
+
   return (
-    <div className="space-y-4">
-      {/* Slide Editor - shown above queue when there are completed posts */}
+    <div className="h-full flex flex-col space-y-4 p-6 overflow-hidden">
+      {/* Output Selector Dropdown */}
       {completedPosts.length > 0 && (
-        <SlideCarouselEditor posts={completedPosts} aspectRatio="4:5" />
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium text-foreground/70">
+            Preview:
+          </label>
+          <Select value={selectedPostIndex} onValueChange={setSelectedPostIndex}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Select output to preview" />
+            </SelectTrigger>
+            <SelectContent>
+              {completedPosts.map((post, index) => (
+                <SelectItem key={index} value={index.toString()}>
+                  Generation {index + 1}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Slide Editor - Main scrolling view */}
+      {selectedPost && (
+        <div className="flex-1 overflow-hidden">
+          <SlideCarouselEditor posts={[selectedPost]} aspectRatio="4:5" />
+        </div>
       )}
 
       {/* Generation Queue */}
-      <Card>
+      <Card className="flex-1 overflow-hidden flex flex-col">
         <CardHeader className="pb-3">
           <CardTitle className="text-base">
             Generation Queue{" "}
             <span className="text-secondary">({queue.length})</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-y-auto">
           <div className="space-y-2">
             {queue.map((request) => {
               let sec;

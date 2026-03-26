@@ -10,7 +10,7 @@ Each builder returns a formatted section for use in _generate_prompt().
 
 import json
 from typing import Optional, Dict, Any, List
-from backend.models.user import BrandSettings
+from app.features.user.schemas import BrandSettings
 
 
 def build_system_role(brand: BrandSettings, classifier_context: Optional[Dict[str, Any]] = None) -> str:

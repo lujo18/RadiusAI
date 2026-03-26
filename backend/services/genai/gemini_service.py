@@ -3,14 +3,9 @@
 import json
 from typing import List, Dict, Any
 
-
-from services.genai.prompts import build_generation_prompt
-from services.genai.structure_input import build_gemini_slide_structure
-from models import (
-    Template, 
-    BrandSettings
-)
-from models.slide import PostContent, LayoutConfig
+from app.features.templates.schemas import Template
+from app.features.user.schemas import BrandSettings
+from app.features.posts.schemas import PostContent, LayoutConfig
 from config import Config
 import sys
 from pathlib import Path

@@ -6,7 +6,7 @@ Mirrors frontend StorageRepository.ts pattern.
 from typing import Any, Dict, List, Optional, Tuple
 from io import BytesIO
 from PIL import Image
-from services.integrations.supabase.client import get_supabase
+from app.features.integrations.supabase.client import get_supabase
 
 
 DEFAULT_IMAGE_EXTENSION = "avif"

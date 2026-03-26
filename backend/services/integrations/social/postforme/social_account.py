@@ -3,20 +3,20 @@ from typing import Optional, Literal
 import httpx
 
 from config import Config
-from models.post import Post
-from services.integrations.supabase.db.post import (
+from app.features.posts.schemas import Post
+from app.features.integrations.supabase.db.post import (
     get_post,
     update_post,
     update_post_status,
 )
 from ..social_provider import CreateAuthUrlResponse, SaveIntegrationResponse
 from typing import cast
-from services.integrations.supabase.db.brand import (
+from app.features.integrations.supabase.db.brand import (
     connect_social_account_to_brand,
     get_social_accounts,
     update_social_account_status,
 )
-from services.integrations.supabase.client import get_supabase
+from app.features.integrations.supabase.client import get_supabase
 
 POST_FOR_ME_API_KEY = Config.POST_FOR_ME_API_KEY
 

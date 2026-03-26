@@ -1,19 +1,19 @@
 import json
 import logging
 from typing import Dict, Optional
-from backend.services.stock_packs.getPhotos import queryStockPackUrls
-from backend.util.llm_output_sanitizer import sanitize_text
-from models.slide import LayoutConfig, PostContent
-from models.user import BrandSettings
-from models import Template
-from services.genai.prompts import SYSTEM_PROMPT
-from services.genai.gpt_oss_prompts import assemble_generation_prompt
-from services.integrations.groq.client import groq
-from services.usage.service import track_slides_generated
+from app.features.stock_packs.getPhotos import queryStockPackUrls
+from app.shared.genai.llm_output_sanitizer import sanitize_text
+from app.features.posts.schemas import LayoutConfig, PostContent
+from app.features.user.schemas import BrandSettings
+from app.features.templates.schemas import Template
+from app.shared.genai.prompts import SYSTEM_PROMPT
+from app.shared.genai.gpt_oss_prompts import assemble_generation_prompt
+from app.features.integrations.groq.client import groq
+from app.features.usage.service import track_slides_generated
 from .client import client
 from .slide_layouts import get_all_layout_schemas, SLIDE_LAYOUTS, SlideLayout
 from google.genai import types
-from services.unsplash.getPhotos import queryUnsplashUrls
+from app.features.integrations.unsplash.getPhotos import queryUnsplashUrls
 
 logger = logging.getLogger(__name__)
 

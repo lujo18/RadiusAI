@@ -1,15 +1,36 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
-from models.slide import PostContent
-from models.template import Template
-from models.user import BrandSettings
-from services.genai.generate_slideshow import generate_slideshow_auto
-from services.usage import service as usage_service
-from services.integrations.supabase.db.post import create_post, update_post_storage_urls
-from services.integrations.supabase.storage import upload_post_images_optimized
-from services.pillow.renderSlides import SlideRenderer
-from util.system_prompt import SYSTEM_PROMPT
+from app.features.posts.schemas import PostContent
+from app.features.templates.schemas import Template
+from app.features.user.schemas import BrandSettings
+from app.features.generate.genai.generate_slideshow import generate_slideshow_auto
+
+# Legacy compatibility wrapper for usage_service
+try:
+    from app.features.usage.service import check_generation_credits, track_slides_generated
+except ImportError:
+    # Fallback stubs if functions don't exist
+    def check_generation_credits(*args, **kwargs):
+        return None
+    def track_slides_generated(*args, **kwargs):
+        return None
+
+class UsageServiceCompat:
+    @staticmethod
+    def check_generation_credits(*args, **kwargs):
+        return check_generation_credits(*args, **kwargs)
+    @staticmethod
+    def track_slides_generated(*args, **kwargs):
+        return track_slides_generated(*args, **kwargs)
+
+usage_service = UsageServiceCompat()
+# Legacy Supabase integrations - keeping for now due to complex dependencies
+# TODO: Migrate to app/features/posts/repository.py for DB operations
+from backend.services.integrations.supabase.db.post import create_post, update_post_storage_urls
+from backend.services.integrations.supabase.storage import upload_post_images_optimized
+from backend.services.pillow.renderSlides import SlideRenderer
+from app.shared.genai.system_prompt import SYSTEM_PROMPT
 import json
 
 

@@ -8,13 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function SecurityPage() {
-  const [current, setCurrent] = useState("");
-  const [password, setPassword] = useState("");
   const [twofa, setTwofa] = useState(false);
-
-  const handleChangePassword = () => {
-    console.log("change password", { current, password });
-  };
 
   return (
     <div className="space-y-8">
@@ -22,29 +16,7 @@ export default function SecurityPage() {
         <h1 className="text-3xl font-bold text-foreground">Security</h1>
         <p className="text-foreground/60">Password, two-factor authentication, and sessions</p>
       </div>
-
-      <Card className="glass-card max-w-2xl">
-        <CardHeader>
-          <CardTitle>Change Password</CardTitle>
-          <CardDescription>Update your account password</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="current">Current password</Label>
-              <Input id="current" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="new">New password</Label>
-              <Input id="new" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
-            <div className="pt-2">
-              <Button onClick={handleChangePassword}>Change password</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+      
       <Card className="glass-card max-w-2xl">
         <CardHeader>
           <CardTitle>Two-Factor Authentication</CardTitle>

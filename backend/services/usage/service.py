@@ -2,11 +2,12 @@ import stripe
 from typing import Optional, Dict, Any
 from datetime import datetime
 
-from backend.services.integrations.supabase.db.templates import get_template_count
+from app.features.integrations.supabase.db.templates import get_template_count
+from app.shared.utils.time_utils import _to_iso, to_iso
 from config import Config
-from services.usage import repo as usage_repo
-from services.usage import rules as usage_rules
-from services.integrations.supabase.client import get_supabase
+from app.features.usage import repo as usage_repo
+from app.features.usage import rules as usage_rules
+from app.features.integrations.supabase.client import get_supabase
 
 # Credit usage mapping (from admin/credits.py)
 CREDIT_USAGE = {
@@ -299,6 +300,10 @@ def _store_metric_usage(team_id: str, metric_name: str, count: int):
 # ============================================================================
 
 
+def intitalize_team_activity(team_id: str, period_start: str, period_end: str):
+    intitalize_team_activity
+
+
 def get_metric_limit(
     user_id: str, metric_name: str, brand_id: Optional[str] = None
 ) -> int:
@@ -551,6 +556,8 @@ def _get_active_subscription_for_customer(customer_id: str) -> Optional[Dict[str
         return None
 
 
+
+
 def sync_usage_period_from_subscription(user_id: str) -> Optional[Dict[str, Any]]:
     """Ensure team_activity.period_start/period_end is set from Stripe subscription periods.
 
@@ -588,20 +595,8 @@ def sync_usage_period_from_subscription(user_id: str) -> Optional[Dict[str, Any]
         period_start = getattr(sub, "current_period_start", None) or None
         period_end = getattr(sub, "current_period_end", None) or None
 
-        # convert unix timestamps to iso if needed
-        def _to_iso(val):
-            if val is None:
-                return None
-            try:
-                # stripe returns ints for many fields
-                if isinstance(val, int):
-                    return datetime.utcfromtimestamp(val).isoformat()
-                return val
-            except Exception:
-                return None
-
-        ps = _to_iso(period_start)
-        pe = _to_iso(period_end)
+        ps = to_iso(period_start)
+        pe = to_iso(period_end)
 
         if not ps or not pe:
             print(

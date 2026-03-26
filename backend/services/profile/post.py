@@ -1,7 +1,7 @@
 from config import Config
 import requests
 
-from models.post import Post
+from app.features.posts.schemas import Post
 
 def send_post(post: Post, lateAccountId: str, publishNow: bool) -> bool:
   api_key = Config.LATE_API_KEY

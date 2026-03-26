@@ -5,9 +5,9 @@ import logging
 import httpx
 from typing import Optional
 from datetime import datetime
-from services.integrations.supabase.db.platformIntegration import getIntegrationById
+from app.features.integrations.supabase.db.platformIntegration import getIntegrationById
 from config import Config
-from models.postforme_analytics import PostForMeAnalyticsResponse
+from app.features.analytics.schemas import PostForMeAnalyticsResponse
 
 POST_FOR_ME_API_KEY = Config.POST_FOR_ME_API_KEY
 

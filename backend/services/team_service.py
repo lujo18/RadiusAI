@@ -16,7 +16,7 @@ from backend.models.team import (
     CreateTeamRequest, UpdateTeamRequest,
     InviteTeamMemberRequest, UpdateTeamMemberRequest
 )
-from backend.services.integrations.supabase.client import get_supabase
+from app.features.integrations.supabase.client import get_supabase
 import secrets
 import re
 

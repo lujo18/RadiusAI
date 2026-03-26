@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import { ArrowLeft, Check, ImageIcon, Loader2, Package } from "lucide-react";
 import Image from "next/image";
 
@@ -23,12 +23,14 @@ interface StockPackDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   setSelectedPack?: (packName: string) => void;
+  children: ReactNode
 }
 
 export function StockPackDialog({
   open,
   onOpenChange,
   setSelectedPack,
+  children,
 }: StockPackDialogProps) {
   const selectable = !!setSelectedPack;
   const [activePack, setActivePack] = useState<StockPack | null>(null);
@@ -48,7 +50,7 @@ export function StockPackDialog({
 
   const handleUsePack = () => {
     const pack = packs?.find((p) => p.id === selectedPackId);
-    if (pack && setSelectedPack) {
+    if (pack && setSelectedPack && pack.name) {
       setSelectedPack(pack.name);
       onOpenChange(false);
     }

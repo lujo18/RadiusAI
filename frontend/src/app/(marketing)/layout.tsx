@@ -5,12 +5,12 @@ import Footerdemo from "@/components/Home/Footer";
 import AppBanner from "@/components/AppBanner";
 
 export const metadata: Metadata = {
-  title: "Radius | TikTok Slideshow & Instagram Carousel Automation Generator",
-  description: "Automate your social media growth. Radius is the best AI TikTok slideshow automation, Instagram carousel generator, and A/B CTA testing tool for modern creators.",
-  keywords: "tiktok slideshow automation, instagram carousel generator, tiktok carousel maker, best carousel templates, AI social media generator, automated A/B CTA testing, tiktok slides maker, instagram content automation, niche templates for creators",
+  title: "Radius | AI TikTok Slideshow & Instagram Carousel Generator",
+  description: "Transform your social media growth with Radius. The #1 AI TikTok slideshow automation and Instagram carousel generator for high-signal founders and creators. Automate carousel creation with niche templates and built-in A/B CTA testing.",
+  keywords: "tiktok slideshow automation, instagram carousel generator, tiktok carousel maker, AI social media automation, automated A/B CTA testing, instagram content automation, best carousel templates for business, social media growth tools, AI content generator for solo founders",
   openGraph: {
     title: "Radius - #1 AI TikTok Slideshow & Carousel Generator",
-    description: "Create engaging TikTok slideshows and Instagram carousels in seconds. Built-in CTA testing and niche templates to maximize your engagement.",
+    description: "Create engaging TikTok slideshows and Instagram carousels in seconds. Built-in CTA testing and niche templates to maximize your engagement and revenue.",
     url: "https://getradius.ai", // Substitute with real URL
     siteName: "Radius",
     images: [

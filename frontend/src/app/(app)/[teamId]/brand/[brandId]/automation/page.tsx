@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AutomationWizard } from "@/components/automations/AutomationWizard";
+import { useAutomations } from "@/features/automation/hooks";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type PlatformIntegration =
   Database["public"]["Tables"]["platform_integrations"]["Row"];

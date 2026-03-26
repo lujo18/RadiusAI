@@ -6,4 +6,4 @@
       2. The core previewed genration should have the main scrolling view that allows for shifting through the slides
 2. Editing slides
    1. Instead of rendering the slides as raw images, they should be rendered using Konva using the same render system as Pillow in the Python backend
-   2. 
+   2. Implement interactive editing: draggable text elements, editable text content, Edit/Save mode toggle with visual feedback

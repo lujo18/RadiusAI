@@ -67,15 +67,21 @@ export const signInWithEmail = async (
  * Sign in with Google OAuth
  */
 export const signInWithGoogle = async (): Promise<void> => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
+  // Use server-side signin to ensure PKCE verifier is stored in cookies
+  const res = await fetch('/api/auth/signin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'google', redirectTo: `${window.location.origin}/auth/callback` }),
   });
 
-  if (error) {
-    throw new Error(error.message || 'Failed to sign in with Google');
+  const payload = await res.json();
+  if (!res.ok) {
+    throw new Error(payload?.error || 'Failed to start Google sign-in');
+  }
+
+  // If server returned a redirect URL, navigate there
+  if (payload.url) {
+    window.location.href = payload.url;
   }
 };
 
@@ -83,15 +89,19 @@ export const signInWithGoogle = async (): Promise<void> => {
  * Sign in with GitHub OAuth
  */
 export const signInWithGitHub = async (): Promise<void> => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
+  const res = await fetch('/api/auth/signin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'github', redirectTo: `${window.location.origin}/auth/callback` }),
   });
 
-  if (error) {
-    throw new Error(error.message || 'Failed to sign in with GitHub');
+  const payload = await res.json();
+  if (!res.ok) {
+    throw new Error(payload?.error || 'Failed to start GitHub sign-in');
+  }
+
+  if (payload.url) {
+    window.location.href = payload.url;
   }
 };
 

@@ -2,8 +2,8 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from services.integrations.supabase.client import get_supabase
-from services.integrations.social.postforme.analytics_client import (
+from app.features.integrations.supabase.client import get_supabase
+from app.features.integrations.social.service import (
     get_postforme_analytics_client,
 )
 
