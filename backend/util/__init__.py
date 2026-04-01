@@ -31,7 +31,9 @@ except ImportError:
     pass
 
 try:
-    from app.shared.data.text_to_dataframe import gemini_text_to_dataframe, simple_gemini_to_df
+    from app.shared.data.text_to_dataframe import (
+        gemini_text_to_dataframe,
+        simple_gemini_to_df,
+    )
 except ImportError:
     pass
-

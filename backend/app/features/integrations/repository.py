@@ -14,125 +14,90 @@ logger = logging.getLogger(__name__)
 
 class IntegrationRepository(BaseRepository[PlatformIntegration]):
     """Integration data access layer with brand/platform scoping"""
-    
-    def __init__(self):
-        super().__init__(PlatformIntegration)
-    
-    
-    async def get_by_brand(
-        self,
-        db: AsyncSession,
-        brand_id: str,
-        limit: int = 50
-    ) -> list[PlatformIntegration]:
+
+    def __init__(self, db: Optional[AsyncSession] = None, supabase=None):
+        super().__init__(PlatformIntegration, db=db, supabase=supabase)
+
+    async def get_by_brand(self, brand_id: str, limit: int = 50) -> list[PlatformIntegration]:
         """Get all integrations for a brand"""
         stmt = (
             select(PlatformIntegration)
             .where(PlatformIntegration.brand_id == brand_id)
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_brand_and_platform(
-        self,
-        db: AsyncSession,
-        brand_id: str,
-        platform: str
-    ) -> PlatformIntegration | None:
+
+    async def get_by_brand_and_platform(self, brand_id: str, platform: str) -> PlatformIntegration | None:
         """Get integration for specific brand and platform"""
-        stmt = (
-            select(PlatformIntegration)
-            .where(and_(
+        stmt = select(PlatformIntegration).where(
+            and_(
                 PlatformIntegration.brand_id == brand_id,
-                PlatformIntegration.platform == platform
-            ))
+                PlatformIntegration.platform == platform,
+            )
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().first()
-    
-    
-    async def get_by_user(
-        self,
-        db: AsyncSession,
-        user_id: str,
-        limit: int = 50
-    ) -> list[PlatformIntegration]:
+
+    async def get_by_user(self, user_id: str, limit: int = 50) -> list[PlatformIntegration]:
         """Get all integrations for a user"""
         stmt = (
             select(PlatformIntegration)
             .where(PlatformIntegration.user_id == user_id)
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_user_and_platform(
-        self,
-        db: AsyncSession,
-        user_id: str,
-        platform: str
-    ) -> list[PlatformIntegration]:
+
+    async def get_by_user_and_platform(self, user_id: str, platform: str) -> list[PlatformIntegration]:
         """Get all integrations for user on specific platform"""
-        stmt = (
-            select(PlatformIntegration)
-            .where(and_(
+        stmt = select(PlatformIntegration).where(
+            and_(
                 PlatformIntegration.user_id == user_id,
-                PlatformIntegration.platform == platform
-            ))
+                PlatformIntegration.platform == platform,
+            )
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_status(
-        self,
-        db: AsyncSession,
-        brand_id: str,
-        status: str,
-        limit: int = 50
-    ) -> list[PlatformIntegration]:
+
+    async def get_by_status(self, brand_id: str, status: str, limit: int = 50) -> list[PlatformIntegration]:
         """Get integrations with specific status"""
         stmt = (
             select(PlatformIntegration)
-            .where(and_(
-                PlatformIntegration.brand_id == brand_id,
-                PlatformIntegration.status == status
-            ))
+            .where(
+                and_(
+                    PlatformIntegration.brand_id == brand_id,
+                    PlatformIntegration.status == status,
+                )
+            )
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_connected_integrations(
-        self,
-        db: AsyncSession,
-        brand_id: str
-    ) -> list[PlatformIntegration]:
+
+    async def get_connected_integrations(self, brand_id: str) -> list[PlatformIntegration]:
         """Get all connected integrations for a brand"""
-        stmt = (
-            select(PlatformIntegration)
-            .where(and_(
+        stmt = select(PlatformIntegration).where(
+            and_(
                 PlatformIntegration.brand_id == brand_id,
-                PlatformIntegration.status == "connected"
-            ))
+                PlatformIntegration.status == "connected",
+            )
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def delete_by_id(
-        self,
-        db: AsyncSession,
-        integration_id: str
-    ) -> bool:
+
+    async def delete_by_id(self, integration_id: str) -> bool:
         """Delete integration by ID"""
-        integration = await self.get_by_id(db, integration_id)
+        integration = await self.get_by_id(integration_id)
         if not integration:
             return False
-        await db.delete(integration)
-        await db.flush()
+        session = self._ensure_db()
+        await session.delete(integration)
+        await session.flush()
         return True

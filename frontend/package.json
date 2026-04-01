@@ -9,7 +9,7 @@
     "lint": "npx eslint src",
     "dlint": "npx eslint src --ext .js,.jsx,.ts,.tsx -f codeframe | findstr /C:'Parsing error'",
     "lintfile": "npx eslint src --ext .js,.jsx,.ts,.tsx -f codeframe > eslint-output.txt 2>&1",
-    "stripe": "stripe listen --forward-to http://localhost:3000/api/stripe/webhook",
+    "stripe": "stripe listen --forward-to http://localhost:3000/api/v1/stripe/webhook",
     "supabase:types": "npx supabase gen types typescript --linked > src/types/database.ts",
     "supabase:stripe": "npx supabase gen types typescript --project-id klwznwkionqlkxrqakke --schema stripe > src/types/stripe.ts"
   },
@@ -32,6 +32,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
+    "@sentry/nextjs": "^10.46.0",
     "@stripe/stripe-js": "^8.6.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.8.0",

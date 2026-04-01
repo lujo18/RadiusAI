@@ -4,7 +4,7 @@ from datetime import datetime
 
 from app.features.integrations.supabase.db.templates import get_template_count
 from app.shared.utils.time_utils import _to_iso, to_iso
-from config import Config
+from app.core.config import settings
 from app.features.usage import repo as usage_repo
 from app.features.usage import rules as usage_rules
 from app.features.integrations.supabase.client import get_supabase
@@ -16,15 +16,16 @@ CREDIT_USAGE = {
 }
 
 # initialize stripe key from config (billing_service sets this too, but ensure module-safe)
-if not Config.STRIPE_SECRET_KEY:
+if not settings.STRIPE_SECRET_KEY:
     stripe.api_key = None
 else:
-    stripe.api_key = Config.STRIPE_SECRET_KEY
+    stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def require_stripe_key():
     if not stripe.api_key:
-        raise RuntimeError("Stripe secret key not configured")    
+        raise RuntimeError("Stripe secret key not configured")
+
 
 def _get_active_subscription_for_customer(customer_id: str) -> Optional[Dict[str, Any]]:
     """Return the first active subscription for a customer, or None."""
@@ -315,14 +316,14 @@ def get_metric_limit(
 
         product_id = _get_user_product_id(user_id)
         metric_limit = _get_metric_limit(product_id, metric_name)
-        
+
         if not metric_limit:
             raise ValueError("Failed to extract limit")
-            
+
         return metric_limit
     except Exception as e:
         print(f"get_metric_usage({metric_name}) failed: {e}")
-        raise ValueError("Error getting metric limit", e)
+        raise ValueError("Error getting metric limit") from e
 
 
 def get_metric_usage(
@@ -369,7 +370,7 @@ def get_metric_usage(
         remaining = (metric_limit - metric_count) if metric_limit is not None else None
 
         print(
-            f"[get_metric_usage END] metric_count={metric_count}, metric_limit={metric_limit}, remaining={remaining}, total_time={time.time()-start:.2f}s"
+            f"[get_metric_usage END] metric_count={metric_count}, metric_limit={metric_limit}, remaining={remaining}, total_time={time.time() - start:.2f}s"
         )
 
         return {
@@ -554,8 +555,6 @@ def _get_active_subscription_for_customer(customer_id: str) -> Optional[Dict[str
     except Exception as e:
         print("Failed to fetch subscriptions from Stripe", e)
         return None
-
-
 
 
 def sync_usage_period_from_subscription(user_id: str) -> Optional[Dict[str, Any]]:
@@ -805,7 +804,7 @@ def check_generation_credits(user_id: str, slides_to_generate: int) -> Dict[str,
 
             # Get subscription and credit limit from metadata
             credit_limit = get_metric_limit(user_id, "credits")
-            
+
             if not credit_limit:
                 # No limit set, allow unlimited
                 return {
@@ -820,7 +819,7 @@ def check_generation_credits(user_id: str, slides_to_generate: int) -> Dict[str,
 
             # Check against limit with grace period
             will_exceed = projected_credits > credit_limit
-            hard_block = projected_credits >= (credit_limit * 1.1) 
+            hard_block = projected_credits >= (credit_limit * 1.1)
             # For 500 credits allow up to 550
 
             if hard_block:
@@ -941,10 +940,12 @@ def get_template_usage(user_id: str, brand_id: str) -> Dict[str, Any]:
     """
     print(f"[SERVICE get_template_usage] user_id={user_id}, brand_id={brand_id}")
     template_usage = get_template_count(brand_id)
-    
+
     template_limit = get_metric_limit(user_id, "template_count", brand_id=brand_id)
-    
-    print(f"[SERVICE get_template_usage] get_metric_usage {get_template_count}/{template_limit}")
+
+    print(
+        f"[SERVICE get_template_usage] get_metric_usage {get_template_count}/{template_limit}"
+    )
     return {
         "template_count": template_usage,
         "template_limit": template_limit,

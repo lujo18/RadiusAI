@@ -8,8 +8,10 @@ from typing import List, Optional, Literal
 
 # ==================== TEAM SUB-SCHEMAS ====================
 
+
 class TeamMemberInfo(BaseModel):
     """Represents a team member"""
+
     id: str
     user_id: Optional[str] = None
     email: str
@@ -23,8 +25,10 @@ class TeamMemberInfo(BaseModel):
 
 # ==================== TEAM SCHEMAS ====================
 
+
 class Team(BaseModel):
     """Represents a team"""
+
     id: str
     owner_id: str  # The user who owns this team
     name: str
@@ -39,6 +43,7 @@ class Team(BaseModel):
 
 class TeamDetail(Team):
     """Team with additional context (member count, etc.)"""
+
     member_count: int = 0
     members: List[TeamMemberInfo] = []
 
@@ -67,6 +72,7 @@ class UpdateTeamMemberRequest(BaseModel):
 
 class TeamEventSchema(BaseModel):
     """Audit log entry for team actions"""
+
     id: str
     team_id: str
     actor_id: Optional[str] = None

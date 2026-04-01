@@ -11,7 +11,10 @@ from app.core.security import get_current_user
 from app.core.exceptions import AppError
 from app.features.templates import service
 from app.features.templates.schemas import (
-    TemplateCreate, TemplateUpdate, TemplateResponse, TemplateListResponse
+    TemplateCreate,
+    TemplateUpdate,
+    TemplateResponse,
+    TemplateListResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -23,13 +26,14 @@ router = APIRouter(
         401: {"description": "Unauthorized"},
         403: {"description": "Forbidden"},
         404: {"description": "Not Found"},
-    }
+    },
 )
 
 
 # ═════════════════════════════════════════════════
 #  Create Template
 # ═════════════════════════════════════════════════
+
 
 @router.post("", response_model=TemplateResponse, status_code=201)
 async def create_template(
@@ -40,7 +44,7 @@ async def create_template(
 ):
     """
     Create a new template for a brand.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -54,6 +58,7 @@ async def create_template(
 #  Read Templates
 # ═════════════════════════════════════════════════
 
+
 @router.get("/brand/{brand_id}", response_model=list[TemplateListResponse])
 async def list_brand_templates(
     brand_id: str,
@@ -62,7 +67,7 @@ async def list_brand_templates(
 ):
     """
     List all templates for a brand.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -79,7 +84,7 @@ async def list_my_templates(
 ):
     """
     List all templates created by current user.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -96,7 +101,7 @@ async def list_favorite_templates(
 ):
     """
     List user's favorite templates.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -128,7 +133,7 @@ async def get_template(
 ):
     """
     Get template details by ID.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -142,6 +147,7 @@ async def get_template(
 #  Update Template
 # ═════════════════════════════════════════════════
 
+
 @router.patch("/{template_id}", response_model=TemplateResponse)
 async def update_template(
     template_id: str,
@@ -151,7 +157,7 @@ async def update_template(
 ):
     """
     Update template details.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -171,7 +177,7 @@ async def toggle_favorite(
 ):
     """
     Toggle template favorite status.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -185,6 +191,7 @@ async def toggle_favorite(
 #  Delete Template
 # ═════════════════════════════════════════════════
 
+
 @router.delete("/{template_id}", status_code=204)
 async def delete_template(
     template_id: str,
@@ -193,7 +200,7 @@ async def delete_template(
 ):
     """
     Delete a template.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -207,6 +214,7 @@ async def delete_template(
 #  Search Templates
 # ═════════════════════════════════════════════════
 
+
 @router.get("/search/category/{category}", response_model=list[TemplateListResponse])
 async def search_by_category(
     category: str,
@@ -215,7 +223,7 @@ async def search_by_category(
 ):
     """
     Search templates by category.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -233,7 +241,7 @@ async def search_by_tags(
 ):
     """
     Search templates by tags.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:

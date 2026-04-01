@@ -1,24 +1,25 @@
 # backend/services/integrations/provider_example.py
 
-from typing import List, Protocol, Any
+from typing import List, Protocol
 
 from pydantic import BaseModel
 
-from app.features.posts.schemas import Post
 
 class CreateAuthUrlResponse(BaseModel):
     """
     Response model for social provider authentication URL generation.
     Used to standardize the output of create_auth_url across all providers.
     """
+
     authUrl: str  # The URL to redirect the user for OAuth consent
     platform: str  # The social platform (e.g., 'instagram', 'tiktok')
-    message: str   # Human-readable message for logging or UI
-    
-    
+    message: str  # Human-readable message for logging or UI
+
+
 class SaveIntegrationResponse(BaseModel):
     brand_id: str
     platform_connected: str
+
 
 class SocialProvider(Protocol):
     """
@@ -28,12 +29,9 @@ class SocialProvider(Protocol):
     All provider implementations must match these method signatures and return types.
     This enables provider-agnostic routing and easy migration between APIs.
     """
+
     async def create_auth_url(
-        self,
-        platform: str,
-        user_id: str,
-        brand_id: str,
-        existing_profile_id: str = ""
+        self, platform: str, user_id: str, brand_id: str, existing_profile_id: str = ""
     ) -> CreateAuthUrlResponse:
         """
         Generate an OAuth URL for a given platform and user/brand context.
@@ -57,11 +55,13 @@ class SocialProvider(Protocol):
             dict: Provider-specific account details.
         """
         ...
-        
+
     async def disconnect_integration(self, integration_id: str) -> bool:
         ...
 
-    async def publish_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
+    async def publish_post(
+        self, brand_id: str, platforms: List[str], post_id: str
+    ) -> dict:
         """
         Create a post on the given platform/account.
         Args:
@@ -73,7 +73,9 @@ class SocialProvider(Protocol):
         """
         ...
 
-    async def draft_post(self, brand_id: str, platforms: List[str], post_id: str) -> dict:
+    async def draft_post(
+        self, brand_id: str, platforms: List[str], post_id: str
+    ) -> dict:
         """
         Save a post as draft.
         Args:
@@ -85,7 +87,9 @@ class SocialProvider(Protocol):
         """
         ...
 
-    async def schedule_post(self, brand_id: str, platforms: List[str], post_id: str, scheduled_at: str) -> dict:
+    async def schedule_post(
+        self, brand_id: str, platforms: List[str], post_id: str, scheduled_at: str
+    ) -> dict:
         """
         Schedule a post for future publishing.
         Args:
@@ -107,4 +111,5 @@ class SocialProvider(Protocol):
             dict: Provider-specific profile data.
         """
         ...
+
     # Add more methods as needed, documenting each for clarity

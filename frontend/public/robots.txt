@@ -3,7 +3,7 @@ Allow: /
 Allow: /pricing
 Allow: /privacy-policy
 Allow: /terms-of-service
-Disallow: /api/
+Disallow: /api/v1
 Disallow: /auth/
 Disallow: /checkout
 Disallow: /overview

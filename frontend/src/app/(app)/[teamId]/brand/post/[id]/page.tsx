@@ -74,7 +74,7 @@ interface PostDetails {
 
 async function fetchPostDetails(postId: string): Promise<PostDetails> {
   const token = localStorage.getItem("authToken");
-  const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
+  const response = await fetch(`http://localhost:8000/api/v1/posts/${postId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -89,7 +89,7 @@ async function fetchPostDetails(postId: string): Promise<PostDetails> {
 
 async function updatePostStatus(postId: string, status: string) {
   const token = localStorage.getItem("authToken");
-  const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
+  const response = await fetch(`http://localhost:8000/api/v1/posts/${postId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

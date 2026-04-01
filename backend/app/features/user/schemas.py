@@ -2,17 +2,21 @@ from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import Optional, List, Literal
 
+
 # ── Inbound (requests) ──────────────────────
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
 
+
 class UserUpdate(BaseModel):
     email: EmailStr | None = None
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
 
 # ── Outbound (responses) ────────────────────
 class UserResponse(BaseModel):
@@ -24,6 +28,7 @@ class UserResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -34,12 +39,14 @@ class TokenResponse(BaseModel):
 #  Account-level brand settings for AI content generation
 # ═════════════════════════════════════════════════
 
+
 class BrandSettings(BaseModel):
     """Account-level brand settings for AI content generation"""
+
     # Database fields (optional - may come from brand table instead of brand_settings JSON)
     id: Optional[str] = None
     brand_id: Optional[str] = None
-    
+
     # Core brand info (optional with defaults)
     name: Optional[str] = ""
     niche: Optional[str] = ""
@@ -59,11 +66,11 @@ class BrandSettings(BaseModel):
     hashtag_style: Optional[Literal["niche", "trending", "mixed"]] = "mixed"
     hashtag_count: Optional[int] = 10
     hashtags: Optional[List[str]] = None
-    
+
     # Timestamps (optional)
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
-    
+
     class Config:
         # Allow extra fields from JSON for flexibility
         extra = "allow"
@@ -71,5 +78,6 @@ class BrandSettings(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     """Request to update user profile"""
+
     name: Optional[str] = None
     brand_settings: Optional[BrandSettings] = None

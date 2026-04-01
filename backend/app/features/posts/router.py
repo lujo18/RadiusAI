@@ -11,8 +11,12 @@ from app.core.security import get_current_user
 from app.core.exceptions import AppError
 from app.features.posts import service
 from app.features.posts.schemas import (
-    GeneratePostRequest, PostCreate, PostUpdate,
-    PostResponse, PostListResponse, GeneratePostResponse
+    GeneratePostRequest,
+    PostCreate,
+    PostUpdate,
+    PostResponse,
+    PostListResponse,
+    GeneratePostResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -24,13 +28,14 @@ router = APIRouter(
         401: {"description": "Unauthorized"},
         403: {"description": "Forbidden"},
         404: {"description": "Not Found"},
-    }
+    },
 )
 
 
 # ═════════════════════════════════════════════════
 #  Generation
 # ═════════════════════════════════════════════════
+
 
 @router.post("/generate", response_model=GeneratePostResponse, status_code=201)
 async def generate_posts(
@@ -40,7 +45,7 @@ async def generate_posts(
 ):
     """
     Generate new posts using AI.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -52,12 +57,12 @@ async def generate_posts(
             topic=request.topic,
             count=request.count,
             platform=request.platform,
-            scheduled_time=request.scheduled_time
+            scheduled_time=request.scheduled_time,
         )
-        
+
         return GeneratePostResponse(
             posts=[PostResponse.model_validate(p) for p in posts],
-            message="Posts generated successfully"
+            message="Posts generated successfully",
         )
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -66,6 +71,7 @@ async def generate_posts(
 # ═════════════════════════════════════════════════
 #  List Posts
 # ═════════════════════════════════════════════════
+
 
 @router.get("/brand/{brand_id}", response_model=list[PostListResponse])
 async def list_brand_posts(
@@ -114,6 +120,7 @@ async def list_scheduled_posts(
 #  Get Post
 # ═════════════════════════════════════════════════
 
+
 @router.get("/{post_id}", response_model=PostResponse)
 async def get_post(
     post_id: str,
@@ -131,6 +138,7 @@ async def get_post(
 # ═════════════════════════════════════════════════
 #  Update Post
 # ═════════════════════════════════════════════════
+
 
 @router.patch("/{post_id}", response_model=PostResponse)
 async def update_post(
@@ -167,6 +175,7 @@ async def publish_post(
 #  Delete Post
 # ═════════════════════════════════════════════════
 
+
 @router.delete("/{post_id}", status_code=204)
 async def delete_post(
     post_id: str,
@@ -184,6 +193,7 @@ async def delete_post(
 # ═════════════════════════════════════════════════
 #  Analytics
 # ═════════════════════════════════════════════════
+
 
 @router.get("/{post_id}/analytics", response_model=dict)
 async def get_post_analytics(

@@ -62,12 +62,12 @@ function Dashboard() {
 ```python
 # FastAPI backend routes needed
 
-@app.get("/api/content/scheduled")
+@app.get("/api/v1/content/scheduled")
 async def get_scheduled_posts(user_id: str = Depends(get_current_user)):
     """Return list of scheduled posts"""
     return {"posts": [...]}
 
-@app.post("/api/content/generate")
+@app.post("/api/v1/content/generate")
 async def generate_week_content(
     styleGuide: str,
     user_id: str = Depends(get_current_user)
@@ -76,12 +76,12 @@ async def generate_week_content(
     # Your AI generation logic
     return {"posts": [...], "message": "Generated 98 posts"}
 
-@app.delete("/api/content/{post_id}")
+@app.delete("/api/v1/content/{post_id}")
 async def delete_post(post_id: str, user_id: str = Depends(get_current_user)):
     """Delete a post"""
     return {"success": True}
 
-@app.put("/api/content/{post_id}")
+@app.put("/api/v1/content/{post_id}")
 async def update_post(
     post_id: str,
     updates: dict,
@@ -94,7 +94,7 @@ async def update_post(
 ### Analytics API
 
 ```python
-@app.get("/api/analytics")
+@app.get("/api/v1/analytics")
 async def get_analytics(
     timeframe: str = "week",
     user_id: str = Depends(get_current_user)
@@ -105,12 +105,12 @@ async def get_analytics(
         "stats": {...}
     }
 
-@app.get("/api/analytics/variants")
+@app.get("/api/v1/analytics/variants")
 async def get_variant_performance(user_id: str = Depends(get_current_user)):
     """Return A/B test results"""
     return {"variants": [...]}
 
-@app.post("/api/analytics/analyze")
+@app.post("/api/v1/analytics/analyze")
 async def analyze_and_evolve(user_id: str = Depends(get_current_user)):
     """Run AI analysis and update strategy"""
     # Your AI analysis logic
@@ -120,12 +120,12 @@ async def analyze_and_evolve(user_id: str = Depends(get_current_user)):
 ### Style Guide API
 
 ```python
-@app.get("/api/style-guide")
+@app.get("/api/v1/style-guide")
 async def get_style_guide(user_id: str = Depends(get_current_user)):
     """Get user's style guide"""
     return {"content": "...", "lastUpdated": "..."}
 
-@app.put("/api/style-guide")
+@app.put("/api/v1/style-guide")
 async def update_style_guide(
     content: str,
     user_id: str = Depends(get_current_user)
@@ -137,12 +137,12 @@ async def update_style_guide(
 ### User API
 
 ```python
-@app.get("/api/user/profile")
+@app.get("/api/v1/user/profile")
 async def get_profile(user_id: str = Depends(get_current_user)):
     """Get user profile"""
     return {"id": "...", "name": "...", "email": "...", "plan": "..."}
 
-@app.put("/api/user/profile")
+@app.put("/api/v1/user/profile")
 async def update_profile(
     updates: dict,
     user_id: str = Depends(get_current_user)
@@ -150,7 +150,7 @@ async def update_profile(
     """Update user profile"""
     return {"id": "...", "name": "...", ...}
 
-@app.get("/api/user/accounts")
+@app.get("/api/v1/user/accounts")
 async def get_connected_accounts(user_id: str = Depends(get_current_user)):
     """Get connected social accounts"""
     return {"accounts": [...]}
@@ -277,7 +277,7 @@ NEXT_PUBLIC_API_URL=https://your-backend.vercel.app
 
 **1. Vercel (Python Serverless)**
 ```python
-# api/index.py
+# api/v1/index.py
 from fastapi import FastAPI
 app = FastAPI()
 # ... your routes

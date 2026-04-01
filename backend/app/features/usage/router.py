@@ -40,7 +40,7 @@ async def get_usage_summary(
 ):
     """
     Get comprehensive usage and quota summary for a brand.
-    
+
     Returns current usage metrics, quota limits, and per-metric status.
     """
     try:
@@ -84,9 +84,9 @@ async def consume_quota(
 ):
     """
     Consume quota with enforcement.
-    
+
     Raises QuotaExceededError (403) if limit would be exceeded.
-    
+
     Metrics:
     - slides_generated: AI-generated slides
     - images_generated: Generated images
@@ -126,14 +126,14 @@ async def track_usage(
 ):
     """
     Track usage without enforcing quota limits.
-    
+
     Use this for analytics and tracking that shouldn't trigger quota errors.
     """
     try:
         brand_id = request.brand_id
         if not brand_id:
             raise ValidationError("brand_id is required")
-        
+
         metric = await usage_service.track_usage(
             db, user_id, brand_id, request.metric, request.amount
         )
@@ -181,14 +181,14 @@ async def sync_billing_period(
 ):
     """
     Sync billing period from Stripe subscription.
-    
+
     Sets period_start/period_end for quota tracking.
     """
     try:
         metric = await usage_service.sync_period_from_stripe(db, user_id)
         if not metric:
             raise ValueError("No usage metrics found for user")
-        
+
         await db.commit()
         return UsageMetricResponse.model_validate(metric)
     except AppError as e:
@@ -202,6 +202,7 @@ async def sync_billing_period(
 
 
 # ═════════ DEBUG ENDPOINTS ═════════
+
 
 @router.get("/debug/check", response_model=dict)
 async def debug_quota_check(

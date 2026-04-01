@@ -23,11 +23,11 @@ router = APIRouter(prefix="/variants", tags=["variants"])
 async def create_variant_set(
     request: CreateVariantSetRequest,
     user_id: str = Depends(get_current_user),
-    db = Depends(get_db)
+    db=Depends(get_db),
 ):
     """
     Create new A/B test variant set.
-    
+
     Tests multiple templates to determine which performs best.
     """
     try:
@@ -39,11 +39,11 @@ async def create_variant_set(
             templates=request.templates,
             posts_per_template=request.posts_per_template,
             duration_days=request.duration_days,
-            description=request.description
+            description=request.description,
         )
-        
+
         return variant_set
-    
+
     except Exception as e:
         logger.error(f"Failed to create variant set: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -51,19 +51,17 @@ async def create_variant_set(
 
 @router.get("/{variant_set_id}", response_model=VariantSet)
 async def get_variant_set(
-    variant_set_id: str,
-    user_id: str = Depends(get_current_user),
-    db = Depends(get_db)
+    variant_set_id: str, user_id: str = Depends(get_current_user), db=Depends(get_db)
 ):
     """
     Get variant set details.
-    
+
     Returns current status and performance metrics.
     """
     try:
         variant_set = await variants_service.get_variant_set(db, variant_set_id)
         return variant_set
-    
+
     except Exception as e:
         logger.error(f"Failed to fetch variant set: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -71,21 +69,19 @@ async def get_variant_set(
 
 @router.post("/{variant_set_id}/complete", response_model=VariantResultResponse)
 async def complete_variant_set(
-    variant_set_id: str,
-    user_id: str = Depends(get_current_user),
-    db = Depends(get_db)
+    variant_set_id: str, user_id: str = Depends(get_current_user), db=Depends(get_db)
 ):
     """
     Complete variant test and get results.
-    
+
     Calculates winner and generates insights.
     """
     try:
         variant_set = await variants_service.complete_variant_set(db, variant_set_id)
-        
+
         if not variant_set.results:
             raise HTTPException(status_code=400, detail="No results available yet")
-        
+
         return {
             "variant_set_id": variant_set.id,
             "winning_template_id": variant_set.results["winning_template_id"],
@@ -94,7 +90,7 @@ async def complete_variant_set(
             "insights": variant_set.results["insights"],
             "recommendation": f"Use template {variant_set.results['winning_template_id']} for best results",
         }
-    
+
     except Exception as e:
         logger.error(f"Failed to complete variant set: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -102,19 +98,17 @@ async def complete_variant_set(
 
 @router.post("/{variant_set_id}/pause")
 async def pause_variant_set(
-    variant_set_id: str,
-    user_id: str = Depends(get_current_user),
-    db = Depends(get_db)
+    variant_set_id: str, user_id: str = Depends(get_current_user), db=Depends(get_db)
 ):
     """
     Pause an active variant test.
-    
+
     Can be resumed or completed later.
     """
     try:
         variant_set = await variants_service.pause_variant_set(db, variant_set_id)
         return {"status": "paused", "variant_set_id": variant_set.id}
-    
+
     except Exception as e:
         logger.error(f"Failed to pause variant set: {e}")
         raise HTTPException(status_code=500, detail=str(e))

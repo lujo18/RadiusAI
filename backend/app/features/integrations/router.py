@@ -12,9 +12,13 @@ from app.core.security import get_current_user
 from app.core.exceptions import AppError
 from app.features.integrations import service
 from app.features.integrations.schemas import (
-    InitiateOAuthRequest, CompleteOAuthRequest, UpdateIntegrationRequest,
-    PlatformIntegrationResponse, PlatformIntegrationShortResponse,
-    OAuthCallbackResponse, PublishResponse
+    InitiateOAuthRequest,
+    CompleteOAuthRequest,
+    UpdateIntegrationRequest,
+    PlatformIntegrationResponse,
+    PlatformIntegrationShortResponse,
+    OAuthCallbackResponse,
+    PublishResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,13 +30,14 @@ router = APIRouter(
         401: {"description": "Unauthorized"},
         403: {"description": "Forbidden"},
         404: {"description": "Not Found"},
-    }
+    },
 )
 
 
 # ═════════════════════════════════════════════════
 #  OAuth Flow
 # ═════════════════════════════════════════════════
+
 
 @router.post("/oauth/initiate", response_model=OAuthCallbackResponse)
 async def initiate_oauth(
@@ -43,26 +48,24 @@ async def initiate_oauth(
     """
     Initiate OAuth flow for a platform.
     Returns OAuth URL for user to visit.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
         # Generate CSRF token
         state = secrets.token_urlsafe(32)
-        
+
         # Store state in session/cache (TODO: implement state management)
         # For now, just generate the OAuth URL
-        
+
         oauth_url = await service.generate_oauth_url(
-            request.platform,
-            request.brand_id,
-            state
+            request.platform, request.brand_id, state
         )
-        
+
         return OAuthCallbackResponse(
             success=True,
             message=f"Visit this URL to authorize {request.platform}",
-            oauth_url=oauth_url
+            oauth_url=oauth_url,
         )
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -76,26 +79,26 @@ async def oauth_callback(
 ):
     """
     Complete OAuth flow with authorization code.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
         # TODO: Validate state token
-        
+
         integration = await service.complete_oauth_flow(
             db=db,
             user_id=user_id,
             brand_id=request.brand_id,
             platform=request.platform,
-            auth_code=request.auth_code
+            auth_code=request.auth_code,
         )
-        
+
         await db.commit()
-        
+
         return OAuthCallbackResponse(
             success=True,
             message=f"Successfully authenticated with {request.platform}",
-            integration=PlatformIntegrationResponse.model_validate(integration)
+            integration=PlatformIntegrationResponse.model_validate(integration),
         )
     except AppError as e:
         await db.rollback()
@@ -105,6 +108,7 @@ async def oauth_callback(
 # ═════════════════════════════════════════════════
 #  List Integrations
 # ═════════════════════════════════════════════════
+
 
 @router.get("/brand/{brand_id}", response_model=list[PlatformIntegrationShortResponse])
 async def list_brand_integrations(
@@ -120,7 +124,9 @@ async def list_brand_integrations(
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 
-@router.get("/brand/{brand_id}/connected", response_model=list[PlatformIntegrationShortResponse])
+@router.get(
+    "/brand/{brand_id}/connected", response_model=list[PlatformIntegrationShortResponse]
+)
 async def list_connected_integrations(
     brand_id: str,
     user_id: str = Depends(get_current_user),
@@ -137,6 +143,7 @@ async def list_connected_integrations(
 # ═════════════════════════════════════════════════
 #  Get Integration
 # ═════════════════════════════════════════════════
+
 
 @router.get("/{integration_id}", response_model=PlatformIntegrationResponse)
 async def get_integration(
@@ -156,6 +163,7 @@ async def get_integration(
 #  Update Integration
 # ═════════════════════════════════════════════════
 
+
 @router.patch("/{integration_id}", response_model=PlatformIntegrationResponse)
 async def update_integration(
     integration_id: str,
@@ -165,7 +173,9 @@ async def update_integration(
 ):
     """Update integration settings"""
     try:
-        integration = await service.update_integration(db, integration_id, payload, user_id)
+        integration = await service.update_integration(
+            db, integration_id, payload, user_id
+        )
         await db.commit()
         logger.info(f"Integration updated: {integration_id}")
         return integration
@@ -177,6 +187,7 @@ async def update_integration(
 # ═════════════════════════════════════════════════
 #  Disconnect Integration
 # ═════════════════════════════════════════════════
+
 
 @router.post("/{integration_id}/disconnect", response_model=PlatformIntegrationResponse)
 async def disconnect_integration(
@@ -199,6 +210,7 @@ async def disconnect_integration(
 #  Delete Integration
 # ═════════════════════════════════════════════════
 
+
 @router.delete("/{integration_id}", status_code=204)
 async def delete_integration(
     integration_id: str,
@@ -219,6 +231,7 @@ async def delete_integration(
 #  Publishing
 # ═════════════════════════════════════════════════
 
+
 @router.post("/{integration_id}/publish", response_model=PublishResponse)
 async def publish_post(
     integration_id: str,
@@ -228,7 +241,7 @@ async def publish_post(
 ):
     """
     Publish post to connected platform.
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -236,16 +249,16 @@ async def publish_post(
             db=db,
             integration_id=integration_id,
             post_content=post_content,
-            user_id=user_id
+            user_id=user_id,
         )
-        
+
         await db.commit()
         return PublishResponse(
             success=result["success"],
             message="Post published successfully",
             post_url=result.get("post_url"),
             platform_post_id=result.get("platform_post_id"),
-            published_at=result.get("published_at")
+            published_at=result.get("published_at"),
         )
     except AppError as e:
         await db.rollback()
@@ -253,13 +266,11 @@ async def publish_post(
             return PublishResponse(
                 success=False,
                 message="Publishing quota exceeded",
-                error_details=e.detail
+                error_details=e.detail,
             )
         raise HTTPException(status_code=e.status_code, detail=e.detail)
     except Exception as e:
         await db.rollback()
         return PublishResponse(
-            success=False,
-            message="Publishing failed",
-            error_details=str(e)
+            success=False, message="Publishing failed", error_details=str(e)
         )

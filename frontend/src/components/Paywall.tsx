@@ -130,7 +130,7 @@ export default function Paywall() {
 
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiBase}/api/billing/checkout`, {
+      const response = await fetch(`${apiBase}/api/v1/billing/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export default function Paywall() {
 
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiBase}/api/billing/portal`, {
+      const response = await fetch(`${apiBase}/api/v1/billing/portal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

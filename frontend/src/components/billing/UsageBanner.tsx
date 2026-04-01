@@ -44,7 +44,7 @@ export default function UsageBanner({ className, compact = false }: UsageBannerP
       
       if (!session) return;
 
-      const response = await fetch(`${apiBase}/api/usage/team/${user?.id}`, {
+      const response = await fetch(`${apiBase}/api/v1/usage/team/${user?.id}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },

@@ -7,7 +7,7 @@ export const useStripePlans = () => {
     queryKey: ['stripe', 'plans'],
     queryFn: async () => {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const res = await axios.get(`${apiBase}/api/stripe/plans`);
+      const res = await axios.get(`${apiBase}/api/v1/stripe/plans`);
       const data: PlansResponse = res.data;
       return data.plans ?? [];
     },

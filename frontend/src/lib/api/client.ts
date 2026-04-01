@@ -120,7 +120,7 @@ export const billingApi = {
   async getBilling() { throw new Error('billingApi.getBilling shim called'); },
   async getSubscription(expand?: string[]): Promise<any> {
     try {
-      const response = await backendClient.get('/api/billing/subscription', {
+      const response = await backendClient.get('/api/v1/billing/subscription', {
         params: expand && Array.isArray(expand) ? { expand: JSON.stringify(expand) } : {},
       });
       console.log('[billingApi] getSubscription success');
@@ -137,7 +137,7 @@ export const billingApi = {
   },
   async createPortal(userId?: any): Promise<any> {
     try {
-      const response = await backendClient.post('/api/billing/portal', { user_id: userId });
+      const response = await backendClient.post('/api/v1/billing/portal', { user_id: userId });
       console.log('[billingApi] createPortal success');
       return response.data;
     } catch (err) {

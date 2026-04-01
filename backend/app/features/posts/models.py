@@ -13,6 +13,7 @@ from app.core.database import Base
 
 class PostStatus(str, Enum):
     """Post lifecycle status"""
+
     DRAFT = "draft"
     SCHEDULED = "scheduled"
     POSTED = "posted"
@@ -22,6 +23,7 @@ class PostStatus(str, Enum):
 
 class PostPlatform(str, Enum):
     """Social media platforms"""
+
     INSTAGRAM = "instagram"
     TIKTOK = "tiktok"
     REELS = "reels"
@@ -31,47 +33,65 @@ class PostPlatform(str, Enum):
 class Post(Base):
     """
     Generated social media post/carousel.
-    
+
     Contains:
     - Generated content (slides, caption, hashtags)
     - Rendering status (storage URLs for slide images)
     - Publishing metadata (platform, scheduled time, analytics)
     - Variant information (A/B testing)
     """
-    
+
     __tablename__ = "posts"
-    
+
     # Primary Key
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
-    
+
     # Relationships
-    brand_id: Mapped[str] = mapped_column(String(50), ForeignKey("brands.id"), nullable=False)
-    template_id: Mapped[str] = mapped_column(String(50), ForeignKey("templates.id"), nullable=False)
-    variant_set_id: Mapped[str | None] = mapped_column(String(50), nullable=True)  # For A/B testing
-    
+    brand_id: Mapped[str] = mapped_column(
+        String(50), ForeignKey("brands.id"), nullable=False
+    )
+    template_id: Mapped[str] = mapped_column(
+        String(50), ForeignKey("templates.id"), nullable=False
+    )
+    variant_set_id: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )  # For A/B testing
+
     # Post metadata
-    platform: Mapped[str] = mapped_column(String(20), default=PostPlatform.INSTAGRAM.value)
+    platform: Mapped[str] = mapped_column(
+        String(20), default=PostPlatform.INSTAGRAM.value
+    )
     status: Mapped[str] = mapped_column(String(20), default=PostStatus.DRAFT.value)
-    
+
     # Post content (stored as JSON)
     content: Mapped[dict] = mapped_column(JSON, nullable=False)  # PostContent structure
-    
+
     # Storage URLs (after rendering)
-    storage_urls: Mapped[dict] = mapped_column(JSON, default={})  # Slides + thumbnail URLs
-    rendering_status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, in_progress, complete, failed
-    
+    storage_urls: Mapped[dict] = mapped_column(
+        JSON, default={}
+    )  # Slides + thumbnail URLs
+    rendering_status: Mapped[str] = mapped_column(
+        String(20), default="pending"
+    )  # pending, in_progress, complete, failed
+
     # Publishing metadata
     scheduled_time: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     published_time: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    post_metadata: Mapped[dict] = mapped_column(JSON, default={})  # Variant label, generation params
-    
+    post_metadata: Mapped[dict] = mapped_column(
+        JSON, default={}
+    )  # Variant label, generation params
+
     # Analytics (cached from Supabase)
-    analytics: Mapped[dict] = mapped_column(JSON, default={})  # impressions, engagement, saves, shares
-    
+    analytics: Mapped[dict] = mapped_column(
+        JSON, default={}
+    )  # impressions, engagement, saves, shares
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
     # Indexes for common queries
     __table_args__ = (
         Index("ix_posts_brand_id", "brand_id"),
@@ -81,7 +101,7 @@ class Post(Base):
         Index("ix_posts_scheduled_time", "scheduled_time"),
         Index("ix_posts_variant_set_id", "variant_set_id"),
     )
-    
+
     def __init__(self, **kwargs):
         """Generate ID if not provided"""
         if "id" not in kwargs:

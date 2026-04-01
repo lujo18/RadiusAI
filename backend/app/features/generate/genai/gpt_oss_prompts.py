@@ -13,31 +13,41 @@ from typing import Optional, Dict, Any, List
 from app.db.models.user import BrandSettings
 
 
-def build_system_role(brand: BrandSettings, classifier_context: Optional[Dict[str, Any]] = None) -> str:
+def build_system_role(
+    brand: BrandSettings, classifier_context: Optional[Dict[str, Any]] = None
+) -> str:
     """
     Build SYSTEM ROLE block with persona, reasoning effort, and constraints.
-    
+
     Per GPT-OSS 120B docs:
     - Specific persona activates right MoE experts
     - Explicit constraint blocks tether the model
     - Reasoning effort controls depth
-    
+
     Args:
         brand: BrandSettings object containing voice info
         classifier_context: Template format, content_mode, niche (from classifier)
-    
+
     Returns:
         Formatted system role block
     """
     reading_level = brand.reading_level or "conversational"
     brand_voice = brand.brand_voice or "friendly expert"
     niche = brand.niche or "general"
-    template_format = classifier_context.get("template_format", "listicle") if classifier_context else "listicle"
-    content_mode = classifier_context.get("content_mode", "STRUCTURAL") if classifier_context else "STRUCTURAL"
-    
+    template_format = (
+        classifier_context.get("template_format", "listicle")
+        if classifier_context
+        else "listicle"
+    )
+    content_mode = (
+        classifier_context.get("content_mode", "STRUCTURAL")
+        if classifier_context
+        else "STRUCTURAL"
+    )
+
     # Determine reasoning effort per stage
     reasoning_effort = "HIGH" if content_mode == "GENERATIVE" else "MEDIUM"
-    
+
     # Build hook-specific guidance if GENERATIVE
     hook_guidance = ""
     if content_mode == "GENERATIVE":
@@ -56,7 +66,7 @@ HOOK REQUIREMENTS ({template_format.upper()}, GENERATIVE MODE):
   - "Let's explore journaling"
   - "Journaling changed my life"
 """
-    
+
     system_role = f"""### SYSTEM ROLE
 
 You are a TikTok/Instagram content strategist specializing in [{niche}] content.
@@ -97,20 +107,20 @@ JSON OUTPUT RULES:
 - Use layout_type from output_schema definitions ONLY
 - Match word counts to layout type specifications
 """
-    
+
     return system_role
 
 
 def build_brand_component(brand: BrandSettings) -> str:
     """
     Build BRAND GUIDELINES component.
-    
+
     Static content that defines tone, voice, and rules.
     Wrapped in <brand_guidelines> tags for clarity.
-    
+
     Args:
         brand: BrandSettings object
-    
+
     Returns:
         XML-tagged brand guidelines JSON
     """
@@ -127,10 +137,10 @@ def build_brand_component(brand: BrandSettings) -> str:
         "forbidden_words": brand.forbidden_words or [],
         "preferred_words": brand.preferred_words or [],
     }
-    
+
     # Remove None/empty values for cleaner JSON
     brand_dict = {k: v for k, v in brand_dict.items() if v}
-    
+
     return f"""<brand_guidelines>
 {json.dumps(brand_dict, indent=2)}
 </brand_guidelines>"""
@@ -139,13 +149,13 @@ def build_brand_component(brand: BrandSettings) -> str:
 def build_template_component(slideshow_goals: str) -> str:
     """
     Build TEMPLATE ARCHITECTURE component.
-    
+
     Wraps slideshow_goals (template structure) in XML tags.
     Defines slide stages, format_spec, output_modes.
-    
+
     Args:
         slideshow_goals: Template JSON string describing slide structure
-    
+
     Returns:
         XML-tagged template architecture
     """
@@ -157,13 +167,13 @@ def build_template_component(slideshow_goals: str) -> str:
 def build_output_schema(layout_options: Dict[str, Any]) -> str:
     """
     Build TEXT OUTPUT SCHEMA component.
-    
+
     Defines layout types, word limits, and expected JSON structure.
     Provides examples for each layout type.
-    
+
     Args:
         layout_options: Layout definitions from slide_layouts.py
-    
+
     Returns:
         Formatted output schema with layout definitions and examples
     """
@@ -172,7 +182,7 @@ LAYOUT DEFINITIONS & WORD LIMITS:
 
 - hook: High-impact, value-signaling. Max 1 sentence, <15 words, <100 characters.
   Purpose: Grab attention and signal clear benefit or outcome.
-  
+
 - header: Title only. Max 1 sentence, <20 words.
   Purpose: Slide label/section marker.
 
@@ -234,56 +244,66 @@ STRICT RULES:
 - Hashtags: 4-6 hashtags, relevant to niche.
 - background_query: 2-3 words only, describing image needed for slides.
 </output_schema>"""
-    
+
     return schema
 
 
 def build_cta_component(cta: Optional[Dict[str, Any]]) -> str:
     """
     Build CTA OVERRIDES component (optional, dynamic).
-    
+
     Only included if CTA is provided.
     Specifies exact CTA text and URL for final slide.
-    
+
     Args:
         cta: CTA dictionary with cta_text, cta_url, etc.
-    
+
     Returns:
         XML-tagged CTA overrides, or empty string if no CTA
     """
     if not cta:
         return ""
-    
+
     cta_dict = {
         "cta_text": cta.get("cta_text", ""),
         "cta_url": cta.get("cta_url", ""),
         "position": cta.get("position", "last_slide"),
     }
-    
+
     return f"""\n<cta_overrides>
 {json.dumps(cta_dict, indent=2)}
 </cta_overrides>"""
 
 
-def build_input_topic(topic: str, classifier_context: Optional[Dict[str, Any]] = None, count: int = 1) -> str:
+def build_input_topic(
+    topic: str, classifier_context: Optional[Dict[str, Any]] = None, count: int = 1
+) -> str:
     """
     Build INPUT TOPIC section (dynamic, last).
-    
+
     Includes task instructions and the actual user input.
     Classifier context helps the model understand the template format.
-    
+
     Args:
         topic: User's content goal/topic
         classifier_context: Template format, niche, hook_pattern, etc. from classifier
         count: Number of variations to generate
-    
+
     Returns:
         Formatted task instructions and input
     """
-    template_format = classifier_context.get("template_format", "listicle") if classifier_context else "listicle"
-    content_mode = classifier_context.get("content_mode", "STRUCTURAL") if classifier_context else "STRUCTURAL"
+    template_format = (
+        classifier_context.get("template_format", "listicle")
+        if classifier_context
+        else "listicle"
+    )
+    content_mode = (
+        classifier_context.get("content_mode", "STRUCTURAL")
+        if classifier_context
+        else "STRUCTURAL"
+    )
     niche = classifier_context.get("niche") if classifier_context else ""
-    
+
     context_block = ""
     if classifier_context:
         context_block = f"""
@@ -294,7 +314,7 @@ CLASSIFIER CONTEXT:
 - Hook Pattern: {classifier_context.get("hook_pattern") or "Free-write (no pattern)"}
 - Audience Motivation: {classifier_context.get("audience_motivation") or "Not specified"}
 """
-    
+
     input_section = f"""### TASK INSTRUCTIONS
 
 1. Analyze the input topic below
@@ -323,7 +343,7 @@ Generate a JSON object with this exact structure:
 
 Return ONLY valid JSON. No markdown, no explanations, no preamble.
 """
-    
+
     return input_section
 
 
@@ -338,7 +358,7 @@ def assemble_generation_prompt(
 ) -> str:
     """
     Assemble complete generation prompt using modular components.
-    
+
     Order: Static → Dynamic (for Groq caching optimization)
     1. SYSTEM ROLE (static, varies per brand)
     2. BRAND GUIDELINES (static)
@@ -346,7 +366,7 @@ def assemble_generation_prompt(
     4. OUTPUT SCHEMA (static, global)
     5. CTA OVERRIDES (dynamic, optional)
     6. INPUT TOPIC (dynamic, last)
-    
+
     Args:
         layout_options: Slide layout definitions
         slideshow_goals: Template structure JSON
@@ -355,18 +375,18 @@ def assemble_generation_prompt(
         count: Number of variations
         cta: Optional CTA override
         classifier_context: Template format, niche, etc. (from classifier)
-    
+
     Returns:
         Complete prompt string ready for GPT-OSS 120B
     """
-    
+
     system_role = build_system_role(brand, classifier_context)
     brand_component = build_brand_component(brand)
     template_component = build_template_component(slideshow_goals)
     output_schema = build_output_schema(layout_options)
     cta_component = build_cta_component(cta)
     input_topic = build_input_topic(topic, classifier_context, count)
-    
+
     # Assemble with static first, dynamic last
     prompt = f"""{system_role}
 
@@ -381,5 +401,5 @@ def assemble_generation_prompt(
 {cta_component}
 
 {input_topic}"""
-    
+
     return prompt

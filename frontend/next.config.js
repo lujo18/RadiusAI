@@ -18,11 +18,11 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/brand/:path*',
+        source: '/api/v1/brand/:path*',
         destination: 'http://localhost:8000/brand/:path*',
       },
       {
-        source: '/api/generate/:path*',
+        source: '/api/v1/generate/:path*',
         destination: 'http://localhost:8000/generate/:path*',
       },
     ];

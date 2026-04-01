@@ -20,9 +20,10 @@ def queryUnsplash(query: str, count: int):
                 return [fallback_url] * count
             return photos
         except Exception as e:
-            print(f"Failed to load Unsplash image (attempt {attempt+1}): {e}")
+            print(f"Failed to load Unsplash image (attempt {attempt + 1}): {e}")
             import time
-            time.sleep(2 ** attempt)
+
+            time.sleep(2**attempt)
     print("All attempts to load Unsplash image failed. Returning fallback.")
     return [fallback_url] * count
 
@@ -35,9 +36,12 @@ def queryUnsplashUrls(query: str, count: int):
     # If fallback URLs (strings), just return them
     if isinstance(photos[0], str):
         return photos[:count]
-    
+
     # Otherwise extract URLs from photo objects
-    return [photo.links.download if hasattr(photo, 'links') else photo for photo in photos[:count]]
+    return [
+        photo.links.download if hasattr(photo, "links") else photo
+        for photo in photos[:count]
+    ]
 
 
 def queryUnsplashOnePhoto(query: str):

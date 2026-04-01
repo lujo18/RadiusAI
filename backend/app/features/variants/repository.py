@@ -13,35 +13,22 @@ from app.features.variants.models import VariantSet, VariantPerfornance
 
 class VariantSetRepository(BaseRepository[VariantSet]):
     """Repository for VariantSet ORM operations."""
-    
-    def __init__(self):
-        super().__init__(VariantSet)
-    
-    async def get_active_by_team(
-        self,
-        db: AsyncSession,
-        team_id: str
-    ) -> list[VariantSet]:
+
+    def __init__(self, db: Optional[AsyncSession] = None, supabase=None):
+        super().__init__(VariantSet, db=db, supabase=supabase)
+
+    async def get_active_by_team(self, team_id: str) -> list[VariantSet]:
         """Get active variant sets for a team."""
         stmt = (
             select(VariantSet)
-            .where(
-                and_(
-                    VariantSet.team_id == team_id,
-                    VariantSet.status == "active"
-                )
-            )
+            .where(and_(VariantSet.team_id == team_id, VariantSet.status == "active"))
             .order_by(desc(VariantSet.created_at))
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    async def get_by_user(
-        self,
-        db: AsyncSession,
-        user_id: str,
-        limit: int = 100
-    ) -> list[VariantSet]:
+
+    async def get_by_user(self, user_id: str, limit: int = 100) -> list[VariantSet]:
         """Get variant sets created by a user."""
         stmt = (
             select(VariantSet)
@@ -49,67 +36,52 @@ class VariantSetRepository(BaseRepository[VariantSet]):
             .order_by(desc(VariantSet.created_at))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    async def get_completed_by_team(
-        self,
-        db: AsyncSession,
-        team_id: str,
-        limit: int = 50
-    ) -> list[VariantSet]:
+
+    async def get_completed_by_team(self, team_id: str, limit: int = 50) -> list[VariantSet]:
         """Get completed variant sets for a team."""
         stmt = (
             select(VariantSet)
             .where(
-                and_(
-                    VariantSet.team_id == team_id,
-                    VariantSet.status == "completed"
-                )
+                and_(VariantSet.team_id == team_id, VariantSet.status == "completed")
             )
             .order_by(desc(VariantSet.completed_at))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
 
 
 class VariantPerformanceRepository(BaseRepository[VariantPerfornance]):
     """Repository for VariantPerformance ORM operations."""
-    
-    def __init__(self):
-        super().__init__(VariantPerfornance)
-    
-    async def get_by_variant_set(
-        self,
-        db: AsyncSession,
-        variant_set_id: str
-    ) -> list[VariantPerfornance]:
+
+    def __init__(self, db: Optional[AsyncSession] = None, supabase=None):
+        super().__init__(VariantPerfornance, db=db, supabase=supabase)
+
+    async def get_by_variant_set(self, variant_set_id: str) -> list[VariantPerfornance]:
         """Get performance metrics for all variants in a set."""
         stmt = (
             select(VariantPerfornance)
             .where(VariantPerfornance.variant_set_id == variant_set_id)
             .order_by(desc(VariantPerfornance.overall_score))
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    async def get_winner(
-        self,
-        db: AsyncSession,
-        variant_set_id: str
-    ) -> Optional[VariantPerfornance]:
+
+    async def get_winner(self, variant_set_id: str) -> Optional[VariantPerfornance]:
         """Get winning variant performance."""
-        stmt = (
-            select(VariantPerfornance)
-            .where(
-                and_(
-                    VariantPerfornance.variant_set_id == variant_set_id,
-                    VariantPerfornance.is_winning == True
-                )
+        stmt = select(VariantPerfornance).where(
+            and_(
+                VariantPerfornance.variant_set_id == variant_set_id,
+                VariantPerfornance.is_winning == True,
             )
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().first()
 
 

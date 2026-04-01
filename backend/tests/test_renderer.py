@@ -1,13 +1,21 @@
 """
 Test script for Pillow slide renderer
 """
+
 import sys
 from pathlib import Path
 
 # Add parent directory to path so we can import backend module
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from models.slide import PostSlide, TextElement, BackgroundConfig, TextAlign, FontStyle, BackgroundType
+from models.slide import (
+    PostSlide,
+    TextElement,
+    BackgroundConfig,
+    TextAlign,
+    FontStyle,
+    BackgroundType,
+)
 from app.features.posts.utilities.renderSlides import SlideRenderer
 
 # Create a test slide with header_and_body layout (matching slide_layouts.py)
@@ -16,7 +24,7 @@ test_slide = PostSlide(
     design_id="test-1",
     background=BackgroundConfig(
         type=BackgroundType.IMAGE,
-        image_url="https://images.unsplash.com/photo-1700393879677-663e8475bf70?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        image_url="https://images.unsplash.com/photo-1700393879677-663e8475bf70?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     ),
     dynamic=False,
     elements=[
@@ -63,9 +71,9 @@ test_slide = PostSlide(
             shadow_offset_y=2,
             shadow_opacity=0.5,
             line_height=1.3,
-        )
+        ),
     ],
-    image_prompt=None
+    image_prompt=None,
 )
 
 # Render the slide
@@ -75,6 +83,6 @@ png_bytes = renderer.render_slide(test_slide)
 # Save to file for inspection
 with open("test_slide_output.png", "wb") as f:
     f.write(png_bytes)
-    
+
 print(f"✅ Rendered test slide: {len(png_bytes)} bytes")
 print(f"📁 Saved to: test_slide_output.png")

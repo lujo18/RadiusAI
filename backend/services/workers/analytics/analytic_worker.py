@@ -19,29 +19,35 @@ postforme_client = get_postforme_analytics_client()
 async def fetch_platform_metrics(post_id: str) -> dict:
     """
     Call PostForMe API to fetch analytics for a specific post.
-    
+
     Args:
         post_id: Internal Supabase post ID
-    
+
     Returns:
         dict with metrics from PostForMe, or empty dict if error
     """
     # 1) Get the post from Supabase to find pfm_post_id (stored as external_post_id)
     try:
-        post_response = supabase.table("posts").select("external_post_id, platform_ids").eq("id", post_id).single().execute()
-        
+        post_response = (
+            supabase.table("posts")
+            .select("external_post_id, platform_ids")
+            .eq("id", post_id)
+            .single()
+            .execute()
+        )
+
         if not post_response.data:
             logger.warning(f"Post {post_id} not found in Supabase")
             return {}
-        
+
         post = post_response.data
         pfm_post_id = post.get("external_post_id")
         platform_ids = post.get("platform_ids")
-        
+
         if not pfm_post_id:
             logger.warning(f"Post {post_id} has no external_post_id (pfm_post_id)")
             return {}
-        
+
         # 2) Call PostForMe API with the social_post_id
         # Using external_post_id as the social_post_id for PostForMe queries
         for platform in platform_ids:
@@ -50,38 +56,42 @@ async def fetch_platform_metrics(post_id: str) -> dict:
                 social_post_id=pfm_post_id,
                 platform_id=platform,
                 limit=1,
-                expand=["metrics"]
+                expand=["metrics"],
             )
-            
+
             if not analytics_response or not analytics_response.data:
                 logger.warning(f"No analytics data from PostForMe for post {post_id}")
                 return {}
-            
+
             # 3) Extract metrics from first item (limit=1)
             item = analytics_response.data[0]
-            
+
             if not item.metrics:
                 logger.warning(f"No metrics in PostForMe response for post {post_id}")
                 return {}
-            
+
             # 4) Map PostForMe metrics to our schema
             # ACTUAL PostForMe response uses: like_count, comment_count, share_count, view_count
-            metrics_dict = item.metrics.dict() if hasattr(item.metrics, 'dict') else item.metrics
-            
+            metrics_dict = (
+                item.metrics.dict() if hasattr(item.metrics, "dict") else item.metrics
+            )
+
             logger.info(f"Raw metrics for post {post_id}: {metrics_dict}")
-            
+
             return {
                 "likes": metrics_dict.get("like_count", 0),
                 "comments": metrics_dict.get("comment_count", 0),
                 "shares": metrics_dict.get("share_count", 0),
-                "saves": metrics_dict.get("favorites", 0),  # May not exist in actual response
+                "saves": metrics_dict.get(
+                    "favorites", 0
+                ),  # May not exist in actual response
                 "impressions": metrics_dict.get("view_count", 0),
                 "total_time_watched": metrics_dict.get("total_time_watched", 0),
                 "average_time_watched": metrics_dict.get("average_time_watched", 0),
-                "new_followers": metrics_dict.get("new_followers", 0),               
+                "new_followers": metrics_dict.get("new_followers", 0),
                 "last_updated": datetime.now(timezone.utc).isoformat(),
             }
-    
+
     except Exception as e:
         logger.error(f"Error fetching metrics for post {post_id}: {e}", exc_info=True)
         return {}
@@ -94,7 +104,7 @@ async def process_due_posts():
     """
     try:
         now = datetime.now(timezone.utc).isoformat()
-        
+
         logger.info(f"Starting analytics worker at {now}")
 
         # 1) Get tracking rows that are due for collection
@@ -111,7 +121,7 @@ async def process_due_posts():
             return
 
         logger.info(f"Found {len(due.data)} posts due for collection")
-        
+
         post_ids = [row["post_id"] for row in due.data]
 
         # 2) Get basic post info (for platform, etc.)
@@ -131,16 +141,18 @@ async def process_due_posts():
             if not p:
                 logger.warning(f"Post {row['post_id']} not found in posts table")
                 continue
-            logger.info(f"[DEBUG] Processing post {row['post_id']}: brand_id from posts table = {p.get('brand_id')}")
+            logger.info(
+                f"[DEBUG] Processing post {row['post_id']}: brand_id from posts table = {p.get('brand_id')}"
+            )
             tasks.append(process_single_post(row, p))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Log any exceptions that occurred
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 logger.error(f"Error processing post {post_ids[i]}: {result}")
-        
+
         logger.info(f"Completed analytics collection for {len(results)} posts")
 
     except Exception as e:
@@ -153,7 +165,7 @@ async def process_single_post(track_row: dict, post_row: dict):
     1. Fetch metrics from PostForMe
     2. Store in post_analytics table
     3. Update next collection time based on post age
-    
+
     Args:
         track_row: Row from post_tracking_metadata
         post_row: Row from posts table
@@ -161,12 +173,12 @@ async def process_single_post(track_row: dict, post_row: dict):
     post_id = track_row["post_id"]
     brand_id = post_row.get("brand_id")
     platform = post_row.get("platform", "")
-    
+
     logger.info(
         f"[DEBUG] process_single_post started: post_id={post_id}, "
         f"brand_id={brand_id}, platform={platform}"
     )
-    
+
     # Use published_time if available, else created_at
     published_time_str = post_row.get("published_time")
     if published_time_str:
@@ -174,15 +186,17 @@ async def process_single_post(track_row: dict, post_row: dict):
     else:
         # Fallback: use current time (post just created)
         posted_at = datetime.now(timezone.utc)
-    
+
     now = datetime.now(timezone.utc)
 
     try:
         # 1) Fetch metrics from PostForMe API
         metrics = await fetch_platform_metrics(post_id)
-        
+
         if not metrics:
-            logger.warning(f"No metrics fetched for post {post_id}, skipping analytics update")
+            logger.warning(
+                f"No metrics fetched for post {post_id}, skipping analytics update"
+            )
             return
 
         # 2) Calculate total engagement (likes + comments + shares + saves)
@@ -192,12 +206,14 @@ async def process_single_post(track_row: dict, post_row: dict):
             + metrics.get("shares", 0)
             + metrics.get("saves", 0)
         )
-        
+
         # 3) Calculate engagement rate (if possible)
         engagement_rate = None
         if metrics.get("impressions", 0) > 0:
-            engagement_rate = round(total_engagement / metrics["impressions"] * 100) / 100.0
-        
+            engagement_rate = (
+                round(total_engagement / metrics["impressions"] * 100) / 100.0
+            )
+
         # 4) Upsert analytics (update if exists, insert if new)
         # Save all available fields to post_analytics
         analytics_record = {
@@ -211,13 +227,12 @@ async def process_single_post(track_row: dict, post_row: dict):
             "total_time_watched": metrics.get("total_time_watched", 0),
             "average_time_watched": metrics.get("average_time_watched", 0),
             "new_followers": metrics.get("new_followers", 0),
-            "last_updated": now.isoformat()
+            "last_updated": now.isoformat(),
         }
-        
+
         # Upsert: update if post_analytics already exists for this post, else insert
         supabase.table("post_analytics").upsert(
-            analytics_record,
-            on_conflict="post_id"
+            analytics_record, on_conflict="post_id"
         ).execute()
 
         # Also save to history with additional metadata
@@ -234,16 +249,15 @@ async def process_single_post(track_row: dict, post_row: dict):
             "new_followers": metrics.get("new_followers", 0),
             "collection_count": track_row.get("collection_count"),
             "current_interval": track_row.get("current_interval"),
-            "collected_at": now.isoformat()
+            "collected_at": now.isoformat(),
         }
-        
+
         logger.info(f"[DEBUG] Inserting history record: {history_record}")
         # Use upsert instead of insert to handle collection_count=0 already existing
         supabase.table("post_analytics_history").upsert(
-            history_record,
-            on_conflict="post_id,collection_count"
+            history_record, on_conflict="post_id,collection_count"
         ).execute()
-        
+
         logger.info(
             f"[DEBUG] Saved analytics history for post {post_id}: "
             f"collection_count={track_row.get('collection_count')}"
@@ -252,22 +266,26 @@ async def process_single_post(track_row: dict, post_row: dict):
         # 4) Compute next collection interval based on post age
         age_hours = (now - posted_at).total_seconds() / 3600
         interval = pick_interval(age_hours)
-        
+
         if interval is None:
             # Post is too old, stop tracking
-            logger.info(f"Post {post_id} is too old ({age_hours:.1f}h), stopping tracking")
+            logger.info(
+                f"Post {post_id} is too old ({age_hours:.1f}h), stopping tracking"
+            )
             return
 
         # 5) Update tracking metadata for next collection
         next_collection_time = now + interval.delta
-        
-        supabase.table("post_tracking_metadata").update({
-            "last_collected_at": now.isoformat(),
-            "next_collection_at": next_collection_time.isoformat(),
-            "current_interval": interval.key,
-            "collection_count": track_row["collection_count"] + 1,
-        }).eq("post_id", post_id).execute()
-        
+
+        supabase.table("post_tracking_metadata").update(
+            {
+                "last_collected_at": now.isoformat(),
+                "next_collection_at": next_collection_time.isoformat(),
+                "current_interval": interval.key,
+                "collection_count": track_row["collection_count"] + 1,
+            }
+        ).eq("post_id", post_id).execute()
+
         logger.info(
             f"Updated tracking for post {post_id}: "
             f"next collection in {interval.key} ({interval.delta})"

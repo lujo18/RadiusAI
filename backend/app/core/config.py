@@ -1,15 +1,22 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
+from pathlib import Path
 
-
+# Resolve backend/.env regardless of current working directory
+env_path = Path(__file__).resolve().parents[2] / ".env"
 class Settings(BaseSettings):
     # Required in production, but optional during development
     GEMINI_API_KEY: str | None = None
     SUPABASE_URL: str | None = None
     SUPABASE_SERVICE_ROLE_KEY: str | None = None
     STRIPE_SECRET_KEY: str | None = None
-    DATABASE_URL: str | None = None 
-    
+    DATABASE_URL: str | None = None
+    POLAR_API_KEY: str | None = None
+    # Polar migration and webhook config
+    USE_POLAR: bool = False
+    POLAR_WEBHOOK_SECRET: str | None = None
+    POLAR_MIGRATION_MODE: str = "gradual"  # options: 'gradual' or 'immediate'
+
     # Optional vars
     ENV: str = "development"
     GROQ_API_KEY: str | None = None
@@ -25,10 +32,11 @@ class Settings(BaseSettings):
     STATE_SECRET_KEY: str | None = None
     STRIPE_WEBHOOK_SECRET: str | None = None
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-
+    model_config = SettingsConfigDict(
+        env_file=str(env_path),
+        case_sensitive=True,
+        extra="ignore",
+    )
 
 settings = Settings()
 
@@ -44,8 +52,8 @@ def validate_production_settings():
             "SUPABASE_URL",
             "SUPABASE_SERVICE_ROLE_KEY",
             "STRIPE_SECRET_KEY",
+            "POLAR_API_KEY",
         ]
         missing = [key for key in required if not getattr(settings, key)]
         if missing:
             raise ValueError(f"Missing required settings in production: {missing}")
-

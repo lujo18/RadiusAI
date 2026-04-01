@@ -28,7 +28,11 @@ export async function POST(req: Request) {
 
     const cookiesMap = parseCookies(cookieHeader);
 
-    let response = NextResponse.next();
+    const responseCookies: Array<{
+      name: string;
+      value: string;
+      options?: Record<string, unknown>;
+    }> = [];
 
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
@@ -36,10 +40,12 @@ export async function POST(req: Request) {
           return cookiesMap[name];
         },
         set(name: string, value: string, options: any) {
-          response.cookies.set({ name, value, ...options });
+          cookiesMap[name] = value;
+          responseCookies.push({ name, value, options });
         },
         remove(name: string, options: any) {
-          response.cookies.set({ name, value: '', ...options });
+          delete cookiesMap[name];
+          responseCookies.push({ name, value: '', options });
         },
       },
     });
@@ -56,14 +62,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // If supabase returned a URL to redirect, return it to client
     const url = (data as any)?.url;
-    if (url) {
-      // attach cookies set by createServerClient
-      return NextResponse.redirect(url, { headers: response.headers });
+    const response = NextResponse.json({ success: true, url: url || null });
+
+    for (const cookie of responseCookies) {
+      response.cookies.set({
+        name: cookie.name,
+        value: cookie.value,
+        ...(cookie.options || {}),
+      });
     }
 
-    return NextResponse.json({ success: true, url: url || null });
+    return response;
   } catch (err: any) {
     console.error('[Auth SignIn] unexpected error:', err);
     return NextResponse.json({ error: err?.message || 'Unknown error' }, { status: 500 });

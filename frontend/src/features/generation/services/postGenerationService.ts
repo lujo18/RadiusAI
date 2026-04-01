@@ -25,7 +25,7 @@ export const postGenerationService = {
 
   /**
    * Generate from template with auto layout selection
-   * (uses backend's /api/generate/post/auto endpoint)
+   * (uses backend's /api/v1/generate/post/auto endpoint)
    */
   async generateFromTemplateAuto(
     template: Database['public']['Tables']['templates']['Row'],

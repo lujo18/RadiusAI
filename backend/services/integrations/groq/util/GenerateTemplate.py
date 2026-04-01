@@ -119,8 +119,6 @@ But NEVER override user-specified structures for the sake of uniqueness.
 Start with {{ end with }}"""
 
 
-
-
 CLASSIFIER_SYSTEM_PROMPT = """You are a content format classifier.
 Analyze the user's request and return ONLY a JSON object. No explanation. No markdown.
 
@@ -155,8 +153,15 @@ def _validate_and_fix_template(template: dict) -> None:
     """
     # Fix malformed template_format (e.g., "listicle|STRUCTURAL" -> "listicle")
     valid_formats = [
-        "listicle", "step_by_step", "journal_prompts", "before_after",
-        "quote_carousel", "faq", "ranking_countdown", "myth_busting", "affirmations"
+        "listicle",
+        "step_by_step",
+        "journal_prompts",
+        "before_after",
+        "quote_carousel",
+        "faq",
+        "ranking_countdown",
+        "myth_busting",
+        "affirmations",
     ]
 
     fmt = template.get("template_format", "")
@@ -173,7 +178,7 @@ def _validate_and_fix_template(template: dict) -> None:
     # Validate and fix slides
     slides = template.get("content_blueprint", {}).get("slides", [])
     total_slide_count = len(slides)
-    
+
     # CRITICAL: Enforce 4-7 slide maximum (Hook + CTA included)
     if total_slide_count > 7:
         raise ValueError(
@@ -185,13 +190,13 @@ def _validate_and_fix_template(template: dict) -> None:
             f"Generated template has {total_slide_count} slides, below 4-slide minimum. "
             f"Total must be 4-7 (includes HOOK + CTA). Increase item_count or add stages."
         )
-    
+
     for i, slide in enumerate(slides):
         # Ensure format_spec is never empty
         if not slide.get("format_spec") or slide["format_spec"].strip() == "":
             stage = slide.get("stage", f"SLIDE_{i}")
             raise ValueError(
-                f"Slide {slide.get('slide_number', i+1)} ({stage}) has empty format_spec. "
+                f"Slide {slide.get('slide_number', i + 1)} ({stage}) has empty format_spec. "
                 f"Every slide must have a format_spec with guidance, even FREE_WRITE slides."
             )
 
@@ -204,7 +209,10 @@ def generate_template(guideline_prompt: str):
         model="llama-3.3-70b-versatile",
         messages=[
             {"role": "system", "content": CLASSIFIER_SYSTEM_PROMPT},
-            {"role": "user", "content": CLASSIFIER_USER_PROMPT.format(REQUEST=guideline_prompt)},
+            {
+                "role": "user",
+                "content": CLASSIFIER_USER_PROMPT.format(REQUEST=guideline_prompt),
+            },
         ],
         temperature=0.6,
         top_p=0.9,
@@ -212,7 +220,7 @@ def generate_template(guideline_prompt: str):
         frequency_penalty=0.2,
         max_completion_tokens=3000,
     )
-    
+
     classification_res = response.choices[0].message.content
 
     if not classification_res or not classification_res.strip():
@@ -221,7 +229,7 @@ def generate_template(guideline_prompt: str):
     classifier_output = json.loads(classification_res)
     # Preserve the user's original request in the classifier output
     classifier_output["original_request"] = guideline_prompt
-    
+
     # CRITICAL: Enforce 4-7 total slides by capping item_count per format
     # Rule: Total = HOOK(1) + Items + Other Stages + CTA(1) <= 7
     # So: Items + Other Stages <= 5
@@ -261,7 +269,7 @@ def generate_template(guideline_prompt: str):
 
     try:
         parsed_template = json.loads(raw)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         # Try to extract the first balanced JSON object from the response
         def extract_first_json(s: str):
             start = s.find("{")
@@ -286,11 +294,11 @@ def generate_template(guideline_prompt: str):
                 # fall through to error below
                 raise ValueError(
                     f"Failed to parse JSON from model response. Raw response: {raw}"
-                )
+                ) from exc
         else:
             raise ValueError(
                 f"Failed to parse JSON from model response. Raw response: {raw}"
-            )
+            ) from exc
 
     # Validate and fix the parsed template
     _validate_and_fix_template(parsed_template)
@@ -298,57 +306,65 @@ def generate_template(guideline_prompt: str):
     return parsed_template
 
 
-
-
 FORMAT_CONFIG = {
     "journal_prompts": {
         "content_mode": "GENERATIVE",
         "_overhead": 3,  # HOOK, INTRO, CTA
-        "stage_sequence": lambda n: ["HOOK", "INTRO"] + [f"PROMPT_{i}" for i in range(1, n+1)] + ["CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK", "INTRO"] + [f"PROMPT_{i}" for i in range(1, n + 1)] + ["CTA"]
+        ),
         "content_mode_instruction": (
             "Journal prompts are generative content. format_spec provides guidance for what to generate.\n"
             "Example pattern: 'Write a journal prompt about: [topic]. [1 constraint].'\n"
             "The content generator will create the actual prompt at generation time."
         ),
-        "output_mode_rule": "PROMPT slides: FOLLOW_EXACTLY. HOOK, INTRO: FREE_WRITE. CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "PROMPT slides: FOLLOW_EXACTLY. HOOK, INTRO: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
     },
     "affirmations": {
         "content_mode": "GENERATIVE",
         "_overhead": 2,  # HOOK, CTA
-        "stage_sequence": lambda n: ["HOOK"] + [f"AFFIRMATION_{i}" for i in range(1, n+1)] + ["CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK"] + [f"AFFIRMATION_{i}" for i in range(1, n + 1)] + ["CTA"]
+        ),
         "content_mode_instruction": (
             "Affirmations are generative content. format_spec provides guidance for what to generate.\n"
             "Example pattern: 'Write an affirmation about: [topic]. Second person. Present tense. Max 12 words.'\n"
             "The content generator will create the actual affirmation at generation time."
         ),
-        "output_mode_rule": "AFFIRMATION slides: FOLLOW_EXACTLY. HOOK: FREE_WRITE. CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "AFFIRMATION slides: FOLLOW_EXACTLY. HOOK: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
     },
     "quote_carousel": {
         "content_mode": "GENERATIVE",
         "_overhead": 3,  # HOOK, REFLECTION, CTA
-        "stage_sequence": lambda n: ["HOOK"] + [f"QUOTE_{i}" for i in range(1, n+1)] + ["REFLECTION", "CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK"] + [f"QUOTE_{i}" for i in range(1, n + 1)] + ["REFLECTION", "CTA"]
+        ),
         "content_mode_instruction": (
             "Quotes are generative content. format_spec provides guidance for what to generate.\n"
             "Example pattern: 'Write a quote about: [topic]. [tone]. Include 1-sentence interpretation.'\n"
             "The content generator will create the actual quote at generation time."
         ),
-        "output_mode_rule": "QUOTE slides: FOLLOW_EXACTLY. HOOK, REFLECTION: FREE_WRITE. CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "QUOTE slides: FOLLOW_EXACTLY. HOOK, REFLECTION: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
     },
     "faq": {
         "content_mode": "GENERATIVE",
         "_overhead": 2,  # HOOK, CTA
-        "stage_sequence": lambda n: ["HOOK"] + [f"QA_{i}" for i in range(1, n+1)] + ["CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK"] + [f"QA_{i}" for i in range(1, n + 1)] + ["CTA"]
+        ),
         "content_mode_instruction": (
             "FAQ content is generative. format_spec provides guidance for what to generate.\n"
             "Example pattern: 'Write a Q&A about: [topic]. [audience level]. Answer: 2 sentences, direct.'\n"
             "The content generator will create the actual questions and answers at generation time."
         ),
-        "output_mode_rule": "QA slides: FOLLOW_EXACTLY. HOOK: FREE_WRITE. CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "QA slides: FOLLOW_EXACTLY. HOOK: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
     },
     "listicle": {
         "content_mode": "STRUCTURAL",
         "_overhead": 2,  # HOOK, CTA
-        "stage_sequence": lambda n: ["HOOK"] + [f"ITEM_{i}" for i in range(1, n+1)] + ["CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK"] + [f"ITEM_{i}" for i in range(1, n + 1)] + ["CTA"]
+        ),
         "content_mode_instruction": (
             "Listicles are numbered lists. Each ITEM slide is ONE list item.\n\n"
             "PRIORITY: Use user's requested structure if provided (check 'slide_structure_request').\n"
@@ -357,12 +373,16 @@ FORMAT_CONFIG = {
             "The format_spec should be a TEMPLATE with placeholders, not final content.\n"
             "User-specified structures ALWAYS override generic suggestions."
         ),
-        "output_mode_rule": "ITEM slides: FOLLOW_EXACTLY. HOOK: depends on pattern (see hook logic). CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "ITEM slides: FOLLOW_EXACTLY. HOOK: depends on pattern (see hook logic). CTA: FOLLOW_EXACTLY.",
     },
     "step_by_step": {
         "content_mode": "STRUCTURAL",
         "_overhead": 4,  # HOOK, CONTEXT, PROOF, CTA
-        "stage_sequence": lambda n: ["HOOK", "CONTEXT"] + [f"STEP_{i}" for i in range(1, n+1)] + ["PROOF", "CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK", "CONTEXT"]
+            + [f"STEP_{i}" for i in range(1, n + 1)]
+            + ["PROOF", "CTA"]
+        ),
         "content_mode_instruction": (
             "Step-by-step guides show sequential actions.\n\n"
             "PRIORITY: Use user's requested structure if provided (check 'slide_structure_request').\n"
@@ -370,7 +390,7 @@ FORMAT_CONFIG = {
             "Available placeholders: [Number], [Subject], [Action], [Result], [Niche], [Trait]\n\n"
             "User-specified structures ALWAYS override generic suggestions."
         ),
-        "output_mode_rule": "STEP slides: FOLLOW_EXACTLY. HOOK, CONTEXT, PROOF: FREE_WRITE. CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "STEP slides: FOLLOW_EXACTLY. HOOK, CONTEXT, PROOF: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
     },
     "before_after": {
         "content_mode": "STRUCTURAL",
@@ -382,32 +402,38 @@ FORMAT_CONFIG = {
             "AFTER format_spec example: '[Subject] after [Action]: [Positive result]'\n\n"
             "Both should use parallel structure when possible. Use user structure if provided."
         ),
-        "output_mode_rule": "BEFORE, AFTER: FOLLOW_EXACTLY. HOOK, TURNING_POINT: FREE_WRITE. CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "BEFORE, AFTER: FOLLOW_EXACTLY. HOOK, TURNING_POINT: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
     },
     "myth_busting": {
         "content_mode": "STRUCTURAL",
         "_overhead": 3,  # HOOK, PROOF, CTA (each myth/truth pair counts as items)
-        "stage_sequence": lambda n: ["HOOK"] + sum([[f"MYTH_{i}", f"TRUTH_{i}"] for i in range(1, n+1)], []) + ["PROOF", "CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK"]
+            + sum([[f"MYTH_{i}", f"TRUTH_{i}"] for i in range(1, n + 1)], [])
+            + ["PROOF", "CTA"]
+        ),
         "content_mode_instruction": (
             "Myth-busting format pairs false beliefs with corrections.\n\n"
             "MYTH format_spec example: 'Myth: [False belief about Subject]'\n"
             "TRUTH format_spec example: 'Truth: [Factual correction]'\n\n"
             "Each MYTH slide is followed by its TRUTH slide. Use user structure if provided."
         ),
-        "output_mode_rule": "MYTH, TRUTH slides: FOLLOW_EXACTLY. HOOK, PROOF: FREE_WRITE. CTA: FOLLOW_EXACTLY."
+        "output_mode_rule": "MYTH, TRUTH slides: FOLLOW_EXACTLY. HOOK, PROOF: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
     },
     "ranking_countdown": {
         "content_mode": "STRUCTURAL",
         "_overhead": 3,  # HOOK, REVEAL, CTA
-        "stage_sequence": lambda n: ["HOOK"] + [f"RANK_{i}" for i in range(n, 0, -1)] + ["REVEAL", "CTA"],
+        "stage_sequence": lambda n: (
+            ["HOOK"] + [f"RANK_{i}" for i in range(n, 0, -1)] + ["REVEAL", "CTA"]
+        ),
         "content_mode_instruction": (
             "Countdown format builds suspense by revealing ranks from lowest to highest.\n\n"
             "PRIORITY: Use user's requested structure if provided (check 'slide_structure_request').\n"
             "If no user structure, use: 'Rank [Number]: [Subject/title] — [brief reason]'\n\n"
             "REVEAL is the final #1 rank. Use user structure if provided."
         ),
-        "output_mode_rule": "RANK slides: FOLLOW_EXACTLY. HOOK, REVEAL: FREE_WRITE. CTA: FOLLOW_EXACTLY."
-    }
+        "output_mode_rule": "RANK slides: FOLLOW_EXACTLY. HOOK, REVEAL: FREE_WRITE. CTA: FOLLOW_EXACTLY.",
+    },
 }
 
 
@@ -423,7 +449,7 @@ def _build_template_prompt(classifier_output: dict) -> str:
     if hook_pattern:
         # User provided a reusable pattern - use it
         hook_instruction = (
-            f"The hook should follow this pattern:\n\"{hook_pattern}\"\n\n"
+            f'The hook should follow this pattern:\n"{hook_pattern}"\n\n'
             f"This is a PATTERN with placeholder variables in [brackets]. "
             f"The content generation model will fill these variables based on the topic.\n"
             f"Mark this slide as FOLLOW_EXACTLY since it has a defined structure."
@@ -432,7 +458,7 @@ def _build_template_prompt(classifier_output: dict) -> str:
     elif hook_text:
         # User provided exact text - use it exactly
         hook_instruction = (
-            f"Use exactly this hook text:\n\"{hook_text}\"\n\n"
+            f'Use exactly this hook text:\n"{hook_text}"\n\n'
             f"Do not modify it. This is the exact hook to use.\n"
             f"Mark this slide as FOLLOW_EXACTLY."
         )
@@ -452,18 +478,30 @@ def _build_template_prompt(classifier_output: dict) -> str:
     slide_structure_request = classifier_output.get("slide_structure_request")
     structure_guidance = ""
 
-    if slide_structure_request and fmt in ["listicle", "step_by_step", "ranking_countdown"]:
+    if slide_structure_request and fmt in [
+        "listicle",
+        "step_by_step",
+        "ranking_countdown",
+    ]:
         # User provided explicit structure - use it
         structure_guidance = f"\n\nUSER'S REQUESTED SLIDE STRUCTURE (use this EXACTLY for all {fmt.upper().replace('_', ' ')} slides):\n"
-        structure_guidance += f"\"{slide_structure_request}\"\n\n"
-        structure_guidance += "DO NOT modify this structure. Apply it to each item/step/rank slide.\n"
+        structure_guidance += f'"{slide_structure_request}"\n\n'
+        structure_guidance += (
+            "DO NOT modify this structure. Apply it to each item/step/rank slide.\n"
+        )
         structure_guidance += "Available placeholders: [Number], [Subject], [Action], [Result], [Niche], [Trait]\n"
 
     # Add original request context for reference
     original_request = classifier_output.get("original_request", "")
-    context_section = f"\n\n## USER'S ORIGINAL REQUEST (for context)\n{original_request}\n\n"
-    context_section += "Use this to understand the user's intent, topic, and desired style.\n"
-    context_section += "If the request specifies slide structure or content patterns, honor them.\n"
+    context_section = (
+        f"\n\n## USER'S ORIGINAL REQUEST (for context)\n{original_request}\n\n"
+    )
+    context_section += (
+        "Use this to understand the user's intent, topic, and desired style.\n"
+    )
+    context_section += (
+        "If the request specifies slide structure or content patterns, honor them.\n"
+    )
 
     user_prompt = TEMPLATE_USER_PROMPT.format(
         REQUEST=original_request,
@@ -472,12 +510,16 @@ def _build_template_prompt(classifier_output: dict) -> str:
         ITEM_COUNT=item_count,
         HOOK_INSTRUCTION=hook_instruction,
         STAGE_SEQUENCE=" → ".join(stage_sequence),
-        CONTENT_MODE_INSTRUCTION=config["content_mode_instruction"] + structure_guidance + context_section,
+        CONTENT_MODE_INSTRUCTION=config["content_mode_instruction"]
+        + structure_guidance
+        + context_section,
         OUTPUT_MODE_RULE=config["output_mode_rule"].replace(
-            "HOOK: FREE_WRITE" if "FREE_WRITE" in config["output_mode_rule"] else "HOOK: FOLLOW_EXACTLY",
-            f"HOOK: {hook_output_mode}"
+            "HOOK: FREE_WRITE"
+            if "FREE_WRITE" in config["output_mode_rule"]
+            else "HOOK: FOLLOW_EXACTLY",
+            f"HOOK: {hook_output_mode}",
         ),
-        SCHEMA=TEMPLATE_SCHEMA
+        SCHEMA=TEMPLATE_SCHEMA,
     )
 
     return user_prompt

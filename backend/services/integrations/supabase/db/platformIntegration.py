@@ -1,9 +1,8 @@
 from typing import List, Optional
-from app.features.integrations.schemas import PlatformIntegration
 from app.features.integrations.supabase.client import get_supabase
 
 
-def getIntegrationById(integration_id: str) -> Optional[PlatformIntegration]:
+def getIntegrationById(integration_id: str) -> Optional[dict]:
     """Get a single platform integration by ID"""
     try:
         supabase = get_supabase()
@@ -15,14 +14,14 @@ def getIntegrationById(integration_id: str) -> Optional[PlatformIntegration]:
             .execute()
         )
         if response.data:
-            return PlatformIntegration(**response.data)
+            return response.data
         return None
     except Exception as e:
         print(f"Error fetching integration {integration_id}: {e}")
         return None
 
 
-def getIntegrationsByBrandId(brand_id: str) -> List[PlatformIntegration]:
+def getIntegrationsByBrandId(brand_id: str) -> List[dict]:
     """Get all platform integrations for a brand"""
     try:
         supabase = get_supabase()
@@ -33,14 +32,14 @@ def getIntegrationsByBrandId(brand_id: str) -> List[PlatformIntegration]:
             .execute()
         )
         if response.data:
-            return [PlatformIntegration(**item) for item in response.data]
+            return [item for item in response.data]
         return []
     except Exception as e:
         print(f"Error fetching integrations for brand {brand_id}: {e}")
         return []
 
 
-def getIntegrationsByPlatform(brand_id: str, platform: str) -> List[PlatformIntegration]:
+def getIntegrationsByPlatform(brand_id: str, platform: str) -> List[dict]:
     """Get all platform integrations for a brand on a specific platform"""
     try:
         supabase = get_supabase()
@@ -52,32 +51,34 @@ def getIntegrationsByPlatform(brand_id: str, platform: str) -> List[PlatformInte
             .execute()
         )
         if response.data:
-            return [PlatformIntegration(**item) for item in response.data]
+            return [item for item in response.data]
         return []
     except Exception as e:
         print(f"Error fetching {platform} integrations for brand {brand_id}: {e}")
         return []
 
 
-def createIntegration(integration: PlatformIntegration) -> Optional[PlatformIntegration]:
+def createIntegration(integration: dict) -> Optional[dict]:
     """Create a new platform integration"""
     try:
         supabase = get_supabase()
-        integration_dict = integration.dict(exclude_none=True)
+        integration_dict = (
+            integration.dict(exclude_none=True)
+            if hasattr(integration, "dict")
+            else integration
+        )
         response = (
-            supabase.table("platform_integrations")
-            .insert(integration_dict)
-            .execute()
+            supabase.table("platform_integrations").insert(integration_dict).execute()
         )
         if response.data:
-            return PlatformIntegration(**response.data[0])
+            return response.data[0]
         return None
     except Exception as e:
         print(f"Error creating integration: {e}")
         return None
 
 
-def updateIntegration(integration_id: str, updates: dict) -> Optional[PlatformIntegration]:
+def updateIntegration(integration_id: str, updates: dict) -> Optional[dict]:
     """Update a platform integration"""
     try:
         supabase = get_supabase()
@@ -88,7 +89,7 @@ def updateIntegration(integration_id: str, updates: dict) -> Optional[PlatformIn
             .execute()
         )
         if response.data:
-            return PlatformIntegration(**response.data[0])
+            return response.data[0]
         return None
     except Exception as e:
         print(f"Error updating integration {integration_id}: {e}")

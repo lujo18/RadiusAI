@@ -6,7 +6,7 @@ import { useSubscription } from '@/features/subscription/hooks';
 import { useQuery } from "@tanstack/react-query";
 import backendClient from "@/lib/api/clients/backendClient";
 import { PLANS, PLAN_ORDER, toPlanKey, isUpgrade as isPlanUpgrade, type PlanKey } from "@/lib/plans";
-import { startCheckout, switchPlan, openPortal } from "@/features/subscription/actions";
+import { switchPlan, openPortal } from "@/features/subscription/actions";
 import { useProducts } from "@/features/stripe/products/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +17,7 @@ import { formatDate, formatCurrency } from "@/features/stripe/utils/formatting";
 import type { Invoice } from "@/features/stripe/invoice/types";
 import type { StripeProduct } from "@/features/stripe/products/types";
 import type { AvailableUpgrade } from "@/features/stripe/plans/types";
+import { startCheckout } from "@/features/stripe/checkout/service";
 
 async function fetchInvoices() {
   const response = await backendClient.get('/api/billing/invoices');
@@ -101,7 +102,7 @@ export default function BillingPage() {
     setSwitchingPlan(planKey);
     setSwitchError(null);
     try {
-      await startCheckout(planKey, { cancelUrl: window.location.href });
+      await startCheckout(planKey, window.location.href);
     } catch (err: unknown) {
       setSwitchError(err instanceof Error ? err.message : 'Failed to start checkout. Please try again.');
     } finally {

@@ -14,17 +14,11 @@ logger = logging.getLogger(__name__)
 
 class PostRepository(BaseRepository[Post]):
     """Post data access layer with brand/platform scoping"""
-    
-    def __init__(self):
-        super().__init__(Post)
-    
-    
-    async def get_by_brand(
-        self, 
-        db: AsyncSession, 
-        brand_id: str, 
-        limit: int = 50
-    ) -> list[Post]:
+
+    def __init__(self, db: Optional[AsyncSession] = None, supabase=None):
+        super().__init__(Post, db=db, supabase=supabase)
+
+    async def get_by_brand(self, brand_id: str, limit: int = 50) -> list[Post]:
         """Get all posts for a brand"""
         stmt = (
             select(Post)
@@ -32,16 +26,11 @@ class PostRepository(BaseRepository[Post]):
             .order_by(desc(Post.created_at))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_template(
-        self, 
-        db: AsyncSession, 
-        template_id: str, 
-        limit: int = 50
-    ) -> list[Post]:
+
+    async def get_by_template(self, template_id: str, limit: int = 50) -> list[Post]:
         """Get all posts using a specific template"""
         stmt = (
             select(Post)
@@ -49,57 +38,35 @@ class PostRepository(BaseRepository[Post]):
             .order_by(desc(Post.created_at))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_status(
-        self, 
-        db: AsyncSession, 
-        brand_id: str,
-        status: str, 
-        limit: int = 50
-    ) -> list[Post]:
+
+    async def get_by_status(self, brand_id: str, status: str, limit: int = 50) -> list[Post]:
         """Get posts by status for a brand"""
         stmt = (
             select(Post)
-            .where(and_(
-                Post.brand_id == brand_id,
-                Post.status == status
-            ))
+            .where(and_(Post.brand_id == brand_id, Post.status == status))
             .order_by(desc(Post.created_at))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_scheduled_posts(
-        self,
-        db: AsyncSession,
-        brand_id: str,
-        limit: int = 50
-    ) -> list[Post]:
+
+    async def get_scheduled_posts(self, brand_id: str, limit: int = 50) -> list[Post]:
         """Get scheduled posts for a brand"""
         stmt = (
             select(Post)
-            .where(and_(
-                Post.brand_id == brand_id,
-                Post.status == "scheduled"
-            ))
+            .where(and_(Post.brand_id == brand_id, Post.status == "scheduled"))
             .order_by(Post.scheduled_time)
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_variant_set(
-        self,
-        db: AsyncSession,
-        variant_set_id: str,
-        limit: int = 50
-    ) -> list[Post]:
+
+    async def get_by_variant_set(self, variant_set_id: str, limit: int = 50) -> list[Post]:
         """Get posts in a variant set (A/B testing)"""
         stmt = (
             select(Post)
@@ -107,19 +74,16 @@ class PostRepository(BaseRepository[Post]):
             .order_by(desc(Post.created_at))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        result = await session.execute(stmt)
         return result.scalars().all()
 
-
-    async def delete_by_id(
-        self,
-        db: AsyncSession,
-        post_id: str
-    ) -> bool:
+    async def delete_by_id(self, post_id: str) -> bool:
         """Delete post by ID"""
-        post = await self.get_by_id(db, post_id)
+        post = await self.get_by_id(post_id)
         if not post:
             return False
-        await db.delete(post)
-        await db.flush()
+        session = self._ensure_db()
+        await session.delete(post)
+        await session.flush()
         return True

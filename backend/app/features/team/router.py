@@ -40,6 +40,7 @@ router = APIRouter(prefix="/teams", tags=["teams"])
 
 # ═════════ TEAM CRUD ═════════
 
+
 @router.post("", response_model=Team, status_code=status.HTTP_201_CREATED)
 async def create_team(
     request: CreateTeamRequest,
@@ -142,7 +143,12 @@ async def delete_team(
 
 # ═════════ TEAM MEMBER MANAGEMENT ═════════
 
-@router.post("/{team_id}/members", response_model=TeamMemberInfo, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/{team_id}/members",
+    response_model=TeamMemberInfo,
+    status_code=status.HTTP_201_CREATED,
+)
 async def invite_member(
     team_id: str = Path(..., description="Team ID"),
     request: InviteTeamMemberRequest = None,
@@ -193,7 +199,9 @@ async def update_member_role(
 ):
     """Update member role (admin/owner only)."""
     try:
-        member = await team_service.update_member_role(db, team_id, member_id, user_id, request)
+        member = await team_service.update_member_role(
+            db, team_id, member_id, user_id, request
+        )
         await db.commit()
         return member
     except AppError as e:
@@ -228,6 +236,7 @@ async def remove_member(
 
 
 # ═════════ AUDIT LOG ═════════
+
 
 @router.get("/{team_id}/audit-log", response_model=List[dict])
 async def get_audit_log(

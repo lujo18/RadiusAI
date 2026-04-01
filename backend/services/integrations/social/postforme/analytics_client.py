@@ -6,10 +6,10 @@ import httpx
 from typing import Optional
 from datetime import datetime
 from app.features.integrations.supabase.db.platformIntegration import getIntegrationById
-from config import Config
+from app.core.config import settings
 from app.features.analytics.schemas import PostForMeAnalyticsResponse
 
-POST_FOR_ME_API_KEY = Config.POST_FOR_ME_API_KEY
+POST_FOR_ME_API_KEY = settings.POST_FOR_ME_API_KEY
 
 logger = logging.Logger(__name__)
 

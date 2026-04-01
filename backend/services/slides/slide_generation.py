@@ -8,26 +8,36 @@ from app.features.generate.genai.generate_slideshow import generate_slideshow_au
 
 # Legacy compatibility wrapper for usage_service
 try:
-    from app.features.usage.service import check_generation_credits, track_slides_generated
+    from app.features.usage.service import (
+        check_generation_credits,
+        track_slides_generated,
+    )
 except ImportError:
     # Fallback stubs if functions don't exist
     def check_generation_credits(*args, **kwargs):
         return None
+
     def track_slides_generated(*args, **kwargs):
         return None
+
 
 class UsageServiceCompat:
     @staticmethod
     def check_generation_credits(*args, **kwargs):
         return check_generation_credits(*args, **kwargs)
+
     @staticmethod
     def track_slides_generated(*args, **kwargs):
         return track_slides_generated(*args, **kwargs)
 
+
 usage_service = UsageServiceCompat()
 # Legacy Supabase integrations - keeping for now due to complex dependencies
 # TODO: Migrate to app/features/posts/repository.py for DB operations
-from backend.services.integrations.supabase.db.post import create_post, update_post_storage_urls
+from backend.services.integrations.supabase.db.post import (
+    create_post,
+    update_post_storage_urls,
+)
 from backend.services.integrations.supabase.storage import upload_post_images_optimized
 from backend.services.pillow.renderSlides import SlideRenderer
 from app.shared.genai.system_prompt import SYSTEM_PROMPT
@@ -36,29 +46,32 @@ import json
 
 logger = logging.getLogger(__name__)
 
+
 def generate_slideshows(
-  user_id: str,
-  brand_id: str,
-  template: Template,
-  brand_settings: BrandSettings,
-  count: int = 1,
-  cta: dict = None,
-  stock_pack_directory: Optional[str] = None
+    user_id: str,
+    brand_id: str,
+    template: Template,
+    brand_settings: BrandSettings,
+    count: int = 1,
+    cta: dict = None,
+    stock_pack_directory: Optional[str] = None,
 ):
     """
     Generate slideshow content using Gemini 2.0 Flash.
     Returns structured JSON parsed into GeminiSlideshowResponse objects.
     """
-    
+
     print("Generating slideshows with Gemini...")
-    
+
     # Convert content_rules dict to string for prompt
     prompt = json.dumps(template.content_rules)
-    
+
     # 1. Check usage allowance and reserve generation tokens
     check = usage_service.check_generation_credits(user_id, slides_to_generate=count)
-    if not check.get('allowed'):
-        raise RuntimeError(f"Slide generation not allowed: projected={check.get('projected_credits')} limit={check.get('credit_limit')}")
+    if not check.get("allowed"):
+        raise RuntimeError(
+            f"Slide generation not allowed: projected={check.get('projected_credits')} limit={check.get('credit_limit')}"
+        )
 
     usage_service.track_slides_generated(user_id, count=count)
 
@@ -68,53 +81,58 @@ def generate_slideshows(
         brandSettings=brand_settings,
         count=count,
         cta=cta,
-        stock_pack_directory=stock_pack_directory
+        stock_pack_directory=stock_pack_directory,
     )
-    
+
     # 2. Save all posts to Supabase (serialize PostContent to dict)
     posts = [  # Returns dicts from Supabase, not Post models
-      create_post(brand_id=brand_id, template_id=template.id, content=post_content.model_dump() if hasattr(post_content, 'model_dump') else post_content.dict()) # TODO: currently no template, default to instagram
-      for post_content in post_content_list
+        create_post(
+            brand_id=brand_id,
+            template_id=template.id,
+            content=post_content.model_dump()
+            if hasattr(post_content, "model_dump")
+            else post_content.dict(),
+        )  # TODO: currently no template, default to instagram
+        for post_content in post_content_list
     ]
-    
+
     # 3. Render and process posts in parallel
     renderer = SlideRenderer()
     return_posts = []
-    
+
     def process_post(post):
         """Process a single post: render slides, upload to storage, update DB"""
         try:
-            
             # Convert dict to PostContent Pydantic model
-            post_content = PostContent(**post['content'])
-            
+            post_content = PostContent(**post["content"])
+
             # Render all slides (now happens in parallel within render_slides)
             slide_images = renderer.render_slides(post_content.slides)
-            
+
             # Upload images to Supabase (using brand_id as tenant identifier for storage)
             result = upload_post_images_optimized(
                 user_id=brand_id,
-                post_id=post['id'],
+                post_id=post["id"],
                 slide_images=slide_images,
-                optimize=True
+                optimize=True,
             )
-            
+
             # Update post with storage URLs and get the updated post back
             updated_post = update_post_storage_urls(
-                post_id=post['id'],
+                post_id=post["id"],
                 slide_urls=result["slide_urls"],
-                thumbnail_url=result["thumbnail_url"]
+                thumbnail_url=result["thumbnail_url"],
             )
-            
+
             return updated_post
         except Exception as e:
             logger.error(f"Failed to process post {post['id']}: {e}", exc_info=True)
             raise
-    
+
     # Process multiple posts in parallel (up to 2 concurrent post processing)
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = {executor.submit(process_post, post): post for post in posts}
-        
+
         for future in as_completed(futures):
             try:
                 processed_post = future.result()
@@ -122,13 +140,13 @@ def generate_slideshows(
             except Exception as e:
                 post = futures[future]
                 logger.error(f"Error processing post {post['id']}: {e}")
-      
+
     # 6. Record slides generated for successful posts and return results
     try:
         total_slides = 0
         for p in return_posts:
-            content = p.get('content') or {}
-            slides = content.get('slides') if isinstance(content, dict) else None
+            content = p.get("content") or {}
+            slides = content.get("slides") if isinstance(content, dict) else None
             if slides:
                 total_slides += len(slides)
 
@@ -138,8 +156,3 @@ def generate_slideshows(
         logger.warning(f"Failed to record slides generated usage: {e}")
 
     return return_posts
-   
-    
-    
-    
-    

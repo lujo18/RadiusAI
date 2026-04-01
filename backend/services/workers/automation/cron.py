@@ -21,7 +21,7 @@ scheduler = BackgroundScheduler()
 def register_automation_worker(app: FastAPI) -> None:
     """
     Register the automation worker with the scheduler.
-    
+
     Runs every 10 minutes.
     """
     scheduler.add_job(

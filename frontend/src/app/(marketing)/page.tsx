@@ -150,12 +150,12 @@ export default function LandingPage() {
 
   // Fetch dynamic metrics and testimonials
   useEffect(() => {
-    fetch("/api/metrics")
+    fetch("/api/v1/metrics")
       .then((res) => res.json())
       .then((data) => setMetrics(data as DynamicMetrics))
       .catch(console.error);
 
-    fetch("/api/testimonials")
+    fetch("/api/v1/testimonials")
       .then((res) => res.json())
       .then((data) => setTestimonials((data as { testimonials?: Testimonial[] }).testimonials || []))
       .catch(console.error);

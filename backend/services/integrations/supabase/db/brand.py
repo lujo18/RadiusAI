@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import List, Literal
 import uuid
 
-from app.features.integrations.schemas import PlatformIntegration
 from app.features.user.schemas import BrandSettings
 from app.features.integrations.supabase.client import get_supabase
 
@@ -63,7 +62,9 @@ def connect_social_account_to_brand(
     now = datetime.now().isoformat()
 
     data = {
-        "id": str(uuid.uuid4()),  # Generate UUID for new rows (required for upsert insert)
+        "id": str(
+            uuid.uuid4()
+        ),  # Generate UUID for new rows (required for upsert insert)
         "brand_id": brand_id,
         "platform": platform,
         "pfm_account_id": post_for_me_account_id,
@@ -108,15 +109,15 @@ def update_social_account_status(
     return res.data[0] if res.data else None
 
 
-def get_social_accounts(brand_id: str, platforms: List[str]) -> List[PlatformIntegration]:
+def get_social_accounts(brand_id: str, platforms: List[str]) -> List[dict]:
     supabase = get_supabase()
 
     res = (
-      supabase.table("platform_integrations")
-      .select("*")
-      .eq("brand_id", brand_id)
-      .in_("platform", platforms)
-      .execute()
+        supabase.table("platform_integrations")
+        .select("*")
+        .eq("brand_id", brand_id)
+        .in_("platform", platforms)
+        .execute()
     )
 
     if getattr(res, "error", None):
@@ -124,10 +125,10 @@ def get_social_accounts(brand_id: str, platforms: List[str]) -> List[PlatformInt
         return []
 
     data = res.data or []
-    integrations: List[PlatformIntegration] = []
+    integrations: List[dict] = []
     for item in data:
         try:
-            integrations.append(PlatformIntegration(**item))
+            integrations.append(item)
         except Exception as e:
             # Skip malformed items but log for debugging
             print("Failed to parse integration item:", item, e)

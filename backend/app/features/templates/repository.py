@@ -15,150 +15,99 @@ logger = logging.getLogger(__name__)
 class TemplateRepository(BaseRepository[Template]):
     """
     Template data access layer.
-    
+
     Provides CRUD operations and custom queries for templates,
     with brand/user scoping for data isolation.
     """
-    
-    def __init__(self):
-        super().__init__(Template)
-    
+
+    def __init__(self, db: Optional[AsyncSession] = None, supabase=None):
+        super().__init__(Template, db=db, supabase=supabase)
+
     # ═════════ Custom Queries ═════════
-    
-    async def get_by_brand(
-        self, 
-        db: AsyncSession, 
-        brand_id: str, 
-        limit: int = 100
-    ) -> list[Template]:
+
+    async def get_by_brand(self, brand_id: str, limit: int = 100) -> list[Template]:
         """Get all templates for a brand"""
-        stmt = (
-            select(Template)
-            .where(Template.brand_id == brand_id)
-            .limit(limit)
-        )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        stmt = select(Template).where(Template.brand_id == brand_id).limit(limit)
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_user(
-        self, 
-        db: AsyncSession, 
-        user_id: str, 
-        limit: int = 100
-    ) -> list[Template]:
+
+    async def get_by_user(self, user_id: str, limit: int = 100) -> list[Template]:
         """Get all templates created by a user"""
-        stmt = (
-            select(Template)
-            .where(Template.user_id == user_id)
-            .limit(limit)
-        )
-        result = await db.execute(stmt)
+        session = self._ensure_db()
+        stmt = select(Template).where(Template.user_id == user_id).limit(limit)
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_defaults(
-        self, 
-        db: AsyncSession, 
-        limit: int = 50
-    ) -> list[Template]:
+
+    async def get_defaults(self, limit: int = 50) -> list[Template]:
         """Get default/system templates available to all users"""
+        session = self._ensure_db()
         stmt = (
             select(Template)
             .where(Template.is_default == True)
             .where(Template.status == "active")
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def get_by_category(
-        self, 
-        db: AsyncSession, 
-        category: str,
-        user_id: str,
-        limit: int = 50
-    ) -> list[Template]:
+
+    async def get_by_category(self, category: str, user_id: str, limit: int = 50) -> list[Template]:
         """Get templates in a specific category for a user"""
+        session = self._ensure_db()
         stmt = (
             select(Template)
-            .where(and_(
-                Template.category == category,
-                Template.user_id == user_id
-            ))
+            .where(and_(Template.category == category, Template.user_id == user_id))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def search_by_tags(
-        self, 
-        db: AsyncSession, 
-        tags: list[str],
-        user_id: str,
-        limit: int = 50
-    ) -> list[Template]:
+
+    async def search_by_tags(self, tags: list[str], user_id: str, limit: int = 50) -> list[Template]:
         """Search templates by tags (partial match)"""
+        session = self._ensure_db()
         stmt = (
             select(Template)
-            .where(and_(
-                Template.user_id == user_id,
-                Template.tags.contains(tags)  # JSON contains operator
-            ))
+            .where(
+                and_(
+                    Template.user_id == user_id,
+                    Template.tags.contains(tags),  # JSON contains operator
+                )
+            )
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def mark_as_favorite(
-        self, 
-        db: AsyncSession, 
-        template_id: str, 
-        is_favorite: bool = True
-    ) -> Template:
+
+    async def mark_as_favorite(self, template_id: str, is_favorite: bool = True) -> Template:
         """Toggle template favorite status"""
-        template = await self.get_by_id(db, template_id)
+        template = await self.get_by_id(template_id)
         if not template:
             return None
-        
+
         template.favorite = is_favorite
-        db.add(template)
-        await db.flush()
+        session = self._ensure_db()
+        session.add(template)
+        await session.flush()
         return template
-    
-    
-    async def get_favorites(
-        self, 
-        db: AsyncSession, 
-        user_id: str, 
-        limit: int = 50
-    ) -> list[Template]:
+
+    async def get_favorites(self, user_id: str, limit: int = 50) -> list[Template]:
         """Get user's favorite templates"""
+        session = self._ensure_db()
         stmt = (
             select(Template)
-            .where(and_(
-                Template.user_id == user_id,
-                Template.favorite == True
-            ))
+            .where(and_(Template.user_id == user_id, Template.favorite == True))
             .limit(limit)
         )
-        result = await db.execute(stmt)
+        result = await session.execute(stmt)
         return result.scalars().all()
-    
-    
-    async def delete_by_id(
-        self, 
-        db: AsyncSession, 
-        template_id: str
-    ) -> bool:
+
+    async def delete_by_id(self, template_id: str) -> bool:
         """Delete template by ID"""
-        template = await self.get_by_id(db, template_id)
+        template = await self.get_by_id(template_id)
         if not template:
             return False
-        
-        await db.delete(template)
-        await db.flush()
+
+        session = self._ensure_db()
+        await session.delete(template)
+        await session.flush()
         return True

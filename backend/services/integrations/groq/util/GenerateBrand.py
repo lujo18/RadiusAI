@@ -4,9 +4,9 @@ import json
 
 
 BRAND_SYSTEM_PROMPT = """
-You are a Brand Strategist. Your task is to transform the user's specific guidelines into a cohesive JSON brand identity. 
-- You MUST use the niche and topics provided by the user. 
-- Do NOT invent a new industry. 
+You are a Brand Strategist. Your task is to transform the user's specific guidelines into a cohesive JSON brand identity.
+- You MUST use the niche and topics provided by the user.
+- Do NOT invent a new industry.
 - Create a name that is creative and relevant to the user's input.
 - INFER reading_level from target audience + niche. Examples:
   - "Wellness/mental health, young professionals" → "conversational"
@@ -76,13 +76,15 @@ If you cannot produce valid JSON for any reason, try to produce the best-effort 
 
     # Defensive parsing: try direct JSON first, then attempt to extract the first balanced JSON object
     if not response_text or not response_text.strip():
-        raise ValueError(f"No response_text received from Gemini/Groq API. Raw response: {response}")
+        raise ValueError(
+            f"No response_text received from Gemini/Groq API. Raw response: {response}"
+        )
 
     raw = response_text.strip()
 
     try:
         return json.loads(raw)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         # Try to extract the first balanced JSON object from the response
         def extract_first_json(s: str):
             start = s.find("{")
@@ -108,4 +110,6 @@ If you cannot produce valid JSON for any reason, try to produce the best-effort 
                 pass
 
         # If we get here, parsing failed — raise a helpful error including the raw response
-        raise ValueError(f"Failed to parse JSON from model response. Raw response: {raw}")
+        raise ValueError(
+            f"Failed to parse JSON from model response. Raw response: {raw}"
+        ) from exc

@@ -11,7 +11,11 @@ from app.features.generate.genai.gpt_oss_prompts import assemble_generation_prom
 from app.features.integrations.groq.client import groq
 from app.features.usage.service import track_slides_generated
 from app.features.generate.genai.client import client
-from app.features.generate.genai.slide_layouts import get_all_layout_schemas, SLIDE_LAYOUTS, SlideLayout
+from app.features.generate.genai.slide_layouts import (
+    get_all_layout_schemas,
+    SLIDE_LAYOUTS,
+    SlideLayout,
+)
 from google.genai import types
 from app.features.integrations.unsplash import queryUnsplashUrls
 
@@ -19,7 +23,11 @@ logger = logging.getLogger(__name__)
 
 
 def generate_slideshow_auto(
-    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1, cta: Optional[dict] = None, stock_pack_directory: str | None = None
+    slideshowGoals: str,
+    brandSettings: BrandSettings,
+    count: int = 1,
+    cta: Optional[dict] = None,
+    stock_pack_directory: str | None = None,
 ):
     """
     Generate complete TikTok slideshow with layout selection and content.
@@ -34,21 +42,25 @@ def generate_slideshow_auto(
     """
 
     layout_options = get_all_layout_schemas()
-    prompt = _generate_prompt(layout_options, slideshowGoals, brandSettings, count, template_structure=None, cta=cta)
+    prompt = _generate_prompt(
+        layout_options,
+        slideshowGoals,
+        brandSettings,
+        count,
+        template_structure=None,
+        cta=cta,
+    )
 
     prompt = " ".join(prompt.split())
 
     print("System PROMPT:", SYSTEM_PROMPT)
 
     print("FULL PROMPT:", prompt)
-    
+
     response = groq.chat.completions.create(
         model="openai/gpt-oss-120b",
         messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT
-            },
+            {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": prompt,
@@ -80,7 +92,9 @@ def generate_slideshow_auto(
                                                 "layout_type": {"type": "string"},
                                                 "text_elements": {
                                                     "type": "object",
-                                                    "additionalProperties": {"type": "string"},
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
                                                 },
                                             },
                                             "required": [
@@ -115,7 +129,7 @@ def generate_slideshow_auto(
     print("Response received.")
 
     response_text = response.choices[0].message.content
-    
+
     print("Response text:", response_text)
 
     if not response_text:
@@ -132,18 +146,27 @@ def generate_slideshow_auto(
         elif "slides" in generated_data:
             generated_data = [generated_data]
         else:
-            raise ValueError(f"Response structure unexpected: {list(generated_data.keys())}")
+            raise ValueError(
+                f"Response structure unexpected: {list(generated_data.keys())}"
+            )
     elif not isinstance(generated_data, list):
-        raise ValueError(f"Response must be an array or object, got: {type(generated_data)}")
+        raise ValueError(
+            f"Response must be an array or object, got: {type(generated_data)}"
+        )
 
     # Ensure response is an array
     if not isinstance(generated_data, list):
         raise ValueError("Response must be an array of post variations")
 
-    cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None) 
+    cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None)
     print("CTA IMAGE OVERRIDE: ", cta_image_url)
     post_contents = [
-        _convert_to_post_content(generated_post, cta_image_override=cta_image_url, stock_pack_directory=stock_pack_directory) for generated_post in generated_data
+        _convert_to_post_content(
+            generated_post,
+            cta_image_override=cta_image_url,
+            stock_pack_directory=stock_pack_directory,
+        )
+        for generated_post in generated_data
     ]
 
     logger.info(f"Converted {len(post_contents)} posts successfully")
@@ -164,8 +187,10 @@ def _generate_prompt(
     Build complete generation prompt using modular injection architecture.
     """
     if cta:
-        logger.info(f"Injecting CTA - Text: {cta.get('cta_text', '')}, URL: {cta.get('cta_url', '')}")
-    
+        logger.info(
+            f"Injecting CTA - Text: {cta.get('cta_text', '')}, URL: {cta.get('cta_url', '')}"
+        )
+
     prompt = assemble_generation_prompt(
         layout_options=layout_options,
         slideshow_goals=slideshowGoals,
@@ -175,11 +200,13 @@ def _generate_prompt(
         cta=cta,
         classifier_context=classifier_context,
     )
-    
+
     return prompt
 
 
-def _convert_to_post_content(generated: dict, cta_image_override: str | None, stock_pack_directory:str|None) -> PostContent:
+def _convert_to_post_content(
+    generated: dict, cta_image_override: str | None, stock_pack_directory: str | None
+) -> PostContent:
     """
     Convert a single generated post into PostContent structure.
     Maps generated text back to slide elements.
@@ -189,7 +216,7 @@ def _convert_to_post_content(generated: dict, cta_image_override: str | None, st
     post_slides = []
 
     background_query = generated.get("background_query", None)
-    
+
     if not background_query:
         ValueError("No backgrounds were added to post")
 
@@ -201,19 +228,17 @@ def _convert_to_post_content(generated: dict, cta_image_override: str | None, st
         backgroundUrls = queryStockPackUrls(
             stock_pack_directory, len(generated["slides"])
         )
-    else: 
-        backgroundUrls = queryUnsplashUrls(
-            background_query, len(generated["slides"])
-        )
+    else:
+        backgroundUrls = queryUnsplashUrls(background_query, len(generated["slides"]))
 
     if backgroundUrls is None or len(backgroundUrls) == 0:
         raise ValueError("Failed to retrieve background images")
-    
+
     # If we got fewer URLs than slides, extend with the last URL as fallback
     while len(backgroundUrls) < len(generated["slides"]):
         backgroundUrls.append(backgroundUrls[-1] if backgroundUrls else None)
-        
-    last_slide_index = len(generated['slides']) - 1
+
+    last_slide_index = len(generated["slides"]) - 1
     # Replace last image with CTA IMAGE OVERRIDE
     if cta_image_override and last_slide_index >= 0:
         backgroundUrls[last_slide_index] = cta_image_override

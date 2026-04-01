@@ -4,7 +4,9 @@ import os
 
 from .late.provider import LateProvider
 from .postforme.provider import PostForMeProvider
+
 # from ..custom.social_account import CustomProvider
+
 
 def get_social_provider():
     # Use env/config to select provider
@@ -12,7 +14,7 @@ def get_social_provider():
     if provider_name == "postforme":
         return PostForMeProvider()
     if provider_name == "late":
-      return LateProvider()
+        return LateProvider()
     # elif provider_name == "custom":
     #     return CustomProvider()
     raise ValueError("Unknown social provider")

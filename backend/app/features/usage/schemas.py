@@ -9,8 +9,10 @@ from datetime import datetime
 
 # ═════════ REQUEST SCHEMAS ═════════
 
+
 class ConsumeUsageRequest(BaseModel):
     """Request to consume quota for a specific metric."""
+
     metric: str = Field(
         description="Metric type: slides_generated, images_generated, ai_credits_used, etc."
     )
@@ -19,6 +21,7 @@ class ConsumeUsageRequest(BaseModel):
 
 class TrackUsageRequest(BaseModel):
     """Request to track a usage event."""
+
     metric: str
     amount: int = Field(default=1, ge=1)
     brand_id: Optional[str] = None
@@ -26,6 +29,7 @@ class TrackUsageRequest(BaseModel):
 
 class UpdateQuotaRequest(BaseModel):
     """Request to update usage quotas (admin only)."""
+
     plan_tier: Optional[str] = None
     slides_limit: Optional[int] = None
     images_limit: Optional[int] = None
@@ -37,13 +41,16 @@ class UpdateQuotaRequest(BaseModel):
 
 class SyncPeriodRequest(BaseModel):
     """Request to sync usage period from Stripe subscription."""
+
     pass
 
 
 # ═════════ RESPONSE SCHEMAS ═════════
 
+
 class UsageMetricResponse(BaseModel):
     """Response with current usage metrics."""
+
     id: str
     brand_id: str
     slides_generated: int
@@ -55,12 +62,13 @@ class UsageMetricResponse(BaseModel):
     period_end: Optional[datetime]
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = {"from_attributes": True}
 
 
 class UsageQuotaResponse(BaseModel):
     """Response with quota limits for current user."""
+
     id: str
     user_id: str
     slides_limit: Optional[int]
@@ -73,12 +81,13 @@ class UsageQuotaResponse(BaseModel):
     stripe_product_id: Optional[str]
     is_active: bool
     created_at: datetime
-    
+
     model_config = {"from_attributes": True}
 
 
 class QuotaCheckResponse(BaseModel):
     """Response when checking quota against current usage."""
+
     metric: str
     current_usage: int
     limit: Optional[int]
@@ -89,6 +98,7 @@ class QuotaCheckResponse(BaseModel):
 
 class ConsumeResponse(BaseModel):
     """Response after consuming quota."""
+
     allowed: bool
     consumed: int
     new_total: int
@@ -97,12 +107,14 @@ class ConsumeResponse(BaseModel):
 
 class UsageListResponse(BaseModel):
     """Response with multiple usage metrics."""
+
     items: list[UsageMetricResponse]
     total: int
 
 
 class UsageSummaryResponse(BaseModel):
     """Summary response showing usage and quotas side-by-side."""
+
     brand_id: str
     metrics: UsageMetricResponse
     quotas: UsageQuotaResponse
@@ -110,5 +122,5 @@ class UsageSummaryResponse(BaseModel):
     period_active: bool
     period_start: Optional[datetime]
     period_end: Optional[datetime]
-    
+
     model_config = {"from_attributes": True}

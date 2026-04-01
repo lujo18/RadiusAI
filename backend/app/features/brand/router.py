@@ -10,7 +10,12 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.exceptions import AppError
 from app.features.brand import service
-from app.features.brand.schemas import BrandCreate, BrandUpdate, BrandResponse, BrandListResponse
+from app.features.brand.schemas import (
+    BrandCreate,
+    BrandUpdate,
+    BrandResponse,
+    BrandListResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +25,14 @@ router = APIRouter(
     responses={
         401: {"description": "Unauthorized"},
         404: {"description": "Not Found"},
-    }
+    },
 )
 
 
 # ═════════════════════════════════════════════════
 #  Create Brand
 # ═════════════════════════════════════════════════
+
 
 @router.post("", response_model=BrandResponse, status_code=201)
 async def create_brand(
@@ -36,7 +42,7 @@ async def create_brand(
 ):
     """
     Create a new brand
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -50,6 +56,7 @@ async def create_brand(
 #  Read Brands
 # ═════════════════════════════════════════════════
 
+
 @router.get("", response_model=list[BrandListResponse])
 async def list_brands(
     user_id: str = Depends(get_current_user),
@@ -57,7 +64,7 @@ async def list_brands(
 ):
     """
     List all brands for current user
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -75,7 +82,7 @@ async def get_brand(
 ):
     """
     Get brand details by ID
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -89,6 +96,7 @@ async def get_brand(
 #  Update Brand
 # ═════════════════════════════════════════════════
 
+
 @router.patch("/{brand_id}", response_model=BrandResponse)
 async def update_brand(
     brand_id: str,
@@ -98,7 +106,7 @@ async def update_brand(
 ):
     """
     Update brand details
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:
@@ -113,6 +121,7 @@ async def update_brand(
 #  Delete Brand
 # ═════════════════════════════════════════════════
 
+
 @router.delete("/{brand_id}", status_code=204)
 async def delete_brand(
     brand_id: str,
@@ -121,7 +130,7 @@ async def delete_brand(
 ):
     """
     Delete a brand
-    
+
     Requires: Authorization: Bearer <token>
     """
     try:

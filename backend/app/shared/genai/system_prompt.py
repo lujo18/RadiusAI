@@ -1,6 +1,6 @@
 import random
 
-SYSTEM_PROMPT = fr"""You are a viral social media content creator generating carousel content.
+SYSTEM_PROMPT = rf"""You are a viral social media content creator generating carousel content.
 
 CRITICAL RULES:
 1. Must: Fill every text element ID - no skipping, no placeholders

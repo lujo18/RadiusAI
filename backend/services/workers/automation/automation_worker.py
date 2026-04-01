@@ -35,18 +35,21 @@ logger = logging.getLogger(__name__)
 # Lazy initialization - will be called when first needed
 _supabase = None
 
+
 def _get_supabase():
     """Get Supabase client (lazy initialization)"""
     global _supabase
     if _supabase is None:
-        from config import Config
-        if not Config.SUPABASE_SERVICE_ROLE_KEY:
-            raise RuntimeError(
-                "SUPABASE_SERVICE_ROLE_KEY is not set. Worker cannot authenticate with Supabase. "
-                "This is required for the automation worker to function."
-            )
+        from app.core.config import settings
+
+            if not settings.SUPABASE_SERVICE_ROLE_KEY:
+                raise RuntimeError(
+                    "SUPABASE_SERVICE_ROLE_KEY is not set in settings. Worker cannot authenticate with Supabase. "
+                    "This is required for the automation worker to function."
+                )
         _supabase = get_supabase()
     return _supabase
+
 
 BATCH_SIZE = 50
 
@@ -77,11 +80,15 @@ async def process_due_automations():
         success_count = 0
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                logger.error(f"Error processing automation {due_automations[i]['id']}: {result}")
+                logger.error(
+                    f"Error processing automation {due_automations[i]['id']}: {result}"
+                )
             else:
                 success_count += 1
 
-        logger.info(f"Completed execution for {success_count}/{len(due_automations)} automations")
+        logger.info(
+            f"Completed execution for {success_count}/{len(due_automations)} automations"
+        )
 
     except Exception as e:
         logger.error(f"Error in process_due_automations: {e}", exc_info=True)
@@ -110,7 +117,7 @@ async def run_automation(automation_id: UUID) -> dict:
         "template_id_used": None,
         "cta_id_used": None,
         "platforms_used": [],
-        "stock_pack_directory": None
+        "stock_pack_directory": None,
     }
 
     try:
@@ -130,32 +137,48 @@ async def run_automation(automation_id: UUID) -> dict:
         team_id = automation.get("team_id")
         brand_id = automation.get("brand_id")
         stock_pack_directory = automation.get("stock_pack_directory")
-        
+
         # Validate required fields early
         if not team_id:
-            logger.error(f"Automation {automation_id} has no team_id. Automation data: {automation}")
+            logger.error(
+                f"Automation {automation_id} has no team_id. Automation data: {automation}"
+            )
             raise ValueError(f"Automation {automation_id} missing team_id")
-        
+
         if not template_ids:
-            logger.error(f"Automation {automation_id} has no template_ids. Automation data: {automation}")
+            logger.error(
+                f"Automation {automation_id} has no template_ids. Automation data: {automation}"
+            )
             raise ValueError(f"Automation {automation_id} missing template_ids")
-        
+
         if not platformIds:
-            logger.error(f"Automation {automation_id} has no platforms. Automation data: {automation}")
+            logger.error(
+                f"Automation {automation_id} has no platforms. Automation data: {automation}"
+            )
             raise ValueError(f"Automation {automation_id} missing platforms")
-        
+
         platforms = []
         for i in platformIds:
             integration = getIntegrationById(i)
             if integration:
                 platforms.append(integration.platform)
-        
+
         if not platforms:
-            logger.error(f"Automation {automation_id} has no valid platform integrations found. Platform IDs: {platformIds}")
-            raise ValueError(f"Automation {automation_id} platform integrations not found")
-                
-        cursor_template_index = automation.get("cursor_template_index", 0) % max(len(template_ids), 1)
-        cursor_cta_index = automation.get("cursor_cta_index", 0) % max(len(cta_ids), 1) if cta_ids else 0
+            logger.error(
+                f"Automation {automation_id} has no valid platform integrations found. Platform IDs: {platformIds}"
+            )
+            raise ValueError(
+                f"Automation {automation_id} platform integrations not found"
+            )
+
+        cursor_template_index = automation.get("cursor_template_index", 0) % max(
+            len(template_ids), 1
+        )
+        cursor_cta_index = (
+            automation.get("cursor_cta_index", 0) % max(len(cta_ids), 1)
+            if cta_ids
+            else 0
+        )
 
         template_id = template_ids[cursor_template_index]
         cta_id = cta_ids[cursor_cta_index] if cta_ids else None  # CTA is optional
@@ -177,14 +200,20 @@ async def run_automation(automation_id: UUID) -> dict:
             raise ValueError(f"CTA {cta_id} not found")
 
         # Step 4: Fetch brand settings
-        brand_response = _get_supabase().table("brand").select("*").eq("id", brand_id).single().execute()
+        brand_response = (
+            _get_supabase()
+            .table("brand")
+            .select("*")
+            .eq("id", brand_id)
+            .single()
+            .execute()
+        )
         if not brand_response.data:
             raise ValueError(f"Brand {brand_id} not found")
-        
 
         brand_data = brand_response.data
         brand_settings_json = brand_data.get("brand_settings", {})
-        
+
         # Parse brand_settings from JSON column
         # BrandSettings now matches frontend structure with all optional fields
         try:
@@ -225,7 +254,7 @@ async def run_automation(automation_id: UUID) -> dict:
             brand_settings=brand_settings,
             count=1,
             cta=cta_dict,
-            stock_pack_directory=stock_pack_directory
+            stock_pack_directory=stock_pack_directory,
         )
 
         if not posts:
@@ -242,8 +271,6 @@ async def run_automation(automation_id: UUID) -> dict:
         logger.info(f"Posting to platforms: {platforms}")
 
         from app.features.integrations.social.service import make_post
-        
-        
 
         for platform in platforms:
             try:
@@ -251,7 +278,7 @@ async def run_automation(automation_id: UUID) -> dict:
                 await make_post(
                     brand_id=str(brand_id),
                     platforms=[platform],  # PostForMe expects a list
-                    post_id=post_id
+                    post_id=post_id,
                 )
                 run_result["platforms_used"].append(platform)
             except Exception as e:
@@ -308,7 +335,9 @@ async def run_automation(automation_id: UUID) -> dict:
 
         # Update automation with error info and potential deactivation
         try:
-            await update_automation_after_failure(automation_id=automation_id, error_message=str(e))
+            await update_automation_after_failure(
+                automation_id=automation_id, error_message=str(e)
+            )
         except Exception as update_err:
             logger.error(f"Failed to update automation after failure: {update_err}")
 

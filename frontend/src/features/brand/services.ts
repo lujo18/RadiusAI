@@ -17,7 +17,7 @@ const brandService = {
     brand_id: string;
     platform: string;
   }) {
-    const resp = await backendClient.post(`/api/social/connect/${platform}`, {
+    const resp = await backendClient.post(`/api/v1/social/connect/${platform}`, {
       existing_profile_id: late_profile_id,
       brand_id,
     });
@@ -28,7 +28,7 @@ const brandService = {
    * Disconnect a social media account
    */
   async disconnectSocialAccount({ integration_id }: { integration_id: string }) {
-    const resp = await backendClient.post('/api/social/disconnect', { integration_id });
+    const resp = await backendClient.post('/api/v1/social/disconnect', { integration_id });
     return resp.data;
   },
 

@@ -11,10 +11,10 @@ print("TEST 1: BrandSettings with partial data (from database)")
 print("=" * 60)
 
 brand_settings_json = {
-    'id': 'brand-123',
-    'brand_id': 'brand-456',
-    'name': 'Tech Blog',
-    'niche': 'Technology',
+    "id": "brand-123",
+    "brand_id": "brand-456",
+    "name": "Tech Blog",
+    "niche": "Technology",
     # Missing: aesthetic, target_audience, brand_voice, content_pillars
     # But BrandSettings should accept this now with optional fields
 }
@@ -37,11 +37,11 @@ print("TEST 2: Template with minimal data")
 print("=" * 60)
 
 template_json = {
-    'id': 'template-123',
-    'name': 'My Template',
-    'user_id': 'user-456',
-    'category': 'listicle',
-    'status': 'active',
+    "id": "template-123",
+    "name": "My Template",
+    "user_id": "user-456",
+    "category": "listicle",
+    "status": "active",
 }
 
 try:
@@ -62,23 +62,23 @@ print("TEST 3: BrandSettings with all fields")
 print("=" * 60)
 
 full_brand_settings = {
-    'id': 'bs-789',
-    'brand_id': 'brand-789',
-    'name': 'Tech Community',
-    'niche': 'Tech & AI',
-    'aesthetic': 'Modern, Minimalist',
-    'target_audience': 'Software Developers',
-    'brand_voice': 'Expert, Helpful',
-    'content_pillars': ['tutorials', 'tips', 'trends'],
-    'tone_of_voice': 'professional',
-    'emoji_usage': 'minimal',
-    'forbidden_words': ['obvious', 'basic'],
-    'preferred_words': ['innovative', 'elegant'],
-    'hashtag_style': 'niche',
-    'hashtag_count': 15,
-    'hashtags': ['#python', '#javascript', '#webdev'],
-    'created_at': '2026-02-01T10:00:00Z',
-    'updated_at': '2026-02-02T15:30:00Z',
+    "id": "bs-789",
+    "brand_id": "brand-789",
+    "name": "Tech Community",
+    "niche": "Tech & AI",
+    "aesthetic": "Modern, Minimalist",
+    "target_audience": "Software Developers",
+    "brand_voice": "Expert, Helpful",
+    "content_pillars": ["tutorials", "tips", "trends"],
+    "tone_of_voice": "professional",
+    "emoji_usage": "minimal",
+    "forbidden_words": ["obvious", "basic"],
+    "preferred_words": ["innovative", "elegant"],
+    "hashtag_style": "niche",
+    "hashtag_count": 15,
+    "hashtags": ["#python", "#javascript", "#webdev"],
+    "created_at": "2026-02-01T10:00:00Z",
+    "updated_at": "2026-02-02T15:30:00Z",
 }
 
 try:

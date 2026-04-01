@@ -1,10 +1,11 @@
 from supabase.client import create_client, Client, ClientOptions
-from app.config import Config
+from app.core.config import settings
+
 
 
 def get_supabase() -> Client:
-    url = Config.SUPABASE_URL
-    key = Config.SUPABASE_SERVICE_ROLE_KEY
+    url = settings.SUPABASE_URL
+    key = settings.SUPABASE_SERVICE_ROLE_KEY
 
     if url is None or key is None:
         raise ValueError(
@@ -16,8 +17,8 @@ def get_supabase() -> Client:
 
 
 def get_stripe_supabase() -> Client:
-    url = Config.SUPABASE_URL
-    key = Config.SUPABASE_SERVICE_ROLE_KEY
+    url = settings.SUPABASE_URL
+    key = settings.SUPABASE_SERVICE_ROLE_KEY
 
     if url is None or key is None:
         raise ValueError(

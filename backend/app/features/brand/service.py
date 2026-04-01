@@ -20,6 +20,7 @@ repository = BrandRepository()
 #  CREATE
 # ════════════════════════════════
 
+
 async def create_brand(
     db: AsyncSession,
     user_id: str,
@@ -28,19 +29,19 @@ async def create_brand(
 ) -> Brand:
     """
     Create a new brand
-    
+
     Args:
         db: Database session
         user_id: User creating the brand
         payload: Brand creation data
         team_id: (optional) Team to assign brand to
-    
+
     Returns:
         Created Brand
     """
     # Generate unique brand ID
     brand_id = f"brand_{uuid.uuid4().hex[:12]}"
-    
+
     # Create new brand
     brand = Brand(
         id=brand_id,
@@ -51,7 +52,7 @@ async def create_brand(
         brand_settings=payload.brand_settings,
         cta_settings=payload.cta_settings,
     )
-    
+
     # Persist to database
     created = await repository.create(db, brand)
     logger.info(f"Brand created: {brand_id} by user {user_id}")
@@ -62,38 +63,41 @@ async def create_brand(
 #  READ
 # ════════════════════════════════
 
-async def get_brand(db: AsyncSession, brand_id: str, user_id: str | None = None) -> Brand:
+
+async def get_brand(
+    db: AsyncSession, brand_id: str, user_id: str | None = None
+) -> Brand:
     """
     Get brand by ID
-    
+
     Args:
         db: Database session
         brand_id: Brand ID to fetch
         user_id: (optional) For RLS check - verify user owns/has access to brand
-    
+
     Raises:
         NotFoundError: If brand does not exist
     """
     brand = await repository.get_by_id(db, brand_id)
     if not brand:
         raise NotFoundError("Brand", brand_id)
-    
+
     # RLS: Optionally verify user has access
     if user_id and brand.user_id != user_id and brand.team_id:
         # TODO: Check if user is member of team
         pass
-    
+
     return brand
 
 
 async def list_user_brands(db: AsyncSession, user_id: str) -> list[Brand]:
     """
     List all brands owned by a user
-    
+
     Args:
         db: Database session
         user_id: User ID to fetch brands for
-    
+
     Returns:
         List of Brand objects
     """
@@ -105,6 +109,7 @@ async def list_user_brands(db: AsyncSession, user_id: str) -> list[Brand]:
 #  UPDATE
 # ════════════════════════════════
 
+
 async def update_brand(
     db: AsyncSession,
     brand_id: str,
@@ -113,18 +118,18 @@ async def update_brand(
 ) -> Brand:
     """
     Update brand details
-    
+
     Args:
         db: Database session
         brand_id: Brand ID to update
         payload: Update data
         user_id: (optional) For RLS check
-    
+
     Raises:
         NotFoundError: If brand does not exist
     """
     brand = await get_brand(db, brand_id, user_id)
-    
+
     # Update fields if provided
     if payload.name is not None:
         brand.name = payload.name
@@ -134,7 +139,7 @@ async def update_brand(
         brand.brand_settings = payload.brand_settings
     if payload.cta_settings is not None:
         brand.cta_settings = payload.cta_settings
-    
+
     # Persist changes
     updated = await repository.update(db, brand)
     logger.info(f"Brand updated: {brand_id}")
@@ -145,21 +150,24 @@ async def update_brand(
 #  DELETE
 # ════════════════════════════════
 
-async def delete_brand(db: AsyncSession, brand_id: str, user_id: str | None = None) -> None:
+
+async def delete_brand(
+    db: AsyncSession, brand_id: str, user_id: str | None = None
+) -> None:
     """
     Delete a brand
-    
+
     Args:
         db: Database session
         brand_id: Brand ID to delete
         user_id: (optional) For RLS check
-    
+
     Raises:
         NotFoundError: If brand does not exist
     """
     # Verify exists first
     brand = await get_brand(db, brand_id, user_id)
-    
+
     # Delete
     await repository.delete_by_id(db, brand_id)
     logger.info(f"Brand deleted: {brand_id}")

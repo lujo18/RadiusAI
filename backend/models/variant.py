@@ -7,23 +7,30 @@ from .enums import VariantSetStatus
 
 # ==================== VARIANT SUB-MODELS ====================
 
+
 class TemplateStats(BaseModel):
+    """Aggregated statistics for a single template in an experiment."""
     avgSaves: float
     avgEngagement: float
     avgImpressions: float
     avgEngagementRate: float
     totalPosts: int
 
+
 class VariantSetResults(BaseModel):
+    """Results and insights produced after a variant set completes."""
     winningTemplateId: str
     confidenceScore: float
     stats: dict[str, TemplateStats]
     insights: List[str]
     completedAt: datetime
 
+
 # ==================== VARIANT SET MODELS ====================
 
+
 class VariantSet(BaseModel):
+    """Representation of an A/B variant set and its configuration."""
     id: str
     team_id: str  # Team ownership (primary)
     user_id: str  # Creator attribution
@@ -35,7 +42,9 @@ class VariantSet(BaseModel):
     posts_per_template: int
     results: Optional[dict] = None
 
+
 class CreateVariantSetRequest(BaseModel):
+    """Request payload for creating a new variant set."""
     teamId: str  # NOW REQUIRED: Must specify team when creating
     name: str
     templates: List[str]

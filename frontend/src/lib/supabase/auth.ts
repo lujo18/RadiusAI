@@ -13,6 +13,18 @@ export interface AuthResponse {
   error: AuthError | null;
 }
 
+const parseJsonSafe = (text: string): any | null => {
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
 // =====================================================
 // EMAIL/PASSWORD AUTHENTICATION
 // =====================================================
@@ -68,13 +80,14 @@ export const signInWithEmail = async (
  */
 export const signInWithGoogle = async (): Promise<void> => {
   // Use server-side signin to ensure PKCE verifier is stored in cookies
-  const res = await fetch('/api/auth/signin', {
+  const res = await fetch('/api/v1/auth/signin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider: 'google', redirectTo: `${window.location.origin}/auth/callback` }),
   });
 
-  const payload = await res.json();
+  const payloadText = await res.text();
+  const payload = parseJsonSafe(payloadText);
   if (!res.ok) {
     throw new Error(payload?.error || 'Failed to start Google sign-in');
   }
@@ -89,13 +102,14 @@ export const signInWithGoogle = async (): Promise<void> => {
  * Sign in with GitHub OAuth
  */
 export const signInWithGitHub = async (): Promise<void> => {
-  const res = await fetch('/api/auth/signin', {
+  const res = await fetch('/api/v1/auth/signin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider: 'github', redirectTo: `${window.location.origin}/auth/callback` }),
   });
 
-  const payload = await res.json();
+  const payloadText = await res.text();
+  const payload = parseJsonSafe(payloadText);
   if (!res.ok) {
     throw new Error(payload?.error || 'Failed to start GitHub sign-in');
   }

@@ -8,6 +8,11 @@ from app.features.integrations.supabase.client import get_supabase
 
 # CREATE ######
 class UsageRepository(BaseRepository):
+    """Repository for team usage records stored in Supabase.
+
+    This provides helper methods used by higher-level usage services. It
+    is intentionally lightweight to match legacy import patterns.
+    """
 
     def create(self, team_id: str, period_start: str, period_end: str):
         """Creates an empty team activity log for the given subscription period"""
@@ -29,12 +34,11 @@ class UsageRepository(BaseRepository):
             if error:
                 print(f"initialize_team_activity_log failed for {team_id}: {error}")
                 return None
-            
+
             return getattr(res, "data", None)
         except Exception as e:
             print(f"initialize_team_activity_log failed for {team_id}: {e}")
             return None
-
 
 
 def get_recent_team_activity(team_id: str) -> Optional[Dict[str, Any]]:

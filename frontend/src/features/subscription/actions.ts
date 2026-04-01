@@ -40,73 +40,6 @@ async function requireSession() {
   return { user, session };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// startCheckout
-// ─────────────────────────────────────────────────────────────────────────────
-
-export interface StartCheckoutOptions {
-  /** URL to land on after successful payment. Defaults to /overview */
-  successUrl?: string;
-  /** URL Stripe returns to on cancel. Defaults to current page */
-  cancelUrl?: string;
-}
-
-/**
- * Start a new Stripe Checkout session for a user who has no subscription.
- * Mirrors the `/checkout` page flow exactly.
- *
- * Throws `'not_authenticated'` | `'session_expired'` | `'no_product_id'` | `Error`
- */
-export async function startCheckout(
-  planKey: PlanKey,
-  options: StartCheckoutOptions = {}
-): Promise<void> {
-  const { user, session } = await requireSession();
-
-  // Check if already subscribed
-  const { data: userData } = await supabase
-    .from('users')
-    .select('subscription_status, stripe_subscription_id')
-    .eq('id', user.id)
-    .single();
-
-  if (userData?.subscription_status === 'active' && userData?.stripe_subscription_id) {
-    // Already subscribed — send to overview
-    window.location.href = '/overview?message=already_subscribed';
-    return;
-  }
-
-  const productId = getProductId(planKey);
-  if (!productId) throw new Error('no_product_id');
-
-  const successUrl = options.successUrl ?? `${window.location.origin}/overview`;
-  const cancelUrl = options.cancelUrl ?? window.location.href;
-
-  const res = await fetch(`${apiBase()}/api/billing/checkout`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-    },
-    body: JSON.stringify({
-      product_id: productId,
-      user_id: user.id,
-      plan: planKey,
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-    }),
-  });
-
-  if (!res.ok) {
-    const body = (await res.json().catch(() => ({}))) as { detail?: string };
-    throw new Error(body?.detail || 'checkout_failed');
-  }
-
-  const data = (await res.json()) as { url?: string };
-  if (!data.url) throw new Error('checkout_no_url');
-
-  window.location.href = data.url;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // switchPlan  (upgrade / downgrade for existing subscribers)
@@ -114,12 +47,12 @@ export async function startCheckout(
 
 /**
  * Switch an active subscription to a different plan via the upgrade endpoint.
- * Uses the price_id + product_id returned by /api/billing/available-upgrades.
+ * Uses the price_id + product_id returned by /api/v1/billing/available-upgrades.
  */
 export async function switchPlan(priceId: string, productId: string): Promise<void> {
   const { session } = await requireSession();
 
-  const res = await fetch(`${apiBase()}/api/billing/upgrade`, {
+  const res = await fetch(`${apiBase()}/api/v1/billing/upgrade`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -145,7 +78,7 @@ export async function switchPlan(priceId: string, productId: string): Promise<vo
 export async function openPortal(): Promise<void> {
   const { session } = await requireSession();
 
-  const res = await fetch(`${apiBase()}/api/billing/portal`, {
+  const res = await fetch(`${apiBase()}/api/v1/billing/portal`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

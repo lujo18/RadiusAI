@@ -10,6 +10,7 @@ from typing import TypedDict, Literal, Optional, List
 
 class TextElement(TypedDict, total=False):
     """Text element structure matching frontend Konva format"""
+
     id: str
     type: Literal["text"]
     content: str
@@ -34,6 +35,7 @@ class TextElement(TypedDict, total=False):
 
 class SlideLayout(TypedDict):
     """Slide layout structure"""
+
     name: str
     text_elements: List[TextElement]
 
@@ -80,7 +82,7 @@ SLIDE_CONSTANTS: dict[str, TextElement] = {
         "shadow_offset_y": 2,
         "shadow_opacity": 0.5,
         "line_height": 1.3,
-    }
+    },
 }
 
 
@@ -99,19 +101,16 @@ SLIDE_LAYOUTS: dict[str, SlideLayout] = {
                 "x": 100,
                 "y": 600,
             }
-        ]
+        ],
     },
     "header_and_body": {
         "name": "header_and_body",
         "text_elements": [
             SLIDE_CONSTANTS["header_text"],
             SLIDE_CONSTANTS["body_text"],
-        ]
+        ],
     },
-    "header": {
-        "name": "header",
-        "text_elements": [SLIDE_CONSTANTS["header_text"]]
-    },
+    "header": {"name": "header", "text_elements": [SLIDE_CONSTANTS["header_text"]]},
 }
 
 

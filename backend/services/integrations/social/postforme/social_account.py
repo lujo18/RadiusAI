@@ -2,7 +2,7 @@ from typing import List
 from typing import Optional, Literal
 import httpx
 
-from config import Config
+from app.core.config import settings
 from app.features.posts.schemas import Post
 from app.features.integrations.supabase.db.post import (
     get_post,
@@ -18,7 +18,7 @@ from app.features.integrations.supabase.db.brand import (
 )
 from app.features.integrations.supabase.client import get_supabase
 
-POST_FOR_ME_API_KEY = Config.POST_FOR_ME_API_KEY
+POST_FOR_ME_API_KEY = settings.POST_FOR_ME_API_KEY
 
 
 def _get_user_id_from_brand(brand_id: str) -> Optional[str]:
@@ -143,7 +143,7 @@ async def disconnect_integration(integration_id: str):
             f"https://api.postforme.dev/v1/social-accounts/{integration_id}/disconnect",
             headers={"Authorization": f"Bearer {POST_FOR_ME_API_KEY}"},
         )
-        
+
         print("ACCOUNT DISCONNECTED", r)
 
         r.raise_for_status()
@@ -179,11 +179,11 @@ async def make_post(
         raise PermissionError("brand_id does not match post")
 
     user_id = raw_post.get("user_id")
-    
+
     # Publish flow
     # 1) collect connected integrations
     social_integrations = get_social_accounts(brand_id, platforms)
-    
+
     platform_ids = [i.id for i in social_integrations]
 
     # Draft flow: just update status
@@ -196,8 +196,6 @@ async def make_post(
         if scheduled_at:
             updates["scheduled_time"] = scheduled_at
         update_post(post_id, updates)
-
-    
 
     # Extract pfm account ids defensively
     pfm_account_ids = []
@@ -265,8 +263,7 @@ async def make_post(
             )
             r.raise_for_status()
             resp = r.json()
-    
-            
+
         print("POST FOR ME RESPONSE:", resp)
 
         # Persist external ids and mark posted
@@ -282,7 +279,7 @@ async def make_post(
 
         return {"status": "posted", "external_post_id": external_post_id}
     except Exception as e:
-            print("FAILED TO POST, POSTFORME ", e);
+        print("FAILED TO POST, POSTFORME ", e)
 
 
 async def publish_post(brand_id: str, platforms: List[str], post_id: str):

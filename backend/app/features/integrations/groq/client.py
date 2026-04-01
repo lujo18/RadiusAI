@@ -1,7 +1,6 @@
+from app.core.config import settings
 from groq import Groq
 
-from app.config import Config
-
 groq = Groq(
-    api_key=Config.GROQ_API_KEY,
+    api_key=settings.GROQ_API_KEY,
 )

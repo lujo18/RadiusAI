@@ -7,7 +7,7 @@ export const postService = {
    * Publish a post to one or more platforms
    */
   async publishPost(brand_id: string, platforms: string[], postId: string) {
-    const resp = await backendClient.post('/api/post', {
+    const resp = await backendClient.post('/api/v1/post', {
       brand_id,
       platforms,
       post_id: postId,
@@ -20,7 +20,7 @@ export const postService = {
    * Save a post as draft without publishing
    */
   async draftPost(brand_id: string, platforms: string[], postId: string) {
-    const resp = await backendClient.post('/api/post', {
+    const resp = await backendClient.post('/api/v1/post', {
       brand_id,
       platforms,
       post_id: postId,
@@ -33,7 +33,7 @@ export const postService = {
    * Schedule a post for future publication
    */
   async schedulePost(brand_id: string, platforms: string[], postId: string, scheduled_at: string) {
-    const resp = await backendClient.post('/api/post', {
+    const resp = await backendClient.post('/api/v1/post', {
       brand_id,
       platforms,
       post_id: postId,

@@ -17,43 +17,42 @@ logger = logging.getLogger(__name__)
 class GenerateService:
     """
     Content generation orchestration service.
-    
+
     Wraps GenAI providers (Gemini, Groq) with error handling,
     validation, and structured output.
-    
+
     Future: Extensible for multiple LLM providers (Claude, GPT-4, etc.)
     """
-    
+
     def __init__(self):
         """Initialize with lazy-loaded GenAI clients"""
         self._groq_client = None
         self._gemini_client = None
-    
-    
+
     @property
     def groq_client(self):
         """Lazy-load Groq client"""
         if self._groq_client is None:
             try:
                 from app.features.integrations.groq.client import groq
+
                 self._groq_client = groq
             except ImportError:
                 raise ExternalServiceError("Groq client not configured")
         return self._groq_client
-    
-    
+
     @property
     def gemini_client(self):
         """Lazy-load Gemini client"""
         if self._gemini_client is None:
             try:
                 from app.features.generate.genai.client import client
+
                 self._gemini_client = client
             except ImportError:
                 raise ExternalServiceError("Gemini client not configured")
         return self._gemini_client
-    
-    
+
     async def generate_carousel_content(
         self,
         topic: str,
@@ -61,11 +60,11 @@ class GenerateService:
         content_rules: dict,
         template_structure: dict,
         count: int = 1,
-        provider: str = "groq"  # "groq", "gemini"
+        provider: str = "groq",  # "groq", "gemini"
     ) -> list[dict]:
         """
         Generate carousel content (multiple slide variations) for a topic.
-        
+
         Args:
             topic: Content topic/goal
             brand_settings: Brand voice, tone, aesthetic, forbidden words, etc.
@@ -73,23 +72,23 @@ class GenerateService:
             template_structure: Slide count, designs, text element placeholders
             count: Number of variations to generate
             provider: LLM provider to use ("groq" or "gemini")
-        
+
         Returns:
             List of carousel objects with slides, caption, hashtags
-        
+
         Raises:
             ValidationError: If inputs are invalid
             ExternalServiceError: If LLM call fails
         """
-        
+
         if count < 1 or count > 10:
             raise ValidationError("Count must be between 1 and 10")
-        
+
         if not topic or not topic.strip():
             raise ValidationError("Topic cannot be empty")
-        
+
         logger.info(f"Generating {count} carousel variations via {provider}")
-        
+
         try:
             if provider == "groq":
                 return await self._generate_via_groq(
@@ -101,32 +100,31 @@ class GenerateService:
                 )
             else:
                 raise ValidationError(f"Unknown provider: {provider}")
-        
+
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {e}")
             raise ExternalServiceError("LLM returned invalid JSON format")
         except Exception as e:
             logger.error(f"Content generation failed: {e}", exc_info=True)
             raise ExternalServiceError(f"Content generation failed: {str(e)}")
-    
-    
+
     async def _generate_via_groq(
         self,
         topic: str,
         brand_settings: dict,
         content_rules: dict,
         template_structure: dict,
-        count: int
+        count: int,
     ) -> list[dict]:
         """Generate content using Groq API (GPT-OSS 120B + Llama)"""
-        
+
         # Build prompt from template structure and brand settings
         prompt = self._build_content_prompt(
             topic, brand_settings, content_rules, template_structure, count
         )
-        
+
         logger.debug(f"Groq request prompt length: {len(prompt)} chars")
-        
+
         # Call Groq API with JSON schema
         response = self.groq_client.chat.completions.create(
             model="openai/gpt-oss-120b",
@@ -168,11 +166,11 @@ class GenerateService:
                 },
             },
         )
-        
+
         # Parse response
         response_text = response.choices[0].message.content
         generated_data = json.loads(response_text.strip())
-        
+
         # Extract variations array
         if "variations" in generated_data:
             variations = generated_data["variations"]
@@ -180,76 +178,74 @@ class GenerateService:
             variations = generated_data
         else:
             raise ValidationError("Unexpected Groq response structure")
-        
+
         logger.info(f"Generated {len(variations)} carousel variations via Groq")
         return variations
-    
-    
+
     async def _generate_via_gemini(
         self,
         topic: str,
         brand_settings: dict,
         content_rules: dict,
         template_structure: dict,
-        count: int
+        count: int,
     ) -> list[dict]:
         """
         Generate content using Gemini API.
-        
+
         TODO: Implement when Gemini integration is updated to new API
         """
         raise NotImplementedError(
             "Gemini provider currently under migration. Use Groq for now."
         )
-    
-    
+
     def _build_content_prompt(
         self,
         topic: str,
         brand_settings: dict,
         content_rules: dict,
         template_structure: dict,
-        count: int
+        count: int,
     ) -> str:
         """
         Build detailed generation prompt from template and brand settings.
-        
+
         Maps template text elements to generation instructions.
         """
-        
+
         # Build slide-by-slide instructions
         slide_instructions = []
         for slide in template_structure.get("slides", []):
             slide_num = slide.get("slideNumber", 0)
             elements = slide.get("textElements", {})
-            
+
             slide_instr = f"\nSlide {slide_num}:"
             for elem_id, elem_info in elements.items():
                 description = elem_info.get("content", elem_id)
                 slide_instr += f"\n  • {elem_id}: {description}"
-            
+
             slide_instructions.append(slide_instr)
-        
+
         # Build prompt
         prompt = f"""Generate {count} UNIQUE carousel content variations for TikTok/Instagram.
 
 TOPIC: {topic}
 
 BRAND VOICE:
-- Niche: {brand_settings.get('niche', 'general')}
-- Tone: {brand_settings.get('tone', 'friendly')}
-- Aesthetic: {brand_settings.get('aesthetic', 'modern')}
-- Emoji usage: {brand_settings.get('emoji_usage', 'moderate')}
-- NEVER use: {', '.join(brand_settings.get('forbidden_words', []))}
-- PREFER: {', '.join(brand_settings.get('preferred_words', []))}
+- Niche: {brand_settings.get("niche", "general")}
+- Tone: {brand_settings.get("tone", "friendly")}
+- Aesthetic: {brand_settings.get("aesthetic", "modern")}
+- Emoji usage: {brand_settings.get("emoji_usage", "moderate")}
+- NEVER use: {", ".join(brand_settings.get("forbidden_words", []))}
+- PREFER: {", ".join(brand_settings.get("preferred_words", []))}
 
 CONTENT RULES:
-- Format: {content_rules.get('format', 'listicle')}
-- Hook style: {content_rules.get('hook_style', 'question')}
-- Depth: {content_rules.get('depth_level', 'detailed')}
+- Format: {content_rules.get("format", "listicle")}
+- Hook style: {content_rules.get("hook_style", "question")}
+- Depth: {content_rules.get("depth_level", "detailed")}
 
 SLIDE STRUCTURE:
-{''.join(slide_instructions)}
+{"".join(slide_instructions)}
 
 REQUIREMENTS:
 - Each variation must be UNIQUE and offer different perspectives/angles on {topic}
@@ -260,17 +256,16 @@ REQUIREMENTS:
 - 5-10 trending hashtags per variation
 
 Return JSON array with {count} carousel variations. Each has: slides[], caption, hashtags[]"""
-        
+
         return prompt
-    
-    
+
     def _get_system_prompt(self, brand_settings: dict) -> str:
         """
         Get system prompt for LLM to guide content generation.
-        
+
         Encoded with brand voice patterns.
         """
-        
+
         return """You are a viral TikTok/Instagram content strategist.
 
 INSTRUCTIONS:
@@ -283,41 +278,40 @@ INSTRUCTIONS:
 - No filler content like "let's dive in" or "here's the thing"
 
 OUTPUT FORMAT: JSON array of carousel objects"""
-    
-    
+
     async def validate_carousel_response(
-        self,
-        response: list[dict],
-        template_structure: dict
+        self, response: list[dict], template_structure: dict
     ) -> bool:
         """
         Validate LLM response meets template requirements.
-        
+
         Checks:
         - All required slides present
         - All text elements filled
         - No empty values
-        
+
         Returns:
             True if valid, raises ValidationError if invalid
         """
-        
-        required_slides = {s["slideNumber"] for s in template_structure.get("slides", [])}
-        
+
+        required_slides = {
+            s["slideNumber"] for s in template_structure.get("slides", [])
+        }
+
         for idx, carousel in enumerate(response):
             if not isinstance(carousel, dict):
                 raise ValidationError(f"Carousel {idx} is not an object")
-            
+
             if "slides" not in carousel:
                 raise ValidationError(f"Carousel {idx} missing 'slides' field")
-            
+
             # Validate slides exist
             carousel_slides = {s.get("slide_number"): s for s in carousel["slides"]}
-            
+
             if not required_slides.issubset(carousel_slides.keys()):
                 missing = required_slides - carousel_slides.keys()
                 raise ValidationError(f"Carousel {idx} missing slides: {missing}")
-            
+
             # Validate text elements are filled (not empty)
             for slide_num, slide_data in carousel_slides.items():
                 text_elements = slide_data.get("text_elements", {})
@@ -326,7 +320,7 @@ OUTPUT FORMAT: JSON array of carousel objects"""
                         raise ValidationError(
                             f"Carousel {idx}, Slide {slide_num}, Element {elem_id} is empty"
                         )
-        
+
         logger.debug(f"Validated {len(response)} carousel responses")
         return True
 

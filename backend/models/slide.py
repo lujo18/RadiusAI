@@ -1,33 +1,42 @@
 # Modals for slides (types)
 
-from pydantic import BaseModel, Field
-from typing import List, Literal, Optional, Dict, Any, Tuple
+from pydantic import BaseModel
+from typing import List, Literal, Optional, Tuple
 from enum import Enum
 
 
 class TextAlign(str, Enum):
+    """Horizontal text alignment options for text elements."""
     LEFT = "left"
     CENTER = "center"
     RIGHT = "right"
 
+
 class FontStyle(str, Enum):
+    """Font style options for text elements."""
     NORMAL = "normal"
     ITALIC = "italic"
     BOLD = "bold"
 
+
 class BackgroundType(str, Enum):
+    """Supported background types for a slide design."""
     SOLID = "solid"
     GRADIENT = "gradient"
     IMAGE = "image"
 
+
 class BackgroundConfig(BaseModel):
+    """Configuration for slide backgrounds (colors, images, gradients)."""
     type: BackgroundType
     color: Optional[str] = None
     image_url: Optional[str] = None
     gradient_colors: Optional[Tuple[str, str]] = None
     gradient_angle: Optional[float] = None
 
+
 class TextElement(BaseModel):
+    """A text element placed on a slide design."""
     id: str
     type: Literal["text"] = "text"
     content: str
@@ -51,24 +60,32 @@ class TextElement(BaseModel):
     # Additional text properties
     letter_spacing: Optional[float] = None
     line_height: Optional[float] = None
-   
+
+
 class SlideDesign(BaseModel):
+    """Reusable design template for slides (contains elements and background)."""
     id: str
     name: str
     background: BackgroundConfig
     elements: List[TextElement]
     dynamic: bool = False
-    
+
+
 class SlideSequence(BaseModel):
+    """Sequence mapping that assigns slide numbers to design IDs."""
     slide_number: int
     design_id: str
 
+
 class LayoutConfig(BaseModel):
+    """Layout configuration (aspect ratio and pixel dimensions)."""
     aspect_ratio: str = "1:1"
     width: int = 1080
     height: int = 1080
 
+
 class PostSlide(BaseModel):
+    """A rendered slide within a PostContent payload."""
     slide_number: int
     design_id: str
     background: BackgroundConfig
@@ -76,7 +93,9 @@ class PostSlide(BaseModel):
     elements: List[TextElement]
     image_prompt: Optional[str] = None
 
+
 class PostContent(BaseModel):
+    """Top-level post content returned by the renderer or generator."""
     slides: List[PostSlide]
     layout: LayoutConfig
     caption: str

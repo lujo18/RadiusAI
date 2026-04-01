@@ -52,7 +52,7 @@ export default function UpgradeFlow({ isOpen, onClose, trigger = 'manual', messa
         return;
       }
 
-      const response = await fetch(`${apiBase}/api/billing/available-upgrades`, {
+      const response = await fetch(`${apiBase}/api/v1/billing/available-upgrades`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },
@@ -87,7 +87,7 @@ export default function UpgradeFlow({ isOpen, onClose, trigger = 'manual', messa
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${apiBase}/api/billing/upgrade`, {
+      const response = await fetch(`${apiBase}/api/v1/billing/upgrade`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -9,6 +9,7 @@ from datetime import datetime
 
 class TemplateStats(BaseModel):
     """Performance statistics for a template variant"""
+
     avg_saves: float
     avg_engagement: float
     avg_impressions: float
@@ -18,6 +19,7 @@ class TemplateStats(BaseModel):
 
 class VariantSetResults(BaseModel):
     """Results of completed variant test"""
+
     winning_template_id: str
     confidence_score: float
     stats: dict[str, TemplateStats]
@@ -27,6 +29,7 @@ class VariantSetResults(BaseModel):
 
 class VariantSet(BaseModel):
     """Variant set for A/B testing"""
+
     id: str
     team_id: str
     user_id: str
@@ -46,6 +49,7 @@ class VariantSet(BaseModel):
 
 class CreateVariantSetRequest(BaseModel):
     """Request to create variant test"""
+
     name: str = Field(min_length=1, max_length=255)
     description: Optional[str] = None
     templates: List[str] = Field(min_items=2, max_items=10)
@@ -55,6 +59,7 @@ class CreateVariantSetRequest(BaseModel):
 
 class UpdateVariantSetRequest(BaseModel):
     """Request to update variant set"""
+
     name: Optional[str] = None
     description: Optional[str] = None
     status: Optional[Literal["active", "paused", "completed"]] = None
@@ -62,11 +67,13 @@ class UpdateVariantSetRequest(BaseModel):
 
 class CompleteVariantSetRequest(BaseModel):
     """Request to complete variant test and get results"""
+
     variant_set_id: str
 
 
 class VariantPerformanceResponse(BaseModel):
     """Performance metrics for a variant"""
+
     template_id: str
     total_posts: int
     avg_impressions: float
@@ -80,6 +87,7 @@ class VariantPerformanceResponse(BaseModel):
 
 class VariantResultResponse(BaseModel):
     """A/B test results"""
+
     variant_set_id: str
     winning_template_id: str
     confidence_score: float

@@ -30,14 +30,14 @@ logger = logging.getLogger(__name__)
 
 def create_app() -> FastAPI:
     """Create and configure FastAPI application"""
-    
+
     app = FastAPI(
         title="SlideForge API",
         version="2.0.0",
         description="AI-powered carousel content automation for social media",
         lifespan=lifespan,
     )
-    
+
     # ═════════ Middleware ═════════
     app.add_middleware(
         CORSMiddleware,
@@ -50,24 +50,33 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    
+
     # ═════════ Logging ═════════
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    
+
     # ═════════ Exception Handlers ═════════
     register_exception_handlers(app)
-    
+
     # ═════════ Routes ═════════
-    
+
     # Feature-based API router (all endpoints in app/features/)
     # Legacy routers have been fully migrated into feature modules
     app.include_router(api_router)
-    
+
+    # Polar payment processor admin endpoints (feature-flagged)
+    if settings.USE_POLAR:
+        from app.features.billing.admin_router import (
+            router as polar_admin_router,
+        )
+
+        app.include_router(polar_admin_router, prefix="/api")
+        logger.info("✓ Polar admin endpoints registered")
+
     # ═════════ Health Check Routes ═════════
-    
+
     @app.get("/", tags=["health"])
     def root():
         """Health check - public endpoint"""
@@ -77,7 +86,7 @@ def create_app() -> FastAPI:
             "status": "running",
             "environment": settings.ENV,
         }
-    
+
     @app.get("/health", tags=["health"])
     def health():
         """Detailed health check - public endpoint"""
@@ -85,7 +94,7 @@ def create_app() -> FastAPI:
             "status": "ok",
             "database": "connected",
         }
-    
+
     @app.get("/protected", tags=["auth"])
     async def protected_route(user_id: str = Depends(get_current_user)):
         """Protected route - requires authentication"""
@@ -93,7 +102,7 @@ def create_app() -> FastAPI:
             "user_id": user_id,
             "message": "Access granted",
         }
-    
+
     return app
 
 
@@ -102,10 +111,10 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
         port=8000,
         reload=settings.ENV == "development",
     )
-

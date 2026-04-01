@@ -11,7 +11,7 @@ standard_layout = ["ac", "as"]
 def queryStockPackUrls(stock_pack_id: str, slides: int):
     """Get stock pack URLs for specified number of slides."""
     photos = []
-    
+
     i = 0
     for layout in standard_layout:
         photos.append(getStockImage(stock_pack_id, layout))

@@ -124,13 +124,13 @@ Main tabs:
 The app expects a backend API with these endpoints:
 
 ```
-POST /api/auth/login
-POST /api/auth/signup
-POST /api/content/generate
-GET  /api/content/scheduled
-GET  /api/analytics
-GET  /api/style-guide
-PUT  /api/style-guide
+POST /api/v1/auth/login
+POST /api/v1/auth/signup
+POST /api/v1/content/generate
+GET  /api/v1/content/scheduled
+GET  /api/v1/analytics
+GET  /api/v1/style-guide
+PUT  /api/v1/style-guide
 ```
 
 API client configured in `src/lib/api.ts` with:
@@ -167,7 +167,7 @@ NEXT_PUBLIC_APP_NAME=ViralStack
 ## Next Steps
 
 1. Run `npm install` to install all dependencies
-2. Set up backend API (FastAPI/Node.js)
+2. Set up backend API (Fastapi/v1/Node.js)
 3. Connect authentication endpoints
 4. Implement real-time analytics
 5. Add WebSocket for live updates

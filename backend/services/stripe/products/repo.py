@@ -1,4 +1,3 @@
-
 from typing import Any, Dict, Optional
 
 from app.features.integrations.supabase.client import get_supabase
@@ -24,7 +23,13 @@ def get_product_rate_limit(product_id: str) -> Optional[Dict[str, Any]]:
     """
     supabase = get_supabase()
     try:
-        res = supabase.table("product_rate_limits").select("*").eq("product_id", product_id).limit(1).execute()
+        res = (
+            supabase.table("product_rate_limits")
+            .select("*")
+            .eq("product_id", product_id)
+            .limit(1)
+            .execute()
+        )
         if getattr(res, "error", None) or not getattr(res, "data", None):
             return None
         return res.data[0]

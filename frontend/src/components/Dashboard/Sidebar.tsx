@@ -163,7 +163,7 @@ export default function DashboardSidebar({
     if (!supportType || !supportMessage.trim()) return;
     setSupportStatus('loading');
     try {
-      const res = await fetch('/api/support', {
+      const res = await fetch('/api/v1/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

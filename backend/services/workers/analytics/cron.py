@@ -8,13 +8,14 @@ from app.features.analytics.service import process_due_posts
 
 scheduler = BackgroundScheduler()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     scheduler.add_job(
         lambda: asyncio.run(process_due_posts()),
-        CronTrigger(minute="*/10"),    # every 5 minutes
+        CronTrigger(minute="*/10"),  # every 5 minutes
         id="analytics_worker",
-        max_instances=1,              # avoid overlapping runs
+        max_instances=1,  # avoid overlapping runs
         replace_existing=True,
     )
     scheduler.start()
@@ -22,5 +23,6 @@ async def lifespan(app: FastAPI):
         yield
     finally:
         scheduler.shutdown()
+
 
 app = FastAPI(lifespan=lifespan)

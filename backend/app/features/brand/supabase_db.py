@@ -69,7 +69,9 @@ def connect_social_account_to_brand(
     now = datetime.now().isoformat()
 
     data = {
-        "id": str(uuid.uuid4()),  # Generate UUID for new rows (required for upsert insert)
+        "id": str(
+            uuid.uuid4()
+        ),  # Generate UUID for new rows (required for upsert insert)
         "brand_id": brand_id,
         "platform": platform,
         "pfm_account_id": post_for_me_account_id,
@@ -115,16 +117,18 @@ def update_social_account_status(
     return res.data[0] if res.data else None
 
 
-def get_social_accounts(brand_id: str, platforms: List[str]) -> List[PlatformIntegration]:
+def get_social_accounts(
+    brand_id: str, platforms: List[str]
+) -> List[PlatformIntegration]:
     """Get social platform integrations for a brand."""
     supabase = get_supabase()
 
     res = (
-      supabase.table("platform_integrations")
-      .select("*")
-      .eq("brand_id", brand_id)
-      .in_("platform", platforms)
-      .execute()
+        supabase.table("platform_integrations")
+        .select("*")
+        .eq("brand_id", brand_id)
+        .in_("platform", platforms)
+        .execute()
     )
 
     if getattr(res, "error", None):
