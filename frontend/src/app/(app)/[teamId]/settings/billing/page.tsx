@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 import { useSubscription } from '@/features/subscription/hooks';
 import { useQuery } from "@tanstack/react-query";
 import backendClient from "@/lib/api/clients/backendClient";
@@ -48,6 +48,8 @@ const PLAN_HIGHLIGHT: PlanKey = 'growth'; // highlighted when ?upgrade=true
 export default function BillingPage() {
   const searchParams = useSearchParams();
   const highlightUpgrade = searchParams.get('upgrade') === 'true';
+  const params = useParams();
+  const teamId = (params as any)?.teamId as string | undefined;
   const plansRef = useRef<HTMLDivElement>(null);
 
   const {data: products, isLoading: productsLoading, error: productsError} = useProducts();
@@ -102,7 +104,7 @@ export default function BillingPage() {
     setSwitchingPlan(planKey);
     setSwitchError(null);
     try {
-      await startCheckout(planKey, window.location.href);
+      await startCheckout(planKey, window.location.href, teamId);
     } catch (err: unknown) {
       setSwitchError(err instanceof Error ? err.message : 'Failed to start checkout. Please try again.');
     } finally {

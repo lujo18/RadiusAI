@@ -1,16 +1,29 @@
 ﻿"""
 Billing Router - HTTP endpoints for subscription and payment management.
 
-Endpoints:
-- GET /billing/plans - Get available billing plans
-- POST /billing/checkout - Create checkout session
-- GET /billing/checkout/success - Checkout success callback
-- GET /billing/subscription - Get current subscription
-- PATCH /billing/subscription - Update subscription
-- POST /billing/subscription/cancel - Cancel subscription
-- GET /billing/invoices - List invoices
-- GET /billing/portal - Get customer portal URL
-- POST /billing/webhook - Stripe webhook handler
+⚠️  DEPRECATED - These endpoints are deprecated. Use /api/billing/* routes instead.
+
+Old Endpoints (DEPRECATED):
+- GET /billing/plans - Get available billing plans → Use GET /api/billing/benefits/plans
+- POST /billing/checkout - Create checkout session → Use POST /api/billing/checkout
+- GET /billing/checkout/success - Checkout success callback → Use GET /api/billing/checkout/success
+- GET /billing/subscription - Get current subscription → Use GET /api/billing/subscriptions
+- PATCH /billing/subscription - Update subscription → Use PATCH /api/billing/subscriptions
+- POST /billing/subscription/cancel - Cancel subscription → Use POST /api/billing/subscriptions/cancel
+- GET /billing/invoices - List invoices → Use GET /api/billing/products/invoices
+- GET /billing/portal - Get customer portal URL → Use GET /api/billing/customers/portal
+- POST /billing/webhook - Stripe webhook handler → Use POST /api/billing/webhooks
+
+Migration Guide:
+All endpoints have been reorganized under /api/billing/* with new prefixes:
+- /api/billing/benefits/* - Plan and benefit management
+- /api/billing/checkout/* - Checkout operations
+- /api/billing/subscriptions/* - Subscription management
+- /api/billing/customers/* - Customer operations
+- /api/billing/products/* - Product and invoice management
+- /api/billing/webhooks/* - Webhook handlers
+
+Please update your clients to use the new routes.
 """
 
 import logging
@@ -22,6 +35,7 @@ import json
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.features.team.service import get_current_team
 from app.core.exceptions import AppError
 from app.features.billing.service import billing_service
 from app.features.billing.schemas import (
@@ -44,11 +58,13 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 # â•â•â•â•â•â•â•â•â• PLANS â•â•â•â•â•â•â•â•â•
 
 
-@router.get("/plans", response_model=list[BillingPlanResponse])
+@router.get("/plans", response_model=list[BillingPlanResponse], deprecated=True)
 async def get_available_plans(
     db: AsyncSession = Depends(get_db),
 ):
-    """Get all available billing plans (no auth required)."""
+    """⚠️ DEPRECATED - Use GET /api/billing/benefits/plans instead.
+    
+    Get all available billing plans (no auth required)."""
     try:
         plans = await billing_service.get_available_plans(db)
         await db.commit()
@@ -64,12 +80,14 @@ async def get_available_plans(
 # â•â•â•â•â•â•â•â•â• CHECKOUT â•â•â•â•â•â•â•â•â•
 
 
-@router.post("/checkout", response_model=CheckoutSessionResponse)
+@router.post("/checkout", response_model=CheckoutSessionResponse, deprecated=True)
 async def create_checkout_session(
     request: CreateCheckoutSessionRequest,
     user_id: str = Depends(get_current_user),
+    team_id: Optional[str] = Depends(get_current_team),
 ):
-    """
+    """⚠️ DEPRECATED - Use POST /api/billing/checkout instead.
+    
     Create Stripe checkout session for subscription.
 
     User is redirected to Stripe checkout URL.
@@ -77,21 +95,28 @@ async def create_checkout_session(
     try:
         product_id = request.get("product_id")
         success_url = request.get("success_url")
-        
-        response = create_checkout_link(user_id, product_id, success_url)
+
+        # Enforce team-scoped external customer id only
+        if not team_id:
+            raise HTTPException(status_code=400, detail="team_id is required for checkout")
+
+        external_id = team_id
+
+        response = create_checkout_link(external_id, product_id, success_url)
        
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to create checkout session")
 
 
-@router.get("/checkout/success", response_model=CheckoutCompletedResponse)
+@router.get("/checkout/success", response_model=CheckoutCompletedResponse, deprecated=True)
 async def checkout_success(
     session_id: str = Query(..., description="Stripe checkout session ID"),
     user_id: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
+    """⚠️ DEPRECATED - Use GET /api/billing/checkout/success instead.
+    
     Handle checkout completion.
 
     Called after user returns from Stripe checkout.
@@ -122,12 +147,14 @@ async def checkout_success(
 # â•â•â•â•â•â•â•â•â• SUBSCRIPTION â•â•â•â•â•â•â•â•â•
 
 
-@router.get("/subscription", response_model=SubscriptionDetailResponse)
+@router.get("/subscription", response_model=SubscriptionDetailResponse, deprecated=True)
 async def get_subscription(
     user_id: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get current subscription details."""
+    """⚠️ DEPRECATED - Use GET /api/billing/subscriptions instead.
+    
+    Get current subscription details."""
     try:
         subscription = await billing_service.get_subscription(db, user_id)
         await db.commit()
@@ -140,13 +167,15 @@ async def get_subscription(
         raise HTTPException(status_code=500, detail="Failed to fetch subscription")
 
 
-@router.patch("/subscription", response_model=SubscriptionDetailResponse)
+@router.patch("/subscription", response_model=SubscriptionDetailResponse, deprecated=True)
 async def update_subscription(
     request: UpdateSubscriptionRequest,
     user_id: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update subscription (change plan, auto-renew)."""
+    """⚠️ DEPRECATED - Use PATCH /api/billing/subscriptions instead.
+    
+    Update subscription (change plan, auto-renew)."""
     try:
         updated = await billing_service.update_subscription(db, user_id, request)
         await db.commit()
@@ -164,13 +193,15 @@ async def update_subscription(
         raise HTTPException(status_code=500, detail="Failed to update subscription")
 
 
-@router.post("/subscription/cancel", status_code=status.HTTP_200_OK)
+@router.post("/subscription/cancel", status_code=status.HTTP_200_OK, deprecated=True)
 async def cancel_subscription(
     request: CancelSubscriptionRequest,
     user_id: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Cancel subscription."""
+    """⚠️ DEPRECATED - Use POST /api/billing/subscriptions/cancel instead.
+    
+    Cancel subscription."""
     try:
         await billing_service.cancel_subscription(db, user_id, request)
         await db.commit()
@@ -189,13 +220,15 @@ async def cancel_subscription(
 # â•â•â•â•â•â•â•â•â• INVOICES â•â•â•â•â•â•â•â•â•
 
 
-@router.get("/invoices", response_model=InvoiceListResponse)
+@router.get("/invoices", response_model=InvoiceListResponse, deprecated=True)
 async def get_invoices(
     limit: int = Query(50, ge=1, le=100),
     user_id: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get user's invoices."""
+    """⚠️ DEPRECATED - Use GET /api/billing/products/invoices instead.
+    
+    Get user's invoices."""
     try:
         invoices = await billing_service.get_invoices(db, user_id, limit)
         unpaid = await billing_service.get_unpaid_invoices(db, user_id)
@@ -218,12 +251,14 @@ async def get_invoices(
 # â•â•â•â•â•â•â•â•â• BILLING PORTAL â•â•â•â•â•â•â•â•â•
 
 
-@router.get("/portal", response_model=BillingPortalResponse)
+@router.get("/portal", response_model=BillingPortalResponse, deprecated=True)
 async def get_billing_portal(
     user_id: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get Stripe customer portal URL for self-service billing management."""
+    """⚠️ DEPRECATED - Use GET /api/billing/customers/portal instead.
+    
+    Get Stripe customer portal URL for self-service billing management."""
     try:
         portal = await billing_service.get_customer_portal_url(db, user_id)
         await db.commit()
@@ -239,12 +274,13 @@ async def get_billing_portal(
 # â•â•â•â•â•â•â•â•â• STRIPE WEBHOOKS â•â•â•â•â•â•â•â•â•
 
 
-@router.post("/webhook", status_code=status.HTTP_200_OK)
+@router.post("/webhook", status_code=status.HTTP_200_OK, deprecated=True)
 async def stripe_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """
+    """⚠️ DEPRECATED - Use POST /api/billing/webhooks instead.
+    
     Handle Stripe webhook events.
 
     Processes:

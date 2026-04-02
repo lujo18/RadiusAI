@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any, Tuple
 from pydantic import BaseModel, Field, validator
 from enum import Enum
-from app.features.usage import repo as usage_repo
+
 
 
 class RuleType(str, Enum):

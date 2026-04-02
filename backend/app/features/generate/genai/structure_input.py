@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
-from app.db.models import Template, BrandSettings
+from app.features.user.schemas import BrandSettings
+from app.features.templates.models import Template
 
 
 def build_gemini_slide_structure(

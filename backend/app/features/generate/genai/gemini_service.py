@@ -5,9 +5,9 @@ from typing import List, Dict, Any
 
 from app.features.generate.genai.prompts import build_generation_prompt
 from app.features.generate.genai.structure_input import build_gemini_slide_structure
-from app.db.models import Template, BrandSettings
-from app.db.models.slide import PostContent, LayoutConfig
-from app.config import Config
+from app.features.posts.schemas import LayoutConfig, PostContent
+from app.features.templates.models import Template
+from app.features.user.schemas import BrandSettings
 
 # Lazy import of genai to avoid protobuf issues on module load
 from .client import client

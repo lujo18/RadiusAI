@@ -9,6 +9,8 @@ Handles:
 """
 
 import logging
+from typing import Optional
+from fastapi import Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 from uuid import uuid4
@@ -36,6 +38,9 @@ from app.features.team.schemas import (
     UpdateTeamMemberRequest,
 )
 from app.features.team.repository import team_repo, members_repo, events_repo
+
+
+from backend.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -380,6 +385,30 @@ class TeamService:
             }
             for e in events
         ]
+        
+        
+        
+# ============ TEAM MEMBER AUTHORIZATION ==================
+
+
+
+async def get_current_team(
+    team_id: Optional[str] = Query(None),
+    user_id: str = Depends(get_current_user),
+):
+    # if client passed a team_id, verify membership
+    if team_id:
+        member = await members_repo.get_by_team_and_user(team_id, user_id)
+        if not member or member.status != 'active':
+            raise HTTPException(status_code=403, detail="Not a member of that team")
+        return team_id
+
+    # fast path: read active_team_id from users table (returned by get_current_user)
+    # if get_current_user only returns id, do a quick repo lookup:
+    teams = await team_repo.get_user_teams(user_id)
+    if not teams:
+        raise HTTPException(status_code=404, detail="No team found for user")
+    return teams[0].id
 
 
 # Module-level singleton

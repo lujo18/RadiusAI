@@ -62,6 +62,8 @@ class Team(Base):
         JSON, nullable=True
     )  # Team-wide settings
     team_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Polar provider customer id (nullable) — persisted after checkout/webhook
+    polar_customer_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -85,6 +87,7 @@ class Team(Base):
         Index("ix_team_owner_id", "owner_id"),
         Index("ix_team_slug", "slug", unique=True),
         Index("ix_team_deleted_at", "deleted_at"),
+        Index("ix_team_polar_customer_id", "polar_customer_id"),
     )
 
 

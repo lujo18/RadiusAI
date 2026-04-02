@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usageApi } from '@/features/usage/surface';
 
-export const useUsage = () => {
+export const useUsage = (team_id: string) => {
   return useQuery({
     queryKey: ['usage', 'user_activity'],
     queryFn: async () => {
-      const res = await usageApi.getUsage();
+      const res = await usageApi.getUsage(team_id);
       // return full response so callers can access limits + usage row
       return res ?? { usage: null, limits: [] };
     },
@@ -16,8 +16,8 @@ export const useUsage = () => {
 export const useConsume = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ productId, amount }: { productId: string; amount?: number }) => {
-      const res = await usageApi.consume(productId, amount ?? 1);
+    mutationFn: async ({ teamId, productId, amount }: { teamId: string; productId: string; amount?: number }) => {
+      const res = await usageApi.consume(teamId, productId, amount ?? 1);
       return res;
     },
     onSuccess: () => {

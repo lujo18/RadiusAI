@@ -66,14 +66,15 @@ def create_app() -> FastAPI:
     # Legacy routers have been fully migrated into feature modules
     app.include_router(api_router)
 
-    # Polar payment processor admin endpoints (feature-flagged)
+    # Polar payment processor endpoints (feature-flagged)
     if settings.USE_POLAR:
-        from app.features.billing.admin_router import (
-            router as polar_admin_router,
-        )
+        from app.features.billing.admin_router import router as polar_admin_router
+        from app.lib.polar.router import router as polar_router
 
         app.include_router(polar_admin_router, prefix="/api")
+        app.include_router(polar_router, prefix="/api")
         logger.info("✓ Polar admin endpoints registered")
+        logger.info("✓ Polar billing endpoints registered")
 
     # ═════════ Health Check Routes ═════════
 

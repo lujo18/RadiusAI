@@ -15,6 +15,8 @@ from app.core.exceptions import ExternalServiceError
 from app.features.billing.models import Subscription, Invoice
 from app.lib.polar.billing_service import get_polar_billing_service
 from app.lib.polar.products.repository import get_polar_products_repository
+from sqlalchemy import update
+from app.features.team.models import Team
 
 logger = logging.getLogger(__name__)
 
@@ -95,27 +97,51 @@ class UnifiedBillingService:
     async def create_checkout_session(
         self,
         db: AsyncSession,
-        user_id: str,
+        user_id: Optional[str],
         product_price_id: str,
         success_url: str,
         cancel_url: Optional[str] = None,
         user_email: Optional[str] = None,
+        team_id: Optional[str] = None,
     ):
         """Create checkout session using active processor."""
         if settings.USE_POLAR:
             result = await self.polar_service.create_checkout_session(
                 user_id=user_id,
+                team_id=team_id,
                 product_price_id=product_price_id,
                 success_url=success_url,
                 cancel_url=cancel_url or "",
             )
             if result.get("error"):
                 raise ExternalServiceError(f"Polar: {result['error']}")
+            # Persist polar_customer_id to Team row if available
+            try:
+                polar_resp = result.get("polar_response") or {}
+                polar_customer_id = (
+                    polar_resp.get("customer_id")
+                    or (polar_resp.get("customer") or {}).get("id")
+                    or None
+                )
+                if polar_customer_id and team_id:
+                    try:
+                        await db.execute(
+                            update(Team)
+                            .where(Team.id == team_id)
+                            .values(polar_customer_id=polar_customer_id, updated_at=datetime.utcnow())
+                        )
+                        await db.commit()
+                    except Exception:
+                        await db.rollback()
+            except Exception:
+                # Non-fatal: persist failure should not block checkout creation
+                pass
 
             return {
                 "session_id": result.get("session_id"),
                 "checkout_url": result.get("url"),
                 "provider": "polar",
+                "polar_response": result.get("polar_response"),
             }
         else:
             raise NotImplementedError(

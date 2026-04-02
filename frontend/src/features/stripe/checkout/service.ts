@@ -14,16 +14,23 @@ import backendClient from "@/lib/api/clients/backendClient";
 export async function startCheckout(
   planId: string,
   successUrl: string,
+  teamId?: string,
 ): Promise<void> {
-  
-  // classify if the user is signed in
-  
+  const body: any = {
+    product_price_id: planId,
+    success_url: successUrl,
+  };
+  if (teamId) body.team_id = teamId;
 
-  backendClient.post(
-    '/api/v1/billing/checkout',
-    {
-      product_id: planId,
-      success_url: successUrl,
-    }
-  )
+  const resp = await backendClient.post('/api/v1/billing/checkout', body);
+
+  // Expect backend to return JSON with `checkout_url` or `url`
+  const data = resp?.data ?? resp;
+  const url = data?.checkout_url || data?.url;
+  if (!url) throw new Error('Checkout URL not returned by server');
+
+  // Redirect user to provider checkout
+  if (typeof window !== 'undefined') {
+    window.location.href = url;
+  }
 }

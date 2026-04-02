@@ -7,9 +7,7 @@ Mirrors frontend PostRepository pattern.
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from app.db.models.slide import PostContent
 from app.features.integrations.supabase.client import get_supabase
-from app.db.models.post import Post, CreatePostRequest, UpdatePostRequest
 from app.core.workers.analytics import create_analytic_tracker
 
 

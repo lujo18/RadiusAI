@@ -1,13 +1,13 @@
 import backendClient from '@/lib/api/clients/backendClient';
 
 export const usageApi = {
-  async getUsage() {
-    const { data } = await backendClient.get('/api/v1/usage');
+  async getUsage(team_id: string) {
+    const { data } = await backendClient.get(`/api/v1/billing/meter/team/${team_id}/credits`);
     return data;
   },
 
-  async consume(productId: string, amount = 1) {
-    const { data } = await backendClient.post('/api/v1/usage/consume', { product_id: productId, amount });
+  async consume(team_id: string, productId: string, amount = 1) {
+    const { data } = await backendClient.post(`/api/v1/usage/meter/${team_id}/consume`, { product_id: productId, amount });
     return data;
   },
 

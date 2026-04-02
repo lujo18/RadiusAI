@@ -64,3 +64,11 @@ api_router.include_router(analytics_router, prefix="/v1", tags=["analytics"])
 from app.features.variants.router import router as variants_router
 
 api_router.include_router(variants_router, prefix="/v1", tags=["variants"])
+
+
+
+from app.features.billing.admin_router import router as polar_admin_router
+from app.lib.polar.router import router as polar_router
+
+api_router.include_router(polar_admin_router, prefix="/v1")
+api_router.include_router(polar_router, prefix="/v1")

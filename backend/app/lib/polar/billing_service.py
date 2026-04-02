@@ -54,6 +54,58 @@ class PolarBillingService:
                 "plans": [],
             }
 
+    async def create_checkout_session(
+        self,
+        user_id: Optional[str],
+        product_price_id: str,
+        success_url: str,
+        cancel_url: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        team_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a checkout session (Polar) and return normalized response.
+
+        Returns a dict containing at minimum `provider`, and on success
+        `session_id` and `checkout_url`. Errors are returned in the `error` key.
+        """
+        if not settings.USE_POLAR:
+            logger.debug("USE_POLAR is False; cannot create Polar session")
+            return {"provider": "stripe", "error": "USE_POLAR is False"}
+
+        try:
+            logger.info(
+                "Creating Polar checkout session for user=%s team=%s product=%s",
+                user_id,
+                team_id,
+                product_price_id,
+            )
+
+            # create_checkout_link is a small sync helper that calls the Polar SDK
+            # Enforce that external customer id is always a team_id (non-negotiable).
+            if not team_id:
+                logger.warning(
+                    "Polar checkout requested without team_id (team-scoped checkout is required)"
+                )
+                return {"provider": "polar", "error": "team_id_required"}
+
+            external_customer_id = team_id
+            result = create_checkout_link(
+                external_customer_id, product_price_id, success_url, cancel_url, metadata
+            )
+
+            return {
+                "provider": "polar",
+                "session_id": result.get("id"),
+                "url": result.get("url"),
+                "checkout_url": result.get("url"),
+                "polar_response": result.get("polar_response"),
+            }
+
+        except PolarAPIError as exc:
+            logger.error("Polar checkout creation failed: %s", exc)
+            return {"provider": "polar", "error": str(exc)}
+
+
     async def sync_products(self) -> Dict[str, Any]:
         """Sync Polar products to local database.
 

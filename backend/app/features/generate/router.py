@@ -28,8 +28,8 @@ async def create_post(
     Consumes user's generation credits and returns generated content.
     """
     try:
-        # Import here to avoid circular dependencies
-        from app.features.usage.service import (
+        # Import here to avoid circular dependencies - use services implementation
+        from backend.services.usage.service import (
             check_generation_credits,
             track_slides_generated,
         )
@@ -82,8 +82,8 @@ async def generate_post_content_from_prompt(
     Consumes user's generation credits.
     """
     try:
-        # Import here to avoid circular dependencies
-        from app.features.usage.service import (
+        # Import here to avoid circular dependencies - use services implementation
+        from backend.services.usage.service import (
             check_generation_credits,
             track_slides_generated,
         )

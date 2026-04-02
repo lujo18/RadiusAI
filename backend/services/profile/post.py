@@ -1,3 +1,14 @@
+import warnings
+
+warnings.warn(
+    "backend.services.profile.post is deprecated; use app.features.integrations.social.profile.post",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from app.features.integrations.social.profile.post import send_post
+
+__all__ = ["send_post"]
 from app.core.config import settings
 import requests
 

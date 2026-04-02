@@ -3,9 +3,7 @@ import logging
 from typing import Dict, Optional
 from app.features.stock_packs import queryStockPackUrls
 from app.util.llm_output_sanitizer import sanitize_text
-from app.db.models.slide import LayoutConfig, PostContent
-from app.db.models.user import BrandSettings
-from app.db.models import Template
+
 from app.features.generate.genai.prompts import SYSTEM_PROMPT
 from app.features.generate.genai.gpt_oss_prompts import assemble_generation_prompt
 from app.features.integrations.groq.client import groq
@@ -16,6 +14,8 @@ from app.features.generate.genai.slide_layouts import (
     SLIDE_LAYOUTS,
     SlideLayout,
 )
+from app.features.posts.schemas import LayoutConfig, PostContent
+from app.features.user.schemas import BrandSettings
 from google.genai import types
 from app.features.integrations.unsplash import queryUnsplashUrls
 

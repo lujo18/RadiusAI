@@ -72,21 +72,11 @@ function CheckoutContent() {
           return;
         }
 
-        // Create Stripe checkout session
-        const res = await backendClient.post("/api/billing/checkout", {
-          product_id: productId,
-          success_url: '/overview',
-        });
-
-        const data = res.data as { url?: string };
-
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          console.error('[Checkout] No URL in response:', data);
-          setError("Failed to create checkout session");
-          setIsLoading(false);
-        }
+        // Legacy user-scoped checkout is no longer supported — require teams.
+        console.log('[Checkout] Legacy checkout route requires team context. Redirecting to /pricing');
+        router.push(`/pricing?plan=${plan}`);
+        setIsLoading(false);
+        return;
       } catch (err) {
         console.error("[Checkout] Error:", err);
         setError("An error occurred while creating your checkout session");

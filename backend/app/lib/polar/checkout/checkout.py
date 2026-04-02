@@ -1,31 +1,41 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from app.lib.polar.client import get_polar_client
 from app.lib.polar.errors import PolarAPIError
 
+
 def create_checkout_link(
-    user_id: str,
+    external_customer_id: str,
     product_id: str,
     success_url: str,
+    cancel_url: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ):
     """Create a Polar checkout link and return a normalized response.
 
-    The returned object is a small mapping with keys commonly used by the billing
-    service: `id`, `url`, and raw `polar_response` for further inspection.
+    `external_customer_id` may be a `team_id` or a `user_id` depending on caller.
+    Returns a mapping with keys: `id`, `url`, and `polar_response`.
+    Accepts `cancel_url` and optional `metadata` which will be forwarded to Polar.
     """
     try:
         with get_polar_client() as polar:
             req = {
                 "products": [product_id],
-                "external_customer_id": user_id,
+                "external_customer_id": external_customer_id,
                 "allow_discount_codes": True,
                 "require_billing_address": False,
                 "success_url": success_url,
             }
 
+            if cancel_url:
+                req["cancel_url"] = cancel_url
+
+            if metadata:
+                # Polar accepts arbitrary metadata under `metadata` key in many SDKs
+                req["metadata"] = metadata
+
             res = polar.checkout.create(request=req)
 
-            # Normalize minimal useful fields
             return {
                 "id": res.get("id"),
                 "url": res.get("url"),
@@ -33,7 +43,6 @@ def create_checkout_link(
             }
 
     except Exception as exc:
-        # Let caller decide how to handle logging/metrics; wrap generic errors
         raise PolarAPIError(str(exc)) from exc
 
 
