@@ -92,7 +92,7 @@ export default function UsageBanner({ className, compact = false }: UsageBannerP
 
       // Fetch usage for resolved team
       try {
-        const data = await usageApi.getUsage(teamId);
+        const data = await usageApi.getUsage();
         setUsage(data as UsageData);
       } catch (err) {
         console.error('Error fetching team usage:', err);

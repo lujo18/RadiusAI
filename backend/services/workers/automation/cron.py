@@ -12,13 +12,9 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
 
-from app.features.automation.service import process_due_automations
+from backend.services.workers.automation.automation_worker import process_due_automations
 
-logger = logging.getLogger(__name__)
-scheduler = BackgroundScheduler()
-
-
-def register_automation_worker(app: FastAPI) -> None:
+def register_automation_worker(scheduler: BackgroundScheduler) -> None:
     """
     Register the automation worker with the scheduler.
 
@@ -31,4 +27,4 @@ def register_automation_worker(app: FastAPI) -> None:
         max_instances=1,  # avoid overlapping runs
         replace_existing=True,
     )
-    logger.info("Registered automation worker to run every 10 minutes")
+    

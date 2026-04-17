@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const useServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || '';
 
 export async function POST(req: Request) {
   try {
@@ -12,6 +13,15 @@ export async function POST(req: Request) {
 
     if (!provider) {
       return NextResponse.json({ error: 'Missing provider' }, { status: 400 });
+    }
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('[Auth SignIn] Missing Supabase URL or key in server environment');
+      return NextResponse.json({ error: 'Server misconfiguration: missing SUPABASE keys' }, { status: 500 });
+    }
+
+    if (!useServiceKey) {
+      console.warn('[Auth SignIn] SUPABASE_SERVICE_ROLE_KEY not set; falling back to publishable key (development only).');
     }
 
     const cookieHeader = req.headers.get('cookie') || '';

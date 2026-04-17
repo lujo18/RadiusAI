@@ -1,4 +1,9 @@
-import stripe
+# DEPRECATED - DELETE
+# DEPRECATED - Stripe usage helpers (migrate to Polar-backed usage APIs)
+try:
+    import stripe  # type: ignore
+except Exception:
+    stripe = None  # type: ignore
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -15,15 +20,16 @@ CREDIT_USAGE = {
     "image_generation": 1,  # 1 credit per image
 }
 
-# initialize stripe key from config (billing_service sets this too, but ensure module-safe)
-if not settings.STRIPE_SECRET_KEY:
-    stripe.api_key = None
-else:
-    stripe.api_key = settings.STRIPE_SECRET_KEY
+# initialize stripe key from config (deprecated)
+if stripe is not None:
+    if not settings.STRIPE_SECRET_KEY:
+        stripe.api_key = None
+    else:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def require_stripe_key():
-    if not stripe.api_key:
+    if not (stripe and getattr(stripe, "api_key", None)):
         raise RuntimeError("Stripe secret key not configured")
 
 

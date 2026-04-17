@@ -22,6 +22,12 @@ logger = logging.getLogger(__name__)
 repository = IntegrationRepository()
 
 
+def _repo_for(db: AsyncSession) -> IntegrationRepository:
+    """Return a repo bound to the provided request session."""
+    _ = db
+    return IntegrationRepository()
+
+
 # ═════════════════════════════════════════════════
 #  OAuth Management
 # ═════════════════════════════════════════════════
@@ -94,8 +100,10 @@ async def complete_oauth_flow(
         logger.error(f"Failed to fetch profile from {platform}: {e}")
         raise ExternalServiceError(f"Failed to fetch profile from {platform}")
 
+    repo = _repo_for(db)
+
     # Check if integration already exists
-    existing = await repository.get_by_brand_and_platform(db, brand_id, platform)
+    existing = await repo.get_by_brand_and_platform(db, brand_id, platform)
 
     if existing:
         # Update tokens and profile
@@ -111,7 +119,7 @@ async def complete_oauth_flow(
         existing.status = IntegrationStatus.CONNECTED.value
         existing.last_synced = datetime.utcnow()
 
-        updated = await repository.update(db, existing)
+        updated = await repo.update(db, existing)
         logger.info(
             f"Integration updated: {existing.id} ({platform}) for brand {brand_id}"
         )
@@ -139,7 +147,7 @@ async def complete_oauth_flow(
         last_synced=datetime.utcnow(),
     )
 
-    created = await repository.create(db, integration)
+    created = await repo.create(db, integration)
     logger.info(
         f"Integration created: {integration_id} ({platform}) for brand {brand_id}"
     )
@@ -156,7 +164,8 @@ async def get_integration(
 ) -> PlatformIntegration:
     """Get integration by ID with optional user verification"""
 
-    integration = await repository.get_by_id(db, integration_id)
+    repo = _repo_for(db)
+    integration = await repo.get_by_id(db, integration_id)
     if not integration:
         raise NotFoundError(f"Integration {integration_id} not found")
 
@@ -171,7 +180,8 @@ async def list_brand_integrations(
 ) -> list[PlatformIntegration]:
     """Get all integrations for a brand"""
 
-    integrations = await repository.get_by_brand(db, brand_id)
+    repo = _repo_for(db)
+    integrations = await repo.get_by_brand(db, brand_id)
     logger.debug(f"Listed {len(integrations)} integrations for brand {brand_id}")
     return integrations
 
@@ -181,7 +191,8 @@ async def list_connected_integrations(
 ) -> list[PlatformIntegration]:
     """Get only connected integrations for a brand"""
 
-    integrations = await repository.get_connected_integrations(db, brand_id)
+    repo = _repo_for(db)
+    integrations = await repo.get_connected_integrations(db, brand_id)
     return integrations
 
 
@@ -202,7 +213,8 @@ async def update_integration(
         integration.status = payload.status
 
     integration.updated_at = datetime.utcnow()
-    updated = await repository.update(db, integration)
+    repo = _repo_for(db)
+    updated = await repo.update(db, integration)
     logger.info(f"Integration updated: {integration_id}")
     return updated
 
@@ -221,7 +233,8 @@ async def disconnect_integration(
     integration.refresh_token = None
     integration.error_message = None
 
-    updated = await repository.update(db, integration)
+    repo = _repo_for(db)
+    updated = await repo.update(db, integration)
     logger.info(f"Integration disconnected: {integration_id}")
     return updated
 
@@ -231,8 +244,9 @@ async def delete_integration(
 ) -> None:
     """Delete integration"""
 
+    repo = _repo_for(db)
     integration = await get_integration(db, integration_id, user_id)
-    await repository.delete(db, integration)
+    await repo.delete(db, integration.id)
     logger.info(f"Integration deleted: {integration_id}")
 
 
@@ -287,7 +301,8 @@ async def publish_post(
             integration.token_expires_at = _calculate_token_expiry(
                 new_tokens.get("expires_in")
             )
-            await repository.update(db, integration)
+            repo = _repo_for(db)
+            await repo.update(db, integration)
         except Exception as e:
             logger.error(f"Token refresh failed: {e}")
             raise ExternalServiceError("Failed to refresh authentication")
@@ -307,7 +322,8 @@ async def publish_post(
         logger.error(f"Publishing failed: {e}")
         integration.error_message = str(e)
         integration.status = IntegrationStatus.FAILED.value
-        await repository.update(db, integration)
+        repo = _repo_for(db)
+        await repo.update(db, integration)
         raise ExternalServiceError(f"Failed to publish to {integration.platform}")
 
 

@@ -187,9 +187,8 @@ export default function GeneratePage() {
       </div>
 
       {/* Main Layout: Left sidebar + Right output */}
-      <div className="flex-1 overflow-hidden flex">
+      <div className="flex-1 flex flex-row p-6 gap-6">
         {/* Left Sidebar: Workflow */}
-        <div className="w-80 border-r border-border/50 overflow-y-auto bg-card/30">
           <SettingsPanel
             brandId={brandId}
             selectedTemplateId={selectedTemplate}
@@ -202,12 +201,11 @@ export default function GeneratePage() {
             onGenerateClick={handleGenerate}
             isGenerating={generateMutation.isPending}
           />
-        </div>
+        
 
-        {/* Right Content: Output Preview */}
-        <div className="flex-1 overflow-hidden">
+      
           <GenerationQueuePanel queue={queue} />
-        </div>
+        
       </div>
     </div>
   );

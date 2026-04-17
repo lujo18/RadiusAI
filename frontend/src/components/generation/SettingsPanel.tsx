@@ -29,6 +29,7 @@ import {
 import { Item, ItemTitle } from "@/components/ui/item";
 import { StockPackDialog } from "@/features/stock_packs/components";
 import { useRouter } from "next/navigation";
+import { Card, CardContent, CardTitle } from "../ui/card";
 
 type BrandCta = Database["public"]["Tables"]["brand_ctas"]["Row"];
 
@@ -98,11 +99,11 @@ export function SettingsPanel({
   };
 
   return (
-    <div className="flex flex-col gap-4 h-fit">
+    <div className="flex flex-col gap-4 h-fit max-w-70">
       {/* Template Selector */}
       <BaseNode>
         <BaseNodeHeader>
-          <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
+          <BaseNodeHeaderTitle className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
             Template Selector
           </BaseNodeHeaderTitle>
@@ -164,27 +165,24 @@ export function SettingsPanel({
               </div>
 
               {selectedTemplate && (
-                <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">
-                    Template Details
-                  </div>
-                  <div className="text-xs space-y-1">
+                <Card className="">
+                  <CardContent className="text-xs space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Category:</span>
-                      <Badge variant="outline" className="text-xs">
+                      <span className="muted">Category:</span>
+                      <Badge variant="secondary" className="text-xs">
                         {selectedTemplate.category || "N/A"}
                       </Badge>
                     </div>
                     {(selectedTemplate.content_rules as any)?.slide_count && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Slides:</span>
-                        <span>
+                        <span className="muted">Slides:</span>
+                        <Badge variant="outline">
                           {(selectedTemplate.content_rules as any).slide_count}
-                        </span>
+                        </Badge>
                       </div>
                     )}
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               )}
             </div>
           )}
@@ -194,7 +192,7 @@ export function SettingsPanel({
       {/* Brand Selector */}
       <BaseNode>
         <BaseNodeHeader>
-          <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
+          <BaseNodeHeaderTitle className="flex items-center gap-2">
             <Building2 className="w-4 h-4 text-primary" />
             Current Brand
           </BaseNodeHeaderTitle>
@@ -215,9 +213,7 @@ export function SettingsPanel({
           ) : (
             <div className="space-y-3">
               <div>
-                <div className="text-xs font-medium text-muted-foreground mb-1">
-                  Brand Details
-                </div>
+               
                 <div className="text-sm space-y-2">
                   {(brand.brand_settings as BrandSettings)?.name && (
                     <div className="flex justify-between">
@@ -229,25 +225,25 @@ export function SettingsPanel({
                   )}
                   {brand.description && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Description:</span>
+                      <span className="muted">Description:</span>
                       <span className="text-xs text-right max-w-32 truncate" title={brand.description}>
                         {brand.description}
                       </span>
                     </div>
                   )}
                   {(brand.brand_settings as BrandSettings)?.niche && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Niche:</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {(brand.brand_settings as BrandSettings).niche}
+                    <div className="flex flex-col gap-2">
+                      <span className="muted">Niche:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {(brand.brand_settings as BrandSettings).niche?.substring(0, 70)}...
                       </Badge>
                     </div>
                   )}
                   {(brand.brand_settings as BrandSettings)?.aesthetic && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Aesthetic:</span>
+                    <div className="flex flex-col gap-2">
+                      <span className="muted">Aesthetic:</span>
                       <Badge variant="outline" className="text-xs">
-                        {(brand.brand_settings as BrandSettings).aesthetic}
+                        {(brand.brand_settings as BrandSettings).aesthetic?.substring(0, 70)}...
                       </Badge>
                     </div>
                   )}
@@ -292,7 +288,7 @@ export function SettingsPanel({
       {/* CTA Selector */}
       <BaseNode>
         <BaseNodeHeader>
-          <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
+          <BaseNodeHeaderTitle className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-primary" />
             CTA Selector
           </BaseNodeHeaderTitle>
@@ -376,7 +372,7 @@ export function SettingsPanel({
       {/* Stock Pack Selector */}
       <BaseNode>
         <BaseNodeHeader>
-          <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
+          <BaseNodeHeaderTitle className="flex items-center gap-2">
             <Images className="w-4 h-4 text-primary" />
             Stock Pack Selector
           </BaseNodeHeaderTitle>

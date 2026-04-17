@@ -1,5 +1,6 @@
-"""Billing/Stripe feature module."""
+"""Compatibility billing feature package."""
 
-from app.features.billing.router import router
+from . import router
+from .unified_service import UnifiedBillingService, get_unified_billing_service
 
-__all__ = ["router"]
+__all__ = ["router", "UnifiedBillingService", "get_unified_billing_service"]

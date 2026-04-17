@@ -37,12 +37,28 @@ class GeneratePostAutoRequest(BaseModel):
 
 
 class GeneratedPost(BaseModel):
-    """Generated post content."""
+    """Generated post payload.
 
-    slides: list[Dict[str, Any]] = Field(..., description="Array of slide content")
-    caption: str = Field(..., description="Post caption")
+    Supports both:
+    1) direct generation payloads (`slides`/`caption`/`hashtags`), and
+    2) persisted post-row payloads (`id` + nested `content`).
+    """
+
+    # Direct generation shape
+    slides: Optional[list[Dict[str, Any]]] = Field(
+        default=None, description="Array of slide content"
+    )
+    caption: Optional[str] = Field(default=None, description="Post caption")
     hashtags: list[str] = Field(default_factory=list, description="Suggested hashtags")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
+
+    # Persisted post shape
+    id: Optional[str] = Field(default=None, description="Post ID when persisted")
+    content: Optional[Dict[str, Any]] = Field(
+        default=None, description="Persisted post content payload"
+    )
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+
+    model_config = {"extra": "allow"}
 
 
 class GeneratePostResponse(BaseModel):

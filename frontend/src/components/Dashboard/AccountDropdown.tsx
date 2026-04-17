@@ -43,7 +43,7 @@ export function AccountDropdown() {
       // best-effort
     } finally {
       logout();
-      router.push('/login');
+      router.push('/');
     }
   };
 

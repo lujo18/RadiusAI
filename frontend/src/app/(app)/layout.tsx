@@ -99,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
 
   const { data: creditData } = useGetCreditsUsage();
-  const creditsRemaining = creditData?.credits_limit - creditData?.credits_used;
+  const creditsRemaining = creditData?.balance ?? 0;
 
   const activeBrand = brands?.find((b: any) => b.id === activeBrandId);
   const displayName = activeBrand
@@ -141,7 +141,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     if (!isLoading && !isAuthenticated) {
       console.log("[App Layout] Not authenticated - redirecting to login");
-      router.push("/login");
+      router.push("/");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -158,7 +158,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     } else if (!isLoading && !isAuthenticated) {
       // Not authenticated at all - redirect to login
       console.log("[App Layout] Not authenticated - redirecting to login");
-      router.push("/login");
+      router.push("/");
     }
   }, [isAuthenticated, isLoading, user, router]);
 

@@ -45,11 +45,7 @@ export default function BrandSelector({
 }: BrandSelectorProps) {
   const { data: brandUsage, isLoading: brandUsageLoading } = useGetBrandUsage();
 
-  if (brandUsageLoading) {
-    return (
-      <Skeleton/>
-    )
-  };
+  
 
   const CreateButton = () => {
     return (

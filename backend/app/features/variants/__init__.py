@@ -2,6 +2,6 @@
 Variants feature module - A/B testing and variant set management
 """
 
-from app.features.variants.service import variants_service
+from app.features.variants.router import router
 
-__all__ = ["variants_service"]
+__all__ = ["router"]

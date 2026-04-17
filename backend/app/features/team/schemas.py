@@ -59,6 +59,7 @@ class UpdateTeamRequest(BaseModel):
     slug: Optional[str] = None
     description: Optional[str] = None
     avatar_url: Optional[str] = None
+    polar_customer_id: Optional[str] = None
 
 
 class InviteTeamMemberRequest(BaseModel):

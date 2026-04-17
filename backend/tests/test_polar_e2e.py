@@ -63,6 +63,7 @@ class TestPolarIntegrationFlow:
 
             checkout_result = create_checkout_link(
                 user_id=user_id,
+                team_id="team_test_123",
                 product_price_id=product_price_id,
                 success_url="https://app.local/success",
                 cancel_url="https://app.local/cancel",

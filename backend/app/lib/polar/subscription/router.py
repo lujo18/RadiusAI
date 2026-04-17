@@ -1,24 +1,21 @@
 """Subscriptions router for Polar subscription operations"""
 from fastapi import APIRouter, Depends, Query
+from polar_sdk import Subscription
 from app.core.security import get_current_user
+from backend.app.features.team.service import get_current_team
+from backend.app.lib.polar.subscription.service import get_subscription_for_team
 
 router = APIRouter(prefix="/subscriptions", tags=["billing"])
 
 
 @router.get("/", summary="List subscriptions")
 async def list_subscriptions(
-    user_id: str = Depends(get_current_user),
-    limit: int = Query(10, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-):
+    team_id: str = Depends(get_current_team)
+) -> Subscription | None:
     """Get all subscriptions for the current user."""
-    # TODO: Implement list subscriptions
-    return {
-        "items": [],
-        "total": 0,
-        "limit": limit,
-        "offset": offset,
-    }
+    
+    return get_subscription_for_team(team_id)
+
 
 
 @router.get("/{subscription_id}", summary="Get subscription details")

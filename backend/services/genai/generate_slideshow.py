@@ -1,13 +1,14 @@
 import json
 import logging
 from typing import Dict, Optional
+from app.core.config import settings
 from app.features.stock_packs.getPhotos import queryStockPackUrls
 from app.shared.genai.llm_output_sanitizer import sanitize_text
 from app.features.posts.schemas import LayoutConfig, PostContent
 from app.features.user.schemas import BrandSettings
 from app.shared.genai.prompts import SYSTEM_PROMPT
 from app.shared.genai.gpt_oss_prompts import assemble_generation_prompt
-from app.features.integrations.groq.client import groq
+from app.lib.ai_client import ai_client
 from .slide_layouts import get_all_layout_schemas, SLIDE_LAYOUTS, SlideLayout
 from app.features.integrations.unsplash.getPhotos import queryUnsplashUrls
 
@@ -20,6 +21,8 @@ def generate_slideshow_auto(
     count: int = 1,
     cta: Optional[dict] = None,
     stock_pack_directory: str | None = None,
+    provider: str = settings.DEFAULT_AI_PROVIDER,
+    model_id: str = "openai/gpt-oss-120b",
 ):
     """
     Generate complete TikTok slideshow with layout selection and content.
@@ -74,15 +77,11 @@ def generate_slideshow_auto(
     # openai/gpt-oss-120b (production model)
     # meta-llama/llama-4-maverick-17b-128e-instruct (preview model)
 
-    response = groq.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
+    response_text = ai_client.call_ai(
+        provider='openrouter',
+        model_id='google/gemma-4-31b-it:free',
+        system_prompt=SYSTEM_PROMPT,
+        main_prompt=prompt,
         temperature=0.6,
         top_p=0.95,
         presence_penalty=0.4,
@@ -149,8 +148,6 @@ def generate_slideshow_auto(
     # Parse response FIXME: re add if needed \/
     # response_text = response.text.strip()
     # generated_data = json.loads(response_text)
-
-    response_text = response.choices[0].message.content
 
     print("Gemini response 1:", response_text)
 

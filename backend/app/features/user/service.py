@@ -5,7 +5,9 @@ Services should never raise HTTPException; use app.core.exceptions instead.
 """
 
 import logging
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
+
+from app.core.database import get_db_session
 from app.features.user.repository import UserRepository
 from app.features.user.schemas import UserCreate, UserUpdate
 from app.features.user.models import User
@@ -14,107 +16,68 @@ from app.core.exceptions import NotFoundError, ConflictError, AuthenticationErro
 
 logger = logging.getLogger(__name__)
 
-repository = UserRepository()
+class UserService:
+    """Business logic for user operations."""
 
-# ════════════════════════════════
-#  CREATE
-# ════════════════════════════════
+    def __init__(self, repository: Optional[UserRepository] = None):
+        self.repository = repository or UserRepository()
 
+    async def _get_user_or_raise(self, db, user_id: int) -> User:
+        user = await self.repository.get_by_id(db, user_id)
+        if not user:
+            raise NotFoundError("User", user_id)
+        return user
 
-async def register_user(db: AsyncSession, payload: UserCreate) -> User:
-    """
-    Register a new user
+    async def register_user(self, payload: UserCreate) -> User:
+        """Register a new user."""
+        async with get_db_session() as db:
+            existing = await self.repository.get_by_email(db, payload.email)
+            if existing:
+                raise ConflictError(f"Email {payload.email} is already registered")
 
-    Raises:
-        ConflictError: If email is already registered
-    """
-    # Check if email already exists
-    existing = await repository.get_by_email(db, payload.email)
-    if existing:
-        raise ConflictError(f"Email {payload.email} is already registered")
+            user = User(
+                email=payload.email,
+                hashed_password=hash_password(payload.password),
+            )
+            return await self.repository.create(db, user)
 
-    # Create new user with hashed password
-    user = User(
-        email=payload.email,
-        hashed_password=hash_password(payload.password),
-    )
+    async def get_user(self, user_id: int) -> User:
+        """Get a user by id."""
+        async with get_db_session() as db:
+            return await self._get_user_or_raise(db, user_id)
 
-    # Persist to database
-    return await repository.create(db, user)
+    async def authenticate_user(self, email: str, password: str) -> str:
+        """Authenticate user and return JWT token."""
+        async with get_db_session() as db:
+            user = await self.repository.get_by_email(db, email)
+            if not user or not verify_password(password, user.hashed_password):
+                raise AuthenticationError("Invalid email or password")
+            return create_access_token({"sub": str(user.id)})
 
+    async def update_user(self, user_id: int, payload: UserUpdate) -> User:
+        """Update user profile."""
+        async with get_db_session() as db:
+            user = await self._get_user_or_raise(db, user_id)
 
-# ════════════════════════════════
-#  READ
-# ════════════════════════════════
+            if payload.email and payload.email != user.email:
+                existing = await self.repository.get_by_email(db, payload.email)
+                if existing:
+                    raise ConflictError(f"Email {payload.email} is already in use")
+                user.email = payload.email
 
+            return await self.repository.update(db, user)
 
-async def get_user(db: AsyncSession, user_id: int) -> User:
-    """
-    Get user by ID
-
-    Raises:
-        NotFoundError: If user does not exist
-    """
-    user = await repository.get_by_id(db, user_id)
-    if not user:
-        raise NotFoundError("User", user_id)
-    return user
-
-
-async def authenticate_user(db: AsyncSession, email: str, password: str) -> str:
-    """
-    Authenticate user and return JWT token
-
-    Raises:
-        AuthenticationError: If credentials are invalid
-    """
-    user = await repository.get_by_email(db, email)
-    if not user or not verify_password(password, user.hashed_password):
-        raise AuthenticationError("Invalid email or password")
-
-    # Generate JWT token
-    token = create_access_token({"sub": str(user.id)})
-    return token
+    async def deactivate_user(self, user_id: int) -> None:
+        """Deactivate user (soft delete)."""
+        async with get_db_session() as db:
+            user = await self._get_user_or_raise(db, user_id)
+            user.is_active = False
+            await self.repository.update(db, user)
 
 
-# ════════════════════════════════
-#  UPDATE
-# ════════════════════════════════
+def get_user_service() -> UserService:
+    """Create a request-scoped user service."""
+    return UserService()
 
 
-async def update_user(db: AsyncSession, user_id: int, payload: UserUpdate) -> User:
-    """
-    Update user profile
-
-    Raises:
-        NotFoundError: If user does not exist
-        ConflictError: If new email is already in use
-    """
-    user = await get_user(db, user_id)
-
-    # If updating email, check availability
-    if payload.email and payload.email != user.email:
-        existing = await repository.get_by_email(db, payload.email)
-        if existing:
-            raise ConflictError(f"Email {payload.email} is already in use")
-        user.email = payload.email
-
-    # Persist changes
-    return await repository.update(db, user)
-
-
-# ════════════════════════════════
-#  DELETE
-# ════════════════════════════════
-
-
-async def deactivate_user(db: AsyncSession, user_id: int) -> None:
-    """
-    Deactivate user (soft delete)
-
-    Raises:
-        NotFoundError: If user does not exist
-    """
-    user = await get_user(db, user_id)
-    user.is_active = False
-    await repository.update(db, user)
+__all__ = ["UserService", "get_user_service"]

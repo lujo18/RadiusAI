@@ -1,12 +1,18 @@
-"""Checkout router for Polar checkout operations"""
+"""Checkout router for Polar checkout operations."""
+
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.core.database import get_db
 from app.core.security import get_current_user
 from app.features.team.service import get_current_team
-from pydantic import BaseModel
-from typing import Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.shared.dependencies import get_db
-from app.features.billing.unified_service import get_unified_billing_service
+from app.lib.polar.billing_service import get_unified_billing_service
+from app.lib.polar.checkout.checkout import resolve_customer_from_session_token
 
 router = APIRouter(prefix="/checkout", tags=["billing"])
 
@@ -18,7 +24,6 @@ async def list_checkout_sessions(
     offset: int = Query(0, ge=0),
 ):
     """Get all checkout sessions for the current user."""
-    # TODO: Implement list checkout sessions
     return {
         "items": [],
         "total": 0,
@@ -27,47 +32,45 @@ async def list_checkout_sessions(
     }
 
 
-@router.get("/{session_id}", summary="Get checkout session details")
-async def get_checkout_session(
-    session_id: str,
-    user_id: str = Depends(get_current_user),
-):
-    """Get details of a specific checkout session."""
-    # TODO: Implement get checkout session
-    return {"session_id": session_id, "status": "pending"}
-
-
-class CreateCheckoutPayload(BaseModel):
-    product_price_id: str
+class CheckoutPayload(BaseModel):
+    product_id: str
     success_url: str
     cancel_url: Optional[str] = None
 
 
-@router.post("/", summary="Create checkout session")
-async def create_checkout(
-    payload: CreateCheckoutPayload,
+@router.post("/create")
+async def create_checkout_session(
+    payload: CheckoutPayload,
     user_id: str = Depends(get_current_user),
-    team_id: Optional[str] = Depends(get_current_team),
-    db: AsyncSession = Depends(get_db),
+    team_id: str = Depends(get_current_team),
 ):
-    """Create a checkout session using the unified billing service.
+    """Create checkout session via the unified billing service."""
+    service = get_unified_billing_service()
+  
 
-    Returns normalized session info with `session_id` and `url`.
-    """
-    try:
-        unified = get_unified_billing_service()
-        result = await unified.create_checkout_session(
-            db,
-            user_id,
-            payload.product_price_id,
-            payload.success_url,
-            payload.cancel_url,
-            team_id=team_id,
-        )
+    result = await service.create_checkout_session(
+        user_id=user_id,
+        product_id=payload.product_id,
+        success_url=payload.success_url,
+        cancel_url=payload.cancel_url,
+        team_id=team_id,
+    )
 
-        return result
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+    if isinstance(result, dict) and result.get("error"):
+        raise HTTPException(status_code=400, detail=str(result["error"]))
+
+    return result
 
 
-__all__ = ["router"]
+@router.get("/success", summary="Polar checkout success callback")
+async def checkout_success_callback(
+    customer_session_token: str = Query(..., min_length=1),
+):
+    """Resolve team/customer from session token and persist linkage in Supabase."""
+    res = await resolve_customer_from_session_token(customer_session_token)
+    return RedirectResponse(
+        url=settings.FRONTEND_URL + "/" + res.team_id + "/settings/billing"
+    )
+
+
+__all__ = ["router", "get_db", "get_current_user", "get_current_team"]

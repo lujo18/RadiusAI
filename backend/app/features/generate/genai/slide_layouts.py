@@ -100,6 +100,16 @@ SLIDE_LAYOUTS: dict[str, SlideLayout] = {
                 "color": "#ffffff",
                 "x": 100,
                 "y": 600,
+                "width": 880,
+                "align": "center",
+                "stroke": "#000000",
+                "stroke_width": 4,
+                "shadow_color": "#000000",
+                "shadow_blur": 6,
+                "shadow_offset_x": 0,
+                "shadow_offset_y": 2,
+                "shadow_opacity": 0.5,
+                "line_height": 1.3,
             }
         ],
     },
@@ -111,10 +121,11 @@ SLIDE_LAYOUTS: dict[str, SlideLayout] = {
         ],
     },
     "header": {"name": "header", "text_elements": [SLIDE_CONSTANTS["header_text"]]},
+    "body": {"name": "body", "text_elements": [SLIDE_CONSTANTS["body_text"]]},
 }
 
 
-def get_all_layout_schemas() -> dict[str, dict[str, dict[str, str]] | None]:
+def get_all_layout_schemas() -> dict[str, dict[str, str]]:
     """
     Return all available slide layouts with schema definitions.
     Used to build prompts for layout-agnostic generation.

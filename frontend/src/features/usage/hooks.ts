@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usageApi } from '@/features/usage/surface';
 
-export const useUsage = (team_id: string) => {
+export const useUsage = () => {
   return useQuery({
     queryKey: ['usage', 'user_activity'],
     queryFn: async () => {
-      const res = await usageApi.getUsage(team_id);
+      const res = await usageApi.getUsage();
       // return full response so callers can access limits + usage row
       return res ?? { usage: null, limits: [] };
     },
@@ -132,7 +132,7 @@ export const useTrackTemplate = () => {
 export const useGetCreditsUsage = () => {
   return useQuery({
     queryKey: ['usage', 'credits'],
-    queryFn: async () => {
+    queryFn: async (): Promise<MeterResponse> => {
       const res = await usageApi.getCreditsUsage();
       return res ?? { credits_used: 0, credits_limit: null };
     },

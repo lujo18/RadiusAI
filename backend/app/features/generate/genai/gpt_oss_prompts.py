@@ -178,66 +178,70 @@ def build_output_schema(layout_options: Dict[str, Any]) -> str:
     Returns:
         Formatted output schema with layout definitions and examples
     """
-    schema = """<output_schema>
-LAYOUT DEFINITIONS & WORD LIMITS:
+    allowed_layouts = sorted(str(name) for name in layout_options.keys())
 
-- hook: High-impact, value-signaling. Max 1 sentence, <15 words, <100 characters.
-  Purpose: Grab attention and signal clear benefit or outcome.
+    if not allowed_layouts:
+        # Defensive fallback if upstream layout registry is empty.
+        allowed_layouts = ["body", "header", "header_and_body", "hook"]
 
-- header: Title only. Max 1 sentence, <20 words.
-  Purpose: Slide label/section marker.
+    layout_definitions = {
+        "hook": "High-impact, value-signaling. Max 1 sentence, <15 words, <100 characters.",
+        "header": "Title only. Max 1 sentence, <20 words.",
+        "header_and_body": "Header + body. Header <15 words. Body 2-3 sentences, <40 words total.",
+        "body": "Longer paragraph without header. 2-4 sentences, <80 words.",
+    }
 
-- header_and_body: Header (title) + body text.
-  Header: 1 sentence, <15 words.
-  Body: 2-3 sentences, <40 words total.
-  Purpose: Educational, builds on hook, provides context.
+    layout_lines = [
+        f"- {layout_name}: {layout_definitions.get(layout_name, 'Follow template architecture and fill all required text elements.')}"
+        for layout_name in allowed_layouts
+    ]
 
-- body: Longer paragraph without header.
-  Content: 2-4 sentences, <80 words.
-  Purpose: Deep explanation, story, or detailed guidance.
+    allowed_layout_csv = ", ".join(allowed_layouts)
 
-- body_and_media_label: Body text with media reference.
-  Content: 1-2 sentences, <35 words.
-  Purpose: Describe an image or video element.
+    schema = f"""<output_schema>
+LAYOUT DEFINITIONS & WORD LIMITS (ALLOWED layout_type values):
+
+{chr(10).join(layout_lines)}
 
 EXAMPLE OUTPUT STRUCTURE:
-{
+{{
   "variations": [
-    {
+    {{
       "slides": [
-        {
+        {{
           "slide_number": 1,
           "layout_type": "hook",
-          "text_elements": {
-            "text-hook-1": "Never lose a thought again. Capture ideas in 3 minutes."
-          }
-        },
-        {
+          "text_elements": {{
+            "hook-text": "Never lose a thought again. Capture ideas in 3 minutes."
+          }}
+        }},
+        {{
           "slide_number": 2,
           "layout_type": "header_and_body",
-          "text_elements": {
-            "text-header-1": "Prompt 1: Morning Clarity",
-            "text-body-1": "Start your day with this simple question: What am I avoiding? Write for 2 minutes without editing. This reveals hidden anxieties."
-          }
-        },
-        {
+          "text_elements": {{
+            "header-text": "Prompt 1: Morning Clarity",
+            "body-text": "Start your day with one hard question. Write for 2 minutes without editing. This reveals hidden anxieties."
+          }}
+        }},
+        {{
           "slide_number": 3,
           "layout_type": "body",
-          "text_elements": {
-            "text-body-2": "Research shows that journaling for just 10 minutes daily reduces stress by 27%. When you externalize thoughts, your brain stops looping them."
-          }
-        }
+          "text_elements": {{
+            "body-text": "Research shows journaling for 10 minutes daily lowers stress. Externalizing thoughts helps break repetitive mental loops."
+          }}
+        }}
       ],
       "caption": "3 journal prompts to ease anxiety before bed. Try them tonight.",
       "hashtags": ["#journaling", "#anxiety", "#mentalhealth", "#sleep"],
-      "background_query": "calm notebook desk evening light"
-    }
+      "background_query": "calm notebook desk"
+    }}
   ]
-}
+}}
 
 STRICT RULES:
 - Fill EVERY text_element ID. No placeholders like {{placeholder}} allowed.
-- Use ONLY layout_type values from definitions above.
+- layout_type MUST be exactly one of: {allowed_layout_csv}
+- Never invent new layout names.
 - Respect word count limits per layout type.
 - No em-dashes (–), use hyphens (-).
 - No unicode or special characters outside ASCII + standard punctuation.

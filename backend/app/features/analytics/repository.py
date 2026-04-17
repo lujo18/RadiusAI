@@ -2,8 +2,8 @@
 Analytics Repository - Data access for post analytics and performance metrics
 """
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, desc, func
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from uuid import uuid4
 
@@ -14,11 +14,12 @@ from app.features.analytics.models import PostAnalytic, PostPerformanceSummary
 class AnalyticsRepository(BaseRepository[PostAnalytic]):
     """Repository for PostAnalytic ORM operations."""
 
-    def __init__(self, db: Optional[AsyncSession] = None, supabase=None):
-        super().__init__(PostAnalytic, db=db, supabase=supabase)
+    def __init__(self, supabase=None):
+        super().__init__(PostAnalytic, supabase=supabase)
 
     async def create_analytic(
         self,
+        db: AsyncSession,
         post_id: str,
         template_id: str,
         user_id: str,
@@ -49,9 +50,11 @@ class AnalyticsRepository(BaseRepository[PostAnalytic]):
             variant_set_id=variant_set_id,
         )
 
-        return await self.create(analytic)
+        return await self.create(db, analytic)
 
-    async def get_by_post(self, post_id: str, limit: int = 100) -> list[PostAnalytic]:
+    async def get_by_post(
+        self, db: AsyncSession, post_id: str, limit: int = 100
+    ) -> list[PostAnalytic]:
         """Get analytics records for a post."""
         stmt = (
             select(PostAnalytic)
@@ -59,11 +62,12 @@ class AnalyticsRepository(BaseRepository[PostAnalytic]):
             .order_by(desc(PostAnalytic.recorded_at))
             .limit(limit)
         )
-        session = self._ensure_db()
-        result = await session.execute(stmt)
-        return result.scalars().all()
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
 
-    async def get_by_team(self, team_id: str, limit: int = 100) -> list[PostAnalytic]:
+    async def get_by_team(
+        self, db: AsyncSession, team_id: str, limit: int = 100
+    ) -> list[PostAnalytic]:
         """Get recent analytics for a team."""
         stmt = (
             select(PostAnalytic)
@@ -71,38 +75,39 @@ class AnalyticsRepository(BaseRepository[PostAnalytic]):
             .order_by(desc(PostAnalytic.recorded_at))
             .limit(limit)
         )
-        session = self._ensure_db()
-        result = await session.execute(stmt)
-        return result.scalars().all()
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
 
-    async def get_by_platform(self, team_id: str, platform: str, limit: int = 100) -> list[PostAnalytic]:
+    async def get_by_platform(
+        self,
+        db: AsyncSession,
+        team_id: str,
+        platform: str,
+        limit: int = 100,
+    ) -> list[PostAnalytic]:
         """Get analytics for a specific platform."""
         stmt = (
             select(PostAnalytic)
-            .where(
-                and_(PostAnalytic.team_id == team_id, PostAnalytic.platform == platform)
-            )
+            .where(and_(PostAnalytic.team_id == team_id, PostAnalytic.platform == platform))
             .order_by(desc(PostAnalytic.recorded_at))
             .limit(limit)
         )
-        session = self._ensure_db()
-        result = await session.execute(stmt)
-        return result.scalars().all()
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
 
 
 class PerformanceSummaryRepository(BaseRepository[PostPerformanceSummary]):
     """Repository for PostPerformanceSummary ORM operations."""
 
-    def __init__(self, db: Optional[AsyncSession] = None, supabase=None):
-        super().__init__(PostPerformanceSummary, db=db, supabase=supabase)
+    def __init__(self, supabase=None):
+        super().__init__(PostPerformanceSummary, supabase=supabase)
 
-    async def get_or_create(self, post_id: str, team_id: str) -> PostPerformanceSummary:
+    async def get_or_create(
+        self, db: AsyncSession, post_id: str, team_id: str
+    ) -> PostPerformanceSummary:
         """Get existing summary or create new one."""
-        stmt = select(PostPerformanceSummary).where(
-            PostPerformanceSummary.post_id == post_id
-        )
-        session = self._ensure_db()
-        result = await session.execute(stmt)
+        stmt = select(PostPerformanceSummary).where(PostPerformanceSummary.post_id == post_id)
+        result = await db.execute(stmt)
         summary = result.scalars().first()
 
         if summary:
@@ -115,23 +120,24 @@ class PerformanceSummaryRepository(BaseRepository[PostPerformanceSummary]):
             team_id=team_id,
         )
 
-        return await self.create(summary)
+        db.add(summary)
+        await db.flush()
+        await db.refresh(summary)
+        return summary
 
     async def update_summary(
         self,
+        db: AsyncSession,
         post_id: str,
         total_impressions: int,
         total_reach: int,
         total_engagement: int,
         avg_engagement_rate: float,
         performance_score: float,
-    ) -> PostPerformanceSummary:
+    ) -> Optional[PostPerformanceSummary]:
         """Update performance summary with aggregated metrics."""
-        stmt = select(PostPerformanceSummary).where(
-            PostPerformanceSummary.post_id == post_id
-        )
-        session = self._ensure_db()
-        result = await session.execute(stmt)
+        stmt = select(PostPerformanceSummary).where(PostPerformanceSummary.post_id == post_id)
+        result = await db.execute(stmt)
         summary = result.scalars().first()
 
         if summary:
@@ -141,11 +147,11 @@ class PerformanceSummaryRepository(BaseRepository[PostPerformanceSummary]):
             summary.avg_engagement_rate = avg_engagement_rate
             summary.performance_score = performance_score
 
-            return await self.update(summary)
+            await db.flush()
+            await db.refresh(summary)
+            return summary
 
         return None
 
 
-# Module-level singletons
-analytics_repo = AnalyticsRepository()
-performance_repo = PerformanceSummaryRepository()
+__all__ = ["AnalyticsRepository", "PerformanceSummaryRepository"]

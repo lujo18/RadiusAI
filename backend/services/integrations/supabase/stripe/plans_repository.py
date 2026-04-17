@@ -1,6 +1,12 @@
 from ..client import get_stripe_supabase
 from typing import List, Optional
-import stripe
+
+# DEPRECATED - DELETE
+# DEPRECATED - Stripe plans repository. Use Polar-backed products repository.
+try:
+    import stripe  # type: ignore
+except Exception:
+    stripe = None  # type: ignore
 
 
 class PlansRepository:

@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store";
-import backendClient from "@/lib/api/clients/backendClient";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -20,17 +19,18 @@ export default function AuthCallbackPage() {
 
       // Call server-side exchange route which uses cookie-backed server client
       try {
-        const res = await backendClient(
-          "/api/v1/auth/exchange",
-          { url: fullUrl },
-        );
+        const exchangeRes = await fetch('/api/auth/exchange', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ url: fullUrl }),
+        });
 
-        console.log("GOOGLE RES", res)
+        const payload = await exchangeRes.json();
 
-        const payload =  res;
-        if (!res) {
+        if (!exchangeRes.ok) {
           console.error("Auth callback exchange error (server):", payload);
-          router.push("/login?error=auth_failed");
+          router.push("/?error=auth_failed");
           return;
         }
 
@@ -42,7 +42,7 @@ export default function AuthCallbackPage() {
 
         if (sessionError) {
           console.error("Auth callback error:", sessionError);
-          router.push("/login?error=auth_failed");
+          router.push("/?error=auth_failed");
           return;
         }
 
@@ -94,7 +94,7 @@ export default function AuthCallbackPage() {
         }
       } catch (err) {
         console.error("Auth callback unexpected error:", err);
-        router.push("/login?error=auth_failed");
+        router.push("/?error=auth_failed");
         return;
       }
     };

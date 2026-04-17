@@ -3,14 +3,54 @@
  *
  * Edit this file to update marketing copy, comparison tables, and FAQs.
  *
- * ⚠️  Plan names, features, and limits are defined in ONE place:
- *     src/lib/plans.ts  ← edit that file, not here
- *
- * The `plans` key below re-exports from plans.ts so all consumers
- * stay in sync automatically.
+ * Features now come from Polar product benefits API instead of hardcoded plan data.
+ * Plan limits are defined locally in usePlanLimits.ts
  */
 
-import { PLANS } from '@/lib/plans';
+// Static plan metadata for schema.org structured data and fallbacks
+const PLAN_METADATA = {
+  starter: {
+    name: 'Starter',
+    price: 19,
+    description: 'For solo creators',
+    highlight: false,
+    badge: null,
+    features: [
+      '5 posts per month',
+      '10 AI generations',
+      '3 templates',
+      'Email support'
+    ]
+  },
+  growth: {
+    name: 'Growth',
+    price: 29,
+    description: 'For growing teams',
+    highlight: true,
+    badge: 'Popular',
+    features: [
+      'Unlimited posts',
+      'Unlimited AI generations',
+      '50+ templates',
+      'Batch generation',
+      'Priority support'
+    ]
+  },
+  unlimited: {
+    name: 'Agency',
+    price: 99,
+    description: 'For agencies & enterprises',
+    highlight: false,
+    badge: null,
+    features: [
+      'Everything in Growth',
+      'Custom templates',
+      'Advanced analytics',
+      'Dedicated support',
+      'Custom integrations'
+    ]
+  }
+} as const;
 
 export const pricingContent = {
   // ==========================================
@@ -23,9 +63,9 @@ export const pricingContent = {
   },
 
   // ==========================================
-  // PLANS — sourced from src/lib/plans.ts
+  // PLANS — static metadata (details come from Polar)
   // ==========================================
-  plans: PLANS,
+  plans: PLAN_METADATA,
 
   // ==========================================
   // SOCIAL PROOF

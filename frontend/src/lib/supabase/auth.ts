@@ -80,8 +80,9 @@ export const signInWithEmail = async (
  */
 export const signInWithGoogle = async (): Promise<void> => {
   // Use server-side signin to ensure PKCE verifier is stored in cookies
-  const res = await fetch('/api/v1/auth/signin', {
+  const res = await fetch('/api/auth/signin', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider: 'google', redirectTo: `${window.location.origin}/auth/callback` }),
   });
@@ -102,8 +103,9 @@ export const signInWithGoogle = async (): Promise<void> => {
  * Sign in with GitHub OAuth
  */
 export const signInWithGitHub = async (): Promise<void> => {
-  const res = await fetch('/api/v1/auth/signin', {
+  const res = await fetch('/api/auth/signin', {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ provider: 'github', redirectTo: `${window.location.origin}/auth/callback` }),
   });

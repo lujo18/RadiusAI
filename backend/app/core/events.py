@@ -32,23 +32,6 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("🚀 Starting SlideForge backend...")
 
-        # ─ Initialize payment processor (Polar or Stripe) ─
-        from app.features.billing.unified_service import (
-            get_unified_billing_service,
-        )
-
-        billing = get_unified_billing_service()
-        processor_status = await billing.initialize_on_startup(None)
-        if not processor_status["configured"]:
-            logger.warning(
-                f"⚠ Payment processor not fully configured: "
-                f"{processor_status.get('errors', [])}"
-            )
-        else:
-            logger.info(
-                f"✓ Payment processor initialized: {processor_status['processor']}"
-            )
-
         # ─ Initialize scheduled tasks (APScheduler) ─
         from app.core.config import settings
 

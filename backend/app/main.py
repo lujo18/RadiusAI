@@ -11,10 +11,15 @@ import sys
 import logging
 from pathlib import Path
 
-# Add backend directory to Python path for absolute imports
+# Add backend directory to Python path for absolute imports early to avoid
+# import-order problems when worker modules import top-level `app` package.
 backend_dir = Path(__file__).parent.parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
+
+from backend.services.workers.analytics.cron import register_analytics_worker
+from backend.services.workers.automation.cron import register_automation_worker
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,11 +30,17 @@ from app.core.config import settings
 from app.api.router import api_router
 from app.shared.dependencies import get_current_user
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+import asyncio
+
+
 logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
     """Create and configure FastAPI application"""
+    
 
     app = FastAPI(
         title="SlideForge API",
@@ -62,19 +73,8 @@ def create_app() -> FastAPI:
 
     # ═════════ Routes ═════════
 
-    # Feature-based API router (all endpoints in app/features/)
-    # Legacy routers have been fully migrated into feature modules
+    # Features: All modern functionality is routed through api_router
     app.include_router(api_router)
-
-    # Polar payment processor endpoints (feature-flagged)
-    if settings.USE_POLAR:
-        from app.features.billing.admin_router import router as polar_admin_router
-        from app.lib.polar.router import router as polar_router
-
-        app.include_router(polar_admin_router, prefix="/api")
-        app.include_router(polar_router, prefix="/api")
-        logger.info("✓ Polar admin endpoints registered")
-        logger.info("✓ Polar billing endpoints registered")
 
     # ═════════ Health Check Routes ═════════
 
@@ -109,6 +109,12 @@ def create_app() -> FastAPI:
 
 # Create app instance
 app = create_app()
+
+scheduler = BackgroundScheduler()
+register_automation_worker(scheduler)
+register_analytics_worker(scheduler)
+scheduler.start()
+
 
 if __name__ == "__main__":
     import uvicorn

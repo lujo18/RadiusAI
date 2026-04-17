@@ -122,15 +122,17 @@ export const updateCustomer = async ({ baseUrl, customer_id, customer }: { baseU
   }
 }
 
-export const checkout = async ({ baseUrl, productCart, customer, return_url, metadata }: { baseUrl?: string, productCart: Array<{ name: string; quantity: number; amount: number }>, customer: { email: string; name: string }, return_url: string, metadata?: Record<string, string> }): Promise<any> => {
+export const checkout = async ({ baseUrl, productCart, customer, return_url, metadata, team_id }: { baseUrl?: string, productCart: Array<{ name: string; quantity: number; amount: number }>, customer: { email: string; name: string }, return_url: string, metadata?: Record<string, string>, team_id?: string }): Promise<any> => {
   try {
     const apiBase = baseUrl || process.env.NEXT_PUBLIC_API_URL || ''
+    const body: any = { productCart, customer, return_url, metadata };
+    if (team_id) body.team_id = team_id;
     const response = await fetch(`${apiBase}/api/v1/billing/checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ productCart, customer, return_url, metadata }),
+      body: JSON.stringify(body),
     })
 
     if (!response.ok) {

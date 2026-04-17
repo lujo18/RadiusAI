@@ -1,9 +1,9 @@
 """
-Stock Packs Photo Retrieval - Query photos from stock pack collections.
+Stock Packs Photo Retrieval - feature shim.
+Delegates to the shared manifest for image selection.
 """
 
 from app.shared.utils.stockPacks.manifest import getStockImage
-
 
 standard_layout = ["ac", "as"]
 

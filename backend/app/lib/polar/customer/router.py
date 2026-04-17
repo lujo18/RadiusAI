@@ -1,8 +1,29 @@
-"""Customer router for Polar customer operations"""
-from fastapi import APIRouter, Depends, Query
+"""Customer router for Polar customer operations."""
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from app.core.config import settings
 from app.core.security import get_current_user
+from app.features.team.service import get_current_team
+from app.lib.polar.customer.service import create_customer_portal_session
 
 router = APIRouter(prefix="/customers", tags=["billing"])
+portal_router = APIRouter(tags=["billing"])
+
+
+@portal_router.post("/portal", summary="Create customer portal session")
+async def create_portal_session(
+    user_id: str = Depends(get_current_user),
+    team_id: str = Depends(get_current_team),
+):
+    """Create a Polar customer portal session URL for the current team."""
+    # Keep users on billing settings after leaving the portal.
+    return_url = f"{settings.FRONTEND_URL}/{team_id}/settings/billing"
+
+    try:
+        return create_customer_portal_session(team_id=team_id, return_url=return_url)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/me", summary="Get current customer info")
@@ -45,4 +66,4 @@ async def get_customer(
     return {"customer_id": customer_id}
 
 
-__all__ = ["router"]
+__all__ = ["router", "portal_router"]

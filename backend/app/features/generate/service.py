@@ -9,7 +9,9 @@ import logging
 import json
 from typing import Optional
 
+from app.core.config import settings
 from app.core.exceptions import ExternalServiceError, ValidationError
+from app.lib.ai_client import ai_client
 
 logger = logging.getLogger(__name__)
 
@@ -26,20 +28,15 @@ class GenerateService:
 
     def __init__(self):
         """Initialize with lazy-loaded GenAI clients"""
-        self._groq_client = None
+        self._ai_client = None
         self._gemini_client = None
 
     @property
-    def groq_client(self):
-        """Lazy-load Groq client"""
-        if self._groq_client is None:
-            try:
-                from app.features.integrations.groq.client import groq
-
-                self._groq_client = groq
-            except ImportError:
-                raise ExternalServiceError("Groq client not configured")
-        return self._groq_client
+    def llm_client(self):
+        """Lazy-load shared AI client"""
+        if self._ai_client is None:
+            self._ai_client = ai_client
+        return self._ai_client
 
     @property
     def gemini_client(self):
@@ -60,7 +57,7 @@ class GenerateService:
         content_rules: dict,
         template_structure: dict,
         count: int = 1,
-        provider: str = "groq",  # "groq", "gemini"
+        provider: str = settings.DEFAULT_AI_PROVIDER,
     ) -> list[dict]:
         """
         Generate carousel content (multiple slide variations) for a topic.
@@ -71,7 +68,7 @@ class GenerateService:
             content_rules: Format, depth level, hook style, etc.
             template_structure: Slide count, designs, text element placeholders
             count: Number of variations to generate
-            provider: LLM provider to use ("groq" or "gemini")
+            provider: LLM provider to use (groq, openrouter, gemini)
 
         Returns:
             List of carousel objects with slides, caption, hashtags
@@ -92,6 +89,10 @@ class GenerateService:
         try:
             if provider == "groq":
                 return await self._generate_via_groq(
+                    topic, brand_settings, content_rules, template_structure, count
+                )
+            elif provider == "openrouter":
+                return await self._generate_via_openrouter(
                     topic, brand_settings, content_rules, template_structure, count
                 )
             elif provider == "gemini":
@@ -117,27 +118,57 @@ class GenerateService:
         count: int,
     ) -> list[dict]:
         """Generate content using Groq API (GPT-OSS 120B + Llama)"""
+        return await self._generate_via_chat_provider(
+            provider="groq",
+            topic=topic,
+            brand_settings=brand_settings,
+            content_rules=content_rules,
+            template_structure=template_structure,
+            count=count,
+        )
+
+    async def _generate_via_openrouter(
+        self,
+        topic: str,
+        brand_settings: dict,
+        content_rules: dict,
+        template_structure: dict,
+        count: int,
+    ) -> list[dict]:
+        """Generate content via OpenRouter using the same chat payload."""
+        return await self._generate_via_chat_provider(
+            provider="openrouter",
+            topic=topic,
+            brand_settings=brand_settings,
+            content_rules=content_rules,
+            template_structure=template_structure,
+            count=count,
+        )
+
+    async def _generate_via_chat_provider(
+        self,
+        provider: str,
+        topic: str,
+        brand_settings: dict,
+        content_rules: dict,
+        template_structure: dict,
+        count: int,
+    ) -> list[dict]:
+        """Generate content using a provider that supports chat completions."""
 
         # Build prompt from template structure and brand settings
         prompt = self._build_content_prompt(
             topic, brand_settings, content_rules, template_structure, count
         )
 
-        logger.debug(f"Groq request prompt length: {len(prompt)} chars")
+        logger.debug(f"{provider} request prompt length: {len(prompt)} chars")
 
-        # Call Groq API with JSON schema
-        response = self.groq_client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": self._get_system_prompt(brand_settings),
-                },
-                {
-                    "role": "user",
-                    "content": prompt,
-                },
-            ],
+        # Call selected provider with the existing JSON schema contract.
+        response_text = self.llm_client.call_ai(
+            provider=provider,
+            model_id="openai/gpt-oss-120b",
+            system_prompt=self._get_system_prompt(brand_settings),
+            main_prompt=prompt,
             temperature=0.7,
             top_p=0.95,
             max_completion_tokens=6000,
@@ -167,8 +198,6 @@ class GenerateService:
             },
         )
 
-        # Parse response
-        response_text = response.choices[0].message.content
         generated_data = json.loads(response_text.strip())
 
         # Extract variations array
@@ -177,9 +206,9 @@ class GenerateService:
         elif isinstance(generated_data, list):
             variations = generated_data
         else:
-            raise ValidationError("Unexpected Groq response structure")
+            raise ValidationError(f"Unexpected {provider} response structure")
 
-        logger.info(f"Generated {len(variations)} carousel variations via Groq")
+        logger.info(f"Generated {len(variations)} carousel variations via {provider}")
         return variations
 
     async def _generate_via_gemini(

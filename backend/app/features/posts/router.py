@@ -4,15 +4,12 @@ Post HTTP endpoints - Generation and CRUD for posts
 
 import logging
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.exceptions import AppError
-from app.features.posts import service
+from app.features.posts.service import PostService, get_post_service
 from app.features.posts.schemas import (
     GeneratePostRequest,
-    PostCreate,
     PostUpdate,
     PostResponse,
     PostListResponse,
@@ -41,7 +38,7 @@ router = APIRouter(
 async def generate_posts(
     request: GeneratePostRequest,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """
     Generate new posts using AI.
@@ -49,8 +46,7 @@ async def generate_posts(
     Requires: Authorization: Bearer <token>
     """
     try:
-        posts = await service.generate_posts(
-            db=db,
+        posts = await post_service.generate_posts(
             user_id=user_id,
             brand_id=request.brand_id,
             template_id=request.template_id,
@@ -77,11 +73,11 @@ async def generate_posts(
 async def list_brand_posts(
     brand_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """List all posts for a brand"""
     try:
-        posts = await service.list_brand_posts(db, brand_id, user_id)
+        posts = await post_service.list_brand_posts(brand_id, user_id)
         return posts
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -92,11 +88,11 @@ async def list_posts_by_status(
     brand_id: str,
     status: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """List posts by status"""
     try:
-        posts = await service.list_posts_by_status(db, brand_id, status, user_id)
+        posts = await post_service.list_posts_by_status(brand_id, status, user_id)
         return posts
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -106,11 +102,11 @@ async def list_posts_by_status(
 async def list_scheduled_posts(
     brand_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """List scheduled posts"""
     try:
-        posts = await service.list_scheduled_posts(db, brand_id, user_id)
+        posts = await post_service.list_scheduled_posts(brand_id, user_id)
         return posts
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -125,11 +121,11 @@ async def list_scheduled_posts(
 async def get_post(
     post_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """Get post details"""
     try:
-        post = await service.get_post(db, post_id, user_id)
+        post = await post_service.get_post(post_id, user_id)
         return post
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -145,11 +141,11 @@ async def update_post(
     post_id: str,
     payload: PostUpdate,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """Update post details"""
     try:
-        post = await service.update_post(db, post_id, payload, user_id)
+        post = await post_service.update_post(post_id, payload, user_id)
         logger.info(f"Post updated: {post_id}")
         return post
     except AppError as e:
@@ -160,11 +156,11 @@ async def update_post(
 async def publish_post(
     post_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """Mark post as published"""
     try:
-        post = await service.mark_as_published(db, post_id, user_id)
+        post = await post_service.mark_as_published(post_id, user_id)
         logger.info(f"Post published: {post_id}")
         return post
     except AppError as e:
@@ -180,11 +176,11 @@ async def publish_post(
 async def delete_post(
     post_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """Delete a post"""
     try:
-        await service.delete_post(db, post_id, user_id)
+        await post_service.delete_post(post_id, user_id)
         logger.info(f"Post deleted: {post_id}")
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -199,11 +195,12 @@ async def delete_post(
 async def get_post_analytics(
     post_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    post_service: PostService = Depends(get_post_service),
 ):
     """Get post analytics"""
     try:
-        analytics = await service.get_post_analytics(db, post_id)
+        analytics = await post_service.get_post_analytics(post_id)
+        _ = user_id
         return analytics
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)

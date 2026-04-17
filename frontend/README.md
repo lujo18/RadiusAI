@@ -145,6 +145,18 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_APP_NAME=ViralStack
 ```
 
+For authentication to work locally and in production, set the Supabase variables below. The server-side routes prefer a service role key for secure server operations (recommended for production). If `SUPABASE_SERVICE_ROLE_KEY` is not provided, the app will fall back to the publishable key for development convenience.
+
+```env
+# Server-side (recommended for production):
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Client-side (publishable):
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-publishable-anon-key
+```
+
 ## Customization
 
 ### Branding

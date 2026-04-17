@@ -118,7 +118,7 @@ async def check_polar_health():
         return
 
     try:
-        from app.features.billing.unified_service import (
+        from app.lib.polar.billing_service import (
             get_unified_billing_service,
         )
 

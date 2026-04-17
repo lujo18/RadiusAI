@@ -4,12 +4,10 @@ Template HTTP endpoints - CRUD operations for templates
 
 import logging
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.exceptions import AppError
-from app.features.templates import service
+from app.features.templates.service import TemplateService, get_template_service
 from app.features.templates.schemas import (
     TemplateCreate,
     TemplateUpdate,
@@ -40,7 +38,7 @@ async def create_template(
     brand_id: str,
     payload: TemplateCreate,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Create a new template for a brand.
@@ -48,7 +46,7 @@ async def create_template(
     Requires: Authorization: Bearer <token>
     """
     try:
-        template = await service.create_template(db, user_id, brand_id, payload)
+        template = await template_service.create_template(user_id, brand_id, payload)
         return template
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -63,7 +61,7 @@ async def create_template(
 async def list_brand_templates(
     brand_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     List all templates for a brand.
@@ -71,7 +69,7 @@ async def list_brand_templates(
     Requires: Authorization: Bearer <token>
     """
     try:
-        templates = await service.list_brand_templates(db, brand_id, user_id)
+        templates = await template_service.list_brand_templates(brand_id, user_id)
         return templates
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -80,7 +78,7 @@ async def list_brand_templates(
 @router.get("/my/all", response_model=list[TemplateListResponse])
 async def list_my_templates(
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     List all templates created by current user.
@@ -88,7 +86,7 @@ async def list_my_templates(
     Requires: Authorization: Bearer <token>
     """
     try:
-        templates = await service.list_user_templates(db, user_id)
+        templates = await template_service.list_user_templates(user_id)
         return templates
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -97,7 +95,7 @@ async def list_my_templates(
 @router.get("/my/favorites", response_model=list[TemplateListResponse])
 async def list_favorite_templates(
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     List user's favorite templates.
@@ -105,7 +103,7 @@ async def list_favorite_templates(
     Requires: Authorization: Bearer <token>
     """
     try:
-        templates = await service.list_favorite_templates(db, user_id)
+        templates = await template_service.list_favorite_templates(user_id)
         return templates
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -113,13 +111,13 @@ async def list_favorite_templates(
 
 @router.get("/defaults", response_model=list[TemplateListResponse])
 async def get_default_templates(
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Get system default templates (public, no auth required).
     """
     try:
-        templates = await service.get_default_templates(db)
+        templates = await template_service.get_default_templates()
         return templates
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -129,7 +127,7 @@ async def get_default_templates(
 async def get_template(
     template_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Get template details by ID.
@@ -137,7 +135,7 @@ async def get_template(
     Requires: Authorization: Bearer <token>
     """
     try:
-        template = await service.get_template(db, template_id, user_id)
+        template = await template_service.get_template(template_id, user_id)
         return template
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -153,7 +151,7 @@ async def update_template(
     template_id: str,
     payload: TemplateUpdate,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Update template details.
@@ -161,7 +159,7 @@ async def update_template(
     Requires: Authorization: Bearer <token>
     """
     try:
-        template = await service.update_template(db, template_id, payload, user_id)
+        template = await template_service.update_template(template_id, payload, user_id)
         logger.info(f"Template updated: {template_id}")
         return template
     except AppError as e:
@@ -173,7 +171,7 @@ async def toggle_favorite(
     template_id: str,
     is_favorite: bool = True,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Toggle template favorite status.
@@ -181,7 +179,9 @@ async def toggle_favorite(
     Requires: Authorization: Bearer <token>
     """
     try:
-        template = await service.toggle_favorite(db, template_id, is_favorite, user_id)
+        template = await template_service.toggle_favorite(
+            template_id, is_favorite, user_id
+        )
         return template
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -196,7 +196,7 @@ async def toggle_favorite(
 async def delete_template(
     template_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Delete a template.
@@ -204,7 +204,7 @@ async def delete_template(
     Requires: Authorization: Bearer <token>
     """
     try:
-        await service.delete_template(db, template_id, user_id)
+        await template_service.delete_template(template_id, user_id)
         logger.info(f"Template deleted: {template_id}")
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -219,7 +219,7 @@ async def delete_template(
 async def search_by_category(
     category: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Search templates by category.
@@ -227,7 +227,7 @@ async def search_by_category(
     Requires: Authorization: Bearer <token>
     """
     try:
-        templates = await service.search_by_category(db, category, user_id)
+        templates = await template_service.search_by_category(category, user_id)
         return templates
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -237,7 +237,7 @@ async def search_by_category(
 async def search_by_tags(
     tags: list[str],
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    template_service: TemplateService = Depends(get_template_service),
 ):
     """
     Search templates by tags.
@@ -245,7 +245,7 @@ async def search_by_tags(
     Requires: Authorization: Bearer <token>
     """
     try:
-        templates = await service.search_by_tags(db, tags, user_id)
+        templates = await template_service.search_by_tags(tags, user_id)
         return templates
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)

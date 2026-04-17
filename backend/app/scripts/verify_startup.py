@@ -31,7 +31,7 @@ async def run_startup_checks() -> bool:
     Returns True if all checks pass, False otherwise.
     """
     from app.core.config import settings
-    from app.features.billing.unified_service import (
+    from app.lib.polar.billing_service import (
         get_unified_billing_service,
     )
 

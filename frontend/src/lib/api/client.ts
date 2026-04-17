@@ -118,19 +118,12 @@ const teamsApiImpl = {
 
 export const billingApi = {
   async getBilling() { throw new Error('billingApi.getBilling shim called'); },
-  async getSubscription(expand?: string[]): Promise<any> {
+  async getSubscription(): Promise<any> {
     try {
-      const response = await backendClient.get('/api/v1/billing/subscription', {
-        params: expand && Array.isArray(expand) ? { expand: JSON.stringify(expand) } : {},
-      });
-      console.log('[billingApi] getSubscription success');
-      return response.data;
+      const res = await backendClient.get('/api/v1/billing/subscriptions');
+      console.log("billingApi: subscription resonse", res)
+      return res.data;
     } catch (err: any) {
-      // 404 = user has no Stripe customer yet (no subscription) — valid state
-      if (err?.response?.status === 404) {
-        console.log('[billingApi] getSubscription: no subscription found (404)');
-        return null;
-      }
       console.error('[billingApi] getSubscription failed:', err);
       throw err;
     }
@@ -248,11 +241,17 @@ export const userApi = {
 };
 
 export const plansApi = {
-  async getPlans() { throw new Error('plansApi.getPlans shim called'); },
-  async getPlan(_id: string) { throw new Error('plansApi.getPlan shim called'); },
-  async createPlan(_data?: any) { throw new Error('plansApi.createPlan shim called'); },
-  async updatePlan(_id: string, _updates?: any) { throw new Error('plansApi.updatePlan shim called'); },
-  async deletePlan(_id: string) { throw new Error('plansApi.deletePlan shim called'); },
+  async getPlans() { 
+    const { data } = await backendClient.get('/api/v1/billing/benefits/plans');
+    return data;
+  },
+  async getPlan(id: string) {
+    const { data } = await backendClient.get(`/api/v1/billing/products/${id}`);
+    return data;
+  },
+  async createPlan(_data?: any) { throw new Error('createPlan is deprecated; use admin APIs'); },
+  async updatePlan(_id: string, _updates?: any) { throw new Error('updatePlan is deprecated; use admin APIs'); },
+  async deletePlan(_id: string) { throw new Error('deletePlan is deprecated; use admin APIs'); },
 };
 
 export const brandApi = {
@@ -281,8 +280,18 @@ export const contentApi = {
 export const teamsApi = teamsApiImpl;
 
 export const productsApi = {
-  async list() { throw new Error('productsApi shim called'); },
-  async getProducts() { throw new Error('productsApi.getProducts shim called'); },
+  async list() {
+    const { data } = await backendClient.get('/api/v1/billing/products');
+    return data;
+  },
+  async getProducts() {
+    const { data } = await backendClient.get('/api/v1/billing/products');
+    return data;
+  },
+  async getProduct(productId: string) {
+    const { data } = await backendClient.get(`/api/v1/billing/product?product_id=${productId}`);
+    return data;
+  },
 };
 
 export const productsApiClient = productsApi;

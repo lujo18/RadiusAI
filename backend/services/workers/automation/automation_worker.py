@@ -42,11 +42,12 @@ def _get_supabase():
     if _supabase is None:
         from app.core.config import settings
 
-            if not settings.SUPABASE_SERVICE_ROLE_KEY:
-                raise RuntimeError(
-                    "SUPABASE_SERVICE_ROLE_KEY is not set in settings. Worker cannot authenticate with Supabase. "
-                    "This is required for the automation worker to function."
-                )
+        if not settings.SUPABASE_SERVICE_ROLE_KEY:
+            raise RuntimeError(
+                "SUPABASE_SERVICE_ROLE_KEY is not set in settings. Worker cannot authenticate with Supabase. "
+                "This is required for the automation worker to function."
+            )
+
         _supabase = get_supabase()
     return _supabase
 

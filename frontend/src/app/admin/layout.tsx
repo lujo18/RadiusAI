@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -16,10 +16,13 @@ import {
   DollarSign,
   Zap,
   Star,
-  Settings,
   Home,
   Package,
+  FileText,
 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/lib/api/hooks/useAuth";
+import { useUserProfile } from "@/features/user/hooks";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -51,10 +54,48 @@ const adminNavItems = [
     href: "/admin/testimonials",
     icon: Star,
   },
+  {
+    title: "Blog",
+    href: "/admin/blog",
+    icon: FileText,
+  },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isLoading: authLoading, isAuthenticated } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
+
+  React.useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.replace("/");
+      return;
+    }
+
+    if (!authLoading && isAuthenticated && !profileLoading && !profile?.is_admin) {
+      router.replace("/overview");
+    }
+  }, [authLoading, isAuthenticated, profileLoading, profile, router]);
+
+  if (authLoading || (isAuthenticated && profileLoading)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Spinner className="size-8" />
+          <p className="mt-2 text-sm text-foreground/60">Checking admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !profile?.is_admin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center text-foreground/70">Admin access required.</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

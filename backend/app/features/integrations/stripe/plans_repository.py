@@ -3,9 +3,17 @@ Stripe Plans Repository - Manage subscription plans and their prices.
 Fetches live data from Stripe API with fallback to Supabase cache.
 """
 
+# DEPRECATED - DELETE
+
+
 from app.features.integrations.supabase.client import get_stripe_supabase
 from typing import List, Optional
-import stripe
+
+# DEPRECATED — Stripe plans repository. Use Polar-backed products repository.
+try:
+    import stripe  # type: ignore
+except Exception:
+    stripe = None  # type: ignore
 
 
 class PlansRepository:

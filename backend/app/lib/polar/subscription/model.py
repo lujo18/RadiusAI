@@ -1,9 +1,6 @@
-from pydantic import BaseModel
+from __future__ import annotations
 
-
-from typing import List, Dict, Optional
 from pydantic import BaseModel
-from datetime import datetime
 
 
 from typing import List, Dict, Optional
@@ -21,13 +18,6 @@ This file removes duplicate definitions and organizes models by category:
 
 Keep definitions small and import only once.
 """
-
-from __future__ import annotations
-
-from typing import List, Dict, Optional
-from datetime import datetime
-
-from pydantic import BaseModel
 
 
 # -----------------------------

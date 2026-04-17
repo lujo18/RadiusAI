@@ -1,10 +1,14 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+let stripePromise: Promise<any | null> | undefined;
 
-let stripePromise: Promise<Stripe | null>;
-
-export const getStripe = () => {
+export const getStripe = async () => {
   if (!stripePromise) {
-    stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    // Dynamically import to avoid bundling Stripe when it's intentionally removed
+    stripePromise = import('@stripe/stripe-js').then((mod) =>
+      mod.loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+    );
   }
   return stripePromise;
 };

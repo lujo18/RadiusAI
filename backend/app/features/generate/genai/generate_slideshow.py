@@ -1,12 +1,13 @@
 import json
 import logging
 from typing import Dict, Optional
+from app.core.config import settings
 from app.features.stock_packs import queryStockPackUrls
 from app.util.llm_output_sanitizer import sanitize_text
 
 from app.features.generate.genai.prompts import SYSTEM_PROMPT
 from app.features.generate.genai.gpt_oss_prompts import assemble_generation_prompt
-from app.features.integrations.groq.client import groq
+from app.lib.ai_client import AIProvider, ai_client
 from app.features.usage.service import track_slides_generated
 from app.features.generate.genai.client import client
 from app.features.generate.genai.slide_layouts import (
@@ -28,6 +29,8 @@ def generate_slideshow_auto(
     count: int = 1,
     cta: Optional[dict] = None,
     stock_pack_directory: str | None = None,
+    provider: str = settings.DEFAULT_AI_PROVIDER,
+    model_id: str = "openai/gpt-oss-120b",
 ):
     """
     Generate complete TikTok slideshow with layout selection and content.
@@ -42,6 +45,7 @@ def generate_slideshow_auto(
     """
 
     layout_options = get_all_layout_schemas()
+    allowed_layout_types = sorted(SLIDE_LAYOUTS.keys())
     prompt = _generate_prompt(
         layout_options,
         slideshowGoals,
@@ -57,15 +61,11 @@ def generate_slideshow_auto(
 
     print("FULL PROMPT:", prompt)
 
-    response = groq.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
+    response_text = ai_client.call_ai(
+        provider='openrouter',
+        model_id='google/gemma-4-31b-it:free',
+        system_prompt=SYSTEM_PROMPT,
+        main_prompt=prompt,
         temperature=0.6,
         top_p=0.95,
         presence_penalty=0.4,
@@ -89,7 +89,10 @@ def generate_slideshow_auto(
                                             "type": "object",
                                             "properties": {
                                                 "slide_number": {"type": "integer"},
-                                                "layout_type": {"type": "string"},
+                                                "layout_type": {
+                                                    "type": "string",
+                                                    "enum": allowed_layout_types,
+                                                },
                                                 "text_elements": {
                                                     "type": "object",
                                                     "additionalProperties": {
@@ -128,8 +131,6 @@ def generate_slideshow_auto(
 
     print("Response received.")
 
-    response_text = response.choices[0].message.content
-
     print("Response text:", response_text)
 
     if not response_text:
@@ -158,6 +159,16 @@ def generate_slideshow_auto(
     if not isinstance(generated_data, list):
         raise ValueError("Response must be an array of post variations")
 
+    for variation in generated_data:
+        for slide in variation.get("slides", []):
+            raw_layout_type = str(slide.get("layout_type") or "").strip()
+            normalized_layout_type = raw_layout_type.replace("-", "_")
+            if normalized_layout_type not in SLIDE_LAYOUTS:
+                raise ValueError(
+                    f"Invalid layout_type '{raw_layout_type}'. Allowed: {allowed_layout_types}"
+                )
+            slide["layout_type"] = normalized_layout_type
+
     cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None)
     print("CTA IMAGE OVERRIDE: ", cta_image_url)
     post_contents = [
@@ -175,11 +186,11 @@ def generate_slideshow_auto(
 
 
 def _generate_prompt(
-    layout_options: dict[str, dict[str, dict[str, str]] | None],
+    layout_options: dict[str, dict[str, str]],
     slideshowGoals: str,
     brand: BrandSettings,
     count: int = 1,
-    template_structure: dict = None,
+    template_structure: Optional[dict] = None,
     cta: Optional[dict] = None,
     classifier_context: Optional[Dict] = None,
 ):
@@ -217,8 +228,8 @@ def _convert_to_post_content(
 
     background_query = generated.get("background_query", None)
 
-    if not background_query:
-        ValueError("No backgrounds were added to post")
+    if not isinstance(background_query, str) or not background_query.strip():
+        raise ValueError("No backgrounds were added to post")
 
     logger.info(
         f"Generated data: {background_query}, {len(generated['slides'])} slides"
@@ -236,35 +247,76 @@ def _convert_to_post_content(
 
     # If we got fewer URLs than slides, extend with the last URL as fallback
     while len(backgroundUrls) < len(generated["slides"]):
-        backgroundUrls.append(backgroundUrls[-1] if backgroundUrls else None)
+        backgroundUrls.append(backgroundUrls[-1])
 
     last_slide_index = len(generated["slides"]) - 1
     # Replace last image with CTA IMAGE OVERRIDE
     if cta_image_override and last_slide_index >= 0:
         backgroundUrls[last_slide_index] = cta_image_override
 
+    def _resolve_text_value(text_elements: dict, element_id: str) -> str | None:
+        if not isinstance(text_elements, dict):
+            return None
+
+        # Exact and separator-variant matches first.
+        for key in {
+            element_id,
+            element_id.replace("-", "_"),
+            element_id.replace("_", "-"),
+        }:
+            value = text_elements.get(key)
+            if isinstance(value, str):
+                sanitized = sanitize_text(value)
+                if sanitized is not None:
+                    return sanitized
+
+        normalized_target = element_id.lower().replace("_", "-")
+        semantic_token = next(
+            (token for token in ("hook", "header", "body") if token in normalized_target),
+            None,
+        )
+
+        # OpenRouter models often emit keys like text-hook-1 / text-body-2.
+        if semantic_token:
+            for key, value in text_elements.items():
+                normalized_key = str(key).lower().replace("_", "-")
+                if semantic_token in normalized_key and "text" in normalized_key:
+                    if isinstance(value, str):
+                        sanitized = sanitize_text(value)
+                        if sanitized is not None:
+                            return sanitized
+
+        # Final fallback for one-field layouts where only one value is present.
+        if len(text_elements) == 1:
+            only_value = next(iter(text_elements.values()))
+            if isinstance(only_value, str):
+                return sanitize_text(only_value)
+
+        return None
+
     for gen_slide in generated["slides"]:
         slide_num = gen_slide["slide_number"]
 
-        design: SlideLayout = SLIDE_LAYOUTS[gen_slide["layout_type"]]
+        raw_layout_type = str(gen_slide.get("layout_type") or "").strip()
+        layout_type = raw_layout_type.replace("-", "_")
+        if layout_type not in SLIDE_LAYOUTS:
+            raise ValueError(
+                f"Invalid layout_type '{raw_layout_type}'. Allowed: {sorted(SLIDE_LAYOUTS.keys())}"
+            )
+
+        design: SlideLayout = SLIDE_LAYOUTS[layout_type]
 
         # Clone design elements and fill with generated content
         filled_elements = []
         for element in design["text_elements"]:
             # Fill element with generated content
             # Handle both dash and underscore formats
-            element_id = element["id"]
-            content = sanitize_text(gen_slide["text_elements"].get(element_id))
-
-            # Fallback: try with underscore if dash version not found
-            if content is None:
-                fallback_id = element_id.replace("-", "_")
-                content = gen_slide["text_elements"].get(fallback_id)
-
-            # Fallback: try with dash if underscore version not found
-            if content is None:
-                fallback_id = element_id.replace("_", "-")
-                content = gen_slide["text_elements"].get(fallback_id)
+            element_id = str(element.get("id", ""))
+            content = (
+                _resolve_text_value(gen_slide.get("text_elements", {}), element_id)
+                if element_id
+                else None
+            )
 
             if content is None:
                 logger.warning(

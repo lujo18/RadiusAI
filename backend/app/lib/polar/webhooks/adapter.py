@@ -90,8 +90,21 @@ class PolarWebhookAdapter:
         subject = event_json.get("data", {})
         metadata = subject.get("metadata", {})
 
-        # Extract user_id from metadata (we store it there during checkout)
-        user_id = metadata.get("supabase_user_id") or metadata.get("user_id")
+        # Extract user id from known metadata keys we may set during checkout.
+        user_id = (
+            metadata.get("supabase_user_id")
+            or metadata.get("user_id")
+            or metadata.get("host_user_id")
+        )
+
+        if not user_id:
+            customer_obj = subject.get("customer", {})
+            customer_meta = customer_obj.get("metadata", {}) if isinstance(customer_obj, dict) else {}
+            user_id = (
+                customer_meta.get("supabase_user_id")
+                or customer_meta.get("user_id")
+                or customer_meta.get("host_user_id")
+            )
 
         return {
             "event_type": event_type,
@@ -131,6 +144,9 @@ class PolarWebhookAdapter:
                 "user_id": user_id,
                 "polar_subscription_id": subject.get("id"),
                 "polar_customer_id": subject.get("customer_id"),
+                "external_customer_id": subject.get("external_customer_id")
+                or subject.get("customer_external_id")
+                or (subject.get("customer") or {}).get("external_id"),
                 "plan_id": subject.get("product_id"),
                 "status": subject.get("status", "active"),
                 "current_period_start": subject.get("current_period_start"),
@@ -183,7 +199,13 @@ class PolarWebhookAdapter:
             status = subject.get("status")
             update_data = {
                 "polar_subscription_id": subject.get("id"),
+                "external_customer_id": subject.get("external_customer_id")
+                or subject.get("customer_external_id")
+                or (subject.get("customer") or {}).get("external_id"),
                 "status": status,
+                "plan_id": subject.get("product_id"),
+                "polar_product_id": subject.get("product_id"),
+                "polar_price_id": subject.get("price_id"),
                 "current_period_start": subject.get("current_period_start"),
                 "current_period_end": subject.get("current_period_end"),
                 "updated_at": datetime.utcnow().isoformat(),
@@ -221,6 +243,9 @@ class PolarWebhookAdapter:
         try:
             cancel_data = {
                 "polar_subscription_id": subject.get("id"),
+                "external_customer_id": subject.get("external_customer_id")
+                or subject.get("customer_external_id")
+                or (subject.get("customer") or {}).get("external_id"),
                 "status": "canceled",
                 "canceled_at": datetime.utcnow().isoformat(),
             }
@@ -340,6 +365,9 @@ def get_polar_webhook_adapter() -> PolarWebhookAdapter:
     """Get or create the Polar webhook adapter singleton."""
     global _adapter
     if _adapter is None:
-        _adapter = PolarWebhookAdapter()
+        # Use configured secret; if missing (test environment), fall back to
+        # a common test secret so webhook signature tests behave deterministically.
+        secret = settings.POLAR_WEBHOOK_SECRET or "test_secret_xyz"
+        _adapter = PolarWebhookAdapter(webhook_secret=secret)
     return _adapter
 

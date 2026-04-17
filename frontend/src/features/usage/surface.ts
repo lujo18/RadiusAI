@@ -1,8 +1,9 @@
 import backendClient from '@/lib/api/clients/backendClient';
+import { Meter } from '@base-ui/react';
 
 export const usageApi = {
-  async getUsage(team_id: string) {
-    const { data } = await backendClient.get(`/api/v1/billing/meter/team/${team_id}/credits`);
+  async getUsage() {
+    const { data } = await backendClient.get(`/api/v1/billing/meter/list`);
     return data;
   },
 
@@ -52,8 +53,8 @@ export const usageApi = {
     return data;
   },
 
-  async getCreditsUsage() {
-    const { data } = await backendClient.get('/api/v1/usage/credits');
+  async getCreditsUsage(): Promise<MeterResponse> {
+    const { data } = await backendClient.get('/api/v1/billing/meter/basic-generations');
     return data;
   },
 };

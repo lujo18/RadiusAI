@@ -3,29 +3,19 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import { useSubscription } from '@/features/subscription/hooks';
-import { useQuery } from "@tanstack/react-query";
-import backendClient from "@/lib/api/clients/backendClient";
-import { PLANS, PLAN_ORDER, toPlanKey, isUpgrade as isPlanUpgrade, type PlanKey } from "@/lib/plans";
+import { SubscriptionStatus } from '@/features/subscription/SubscriptionStatus';
+import { NoSubscription } from "@/features/depreciated-stripe/subscription";
+import { toPlanKey, type PlanKey } from "@/lib/plans";
 import { switchPlan, openPortal } from "@/features/subscription/actions";
-import { useProducts } from "@/features/stripe/products/hooks";
+import PricingSection from '@/components/billing/PricingSection';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plans } from "@/features/stripe/components/Plans";
-import { SubscriptionStatus, NoSubscription } from "@/features/stripe/subscription";
-import { PaymentHistory } from "@/features/stripe/billing";
-import { formatDate, formatCurrency } from "@/features/stripe/utils/formatting";
-import type { Invoice } from "@/features/stripe/invoice/types";
-import type { StripeProduct } from "@/features/stripe/products/types";
-import type { AvailableUpgrade } from "@/features/stripe/plans/types";
-import { startCheckout } from "@/features/stripe/checkout/service";
-
-async function fetchInvoices() {
-  const response = await backendClient.get('/api/billing/invoices');
-  return response.data.invoices;
-}
+import { PaymentHistory } from "@/features/depreciated-stripe/billing";
+import { useCurrentPlanDisplay } from "@/hooks/useCurrentPlanDisplay";
+import { useInvoices } from '@/features/billing/invoices/hooks';
 
 
-async function fetchAvailableUpgrades(): Promise<AvailableUpgrade[]> {
+async function fetchAvailableUpgrades(): Promise<any[]> {
   try {
     const { supabase } = await import('@/lib/supabase/client');
     const { data: { session } } = await supabase.auth.getSession();
@@ -35,7 +25,7 @@ async function fetchAvailableUpgrades(): Promise<AvailableUpgrade[]> {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     if (!res.ok) return [];
-    const data = (await res.json()) as { upgrades?: AvailableUpgrade[] };
+    const data = (await res.json()) as { upgrades?: any[] };
     return data.upgrades || [];
   } catch {
     return [];
@@ -52,16 +42,22 @@ export default function BillingPage() {
   const teamId = (params as any)?.teamId as string | undefined;
   const plansRef = useRef<HTMLDivElement>(null);
 
-  const {data: products, isLoading: productsLoading, error: productsError} = useProducts();
+  // Subscription and plan display data
   const { data: subscription, isLoading, error } = useSubscription();
-  const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
-    queryKey: ['billing', 'invoices'],
-    queryFn: fetchInvoices,
-  });
-  const { data: availableUpgrades = [], isLoading: upgradesLoading } = useQuery({
-    queryKey: ['billing', 'available-upgrades'],
-    queryFn: fetchAvailableUpgrades,
-  });
+  const {
+    planKey,
+    planName,
+    planDescription,
+    features,
+    creditsUsed,
+    creditsLimit,
+    renewalDate,
+    daysRemaining,
+    isLoading: planLoading,
+    error: planError,
+  } = useCurrentPlanDisplay();
+
+  const { data: invoices = [], isLoading: invoicesLoading } = useInvoices(teamId);
 
   const [portalLoading, setPortalLoading] = useState(false);
   const [switchingPlan, setSwitchingPlan] = useState<string | null>(null);
@@ -100,47 +96,10 @@ export default function BillingPage() {
     }
   };
 
-  const handleCheckout = async (planKey: PlanKey) => {
-    setSwitchingPlan(planKey);
-    setSwitchError(null);
-    try {
-      await startCheckout(planKey, window.location.href, teamId);
-    } catch (err: unknown) {
-      setSwitchError(err instanceof Error ? err.message : 'Failed to start checkout. Please try again.');
-    } finally {
-      setSwitchingPlan(null);
-    }
-  };
-
-  const subscriptionItem = subscription?.items?.data?.[0];
-  const productInfo = subscriptionItem?.price?.product;
-  const planName = productInfo?.name || 'No Plan';
-  const planDescription = productInfo?.description || '';
-  const monthlyPrice = (subscription as Record<string, unknown> | null | undefined)?.amount_due_display as string || '$0.00';
-  const currency = (subscription as Record<string, unknown> | null | undefined)?.currency as string || 'USD';
   const status = (subscription as Record<string, unknown> | null | undefined)?.status as string || 'inactive';
-  const nextBillingDate = formatDate((subscription as Record<string, unknown> | null | undefined)?.current_period_end as number);
 
-  // Determine current plan key from subscription
-  const currentPlanKey: PlanKey | null = subscription ? toPlanKey(planName) : null;
-
-  // Build a map from planKey → Stripe product data
-  const productByPlanKey = new Map<PlanKey, StripeProduct>();
-  console.log("PRODUCTS", products)
-  for (const p of products) {
-    const key = toPlanKey(p.name);
-    if (key) productByPlanKey.set(key, p);
-  }
-
-  // Determine if anything is loading
-  const isPageLoading = productsLoading || isLoading || invoicesLoading || upgradesLoading;
-
-  // Build a map from planKey → available upgrade data
-  const upgradeByPlanKey = new Map<PlanKey, AvailableUpgrade>();
-  for (const u of availableUpgrades) {
-    const key = toPlanKey(u.name);
-    if (key) upgradeByPlanKey.set(key, u);
-  }
+  // Determine if anything is loading (subscription, plan display, & invoices)
+  const isPageLoading = isLoading || planLoading || invoicesLoading;
 
   return (
     <div className="space-y-10">
@@ -156,7 +115,7 @@ export default function BillingPage() {
       {isPageLoading ? (
         <>
           {/* Subscription Status Skeleton */}
-          <Card className="max-w-2xl">
+          <Card className="">
             <CardContent className="pt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1 space-y-2">
@@ -208,38 +167,33 @@ export default function BillingPage() {
             </CardContent>
           </Card>
         </>
-      ) : (
+      ) : subscription ? (
         <>
-          {/* Current Subscription Status */}
-          {isLoading ? (
-            <Card className="max-w-2xl">
-              <CardContent className="pt-6">
-                <p className="text-foreground/60">Loading subscription information…</p>
-              </CardContent>
-            </Card>
-          ) : subscription ? (
-            <SubscriptionStatus
-              planName={planName}
-              planDescription={planDescription}
-              monthlyPrice={monthlyPrice}
-              currency={currency}
-              status={status}
-              nextBillingDate={nextBillingDate}
-              portalLoading={portalLoading}
-              onOpenPortal={handleOpenPortal}
-            />
-          ) : (
-            <NoSubscription />
-          )}
+        {/* Unified Subscription Status Card */}
+        <SubscriptionStatus
+          status={status}
+          planKey={planKey}
+          planName={planName}
+          planDescription={planDescription}
+          features={features}
+          creditsUsed={creditsUsed}
+          creditsLimit={creditsLimit}
+          renewalDate={renewalDate}
+          daysRemaining={daysRemaining}
+          isLoading={planLoading}
+          error={planError}
+          portalLoading={portalLoading}
+          onOpenPortal={handleOpenPortal}
+        />
 
-      {/* ── Plan Cards ── */}
+        {/* ── Plan Cards ── */}
       <div ref={plansRef} className="scroll-mt-8">
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-foreground">
-            {currentPlanKey ? 'Switch Plan' : 'Choose a Plan'}
+            {planKey ? 'Switch Plan' : 'Choose a Plan'}
           </h2>
           <p className="text-sm text-foreground/60 mt-1">
-            {currentPlanKey
+            {planKey
               ? 'Upgrade or downgrade at any time. Changes are prorated immediately.'
               : 'Get started with a plan that fits your workflow.'}
           </p>
@@ -251,25 +205,17 @@ export default function BillingPage() {
           </div>
         )}
 
-        <Plans
-          productByPlanKey={productByPlanKey}
-          upgradeByPlanKey={upgradeByPlanKey}
-          currentPlanKey={currentPlanKey}
-          highlightUpgrade={highlightUpgrade}
-          PLAN_HIGHLIGHT={PLAN_HIGHLIGHT}
-          formatCurrencyAmount={formatCurrency}
-          subscription={subscription}
-          switchingPlan={switchingPlan}
-          handleSwitchPlan={handleSwitchPlan}
-          handleCheckout={handleCheckout}
-          productsLoading={productsLoading}
-          upgradesLoading={upgradesLoading}
-        />
+         
+        <div>
+          <PricingSection teamId={teamId} />
+        </div>
       </div>
 
       {/* Payment History */}
       <PaymentHistory invoices={invoices} isLoading={invoicesLoading} />
         </>
+      ) : (
+        <NoSubscription />
       )}
     </div>
   );

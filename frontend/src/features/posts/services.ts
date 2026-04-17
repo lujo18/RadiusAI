@@ -7,12 +7,10 @@ export const postService = {
    * Publish a post to one or more platforms
    */
   async publishPost(brand_id: string, platforms: string[], postId: string) {
-    const resp = await backendClient.post('/api/v1/post', {
-      brand_id,
-      platforms,
-      post_id: postId,
-      mode: 'publish',
-    });
+    // Current backend route: POST /api/v1/posts/{post_id}/publish
+    void brand_id;
+    void platforms;
+    const resp = await backendClient.post(`/api/v1/posts/${postId}/publish`);
     return resp.data;
   },
 
@@ -20,11 +18,11 @@ export const postService = {
    * Save a post as draft without publishing
    */
   async draftPost(brand_id: string, platforms: string[], postId: string) {
-    const resp = await backendClient.post('/api/v1/post', {
-      brand_id,
-      platforms,
-      post_id: postId,
-      mode: 'draft',
+    // Current backend route: PATCH /api/v1/posts/{post_id}
+    void brand_id;
+    void platforms;
+    const resp = await backendClient.patch(`/api/v1/posts/${postId}`, {
+      status: 'draft',
     });
     return resp.data;
   },
@@ -33,12 +31,12 @@ export const postService = {
    * Schedule a post for future publication
    */
   async schedulePost(brand_id: string, platforms: string[], postId: string, scheduled_at: string) {
-    const resp = await backendClient.post('/api/v1/post', {
-      brand_id,
-      platforms,
-      post_id: postId,
-      mode: 'scheduled',
-      scheduled_at,
+    // Current backend route: PATCH /api/v1/posts/{post_id}
+    void brand_id;
+    void platforms;
+    const resp = await backendClient.patch(`/api/v1/posts/${postId}`, {
+      status: 'scheduled',
+      scheduled_time: scheduled_at,
     });
     return resp.data;
   },

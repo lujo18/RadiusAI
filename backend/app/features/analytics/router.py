@@ -5,7 +5,8 @@ Analytics feature router - Post performance tracking endpoints
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.shared.dependencies import get_current_user, get_db
+from app.core.exceptions import AppError
+from app.shared.dependencies import get_current_user
 from app.features.analytics.schemas import (
     TrackAnalyticsRequest,
     PostAnalyticResponse,
@@ -13,7 +14,7 @@ from app.features.analytics.schemas import (
     AnalyticsQueryRequest,
     AnalyticsAggregateResponse,
 )
-from app.features.analytics.service import analytics_service
+from app.features.analytics.service import AnalyticsService, get_analytics_service
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 async def track_analytics(
     request: TrackAnalyticsRequest,
     user_id: str = Depends(get_current_user),
-    db=Depends(get_db),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """
     Record analytics snapshot for a post.
@@ -33,7 +34,6 @@ async def track_analytics(
     """
     try:
         analytic = await analytics_service.track_post_analytics(
-            db=db,
             post_id=request.post_id,
             template_id=request.template_id,
             user_id=user_id,
@@ -54,7 +54,9 @@ async def track_analytics(
         )
 
         return analytic
-
+    except AppError as e:
+        logger.warning(f"Failed to track analytics: {e}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
     except Exception as e:
         logger.error(f"Failed to track analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -65,7 +67,7 @@ async def get_post_analytics(
     post_id: str,
     limit: int = 100,
     user_id: str = Depends(get_current_user),
-    db=Depends(get_db),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """
     Get analytics snapshots for a post.
@@ -73,8 +75,9 @@ async def get_post_analytics(
     Returns recent performance metrics.
     """
     try:
+        _ = user_id
         analytics = await analytics_service.get_post_analytics(
-            db=db, post_id=post_id, limit=min(limit, 1000)
+            post_id=post_id, limit=min(limit, 1000)
         )
 
         return [
@@ -94,7 +97,9 @@ async def get_post_analytics(
             }
             for a in analytics
         ]
-
+    except AppError as e:
+        logger.warning(f"Failed to fetch post analytics: {e}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
     except Exception as e:
         logger.error(f"Failed to fetch post analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -105,7 +110,7 @@ async def get_platform_analytics(
     platform: str,
     limit: int = 100,
     user_id: str = Depends(get_current_user),
-    db=Depends(get_db),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """
     Get analytics for posts on a specific platform.
@@ -114,7 +119,6 @@ async def get_platform_analytics(
     """
     try:
         analytics = await analytics_service.get_platform_analytics(
-            db=db,
             team_id=user_id,  # TODO: Get actual team_id
             platform=platform,
             limit=min(limit, 1000),
@@ -137,7 +141,9 @@ async def get_platform_analytics(
             }
             for a in analytics
         ]
-
+    except AppError as e:
+        logger.warning(f"Failed to fetch platform analytics: {e}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
     except Exception as e:
         logger.error(f"Failed to fetch platform analytics: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -145,7 +151,9 @@ async def get_platform_analytics(
 
 @router.get("/performance/{post_id}", response_model=PostPerformanceResponse)
 async def get_performance_summary(
-    post_id: str, user_id: str = Depends(get_current_user), db=Depends(get_db)
+    post_id: str,
+    user_id: str = Depends(get_current_user),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ):
     """
     Get aggregated performance metrics for a post.
@@ -154,7 +162,6 @@ async def get_performance_summary(
     """
     try:
         summary = await analytics_service.aggregate_performance(
-            db=db,
             post_id=post_id,
             team_id=user_id,  # TODO: Get actual team_id
         )
@@ -168,7 +175,9 @@ async def get_performance_summary(
             "performance_score": summary.performance_score,
             "last_synced_at": summary.last_synced_at,
         }
-
+    except AppError as e:
+        logger.warning(f"Failed to fetch performance summary: {e}")
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
     except Exception as e:
         logger.error(f"Failed to fetch performance summary: {e}")
         raise HTTPException(status_code=500, detail=str(e))

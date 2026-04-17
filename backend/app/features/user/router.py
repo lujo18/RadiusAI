@@ -4,12 +4,10 @@ User HTTP endpoints - registration, authentication, profile management
 
 import logging
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.exceptions import AppError
-from app.features.user import service
+from app.features.user.service import UserService, get_user_service
 from app.features.user.models import User
 from app.features.user.schemas import (
     UserCreate,
@@ -38,7 +36,10 @@ router = APIRouter(
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
+async def register(
+    payload: UserCreate,
+    user_service: UserService = Depends(get_user_service),
+):
     """
     Register a new user
 
@@ -48,7 +49,7 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
     Returns the created user (without password)
     """
     try:
-        user = await service.register_user(db, payload)
+        user = await user_service.register_user(payload)
         logger.info(f"User registered: {user.email}")
         return user
     except AppError as e:
@@ -56,7 +57,10 @@ async def register(payload: UserCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(
+    payload: LoginRequest,
+    user_service: UserService = Depends(get_user_service),
+):
     """
     Authenticate user and receive JWT token
 
@@ -66,7 +70,7 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
     Returns access_token (use in Authorization: Bearer <token> header)
     """
     try:
-        token = await service.authenticate_user(db, payload.email, payload.password)
+        token = await user_service.authenticate_user(payload.email, payload.password)
         logger.info(f"User login: {payload.email}")
         return {"access_token": token, "token_type": "bearer"}
     except AppError as e:
@@ -80,7 +84,8 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_profile(
-    user_id: str = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
 ):
     """
     Get current user profile
@@ -88,7 +93,7 @@ async def get_current_profile(
     Requires: Authorization: Bearer <token>
     """
     try:
-        user = await service.get_user(db, int(user_id))
+        user = await user_service.get_user(int(user_id))
         return user
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -98,7 +103,7 @@ async def get_current_profile(
 async def update_current_profile(
     payload: UserUpdate,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    user_service: UserService = Depends(get_user_service),
 ):
     """
     Update current user profile
@@ -108,7 +113,7 @@ async def update_current_profile(
     - **email**: (optional) New email address
     """
     try:
-        user = await service.update_user(db, int(user_id), payload)
+        user = await user_service.update_user(int(user_id), payload)
         logger.info(f"User updated: {user.id}")
         return user
     except AppError as e:
@@ -117,7 +122,8 @@ async def update_current_profile(
 
 @router.delete("/me", status_code=204)
 async def deactivate_current_user(
-    user_id: str = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
 ):
     """
     Deactivate current user account (soft delete)
@@ -125,7 +131,7 @@ async def deactivate_current_user(
     Requires: Authorization: Bearer <token>
     """
     try:
-        await service.deactivate_user(db, int(user_id))
+        await user_service.deactivate_user(int(user_id))
         logger.info(f"User deactivated: {user_id}")
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)

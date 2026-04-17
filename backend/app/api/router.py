@@ -51,7 +51,7 @@ from app.features.team.router import router as teams_router
 api_router.include_router(teams_router, prefix="/v1", tags=["teams"])
 
 # Billing: Stripe subscription and payment management
-from app.features.billing.router import router as billing_router
+from app.lib.polar.router import router as billing_router
 
 api_router.include_router(billing_router, prefix="/v1", tags=["billing"])
 
@@ -65,10 +65,9 @@ from app.features.variants.router import router as variants_router
 
 api_router.include_router(variants_router, prefix="/v1", tags=["variants"])
 
+# Blog: Public blog content and admin blog generation endpoints
+from app.features.blog.router import router as blog_router
+from app.features.blog.router import admin_router as admin_blog_router
 
-
-from app.features.billing.admin_router import router as polar_admin_router
-from app.lib.polar.router import router as polar_router
-
-api_router.include_router(polar_admin_router, prefix="/v1")
-api_router.include_router(polar_router, prefix="/v1")
+api_router.include_router(blog_router, prefix="/v1", tags=["blog"])
+api_router.include_router(admin_blog_router, tags=["admin-blog"])

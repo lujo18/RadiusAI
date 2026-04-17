@@ -4,12 +4,10 @@ Brand HTTP endpoints - CRUD operations for brands
 
 import logging
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
 from app.core.security import get_current_user
 from app.core.exceptions import AppError
-from app.features.brand import service
+from app.features.brand.service import BrandService, get_brand_service
 from app.features.brand.schemas import (
     BrandCreate,
     BrandUpdate,
@@ -38,7 +36,7 @@ router = APIRouter(
 async def create_brand(
     payload: BrandCreate,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    brand_service: BrandService = Depends(get_brand_service),
 ):
     """
     Create a new brand
@@ -46,7 +44,7 @@ async def create_brand(
     Requires: Authorization: Bearer <token>
     """
     try:
-        brand = await service.create_brand(db, user_id, payload)
+        brand = await brand_service.create_brand(user_id, payload)
         return brand
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -60,7 +58,7 @@ async def create_brand(
 @router.get("", response_model=list[BrandListResponse])
 async def list_brands(
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    brand_service: BrandService = Depends(get_brand_service),
 ):
     """
     List all brands for current user
@@ -68,7 +66,7 @@ async def list_brands(
     Requires: Authorization: Bearer <token>
     """
     try:
-        brands = await service.list_user_brands(db, user_id)
+        brands = await brand_service.list_user_brands(user_id)
         return brands
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -78,7 +76,7 @@ async def list_brands(
 async def get_brand(
     brand_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    brand_service: BrandService = Depends(get_brand_service),
 ):
     """
     Get brand details by ID
@@ -86,7 +84,7 @@ async def get_brand(
     Requires: Authorization: Bearer <token>
     """
     try:
-        brand = await service.get_brand(db, brand_id, user_id)
+        brand = await brand_service.get_brand(brand_id, user_id)
         return brand
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
@@ -102,7 +100,7 @@ async def update_brand(
     brand_id: str,
     payload: BrandUpdate,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    brand_service: BrandService = Depends(get_brand_service),
 ):
     """
     Update brand details
@@ -110,7 +108,7 @@ async def update_brand(
     Requires: Authorization: Bearer <token>
     """
     try:
-        brand = await service.update_brand(db, brand_id, payload, user_id)
+        brand = await brand_service.update_brand(brand_id, payload, user_id)
         logger.info(f"Brand updated: {brand_id}")
         return brand
     except AppError as e:
@@ -126,7 +124,7 @@ async def update_brand(
 async def delete_brand(
     brand_id: str,
     user_id: str = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    brand_service: BrandService = Depends(get_brand_service),
 ):
     """
     Delete a brand
@@ -134,7 +132,7 @@ async def delete_brand(
     Requires: Authorization: Bearer <token>
     """
     try:
-        await service.delete_brand(db, brand_id, user_id)
+        await brand_service.delete_brand(brand_id, user_id)
         logger.info(f"Brand deleted: {brand_id}")
     except AppError as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)

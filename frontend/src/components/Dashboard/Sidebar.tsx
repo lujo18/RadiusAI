@@ -418,8 +418,8 @@ export default function DashboardSidebar({
 function UsageWidget() {
   const { data: creditsData, isLoading } = useGetCreditsUsage();
 
-  const creditsUsed = creditsData?.credits_used ?? 0;
-  const creditsLimit = creditsData?.credits_limit ?? null;
+  const creditsUsed = creditsData?.consumed ?? 0;
+  const creditsLimit = creditsData?.limit ?? null;
 
   return (
     <div>

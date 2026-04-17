@@ -46,89 +46,9 @@ export interface PlanDefinition {
   limits: PlanLimits;
 }
 
-// ── Plan Definitions ───────────────────────────────────────────────────────
+// ── Plan Order ────────────────────────────────────────────────────────────────
 
-export const PLANS: Record<PlanKey, PlanDefinition> = {
-  starter: {
-    key: 'starter',
-    name: 'Starter',
-    description: 'Perfect for testing and small projects',
-    badge: null,
-    highlight: false,
-    features: [
-      '20 posts per month',
-      '5 template options',
-      'Basic analytics',
-      'Email support',
-      '1 brand profile',
-      'Standard quality exports',
-    ],
-    limits: {
-      brands: 1,
-      templates: 5,
-      posts: 20,
-      aiGenerations: 50,
-      teamMembers: 1,
-    },
-  },
-
-  growth: {
-    key: 'growth',
-    name: 'Growth',
-    description: 'For serious creators and businesses',
-    badge: 'Most Popular',
-    highlight: true,
-    features: [
-      'Unlimited posts',
-      '50+ premium templates',
-      'A/B testing (3 variants)',
-      'Advanced analytics',
-      'Priority support',
-      'Custom branding',
-      '5 brand profiles',
-      'HD exports',
-      'Content calendar',
-      'Batch generation',
-    ],
-    limits: {
-      brands: 5,
-      templates: 50,
-      posts: Infinity,
-      aiGenerations: Infinity,
-      teamMembers: 5,
-    },
-  },
-
-  unlimited: {
-    key: 'unlimited',
-    name: 'Unlimited',
-    description: 'For agencies and large teams',
-    badge: 'Best Value',
-    highlight: false,
-    features: [
-      'Everything in Growth',
-      'Unlimited team members',
-      '20 brand profiles',
-      'White-label exports',
-      'API access',
-      'Dedicated account manager',
-      'Custom templates',
-      'Priority processing',
-      'Advanced permissions',
-      'SSO (coming soon)',
-    ],
-    limits: {
-      brands: 20,
-      templates: Infinity,
-      posts: Infinity,
-      aiGenerations: Infinity,
-      teamMembers: Infinity,
-    },
-  },
-};
-
-// ── Ordered list (cheapest → most expensive) ───────────────────────────────
-
+/** Global ordering of plans from lowest to highest tier */
 export const PLAN_ORDER: PlanKey[] = ['starter', 'growth', 'unlimited'];
 
 // ── Helpers ────────────────────────────────────────────────────────────────

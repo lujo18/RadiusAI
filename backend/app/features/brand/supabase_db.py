@@ -10,7 +10,6 @@ import uuid
 
 from app.features.integrations.supabase.client import get_supabase
 from app.features.user.schemas import BrandSettings
-from app.features.integrations.models import PlatformIntegration
 
 
 def create_supabase_brand(
@@ -118,10 +117,11 @@ def update_social_account_status(
     return res.data[0] if res.data else None
 
 
-def get_social_accounts(
-    brand_id: str, platforms: List[str]
-) -> List[PlatformIntegration]:
+def get_social_accounts(brand_id: str, platforms: List[str]) -> List[dict]:
     """Get social platform integrations for a brand."""
+    if not platforms:
+        return []
+
     supabase = get_supabase()
 
     res = (
@@ -137,10 +137,17 @@ def get_social_accounts(
         return []
 
     data = res.data or []
-    integrations: List[PlatformIntegration] = []
+    integrations: List[dict] = []
     for item in data:
         try:
-            integrations.append(PlatformIntegration(**item))
+            row = item if isinstance(item, dict) else dict(item)
+            status = str(row.get("status") or "connected").lower()
+
+            # Publish should only target active integrations.
+            if status != "connected":
+                continue
+
+            integrations.append(row)
         except Exception as e:
             # Skip malformed items but log for debugging
             print("Failed to parse integration item:", item, e)

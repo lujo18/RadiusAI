@@ -33,6 +33,7 @@ class BackgroundConfig(BaseModel):
     color: Optional[str] = None
     image_url: Optional[str] = None
     gradient_colors: Optional[tuple[str, str]] = None
+    gradient_angle: Optional[float] = None
 
 
 class PostSlideResponse(BaseModel):
@@ -116,14 +117,14 @@ class PostResponse(BaseModel):
 
     content: PostContentResponse
     storage_urls: dict  # slide URLs, thumbnail URL
-    rendering_status: str
+    rendering_status: str = "complete"
 
     scheduled_time: Optional[datetime]
     published_time: Optional[datetime]
 
     variant_set_id: Optional[str]
-    post_metadata: dict
-    analytics: dict
+    post_metadata: dict = Field(default_factory=dict)
+    analytics: dict = Field(default_factory=dict)
 
     created_at: datetime
     updated_at: datetime
@@ -140,7 +141,7 @@ class PostListResponse(BaseModel):
     platform: str
     status: str
 
-    rendering_status: str
+    rendering_status: str = "complete"
 
     scheduled_time: Optional[datetime]
     published_time: Optional[datetime]

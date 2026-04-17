@@ -16,6 +16,7 @@ import {
   Zap,
   DollarSign,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -43,6 +44,13 @@ export default function AdminDashboard() {
       href: "/admin/testimonials",
       color: "from-green-500 to-green-600",
     },
+    {
+      title: "Blog Content",
+      description: "Generate and manage SEO blog articles",
+      icon: FileText,
+      href: "/admin/blog",
+      color: "from-amber-500 to-orange-600",
+    },
   ];
 
   return (
@@ -58,7 +66,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -69,7 +77,7 @@ export default function AdminDashboard() {
             >
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
-                  <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-lg`}>
+                  <div className={`bg-linear-to-br ${stat.color} p-3 rounded-lg`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
                   <ArrowRight className="w-5 h-5 text-foreground/40 group-hover:text-primary transition-colors" />
@@ -112,10 +120,10 @@ export default function AdminDashboard() {
             </Button>
             <Button
               variant="outline"
-              disabled
+              onClick={() => router.push("/admin/blog")}
               className="h-12"
             >
-              Settings
+              Blog
             </Button>
           </div>
         </CardContent>
