@@ -3,11 +3,11 @@ import logging
 
 from polar_sdk import CustomerMeter
 
-from backend.app.lib.polar.client import get_polar_client
-from backend.app.lib.polar.meter.model import MeterEntry, MeterListResponse
-from backend.app.lib.polar.utils import get_external_customer_id_for_team
-from backend.app.lib.polar.subscription.model import MeterEntry, SubscriptionItem
-from backend.app.lib.polar.subscription.service import (
+from app.lib.polar.client import get_polar_client
+from app.lib.polar.meter.model import MeterEntry, MeterListResponse
+from app.lib.polar.utils import get_external_customer_id_for_team
+from app.lib.polar.subscription.model import MeterEntry, SubscriptionItem
+from app.lib.polar.subscription.service import (
     get_subscription_for_customer,
     get_subscription_for_team,
 )

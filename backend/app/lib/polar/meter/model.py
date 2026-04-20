@@ -6,7 +6,7 @@ This module provides backward-compatible imports used elsewhere in the codebase.
 
 from pydantic import BaseModel
 
-from backend.app.lib.polar.subscription.model import MeterEntry, MeterListResponse
+from app.lib.polar.subscription.model import MeterEntry, MeterListResponse
 
 
 class SingletonMeterResponse(BaseModel):

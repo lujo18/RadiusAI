@@ -220,7 +220,7 @@ try:
     from app.core.workers.analytics import create_analytic_tracker as _create_analytic_tracker
 except Exception:
     try:
-        from backend.services.workers.analytics.create_analytic_tracker import (
+        from services.workers.analytics.create_analytic_tracker import (
             create_analytic_tracker as _create_analytic_tracker,
         )
     except Exception:

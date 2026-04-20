@@ -11,7 +11,7 @@ Handles:
 from fastapi import HTTPException, status
 from typing import List, Optional, Literal
 from datetime import datetime
-from backend.models.team import (
+from models.team import (
     Team,
     TeamDetail,
     TeamMemberInfo,

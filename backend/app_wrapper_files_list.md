@@ -5,7 +5,7 @@
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\config.py
 Relevant import lines:
 
-- from backend.config import Config
+- from config import Config
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\core\workers\__init__.py
 _No import lines (only docstring / __all__ assignments)_
@@ -13,10 +13,10 @@ _No import lines (only docstring / __all__ assignments)_
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\core\workers\analytics\__init__.py
 Relevant import lines:
 
-- from backend.services.workers.analytics.create_analytic_tracker import (
+- from services.workers.analytics.create_analytic_tracker import (
 -     create_analytic_tracker,
 - )
-- from backend.services.workers.analytics.analytic_worker import *
+- from services.workers.analytics.analytic_worker import *
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\core\workers\analytics\analytic_worker.py
 Relevant import lines:
@@ -30,7 +30,7 @@ Relevant import lines:
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\core\workers\automation\__init__.py
 Relevant import lines:
 
-- from backend.services.workers.automation.automation_worker import *
+- from services.workers.automation.automation_worker import *
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\generate\genai\__init__.py
 _No import lines (only docstring / __all__ assignments)_
@@ -47,7 +47,7 @@ _No import lines (only docstring / __all__ assignments)_
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\integrations\groq\util\GenerateBrand.py
 Relevant import lines:
 
-- from backend.services.integrations.groq.util.GenerateBrand import generate_brand
+- from services.integrations.groq.util.GenerateBrand import generate_brand
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\integrations\social\__init__.py
 _No import lines (only docstring / __all__ assignments)_
@@ -55,22 +55,22 @@ _No import lines (only docstring / __all__ assignments)_
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\integrations\social\profile\connect_account.py
 Relevant import lines:
 
-- from backend.services.profile.connect_account import connect_social
+- from services.profile.connect_account import connect_social
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\integrations\social\profile\post.py
 Relevant import lines:
 
-- from backend.services.profile.post import *
+- from services.profile.post import *
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\integrations\social\provider.py
 Relevant import lines:
 
-- from backend.services.integrations.social.provider import get_social_provider
+- from services.integrations.social.provider import get_social_provider
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\integrations\social\service.py
 Relevant import lines:
 
-- from backend.services.integrations.social.postforme.analytics_client import (
+- from services.integrations.social.postforme.analytics_client import (
 -     get_postforme_analytics_client,
 - )
 
@@ -83,7 +83,7 @@ _No import lines (only docstring / __all__ assignments)_
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\integrations\supabase\db\platformIntegration.py
 Relevant import lines:
 
-- from backend.services.integrations.supabase.db.platformIntegration import *
+- from services.integrations.supabase.db.platformIntegration import *
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\posts\utilities\__init__.py
 _No import lines (only docstring / __all__ assignments)_
@@ -91,12 +91,12 @@ _No import lines (only docstring / __all__ assignments)_
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\posts\utilities\renderSlides.py
 Relevant import lines:
 
-- from backend.services.pillow.renderSlides import SlideRenderer
+- from services.pillow.renderSlides import SlideRenderer
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\features\posts\utilities\slide_generation.py
 Relevant import lines:
 
-- from backend.services.slides.slide_generation import generate_slideshows
+- from services.slides.slide_generation import generate_slideshows
 
 ## c:\Users\asplo\Projects\Main\SlideForge\backend\app\lib\polar\customer\service.py
 _No import lines (only docstring / __all__ assignments)_

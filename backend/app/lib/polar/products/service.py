@@ -1,6 +1,6 @@
 ﻿
 
-from backend.app.lib.polar.client import get_polar_client
+from app.lib.polar.client import get_polar_client
 
 def list_products():
   return get_polar_client().products.list()

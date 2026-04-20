@@ -9,7 +9,7 @@ try:
     from models.platform_integration import PlatformIntegration
 except Exception:
     try:
-        from backend.models.platform_integration import PlatformIntegration
+        from models.platform_integration import PlatformIntegration
     except Exception:
         PlatformIntegration = None
 

@@ -2,7 +2,7 @@
 
 import os
 
-from backend.app.core.config import settings
+from app.core.config import settings
 
 from .late.provider import LateProvider
 from .postforme.provider import PostForMeProvider

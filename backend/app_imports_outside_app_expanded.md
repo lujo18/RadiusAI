@@ -2,17 +2,17 @@
 
 ## app/config.py
 
-- Line 1: from backend.config import Config  
+- Line 1: from config import Config  
   - Type: from
   - Module: backend.config
 
 ## app/core/workers/analytics/__init__.py
 
-- Line 2: from backend.services.workers.analytics.create_analytic_tracker import (  
+- Line 2: from services.workers.analytics.create_analytic_tracker import (  
   - Type: from
   - Module: backend.services.workers.analytics.create_analytic_tracker
 
-- Line 5: from backend.services.workers.analytics.analytic_worker import *  
+- Line 5: from services.workers.analytics.analytic_worker import *  
   - Type: from
   - Module: backend.services.workers.analytics.analytic_worker
 
@@ -24,13 +24,13 @@
 
 ## app/core/workers/automation/__init__.py
 
-- Line 2: from backend.services.workers.automation.automation_worker import *  
+- Line 2: from services.workers.automation.automation_worker import *  
   - Type: from
   - Module: backend.services.workers.automation.automation_worker
 
 ## app/features/analytics/service.py
 
-- Line 231: from backend.services.workers.analytics.create_analytic_tracker import create_analytic_tracker as _create_analytic_tracker  
+- Line 231: from services.workers.analytics.create_analytic_tracker import create_analytic_tracker as _create_analytic_tracker  
   - Type: from
   - Module: backend.services.workers.analytics.create_analytic_tracker
 
@@ -48,31 +48,31 @@
 
 ## app/features/integrations/groq/util/GenerateBrand.py
 
-- Line 2: from backend.services.integrations.groq.util.GenerateBrand import generate_brand  
+- Line 2: from services.integrations.groq.util.GenerateBrand import generate_brand  
   - Type: from
   - Module: backend.services.integrations.groq.util.GenerateBrand
 
 ## app/features/integrations/social/profile/connect_account.py
 
-- Line 2: from backend.services.profile.connect_account import connect_social  
+- Line 2: from services.profile.connect_account import connect_social  
   - Type: from
   - Module: backend.services.profile.connect_account
 
 ## app/features/integrations/social/profile/post.py
 
-- Line 2: from backend.services.profile.post import *  
+- Line 2: from services.profile.post import *  
   - Type: from
   - Module: backend.services.profile.post
 
 ## app/features/integrations/social/provider.py
 
-- Line 2: from backend.services.integrations.social.provider import get_social_provider  
+- Line 2: from services.integrations.social.provider import get_social_provider  
   - Type: from
   - Module: backend.services.integrations.social.provider
 
 ## app/features/integrations/social/service.py
 
-- Line 3: from backend.services.integrations.social.postforme.analytics_client import (  
+- Line 3: from services.integrations.social.postforme.analytics_client import (  
   - Type: from
   - Module: backend.services.integrations.social.postforme.analytics_client
 
@@ -84,7 +84,7 @@
 
 ## app/features/integrations/supabase/db/platformIntegration.py
 
-- Line 2: from backend.services.integrations.supabase.db.platformIntegration import *  
+- Line 2: from services.integrations.supabase.db.platformIntegration import *  
   - Type: from
   - Module: backend.services.integrations.supabase.db.platformIntegration
 
@@ -96,13 +96,13 @@
 
 ## app/features/posts/utilities/renderSlides.py
 
-- Line 2: from backend.services.pillow.renderSlides import SlideRenderer  
+- Line 2: from services.pillow.renderSlides import SlideRenderer  
   - Type: from
   - Module: backend.services.pillow.renderSlides
 
 ## app/features/posts/utilities/slide_generation.py
 
-- Line 2: from backend.services.slides.slide_generation import generate_slideshows  
+- Line 2: from services.slides.slide_generation import generate_slideshows  
   - Type: from
   - Module: backend.services.slides.slide_generation
 
@@ -112,7 +112,7 @@
   - Type: from
   - Module: services.usage.service
 
-- Line 294: from backend.services.usage.service import track_slides_generated as _track_slides_generated  
+- Line 294: from services.usage.service import track_slides_generated as _track_slides_generated  
   - Type: from
   - Module: backend.services.usage.service
 

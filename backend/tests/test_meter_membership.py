@@ -2,8 +2,8 @@ import pytest
 import asyncio
 from fastapi import HTTPException
 
-from backend.app.lib.polar.meter import router as meter_router
-from backend.app.features.team import repository as team_repository
+from app.lib.polar.meter import router as meter_router
+from app.features.team import repository as team_repository
 
 
 class DummyMember:

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 
 from app.features.usage.types import EMPTY_USAGE
-from backend.shared.base_repository import BaseRepository
+from shared.base_repository import BaseRepository
 from app.features.integrations.supabase.client import get_supabase
 
 

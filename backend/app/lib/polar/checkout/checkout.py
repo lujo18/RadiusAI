@@ -5,17 +5,17 @@ from polar_sdk import CheckoutCreate, Customer, CustomerPortalCustomersGetSecuri
 from pydantic import BaseModel
 
 from app.lib.polar.client import get_polar_client
-from backend.app.features.team.schemas import UpdateTeamRequest
-from backend.app.features.team.service import TeamService
+from app.features.team.schemas import UpdateTeamRequest
+from app.features.team.service import TeamService
 import logging
 
 try:
-    from backend.app.lib import polar  # type: ignore
+    from app.lib import polar  # type: ignore
 except Exception:
     from app.lib import polar
 
 try:
-    from backend.app.lib.polar.errors import PolarAPIError
+    from app.lib.polar.errors import PolarAPIError
 except Exception:
     from app.lib.polar.errors import PolarAPIError
 
@@ -54,7 +54,7 @@ def _resolve_get_polar_client():
         return _g
     except Exception:
         try:
-            from backend.app.lib.polar.client import get_polar_client as _g
+            from app.lib.polar.client import get_polar_client as _g
 
             return _g
         except Exception:

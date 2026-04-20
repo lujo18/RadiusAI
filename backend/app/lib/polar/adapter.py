@@ -13,8 +13,8 @@ from app.core.config import settings
 from app.features.integrations.supabase.client import get_supabase
 
 # Import Polar helpers
-from backend.app.lib.polar.meter.service import get_meter_for_team
-from backend.app.lib.polar.reconciliation import get_polar_reconciliation_service
+from app.lib.polar.meter.service import get_meter_for_team
+from app.lib.polar.reconciliation import get_polar_reconciliation_service
 
 
 # Keep credit cost mapping local to avoid importing deprecated service module.

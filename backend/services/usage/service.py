@@ -12,7 +12,7 @@ from app.core.config import settings
 from app.features.usage import repo as usage_repo
 from app.features.usage import rules as usage_rules
 from app.features.integrations.supabase.client import get_supabase
-from backend.services.integrations.supabase.db.templates import get_template_count
+from services.integrations.supabase.db.templates import get_template_count
 
 # Credit usage mapping (from admin/credits.py)
 CREDIT_USAGE = {
