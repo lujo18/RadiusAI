@@ -2,8 +2,8 @@
 from fastapi import APIRouter, Depends, Query
 from polar_sdk import Subscription
 from app.core.security import get_current_user
-from backend.app.features.team.service import get_current_team
-from backend.app.lib.polar.subscription.service import get_subscription_for_team
+from app.features.team.service import get_current_team
+from app.lib.polar.subscription.service import get_subscription_for_team
 
 router = APIRouter(prefix="/subscriptions", tags=["billing"])
 

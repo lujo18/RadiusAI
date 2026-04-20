@@ -4,7 +4,7 @@ Some tests import `app.core.workers.automation.automation_worker` directly.
 This module re-exports the real implementations from the services package.
 """
 
-from backend.services.workers.automation.automation_worker import (
+from services.workers.automation.automation_worker import (
     run_automation,
     process_due_automations,
 )

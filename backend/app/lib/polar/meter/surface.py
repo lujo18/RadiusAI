@@ -1,13 +1,13 @@
 from polar_sdk import CustomerMeter
 
-from backend.app.lib.polar.meter.model import SingletonMeterResponse
-from backend.app.lib.polar.meter.service import (
+from app.lib.polar.meter.model import SingletonMeterResponse
+from app.lib.polar.meter.service import (
   get_meter_for_customer,
   get_meter_by_subscription,
   get_meter_for_team,
   list_meters_for_team as _list_meters_for_team,
 )
-from backend.app.lib.polar.subscription.model import SubscriptionItem
+from app.lib.polar.subscription.model import SubscriptionItem
 
 
 

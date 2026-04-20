@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 
-from backend.app.features.team.repository import members_repo
+from app.features.team.repository import members_repo
 from app.core.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.app.features.team.service import get_current_team
-from backend.app.lib.polar.meter.model import SingletonMeterResponse
-from backend.app.lib.polar.meter.surface import (
+from app.features.team.service import get_current_team
+from app.lib.polar.meter.model import SingletonMeterResponse
+from app.lib.polar.meter.surface import (
     get_basic_generation_for_team,
     get_credit_usage_for_team,
     list_meters_for_team,
 )
-from backend.auth import get_current_user
+from auth import get_current_user
 
 
 router = APIRouter(prefix="/meter", tags=["billing"])

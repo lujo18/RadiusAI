@@ -1,8 +1,8 @@
 from polar_sdk import Subscription
 
-from backend.app.lib.polar.client import get_polar_client
-from backend.app.lib.polar.subscription.model import SubscriptionItem, SubscriptionListResponse
-from backend.app.lib.polar.utils import get_external_customer_id_for_team
+from app.lib.polar.client import get_polar_client
+from app.lib.polar.subscription.model import SubscriptionItem, SubscriptionListResponse
+from app.lib.polar.utils import get_external_customer_id_for_team
 from fastapi.logger import logger
 
 

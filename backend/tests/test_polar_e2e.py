@@ -15,10 +15,10 @@ import hashlib
 from datetime import datetime, UTC
 from unittest.mock import AsyncMock, patch, MagicMock
 
-from backend.app.lib.polar.checkout.checkout import create_checkout_link
-from backend.app.lib.polar.webhooks.adapter import get_polar_webhook_adapter
-from backend.app.lib.polar.billing_service import get_polar_billing_service
-from backend.app.features.billing.unified_service import get_unified_billing_service
+from app.lib.polar.checkout.checkout import create_checkout_link
+from app.lib.polar.webhooks.adapter import get_polar_webhook_adapter
+from app.lib.polar.billing_service import get_polar_billing_service
+from app.features.billing.unified_service import get_unified_billing_service
 
 
 class TestPolarIntegrationFlow:

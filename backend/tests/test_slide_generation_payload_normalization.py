@@ -2,7 +2,7 @@ import pytest
 
 from app.features.templates.schemas import Template
 from app.features.user.schemas import BrandSettings
-from backend.services.slides import slide_generation as slide_generation_mod
+from services.slides import slide_generation as slide_generation_mod
 
 
 def test_normalize_template_model_passthrough():

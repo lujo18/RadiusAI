@@ -58,7 +58,7 @@ Already listed above: `encode_state.py` (see Category 1)
 #### High Priority (Must Update First)
 1. **backend/services/genai/generate_slideshow.py** (lines 4, 9-10, 16)
    ```python
-   from backend.services.stock_packs.getPhotos import queryStockPackUrls
+   from services.stock_packs.getPhotos import queryStockPackUrls
    from services.genai.prompts import SYSTEM_PROMPT
    from services.genai.gpt_oss_prompts import assemble_generation_prompt
    from services.unsplash.getPhotos import queryUnsplashUrls
@@ -88,7 +88,7 @@ Already listed above: `encode_state.py` (see Category 1)
 #### Low Priority (Test Files)
 5. **test_template_generation.py** (line 9)
    ```python
-   from backend.services.integrations.groq.util.GenerateTemplate import generate_template
+   from services.integrations.groq.util.GenerateTemplate import generate_template
    ```
    - Note: This is `services/integrations/groq/util`, not `backend/util/`
    - Action: Skip (different path)

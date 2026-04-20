@@ -17,8 +17,8 @@ backend_dir = Path(__file__).parent.parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
-from backend.services.workers.analytics.cron import register_analytics_worker
-from backend.services.workers.automation.cron import register_automation_worker
+from services.workers.analytics.cron import register_analytics_worker
+from services.workers.automation.cron import register_automation_worker
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from fastapi import FastAPI, Depends

@@ -8,12 +8,12 @@ from app.features.generate.genai.generate_slideshow import generate_slideshow_au
 from app.features.usage.service import check_generation_credits, track_slides_generated
 # Legacy Supabase integrations - keeping for now due to complex dependencies
 # TODO: Migrate to app/features/posts/repository.py for DB operations
-from backend.services.integrations.supabase.db.post import (
+from services.integrations.supabase.db.post import (
     create_post,
     update_post_storage_urls,
 )
-from backend.services.integrations.supabase.storage import upload_post_images_optimized
-from backend.services.pillow.renderSlides import SlideRenderer
+from services.integrations.supabase.storage import upload_post_images_optimized
+from services.pillow.renderSlides import SlideRenderer
 from app.shared.genai.system_prompt import SYSTEM_PROMPT
 import json
 
