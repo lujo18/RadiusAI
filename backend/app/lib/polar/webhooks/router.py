@@ -10,7 +10,6 @@ from fastapi import APIRouter, Header, HTTPException, Request
 
 from app.features.integrations.supabase.client import get_supabase
 from app.features.usage.service import UsageMetricService
-from app.lib.polar.products import PRODUCT_IDS
 from app.lib.polar.webhooks.adapter import get_polar_webhook_adapter
 
 logger = logging.getLogger(__name__)
@@ -36,10 +35,6 @@ def _normalize_plan_key(raw_plan: str | None) -> str | None:
 def _infer_plan_from_product_id(product_id: str | None) -> str | None:
 	if not product_id:
 		return None
-
-	reverse_ids = {v: k for k, v in PRODUCT_IDS.items()}
-	if product_id in reverse_ids:
-		return reverse_ids[product_id]
 
 	lowered = str(product_id).lower()
 	for candidate in ("starter", "growth", "unlimited", "free", "pro", "agency"):
