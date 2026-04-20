@@ -13,6 +13,18 @@ export interface AuthResponse {
   error: AuthError | null;
 }
 
+const parseJsonSafe = (text: string): any | null => {
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
 // =====================================================
 // EMAIL/PASSWORD AUTHENTICATION
 // =====================================================
@@ -67,15 +79,23 @@ export const signInWithEmail = async (
  * Sign in with Google OAuth
  */
 export const signInWithGoogle = async (): Promise<void> => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
+  // Use server-side signin to ensure PKCE verifier is stored in cookies
+  const res = await fetch('/api/auth/signin', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'google', redirectTo: `${window.location.origin}/auth/callback` }),
   });
 
-  if (error) {
-    throw new Error(error.message || 'Failed to sign in with Google');
+  const payloadText = await res.text();
+  const payload = parseJsonSafe(payloadText);
+  if (!res.ok) {
+    throw new Error(payload?.error || 'Failed to start Google sign-in');
+  }
+
+  // If server returned a redirect URL, navigate there
+  if (payload.url) {
+    window.location.href = payload.url;
   }
 };
 
@@ -83,15 +103,21 @@ export const signInWithGoogle = async (): Promise<void> => {
  * Sign in with GitHub OAuth
  */
 export const signInWithGitHub = async (): Promise<void> => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'github',
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
-    },
+  const res = await fetch('/api/auth/signin', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ provider: 'github', redirectTo: `${window.location.origin}/auth/callback` }),
   });
 
-  if (error) {
-    throw new Error(error.message || 'Failed to sign in with GitHub');
+  const payloadText = await res.text();
+  const payload = parseJsonSafe(payloadText);
+  if (!res.ok) {
+    throw new Error(payload?.error || 'Failed to start GitHub sign-in');
+  }
+
+  if (payload.url) {
+    window.location.href = payload.url;
   }
 };
 
@@ -119,10 +145,14 @@ export const getCurrentSession = async (): Promise<Session | null> => {
  * Sign out
  */
 export const logOut = async (): Promise<void> => {
-  const { error } = await supabase.auth.signOut();
-  
-  if (error) {
-    throw new Error(error.message || 'Failed to sign out');
+  const { error: globalError } = await supabase.auth.signOut({ scope: 'global' });
+
+  // If global revocation fails (network/session edge cases), still clear local auth state.
+  if (globalError) {
+    const { error: localError } = await supabase.auth.signOut({ scope: 'local' });
+    if (localError) {
+      throw new Error(localError.message || globalError.message || 'Failed to sign out');
+    }
   }
 };
 

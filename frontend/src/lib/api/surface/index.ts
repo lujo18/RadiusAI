@@ -7,4 +7,4 @@ export * from '@/features/presetPacks/surface';
 export * from '@/features/templates/surface';
 export * from '@/features/testimonials/surface';
 export * from '@/features/user/surface';
-export * from '@/features/stripe/plans/surface';
+export * from '@/features/depreciated-stripe/plans/surface';

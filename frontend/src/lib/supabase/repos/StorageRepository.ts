@@ -1,15 +1,31 @@
 import { supabase } from '../client';
 
+const DEFAULT_IMAGE_TYPE = 'image/avif';
+const FALLBACK_IMAGE_TYPE = 'image/webp';
+
+function getExtensionFromMime(contentType: string): string {
+  switch (contentType) {
+    case 'image/avif':
+      return 'avif';
+    default:
+      return 'webp';
+  }
+}
+
 export class StorageRepository {
   // Upload a single slide image
   static async uploadSlideImage(postId: string, slideIndex: number, blob: Blob): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
-    const fileName = `${user.id}/${postId}/slide-${slideIndex}.webp`;
+
+    const contentType = blob.type || FALLBACK_IMAGE_TYPE;
+    const extension = getExtensionFromMime(contentType);
+    const fileName = `${user.id}/${postId}/slide-${slideIndex}.${extension}`;
+
     const { error: uploadError } = await supabase.storage
       .from('slides')
       .upload(fileName, blob, {
-        contentType: 'image/webp',
+        contentType,
         upsert: true,
       });
     if (uploadError) throw new Error(uploadError.message);
@@ -44,7 +60,7 @@ export class StorageRepository {
 
   // Get a public URL for a slide image
   static getSlideImageUrl(postId: string, slideIndex: number, userId: string): string {
-    const fileName = `${userId}/${postId}/slide-${slideIndex}.webp`;
+    const fileName = `${userId}/${postId}/slide-${slideIndex}.avif`;
     const { data } = supabase.storage.from('slides').getPublicUrl(fileName);
     return data.publicUrl;
   }
@@ -53,11 +69,15 @@ export class StorageRepository {
   static async uploadThumbnail(postId: string, blob: Blob): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
-    const fileName = `${user.id}/${postId}/thumbnail.webp`;
+
+    const contentType = blob.type || FALLBACK_IMAGE_TYPE;
+    const extension = getExtensionFromMime(contentType);
+    const fileName = `${user.id}/${postId}/thumbnail.${extension}`;
+
     const { error: uploadError } = await supabase.storage
       .from('slides')
       .upload(fileName, blob, {
-        contentType: 'image/webp',
+        contentType,
         upsert: true,
       });
     if (uploadError) throw new Error(uploadError.message);
@@ -79,13 +99,21 @@ export class StorageRepository {
         canvas.width = 300;
         canvas.height = 300;
         ctx.drawImage(img, 0, 0, 300, 300);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Failed to generate thumbnail'));
+
+        canvas.toBlob((avifBlob) => {
+          if (avifBlob) {
+            resolve(avifBlob);
+            return;
           }
-        }, 'image/webp');
+
+          canvas.toBlob((webpBlob) => {
+            if (webpBlob) {
+              resolve(webpBlob);
+            } else {
+              reject(new Error('Failed to generate thumbnail'));
+            }
+          }, FALLBACK_IMAGE_TYPE);
+        }, DEFAULT_IMAGE_TYPE);
       };
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(firstSlideBlob);

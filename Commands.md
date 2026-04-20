@@ -1,6 +1,6 @@
 Start backend:
 
-`uvicorn backend.main:app --reload`
+`uvicorn backend.app.main:app --reload`
 
 Activate venv
 `venv\Scripts\activate`

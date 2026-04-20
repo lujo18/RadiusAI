@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, TrendingUp, Zap } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { usageApi } from '@/features/usage/surface';
+import { supabase } from '@/lib/supabase/client';
+import { useParams } from 'next/navigation';
 import UpgradeFlow from './UpgradeFlow';
 import { cn } from '@/lib/utils';
 
@@ -37,22 +40,62 @@ export default function UsageBanner({ className, compact = false }: UsageBannerP
   const fetchUsage = async () => {
     try {
       setLoading(true);
-      
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const { supabase } = await import('@/lib/supabase/client');
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) return;
+      // Determine team context: prefer route param teamId, else find first team for user
+      const params = useParams();
+      const routeTeamId = (params as any)?.teamId as string | undefined;
 
-      const response = await fetch(`${apiBase}/api/usage/team/${user?.id}`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
+      let teamId: string | null = routeTeamId ?? null;
 
-      if (response.ok) {
-        const data = (await response.json()) as UsageData;
-        setUsage(data);
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!teamId && currentUser) {
+        // 1) check owned teams
+        const { data: ownedTeams } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('owner_id', currentUser.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (ownedTeams && ownedTeams.length > 0) {
+          teamId = ownedTeams[0].id as string;
+        }
+
+        // 2) check memberships
+        if (!teamId) {
+          const { data: memberTeams } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('user_id', currentUser.id)
+            .in('status', ['active', 'pending']);
+
+          if (memberTeams && memberTeams.length > 0) {
+            const teamIds = memberTeams.map((m: any) => m.team_id);
+            const { data: teams } = await supabase
+              .from('teams')
+              .select('id')
+              .in('id', teamIds)
+              .is('deleted_at', null)
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (teams && teams.length > 0) teamId = teams[0].id as string;
+          }
+        }
+      }
+
+      if (!teamId) {
+        // No team context available — nothing to show
+        setLoading(false);
+        return;
+      }
+
+      // Fetch usage for resolved team
+      try {
+        const data = await usageApi.getUsage();
+        setUsage(data as UsageData);
+      } catch (err) {
+        console.error('Error fetching team usage:', err);
       }
     } catch (err) {
       console.error('Error fetching usage:', err);

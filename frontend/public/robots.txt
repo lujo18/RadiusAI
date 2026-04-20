@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /privacy-policy
+Allow: /terms-of-service
+Disallow: /api/v1
+Disallow: /auth/
+Disallow: /checkout
+Disallow: /overview
+Disallow: /admin/
+Disallow: /login
+Disallow: /signup
+Disallow: /debug-auth
+Disallow: /debug-teams
+
+Sitemap: https://getradius.ai/sitemap.xml

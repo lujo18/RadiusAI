@@ -1,13 +1,13 @@
 import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";
+import { Card, CardHeader, CardTitle } from "./ui/card";
 
 export function BaseNode({ className, ...props }: ComponentProps<"div">) {
   return (
-    <div
+    <Card
       className={cn(
-        "bg-card text-card-foreground relative rounded-md border",
-        "hover:ring-1",
+        "hover:bg-muted/10",
         // React Flow displays node elements inside of a `NodeWrapper` component,
         // which compiles down to a div with the class `react-flow__node`.
         // When a node is selected, the class `selected` is added to the
@@ -32,8 +32,8 @@ export function BaseNodeHeader({
   ...props
 }: ComponentProps<"header">) {
   return (
-    <header
-      {...props}
+    <CardHeader
+      {...(props as ComponentProps<"div">)}
       className={cn(
         "mx-0 my-0 -mb-1 flex flex-row items-center justify-between gap-2 px-3 py-2",
         // Remove or modify these classes if you modify the padding in the
@@ -53,7 +53,7 @@ export function BaseNodeHeaderTitle({
   ...props
 }: ComponentProps<"h3">) {
   return (
-    <h3
+    <CardTitle
       data-slot="base-node-title"
       className={cn("user-select-none flex-1 font-semibold", className)}
       {...props}

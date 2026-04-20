@@ -182,7 +182,7 @@ export function AutomationWizardStep4({ data, onChange }: Step4Props) {
                     return (
                       <button
                         key={time}
-                        onClick={() => addTimeToDay(day.id, time)}
+                        onClick={() => isSelected ? removeTimeFromDay(day.id, time) : addTimeToDay(day.id, time)}
                         className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                           isSelected
                             ? 'bg-primary text-background'
@@ -226,7 +226,7 @@ export function AutomationWizardStep4({ data, onChange }: Step4Props) {
 
       {/* Help Text */}
       <div className="rounded-lg bg-foreground/5 border border-border p-4">
-        <h4 className="font-medium text-sm mb-2">📅 How it Works</h4>
+        <h4 className="font-medium text-sm mb-2">How it Works</h4>
         <p className="text-sm text-foreground/70">
           Set specific times for each day of the week. Your automation will post at those times,
           cycling through your selected templates. You can have different posting schedules for

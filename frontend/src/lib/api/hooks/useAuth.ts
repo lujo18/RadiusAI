@@ -64,7 +64,7 @@ export function useAuth(options?: { requireAuth?: boolean }) {
 
           // Redirect to login if auth is required
           if (options?.requireAuth !== false) {
-            router.push('/auth/login')
+            router.push('/')
           }
         }
       } catch (error) {
@@ -78,7 +78,7 @@ export function useAuth(options?: { requireAuth?: boolean }) {
         })
 
         if (options?.requireAuth !== false) {
-          router.push('/auth/login')
+          router.push('/')
         }
       }
     }

@@ -6,7 +6,7 @@ import React from "react";
  * Prices are fetched directly from Stripe API
  */
 
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,8 @@ import { useAuthStore } from '@/store/authStore';
 import { Check, Zap, Sparkles, Building2, TrendingUp } from 'lucide-react';
 import UpgradeFlow from '@/components/billing/UpgradeFlow';
 import UsageBanner from '@/components/billing/UsageBanner';
+import { useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase/client';
 
 interface PricingTier {
   id: 'starter' | 'pro' | 'agency';
@@ -117,9 +119,8 @@ export default function Paywall() {
 
   const handleSubscribe = async (priceId: string, plan: string) => {
     // Always verify authentication with Supabase before proceeding
-    const { supabase } = await import('@/lib/supabase/client');
     const { data: { user: currentUser }, error } = await supabase.auth.getUser();
-    
+
     if (!currentUser || error) {
       // No authenticated user - redirect to signup with plan parameter
       window.location.href = `/signup?plan=${plan}`;
@@ -129,15 +130,64 @@ export default function Paywall() {
     setLoading(plan);
 
     try {
+      // Resolve team context: prefer `teamId` route param, else pick first owned/member team
+      const params = useParams();
+      const routeTeamId = (params as any)?.teamId as string | undefined;
+
+      let teamId: string | null = routeTeamId ?? null;
+
+      if (!teamId) {
+        // Owned teams
+        const { data: ownedTeams } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('owner_id', currentUser.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (ownedTeams && ownedTeams.length > 0) teamId = ownedTeams[0].id as string;
+      }
+
+      if (!teamId) {
+        const { data: memberTeams } = await supabase
+          .from('team_members')
+          .select('team_id')
+          .eq('user_id', currentUser.id)
+          .in('status', ['active', 'pending']);
+
+        if (memberTeams && memberTeams.length > 0) {
+          const teamIds = memberTeams.map((m: any) => m.team_id);
+          const { data: teams } = await supabase
+            .from('teams')
+            .select('id')
+            .in('id', teamIds)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (teams && teams.length > 0) teamId = teams[0].id as string;
+        }
+      }
+
+      if (!teamId) {
+        // No team context — redirect user to pricing to create/join a team first
+        window.location.href = `/pricing?plan=${plan}`;
+        return;
+      }
+
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiBase}/api/billing/checkout`, {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(`${apiBase}/api/v1/billing/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
           product_id: priceId,
-          user_id: currentUser.id,
+          team_id: teamId,
           plan,
         }),
       });
@@ -157,17 +207,62 @@ export default function Paywall() {
 
   const handleManageSubscription = async () => {
     setLoading('manage');
-
     try {
+      // Resolve team context similarly to subscription flow
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const params = useParams();
+      const routeTeamId = (params as any)?.teamId as string | undefined;
+
+      let teamId: string | null = routeTeamId ?? null;
+
+      if (!teamId && currentUser) {
+        const { data: ownedTeams } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('owner_id', currentUser.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (ownedTeams && ownedTeams.length > 0) teamId = ownedTeams[0].id as string;
+      }
+
+      if (!teamId && currentUser) {
+        const { data: memberTeams } = await supabase
+          .from('team_members')
+          .select('team_id')
+          .eq('user_id', currentUser.id)
+          .in('status', ['active', 'pending']);
+
+        if (memberTeams && memberTeams.length > 0) {
+          const teamIds = memberTeams.map((m: any) => m.team_id);
+          const { data: teams } = await supabase
+            .from('teams')
+            .select('id')
+            .in('id', teamIds)
+            .is('deleted_at', null)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (teams && teams.length > 0) teamId = teams[0].id as string;
+        }
+      }
+
+      if (!teamId) {
+        window.location.href = '/pricing';
+        return;
+      }
+
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const response = await fetch(`${apiBase}/api/billing/portal`, {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(`${apiBase}/api/v1/billing/portal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
         },
-        body: JSON.stringify({
-          user_id: user?.id,
-        }),
+        body: JSON.stringify({ team_id: teamId }),
       });
 
       const { url } = (await response.json()) as { url?: string };

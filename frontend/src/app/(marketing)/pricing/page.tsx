@@ -11,7 +11,7 @@ import { pricingContent } from '@/content/pricing';
 import { supabase } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/authStore';
 import UpgradeFlow from '@/components/billing/UpgradeFlow';
-import { PricingCards } from '@/components/billing/PricingCards';
+import PricingSection from '@/components/billing/PricingSection';
 import type { PlanKey } from '@/lib/plans';
 
 interface Testimonial {
@@ -288,13 +288,7 @@ export default function PricingPage() {
 
       {/* PRICING CARDS */}
       <section className="pb-20 px-6">
-        <PricingCards
-          currentUserPlan={currentUserPlan}
-          prices={prices}
-          isLoading={isLoading}
-          onGetStarted={(plan: PlanKey) => handleGetStarted(plan)}
-          onUpgrade={handleUpgrade}
-        />
+        <PricingSection />
       </section>
 
       {/* SOCIAL PROOF */}

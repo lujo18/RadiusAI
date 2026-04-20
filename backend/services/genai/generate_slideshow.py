@@ -1,24 +1,28 @@
 import json
 import logging
 from typing import Dict, Optional
-from backend.services.stock_packs.getPhotos import queryStockPackUrls
-from backend.util.llm_output_sanitizer import sanitize_text
-from models.slide import LayoutConfig, PostContent
-from models.user import BrandSettings
-from models import Template
-from services.genai.prompts import SYSTEM_PROMPT
-from services.integrations.groq.client import groq
-from services.usage.service import track_slides_generated
-from .client import client
+from app.core.config import settings
+from app.features.stock_packs.getPhotos import queryStockPackUrls
+from app.shared.genai.llm_output_sanitizer import sanitize_text
+from app.features.posts.schemas import LayoutConfig, PostContent
+from app.features.user.schemas import BrandSettings
+from app.shared.genai.prompts import SYSTEM_PROMPT
+from app.shared.genai.gpt_oss_prompts import assemble_generation_prompt
+from app.lib.ai_client import ai_client
 from .slide_layouts import get_all_layout_schemas, SLIDE_LAYOUTS, SlideLayout
-from google.genai import types
-from services.unsplash.getPhotos import queryUnsplashUrls
+from app.features.integrations.unsplash.getPhotos import queryUnsplashUrls
 
 logger = logging.getLogger(__name__)
 
 
 def generate_slideshow_auto(
-    slideshowGoals: str, brandSettings: BrandSettings, count: int = 1, cta: Optional[dict] = None, stock_pack_directory: str | None = None
+    slideshowGoals: str,
+    brandSettings: BrandSettings,
+    count: int = 1,
+    cta: Optional[dict] = None,
+    stock_pack_directory: str | None = None,
+    provider: str = settings.DEFAULT_AI_PROVIDER,
+    model_id: str = "openai/gpt-oss-120b",
 ):
     """
     Generate complete TikTok slideshow with layout selection and content.
@@ -33,14 +37,21 @@ def generate_slideshow_auto(
     """
 
     layout_options = get_all_layout_schemas()
-    prompt = _generate_prompt(layout_options, slideshowGoals, brandSettings, count, template_structure=None, cta=cta)
+    prompt = _generate_prompt(
+        layout_options,
+        slideshowGoals,
+        brandSettings,
+        count,
+        template_structure=None,
+        cta=cta,
+    )
 
     prompt = " ".join(prompt.split())
 
     print("System PROMPT:", SYSTEM_PROMPT)
 
     print("FULL PROMPT:", prompt)
-    
+
     # tokens = client.models.count_tokens(model="gemini-2.0-flash", contents=prompt).total_tokens
 
     # logger.info(f"Token count: {tokens}")
@@ -66,18 +77,11 @@ def generate_slideshow_auto(
     # openai/gpt-oss-120b (production model)
     # meta-llama/llama-4-maverick-17b-128e-instruct (preview model)
 
-    response = groq.chat.completions.create(
-        model="openai/gpt-oss-120b",
-        messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
+    response_text = ai_client.call_ai(
+        provider='openrouter',
+        model_id='google/gemma-4-31b-it:free',
+        system_prompt=SYSTEM_PROMPT,
+        main_prompt=prompt,
         temperature=0.6,
         top_p=0.95,
         presence_penalty=0.4,
@@ -105,7 +109,9 @@ def generate_slideshow_auto(
                                                 "layout_type": {"type": "string"},
                                                 "text_elements": {
                                                     "type": "object",
-                                                    "additionalProperties": {"type": "string"},
+                                                    "additionalProperties": {
+                                                        "type": "string"
+                                                    },
                                                 },
                                             },
                                             "required": [
@@ -143,8 +149,6 @@ def generate_slideshow_auto(
     # response_text = response.text.strip()
     # generated_data = json.loads(response_text)
 
-    response_text = response.choices[0].message.content
-    
     print("Gemini response 1:", response_text)
 
     if not response_text:
@@ -162,9 +166,13 @@ def generate_slideshow_auto(
             # Single carousel object, wrap it in array
             generated_data = [generated_data]
         else:
-            raise ValueError(f"Groq response structure unexpected: {list(generated_data.keys())}")
+            raise ValueError(
+                f"Groq response structure unexpected: {list(generated_data.keys())}"
+            )
     elif not isinstance(generated_data, list):
-        raise ValueError(f"Groq response must be an array or object, got: {type(generated_data)}")
+        raise ValueError(
+            f"Groq response must be an array or object, got: {type(generated_data)}"
+        )
 
     print("Gemini response 2:", generated_data)
 
@@ -174,13 +182,18 @@ def generate_slideshow_auto(
     if not isinstance(generated_data, list):
         raise ValueError("Gemini response must be an array of post variations")
 
-    cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None) 
+    cta_image_url = (cta or {}).get("metadata", {}).get("cta_image", None)
     print("CTA IMAGE OVERRIDE: ", cta_image_url)
     post_contents = [
-        _convert_to_post_content(generated_post, cta_image_override=cta_image_url, stock_pack_directory=stock_pack_directory) for generated_post in generated_data
+        _convert_to_post_content(
+            generated_post,
+            cta_image_override=cta_image_url,
+            stock_pack_directory=stock_pack_directory,
+        )
+        for generated_post in generated_data
     ]
 
-    logger.info(f"Converted {len(post_contents)} posts successfully")
+    logger.info("Converted %d posts successfully", len(post_contents))
 
     return post_contents
 
@@ -192,76 +205,58 @@ def _generate_prompt(
     count: int = 1,
     template_structure: dict = None,
     cta: Optional[dict] = None,
+    classifier_context: Optional[Dict] = None,
 ):
+    """
+    Build complete generation prompt using modular injection architecture.
 
-    # Build CTA override section if provided
-    cta_section = ""
+    Per GPT-OSS 120B docs: Static content first (caching optimization),
+    dynamic content last (task-specific data).
+
+    Components (in order):
+    1. SYSTEM ROLE - persona, reasoning effort, constraints
+    2. BRAND GUIDELINES - brand voice and rules
+    3. TEMPLATE ARCHITECTURE - slide structure
+    4. TEXT OUTPUT SCHEMA - layout definitions
+    5. CTA OVERRIDES - if provided
+    6. INPUT TOPIC - user goal and instructions
+
+    Args:
+        layout_options: Slide layout definitions
+        slideshowGoals: Template structure (JSON string)
+        brand: BrandSettings with voice/tone info
+        count: Number of variations to generate
+        template_structure: Unused (for backward compat)
+        cta: Optional CTA override
+        classifier_context: Template format, niche, content_mode, etc.
+
+    Returns:
+        Complete prompt string for Groq/GPT-OSS 120B
+    """
     if cta:
-        cta_text = cta.get('cta_text', '')
-        cta_url = cta.get('cta_url', '')
-        logger.info(f"Injecting CTA - Text: {cta_text}, URL: {cta_url}")
-        cta_section = f"""
-### LAST SLIDE CTA:
-Final slide MUST include this exact CTA: "{cta_text}"
-CTA URL: {cta_url if cta_url else 'N/A'}
-Do NOT replace or modify this CTA text."""
+        logger.info(
+            "Injecting CTA - Text: %s, URL: %s",
+            cta.get("cta_text", ""),
+            cta.get("cta_url", ""),
+        )
+
+    # Use new modular component builders
+    prompt = assemble_generation_prompt(
+        layout_options=layout_options,
+        slideshow_goals=slideshowGoals,
+        brand=brand,
+        topic=slideshowGoals,  # Topic is embedded in slideshowGoals JSON
+        count=count,
+        cta=cta,
+        classifier_context=classifier_context,
+    )
+
+    return prompt
 
 
-    return f""" 
-### CORE TASK:
-Design a Tiktok slideshow using the following brand and contraints.
-
-### BRAND GUARDRAILS (JSON):
-{brand}
-
-## HOW TO READ EACH SLIDE
-- stage: the psychological role of this slide
-- format_spec: your writing instruction. Execute it. Do not copy it as content.
-- word_count: maximum words for this slide's text content
-- output_mode:
-  - WRITE FREELY: write original content within the format_spec direction
-  - FOLLOW EXACTLY: reproduce the structure in format_spec precisely, with real content filled in
-
-### SLIDESHOW BLUEPRINT (JSON):
-{slideshowGoals}
-
-{cta_section}
-
-## TECHNICAL JSON SPECIFICATIONS
-
-#### AVAILABLE LAYOUTS (choose optimal layout per slide):
-{layout_options}
-
-#### CRITICAL CONTENT RULES:
-- Fill ALL text element IDs - no placeholders
-- Generate ORIGINAL content - never copy template labels as text
-- Keep background_query SHORT: 2-3 words only
-
-#### OUTPUT FORMAT - Return a JSON object with a "variations" key containing an array of {count} variation(s):
-{{
-  "variations": [
-    {{
-      "slides": [
-        {{
-          "slide_number": 1,
-          "layout_type": "hook",
-          "text_elements": {{
-            "text-id": "Hook text following the template structure"
-          }}
-        }}
-      ],
-      "caption": "Authentic caption related to content",
-      "hashtags": ["hashtag1", "hashtag2"],
-      "background_query": "2-3 words describing an image related to content"
-    }}
-  ]
-}}
-
-Output only valid JSON object.
-"""
-
-
-def _convert_to_post_content(generated: dict, cta_image_override: str | None, stock_pack_directory:str|None) -> PostContent:
+def _convert_to_post_content(
+    generated: dict, cta_image_override: str | None, stock_pack_directory: str | None
+) -> PostContent:
     """
     Convert a single Gemini-generated post into PostContent structure.
     Maps generated text back to slide elements.
@@ -271,31 +266,27 @@ def _convert_to_post_content(generated: dict, cta_image_override: str | None, st
     post_slides = []
 
     background_query = generated.get("background_query", None)
-    
+
     if not background_query:
         ValueError("No backgrounds were added to post")
 
-    logger.info(
-        f"Generated data: {background_query}, {len(generated['slides'])} slides"
-    )
+    logger.info("Generated data: %s, %d slides", background_query, len(generated["slides"]))
 
     if stock_pack_directory:
         backgroundUrls = queryStockPackUrls(
             stock_pack_directory, len(generated["slides"])
         )
-    else: 
-        backgroundUrls = queryUnsplashUrls(
-            background_query, len(generated["slides"])
-        )
+    else:
+        backgroundUrls = queryUnsplashUrls(background_query, len(generated["slides"]))
 
     if backgroundUrls is None or len(backgroundUrls) == 0:
         raise ValueError("Failed to retrieve background images from Unsplash")
-    
+
     # If we got fewer URLs than slides, extend with the last URL as fallback
     while len(backgroundUrls) < len(generated["slides"]):
         backgroundUrls.append(backgroundUrls[-1] if backgroundUrls else None)
-        
-    last_slide_index = len(generated['slides']) - 1
+
+    last_slide_index = len(generated["slides"]) - 1
     # Replace last image with CTA IMAGE OVERIDE
     if cta_image_override and last_slide_index >= 0:
         backgroundUrls[last_slide_index] = cta_image_override
@@ -326,14 +317,18 @@ def _convert_to_post_content(generated: dict, cta_image_override: str | None, st
 
             if content is None:
                 logger.warning(
-                    f"Missing content for element {element_id} in slide {slide_num}"
+                    "Missing content for element %s in slide %s",
+                    element_id,
+                    slide_num,
                 )
                 content = ""  # Use empty string as fallback
 
             filled_elements.append({**element, "content": content})
 
         logger.info(
-            f"Filling slide {slide_num} with layout {backgroundUrls[int(slide_num) - 1]}"
+            "Filling slide %s with layout %s",
+            slide_num,
+            backgroundUrls[int(slide_num) - 1],
         )
 
         post_slides.append(

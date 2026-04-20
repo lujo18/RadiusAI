@@ -41,7 +41,7 @@ function OverviewPageContent() {
           login(restoredUser, session.user, session);
         } else if (error || !session) {
           // Session invalid, redirect to login
-          router.push('/login?error=session_expired');
+          router.push('/');
           return;
         }
       }

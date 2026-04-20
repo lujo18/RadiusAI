@@ -90,7 +90,7 @@ function StyleGuideEditor() {
 
   const handleSave = async () => {
     // Save to backend
-    await fetch('/api/style-guide', {
+    await fetch('/api/v1/style-guide', {
       method: 'PUT',
       body: JSON.stringify({ content }),
     });
@@ -122,7 +122,7 @@ function AnalyticsDashboard() {
   const setTimeframe = useAnalyticsStore((state) => state.setTimeframe);
 
   const fetchAnalytics = async () => {
-    const data = await fetch(`/api/analytics?timeframe=${timeframe}`);
+    const data = await fetch(`/api/v1/analytics?timeframe=${timeframe}`);
     const json = await data.json();
     setPerformanceData(json.performanceData);
   };

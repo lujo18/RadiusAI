@@ -4,31 +4,16 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useTemplates } from "@/features/templates/hooks";
 import { useBrands } from "@/features/brand/hooks";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGenerationStore } from "@/store/generationStore";
 import type { BrandSettings } from "@/components/TemplateCreator/contentTypes";
 import type { Database } from "@/types/database";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PostContent } from "@/lib/parseJsonColumn.supabase";
 import { Post } from "@/types/types";
-import { Workflow } from "@/components/workflows/common/Workflow";
-import { GenerationQueue } from "@/components/generation/GenerationQueue";
 import { useGeneratePostFromPrompt } from '@/features/generation/hooks';
+import { SettingsPanel } from "@/components/generation/SettingsPanel";
+import { GenerationQueuePanel } from "@/components/generation/GenerationQueuePanel";
 
 type Brand = Database["public"]["Tables"]["brand"]["Row"];
 
@@ -177,133 +162,50 @@ export default function GeneratePage() {
     );
   }
 
+  if (!templatesLoading && (templates as any[])?.length === 0) {
+    return (
+      <div className="mt-6 text-center text-muted-foreground text-sm">
+        No templates found. Create a template first.
+      </div>
+    );
+  }
+
+  if (!brandsLoading && brands?.length === 0) {
+    return (
+      <div className="mt-6 text-center text-muted-foreground text-sm">
+        No brands found. Create a brand first.
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full w-full">
-      <div className="">
-        <div className="absolute p-4">
-          <h1 className="text-3xl font-bold font-main mb-2">Generate Post</h1>
-          <p className="text-muted-foreground mb-8">
-            Select a template and press generate
-          </p>
-        </div>
+    <div className="w-full h-full flex flex-col bg-background">
+      {/* Header */}
+      <div className="border-b border-border/50 px-6 py-4">
+        <h1 className="text-3xl font-bold font-main">Generate Post</h1>
+        <p className="text-sm text-muted-foreground mt-1">Build your carousel with our AI generation tool</p>
+      </div>
 
-        <Workflow
-          brandId={brandId}
-          selectedTemplateId={selectedTemplate}
-          selectedCtaId={selectedCta}
-          selectedPackId={selectedPackId}
-          onTemplateSelect={setSelectedTemplate}
-          onCtaSelect={setSelectedCta}
-          onPackSelect={setSelectedPackId}
-          handleGenerate={handleGenerate}
-        />
-
-        {/* <Card>
-          <CardContent className="pt-6 space-y-6">
-            {/* Template Selection
-            {selectedGenType === "template" ? (
-              <div className="space-y-2">
-                <Label htmlFor="template-select">Select Template</Label>
-                <Select
-                  value={selectedTemplate}
-                  onValueChange={setSelectedTemplate}
-                >
-                  <SelectTrigger id="template-select">
-                    <SelectValue placeholder="Choose a template..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates?.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedTemplate && templates && (
-                  <p className="text-sm text-muted-foreground">
-                    Template:{" "}
-                    {templates.find((t) => t.id === selectedTemplate)?.name}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div>
-                <Label>Enter Generation Prompt</Label>
-                <textarea
-                  className="w-full h-[4rem]"
-                  value={genertationPrompt}
-                  onChange={(e) => setGenertationPrompt(e.target.value)}
-                ></textarea>
-              </div>
-            )}
-
-            
-
-           
-            {brands &&
-              (() => {
-                const brand = brands.find((b) => b.id === selectedProfile);
-                const settings = brand ? getBrandSettings(brand) : null;
-                return settings ? (
-                  <div className="space-y-2 p-4 bg-foreground/5 rounded-lg border border-foreground/10">
-                    <Label className="text-sm font-semibold">
-                      Active Brand
-                    </Label>
-                    <p className="text-base font-medium">{settings.name}</p>
-                    <p className="text-sm text-foreground/60">
-                      Niche: {settings.niche}
-                    </p>
-                  </div>
-                ) : null;
-              })()}
-
-            <div>
-              <Select
-                value={selectedGenType}
-                onValueChange={setSelectedGenType}
-              >
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={"Select generation type..."}
-                  ></SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="template">Given Template</SelectItem>
-                  <SelectItem value="prompt">Prompt Based</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            
-            <Button
-              onClick={handleGenerate}
-              disabled={
-                !selectedProfile ||
-                (selectedGenType === "template" && !selectedTemplate) ||
-                (selectedGenType === "prompt" && !genertationPrompt)
-              }
-              size="lg"
-            >
-              Generate Post
-            </Button>
-          </CardContent>
-        </Card> */}
-
-        <GenerationQueue queue={queue} />
-
+      {/* Main Layout: Left sidebar + Right output */}
+      <div className="flex-1 flex flex-row p-6 gap-6">
+        {/* Left Sidebar: Workflow */}
+          <SettingsPanel
+            brandId={brandId}
+            selectedTemplateId={selectedTemplate}
+            selectedCtaId={selectedCta}
+            selectedPackId={selectedPackId}
+            selectedProfile={selectedProfile}
+            onTemplateSelect={setSelectedTemplate}
+            onCtaSelect={setSelectedCta}
+            onPackSelect={setSelectedPackId}
+            onGenerateClick={handleGenerate}
+            isGenerating={generateMutation.isPending}
+          />
         
 
-        {/* Empty States */}
-        {!templatesLoading && (templates as any[])?.length === 0 && (
-          <div className="mt-6 text-center text-muted-foreground text-sm">
-            No templates found. Create a template first.
-          </div>
-        )}
-        {!brandsLoading && brands?.length === 0 && (
-          <div className="mt-6 text-center text-muted-foreground text-sm">
-            No brands found. Create a brand first.
-          </div>
-        )}
+      
+          <GenerationQueuePanel queue={queue} />
+        
       </div>
     </div>
   );

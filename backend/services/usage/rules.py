@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any, Tuple
 from pydantic import BaseModel, Field, validator
 from enum import Enum
-from services.usage import repo as usage_repo
+
 
 
 class RuleType(str, Enum):
@@ -12,7 +12,9 @@ class RuleType(str, Enum):
 class BaseRule(BaseModel):
     id: Optional[str]
     type: RuleType
-    metric: Optional[str] = Field(None, description="team_activity metric to check, e.g., post_count")
+    metric: Optional[str] = Field(
+        None, description="team_activity metric to check, e.g., post_count"
+    )
     limit: Optional[int]
     window: Optional[str] = None
 
@@ -71,8 +73,14 @@ def _normalize_rules_input(raw: Any) -> Optional[Dict[str, Any]]:
             if isinstance(maybe_rules, list):
                 expanded_rules: List[Dict[str, Any]] = []
                 for item in maybe_rules:
-                    if isinstance(item, dict) and "limits" in item and isinstance(item.get("limits"), dict):
-                        expanded_rules.extend(_legacy_limits_to_rules(item.get("limits") or {}))
+                    if (
+                        isinstance(item, dict)
+                        and "limits" in item
+                        and isinstance(item.get("limits"), dict)
+                    ):
+                        expanded_rules.extend(
+                            _legacy_limits_to_rules(item.get("limits") or {})
+                        )
                     else:
                         expanded_rules.append(item)
                 return {"schema_version": schema_version, "rules": expanded_rules}
@@ -108,7 +116,9 @@ def parse_rules(raw: Any) -> Optional[RulesDocument]:
         return None
 
 
-def evaluate_rules_for_user(team_id: str, rules_doc: RulesDocument, amount: int = 1) -> Dict[str, Any]:
+def evaluate_rules_for_user(
+    team_id: str, rules_doc: RulesDocument, amount: int = 1
+) -> Dict[str, Any]:
     """Evaluate all rules for a team; returns aggregated result.
 
     Result: {allowed: bool, failures: [...], details: [...], remaining: int|null}
@@ -119,10 +129,10 @@ def evaluate_rules_for_user(team_id: str, rules_doc: RulesDocument, amount: int 
 
     ua = usage_repo.get_team_activity(team_id) or {}
     # Support centralized `usage` JSON column: prefer ua['usage'][metric], fall back to top-level
-    usage_map = ua.get('usage') or {}
+    usage_map = ua.get("usage") or {}
 
     for r in rules_doc.rules:
-        metric = r.metric or 'post_count'
+        metric = r.metric or "post_count"
         used = int(usage_map.get(metric) or ua.get(metric) or 0)
         if r.type == RuleType.fixed:
             if r.limit is None:
@@ -154,4 +164,9 @@ def evaluate_rules_for_user(team_id: str, rules_doc: RulesDocument, amount: int 
     allowed = len(failures) == 0
     remaining = min(remaining_values) if remaining_values else None
 
-    return {"allowed": allowed, "failures": failures, "details": details, "remaining": remaining}
+    return {
+        "allowed": allowed,
+        "failures": failures,
+        "details": details,
+        "remaining": remaining,
+    }

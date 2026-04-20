@@ -249,6 +249,7 @@ export default function TemplateCreator({
       status: formData.status,
       favorite: formData.favorite,
     });
+    setStep(1)
   };
 
   // Only render the dialog when visible

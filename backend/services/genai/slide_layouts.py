@@ -10,6 +10,7 @@ from typing import TypedDict, Literal, Optional, List
 
 class TextElement(TypedDict, total=False):
     """Text element structure matching frontend Konva format"""
+
     id: str
     type: Literal["text"]
     content: str
@@ -34,6 +35,7 @@ class TextElement(TypedDict, total=False):
 
 class SlideLayout(TypedDict):
     """Slide layout structure"""
+
     name: str
     text_elements: List[TextElement]
 
@@ -80,7 +82,7 @@ SLIDE_CONSTANTS: dict[str, TextElement] = {
         "shadow_offset_y": 2,
         "shadow_opacity": 0.5,
         "line_height": 1.3,
-    }
+    },
 }
 
 # Slide layout definitions matching frontend SlideLayouts.ts
@@ -120,15 +122,11 @@ SLIDE_LAYOUTS: dict[str, SlideLayout] = {
     },
     "header": {
         "name": "header",
-        "text_elements": [
-            SLIDE_CONSTANTS["header_text"]
-        ],
+        "text_elements": [SLIDE_CONSTANTS["header_text"]],
     },
     "body": {
         "name": "body",
-        "text_elements": [
-            SLIDE_CONSTANTS["body_text"]
-        ],
+        "text_elements": [SLIDE_CONSTANTS["body_text"]],
     },
 }
 
@@ -146,18 +144,18 @@ def get_available_layouts() -> list[str]:
 def get_layout_text_fields(layout_type: str) -> dict[str, dict[str, str]] | None:
     """
     Get text element IDs and their placeholder content for a layout.
-    
+
     Returns: {"text-123": "Hook text here", "text-456": "Body text here"}
     Useful for AI prompts - only returns what needs to be filled.
     """
     layout = SLIDE_LAYOUTS.get(layout_type)
     if not layout:
         return None
-    
+
     return {
         element["id"]: {
             "content": element["content"],
-            "role": None # Todo: add text roles for better generation
+            "role": None,  # Todo: add text roles for better generation
         }
         for element in layout["text_elements"]
     }
@@ -166,13 +164,13 @@ def get_layout_text_fields(layout_type: str) -> dict[str, dict[str, str]] | None
 def get_all_layout_schemas() -> dict[str, dict[str, dict[str, str]] | None]:
     """
     Get text field schemas for all layouts.
-    
+
     Returns:
     {
         "hook": {"text-123": "Hook text here"},
         "header_and_body": {"text-123": "Header text here", "text-456": "Body text here"}
     }
-    
+
     Perfect for AI prompts - shows available layouts and required text fields.
     """
     return {
@@ -181,29 +179,32 @@ def get_all_layout_schemas() -> dict[str, dict[str, dict[str, str]] | None]:
     }
 
 
-def fill_layout_with_content(layout_type: str, content_map: dict[str, str]) -> SlideLayout | None:
+def fill_layout_with_content(
+    layout_type: str, content_map: dict[str, str]
+) -> SlideLayout | None:
     """
     Fill a layout template with actual content.
-    
+
     Args:
         layout_type: Type of layout to use
         content_map: Mapping of text element IDs to content
                     {"text-123": "My awesome hook", "text-456": "Body content"}
-    
+
     Returns:
         Complete SlideLayout with content filled in
     """
     import copy
+
     layout = get_slide_layout(layout_type)
     if not layout:
         return None
-    
+
     # Deep copy to avoid mutating template
     filled_layout = copy.deepcopy(layout)
-    
+
     # Fill in content for each text element
     for element in filled_layout["text_elements"]:
         if element["id"] in content_map:
             element["content"] = content_map[element["id"]]
-    
+
     return filled_layout

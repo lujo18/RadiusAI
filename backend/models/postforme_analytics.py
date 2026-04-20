@@ -1,14 +1,16 @@
 # PostForMe Analytics Response Models
 # Mirrors the PostForMe API /v1/items endpoint response structure
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 # ==================== POSTFORME METRICS ====================
 
+
 class PostForMeMetrics(BaseModel):
     """Metrics returned by PostForMe API for a post"""
+
     likes: int = 0
     comments: int = 0
     shares: int = 0
@@ -26,8 +28,10 @@ class PostForMeMetrics(BaseModel):
 
 # ==================== POSTFORME ITEM (POST) ====================
 
+
 class PostForMeItem(BaseModel):
     """A single post item from PostForMe /v1/items endpoint"""
+
     platform: str  # e.g., "instagram", "tiktok"
     social_post_result_id: Optional[str] = None
     posted_at: datetime  # When the post was published
@@ -48,8 +52,10 @@ class PostForMeItem(BaseModel):
 
 # ==================== POSTFORME PAGINATED RESPONSE ====================
 
+
 class PostForMePaginationMeta(BaseModel):
     """Pagination metadata from PostForMe API"""
+
     cursor: Optional[str] = None
     limit: int
     next: Optional[str] = None
@@ -58,5 +64,6 @@ class PostForMePaginationMeta(BaseModel):
 
 class PostForMeAnalyticsResponse(BaseModel):
     """Full response from PostForMe /v1/items endpoint with expand=["metrics"]"""
+
     data: List[PostForMeItem] = []
     meta: PostForMePaginationMeta

@@ -19,6 +19,7 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PostDetails {
   id: string;
@@ -73,7 +74,7 @@ interface PostDetails {
 
 async function fetchPostDetails(postId: string): Promise<PostDetails> {
   const token = localStorage.getItem("authToken");
-  const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
+  const response = await fetch(`http://localhost:8000/api/v1/posts/${postId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -88,7 +89,7 @@ async function fetchPostDetails(postId: string): Promise<PostDetails> {
 
 async function updatePostStatus(postId: string, status: string) {
   const token = localStorage.getItem("authToken");
-  const response = await fetch(`http://localhost:8000/api/posts/${postId}`, {
+  const response = await fetch(`http://localhost:8000/api/v1/posts/${postId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -128,10 +129,79 @@ export default function PostDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading post details...</p>
+      <div className="min-h-screen bg-background">
+        {/* Header Skeleton */}
+        <div className="bg-card border-b border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+            <Skeleton className="h-10 w-20 rounded" />
+            <div className="flex items-start justify-between">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-8 w-48 rounded" />
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-5 w-24 rounded" />
+                  <Skeleton className="h-5 w-24 rounded" />
+                  <Skeleton className="h-5 w-32 rounded" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-32 rounded" />
+                <Skeleton className="h-10 w-32 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content Skeleton */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Slides Skeleton */}
+              <div className="bg-card rounded-xl border border-border p-6">
+                <Skeleton className="h-6 w-24 rounded mb-4" />
+                <div className="grid grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="aspect-[9/16] rounded-lg" />
+                  ))}
+                </div>
+              </div>
+
+              {/* Caption Skeleton */}
+              <div className="bg-card rounded-xl border border-border p-6">
+                <Skeleton className="h-6 w-32 rounded mb-4" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full rounded" />
+                  <Skeleton className="h-4 w-full rounded" />
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                </div>
+              </div>
+
+              {/* Analytics Skeleton */}
+              <div className="bg-card rounded-xl border border-border p-6">
+                <Skeleton className="h-6 w-32 rounded mb-4" />
+                <div className="grid grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-20 rounded" />
+                      <Skeleton className="h-8 w-32 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar Skeleton */}
+            <div className="space-y-6">
+              <div className="bg-card rounded-xl border border-border p-6">
+                <Skeleton className="h-6 w-24 rounded mb-4" />
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-10 w-full rounded" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

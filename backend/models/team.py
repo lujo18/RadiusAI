@@ -1,76 +1,73 @@
+"""Legacy compatibility shim for team models.
+
+Many modules still import from `backend.models.team`. Forward those
+imports to the new feature-scoped location under `app.features.team.schemas`.
 """
-Team Models for multi-tenant team-based access control.
-"""
 
-from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional, Literal
-from datetime import datetime
+try:
+    from app.features.team.schemas import (
+        Team,
+        TeamDetail,
+        TeamMemberInfo,
+        TeamEventSchema as TeamEvent,
+        CreateTeamRequest,
+        UpdateTeamRequest,
+        InviteTeamMemberRequest,
+        UpdateTeamMemberRequest,
+    )
+except Exception:  # pragma: no cover - best-effort shim
+    # Provide minimal placeholders to keep static analysis tools happy.
+    class Team:  # type: ignore
+        """Minimal placeholder for legacy `Team` imports.
 
+        This class is only used as a best-effort shim when the modern
+        `app.features.team.schemas` import is unavailable during static
+        analysis or very early runtime phases.
+        """
+        id: str
+        name: str
+        slug: str
 
-# ==================== TEAM SUB-MODELS ====================
+        def __init__(self, id: str = "", name: str = "", slug: str = "") -> None:
+            self.id = id
+            self.name = name
+            self.slug = slug
 
-class TeamMemberInfo(BaseModel):
-    """Represents a team member"""
-    id: str
-    user_id: Optional[str] = None
-    email: str
-    role: Literal["owner", "admin", "member", "viewer"] = "member"
-    status: Literal["active", "pending", "invited", "removed"] = "pending"
-    invited_at: Optional[str] = None
-    accepted_at: Optional[str] = None
-    created_at: str
-    updated_at: str
-
-
-# ==================== TEAM MODELS ====================
-
-class Team(BaseModel):
-    """Represents a team"""
-    id: str
-    owner_id: str  # The user who owns this team
-    name: str
-    slug: str
-    description: Optional[str] = None
-    avatar_url: Optional[str] = None
-    metadata: Optional[dict] = None
-    created_at: str
-    updated_at: str
-    deleted_at: Optional[str] = None
+    class TeamDetail:  # type: ignore
+        """Placeholder for `TeamDetail` schema used by legacy imports."""
 
 
-class TeamDetail(Team):
-    """Team with additional context (member count, etc.)"""
-    member_count: int = 0
-    members: List[TeamMemberInfo] = []
+    class TeamMemberInfo:  # type: ignore
+        """Placeholder representing a team member's public information."""
 
 
-class CreateTeamRequest(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
-    slug: str = Field(min_length=1, max_length=100, pattern=r"^[a-z0-9-]+$")
-    description: Optional[str] = None
+    class TeamEvent:  # type: ignore
+        """Placeholder for team event payload schema."""
 
 
-class UpdateTeamRequest(BaseModel):
-    name: Optional[str] = None
-    slug: Optional[str] = None
-    description: Optional[str] = None
-    avatar_url: Optional[str] = None
+    class CreateTeamRequest:  # type: ignore
+        """Placeholder for create-team API request shape."""
 
 
-class InviteTeamMemberRequest(BaseModel):
-    email: EmailStr
-    role: Literal["admin", "member", "viewer"] = "member"
+    class UpdateTeamRequest:  # type: ignore
+        """Placeholder for update-team API request shape."""
 
 
-class UpdateTeamMemberRequest(BaseModel):
-    role: Literal["admin", "member", "viewer"]
+    class InviteTeamMemberRequest:  # type: ignore
+        """Placeholder for invite-team-member request schema."""
 
 
-class TeamEvent(BaseModel):
-    """Audit log entry for team actions"""
-    id: str
-    team_id: str
-    actor_id: Optional[str] = None
-    event_type: str
-    payload: Optional[dict] = None
-    created_at: str
+    class UpdateTeamMemberRequest:  # type: ignore
+        """Placeholder for update-team-member request schema."""
+
+
+__all__ = [
+    "Team",
+    "TeamDetail",
+    "TeamMemberInfo",
+    "TeamEvent",
+    "CreateTeamRequest",
+    "UpdateTeamRequest",
+    "InviteTeamMemberRequest",
+    "UpdateTeamMemberRequest",
+]

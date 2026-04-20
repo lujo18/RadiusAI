@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from '@/components/ui/button';
 import { supabase } from "@/lib/supabase/client";
 import { FiLoader, FiAlertCircle } from "react-icons/fi";
+import { getCurrentUser } from "@/lib/supabase/auth";
+import backendClient from "@/lib/api/clients/backendClient";
 
 function CheckoutContent() {
   const router = useRouter();
@@ -24,6 +26,7 @@ function CheckoutContent() {
           error,
         } = await supabase.auth.getUser();
 
+        getCurrentUser()
         console.log('[Checkout] User check result:', {
           hasUser: !!user,
           userId: user?.id,
@@ -31,7 +34,6 @@ function CheckoutContent() {
         });
 
         if (!user || error) {
-          // Not logged in or invalid session, redirect to signup
           console.log('[Checkout] No valid user - REDIRECTING TO SIGNUP');
           router.push(`/signup?plan=${plan}`);
           return;
@@ -70,32 +72,11 @@ function CheckoutContent() {
           return;
         }
 
-        // Create Stripe checkout session via backend billing service
-        const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-        // Create Stripe checkout session
-        const res = await fetch(`${apiBase}/api/billing/checkout`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            product_id: productId,
-            user_id: user.id,
-            plan,
-          }),
-        });
-
-        const data = (await res.json()) as { url?: string };
-
-        console.log('[Checkout] Stripe API response:', { hasUrl: !!data.url });
-
-        if (data.url) {
-          // Redirect to Stripe Checkout
-          console.log('[Checkout] Redirecting to Stripe...');
-          window.location.href = data.url;
-        } else {
-          console.error('[Checkout] No URL in response:', data);
-          setError("Failed to create checkout session");
-          setIsLoading(false);
-        }
+        // Legacy user-scoped checkout is no longer supported — require teams.
+        console.log('[Checkout] Legacy checkout route requires team context. Redirecting to /pricing');
+        router.push(`/pricing?plan=${plan}`);
+        setIsLoading(false);
+        return;
       } catch (err) {
         console.error("[Checkout] Error:", err);
         setError("An error occurred while creating your checkout session");

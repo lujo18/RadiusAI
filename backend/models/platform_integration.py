@@ -4,6 +4,7 @@ from enum import Enum
 
 
 class IntegrationStatus(str, Enum):
+    """Status of a platform integration indicating connectivity."""
     connected = "connected"
     disconnected = "disconnected"
 

@@ -9,7 +9,7 @@ import React from "react";
 
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { useSubscription } from '@/hooks/useSubscription';
+import { useSubscription } from '@/features/subscription/hooks';
 import { FiAlertCircle, FiCreditCard } from 'react-icons/fi';
 
 interface SubscriptionGuardProps {
@@ -23,7 +23,13 @@ export function SubscriptionGuard({
   fallback,
   showUpgradePrompt = true,
 }: SubscriptionGuardProps) {
-  const { isActive, isLoading, status, daysRemaining } = useSubscription();
+  const { data: subscription, isLoading, error } = useSubscription();
+  
+  const isActive = subscription?.status === 'active';
+  const status = subscription?.status || 'unknown';
+  const daysRemaining = subscription?.current_period_end 
+    ? Math.ceil((new Date(subscription.current_period_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    : null;
 
   if (isLoading) {
     return (

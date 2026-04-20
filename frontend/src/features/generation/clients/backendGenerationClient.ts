@@ -15,7 +15,7 @@ export const backendGenerationClient = {
   }): Promise<Post[]> {
     const { data: { session } } = await supabase.auth.getSession();
     const response = await axios.post(
-      `${API_BASE}/api/generate/post`,
+      `${API_BASE}/api/v1/generate/post`,
       { 
         template_id: payload.templateId,
         brand_settings: payload.brandSettings, 
@@ -38,7 +38,7 @@ export const backendGenerationClient = {
     
     
     const response = await axios.post(
-      `${API_BASE}/api/generate/post/auto`,
+      `${API_BASE}/api/v1/generate/post/auto`,
       {
         template: payload.template,
         brand_settings: payload.brandSettings,
@@ -62,7 +62,7 @@ export const backendGenerationClient = {
   }): Promise<Record<string, Post[]>> {
     const { data: { session } } = await supabase.auth.getSession();
     const response = await axios.post(
-      `${API_BASE}/api/generate/variants`,
+      `${API_BASE}/api/v1/generate/variants`,
       {
         template_ids: payload.templateIds,
         brand_settings: payload.brandSettings,
@@ -76,7 +76,7 @@ export const backendGenerationClient = {
   async generateBrandSettings(guideline: string): Promise<BrandSettings> {
     const { data: { session } } = await supabase.auth.getSession();
     const response = await axios.post(
-      `${API_BASE}/api/brand/generate`,
+      `${API_BASE}/api/v1/brand/generate`,
       { guideline_prompt: guideline },
       { headers: { Authorization: `Bearer ${session?.access_token}` } }
     );
@@ -85,7 +85,7 @@ export const backendGenerationClient = {
 
   async generateTemplateFromPrompt(prompt: string): Promise<any> {
     const response = await backendClient.post(
-      `/api/template/generate`,
+      `/api/v1/template/generate`,
       { guideline_prompt: prompt },
     );
     return response.data;

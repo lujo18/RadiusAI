@@ -8,8 +8,25 @@ from typing import Optional
 from datetime import datetime
 
 
+class CreditsUsage(BaseModel):
+    """Breakdown of credits consumption by feature/category."""
+
+    total: int
+    text_generation: int
+
+
+class UsageDict(BaseModel):
+    """Structured usage counters aggregated for a team."""
+
+    credits: CreditsUsage
+    post_count: Optional[int]
+    brand_count: Optional[int]
+    slides_generated: Optional[int]
+
+
 class TeamActivity(BaseModel):
     """Tracks activity within a team for usage metrics (replaces UserActivity after normalization)"""
+
     id: int
     team_id: str  # Team context (primary key)
     usage: Optional[dict] = None  # JSON object with usage metrics
@@ -20,11 +37,13 @@ class TeamActivity(BaseModel):
 
 class UpdateTeamActivityRequest(BaseModel):
     """Update team activity metrics"""
+
     usage: dict  # Usage metrics as JSON
 
 
 class TeamActivitySummary(BaseModel):
     """Summary of team activity"""
+
     team_id: str
     total_posts: int = 0
     total_templates: int = 0

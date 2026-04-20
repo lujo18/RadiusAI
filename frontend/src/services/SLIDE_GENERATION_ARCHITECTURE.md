@@ -298,5 +298,5 @@ const imageUrls = await generateAndUploadSlides(
 ## References
 
 - **Konva Docs**: https://konvajs.org/docs/
-- **OffscreenCanvas**: https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
-- **Web Workers**: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API
+- **OffscreenCanvas**: https://developer.mozilla.org/en-US/docs/Web/api/v1v1/OffscreenCanvas
+- **Web Workers**: https://developer.mozilla.org/en-US/docs/Web/api/v1v1/Web_Workers_API

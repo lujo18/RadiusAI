@@ -163,7 +163,7 @@ export default function DashboardSidebar({
     if (!supportType || !supportMessage.trim()) return;
     setSupportStatus('loading');
     try {
-      const res = await fetch('/api/support', {
+      const res = await fetch('/api/v1/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -391,7 +391,7 @@ export default function DashboardSidebar({
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onLogout}>
+                  <DropdownMenuItem onSelect={onLogout}>
                     <LogOut />
                     Log out
                   </DropdownMenuItem>
@@ -418,8 +418,8 @@ export default function DashboardSidebar({
 function UsageWidget() {
   const { data: creditsData, isLoading } = useGetCreditsUsage();
 
-  const creditsUsed = creditsData?.credits_used ?? 0;
-  const creditsLimit = creditsData?.credits_limit ?? null;
+  const creditsUsed = creditsData?.consumed ?? 0;
+  const creditsLimit = creditsData?.limit ?? null;
 
   return (
     <div>

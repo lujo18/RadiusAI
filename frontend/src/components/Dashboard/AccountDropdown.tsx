@@ -43,7 +43,7 @@ export function AccountDropdown() {
       // best-effort
     } finally {
       logout();
-      router.push('/login');
+      router.push('/');
     }
   };
 
@@ -116,7 +116,7 @@ export function AccountDropdown() {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onSelect={() => void handleLogout()}>
           <LogOut className="mr-2 h-4 w-4" />
           Log out
         </DropdownMenuItem>

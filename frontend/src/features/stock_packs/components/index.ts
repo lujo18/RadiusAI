@@ -1,1 +1,1 @@
-export { default as StockPacksDialog } from "./StockPacksDialog";
+export { StockPackDialog } from "./StockPackDialog";

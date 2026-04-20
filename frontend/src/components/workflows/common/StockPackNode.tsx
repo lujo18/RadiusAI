@@ -3,7 +3,7 @@
 import React, { memo, useState } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
 import { useStockPacks } from "@/features/stock_packs/hook";
-import { StockPacksDialog } from "@/features/stock_packs/components";
+import { StockPackDialog } from "@/features/stock_packs/components";
 import { Badge } from "@/components/ui/badge";
 import { Images, Loader2 } from "lucide-react";
 import {
@@ -73,11 +73,16 @@ const StockPackNodeComponent: React.FC<StockPackNodeProps> = ({ data }) => {
           </div>
         ) : (
           <div className="space-y-3">
-            <StockPacksDialog setSelectedPack={handlePackSelect}>
+            <StockPackDialog 
+              open={dialogOpen}
+              onOpenChange={setDialogOpen}
+              setSelectedPack={handlePackSelect}
+            >
               <button className="w-full px-3 py-2 rounded-md border border-primary bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors">
                 {selectedPack ? "Change Pack" : "Select a Pack"}
               </button>
-            </StockPacksDialog>
+            </StockPackDialog>
+            
 
             {selectedPack && (
               <>

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from '@/features/stripe/plans/hooks';
-import { productRateLimitsApi } from '@/features/stripe/plans/surface';
-import { useStripeProducts } from '@/features/stripe/hooksProducts';
+import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from '@/features/depreciated-stripe/plans/hooks';
+import { productRateLimitsApi } from '@/features/depreciated-stripe/plans/surface';
+import { useProducts } from '@/features/billing/products/hooks';
 import {
   Card,
   CardContent,
@@ -53,7 +53,7 @@ type Plan = {
 
 export default function PricingPage() {
   const { data: plans = [], isLoading } = usePlans();
-  const { data: stripeProducts = [], isLoading: productsLoading } = useStripeProducts();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
   const createMutation = useCreatePlan();
   const updateMutation = useUpdatePlan();
   const deleteMutation = useDeletePlan();
@@ -201,7 +201,7 @@ export default function PricingPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/50">
-                    <TableHead>Stripe Product ID</TableHead>
+                    <TableHead>Product External ID</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Max Brands</TableHead>
                     <TableHead>Max Posts/Month</TableHead>
@@ -211,15 +211,15 @@ export default function PricingPage() {
                 </TableHeader>
                 <TableBody>
                   {plans.map((plan: any) => {
-                    const stripeProduct = stripeProducts.find((p: any) => p.id === plan.plan_id);
+                    const product = (products || []).find((p: any) => p.id === plan.plan_id);
                     return (
                       <TableRow key={plan.plan_id} className="border-border/50">
                         <TableCell className="font-mono text-sm">
                           <div className="flex flex-col gap-1">
                             <span>{plan.plan_id}</span>
-                            {stripeProduct && (
+                            {product && (
                               <span className="text-xs text-foreground/60">
-                                {stripeProduct.name}
+                                {product.name}
                               </span>
                             )}
                           </div>
@@ -281,20 +281,20 @@ export default function PricingPage() {
               <div>
                 <p></p>
 
-                <Label htmlFor="stripe-product">Stripe Product *</Label>
+                <Label htmlFor="product">Product *</Label>
                 <Select value={formData.plan_id} onValueChange={(value) => {
-                  const selectedProduct = stripeProducts.find((p: any) => p.id === value);
+                  const selectedProduct = (products || []).find((p: any) => p.id === value);
                   setFormData({ 
                     ...formData, 
                     plan_id: value,
                     name: selectedProduct?.name || formData.name
                   });
                 }}>
-                  <SelectTrigger id="stripe-product">
-                    <SelectValue placeholder={productsLoading ? "Loading products..." : "Select a Stripe product"} />
+                  <SelectTrigger id="product">
+                    <SelectValue placeholder={productsLoading ? "Loading products..." : "Select a product"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {stripeProducts.map((product: any) => (
+                    {products.map((product: any) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.name} ({product.id})
                       </SelectItem>
@@ -302,7 +302,7 @@ export default function PricingPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-foreground/50 mt-1">
-                  Products are synced from your Stripe account
+                  Products are synced from the billing provider
                 </p>
               </div>
               <div>

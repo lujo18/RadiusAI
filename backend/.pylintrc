@@ -1,0 +1,22 @@
+[MASTER]
+# Ensure pylint can import package modules when run from the backend directory
+init-hook='import sys; sys.path.insert(0, ".")'
+
+[MESSAGES CONTROL]
+# Temporarily suppress a subset of stylistic and refactor warnings to
+# prioritize import resolution and runtime issues while we iterate.
+disable=
+    C0114,  # missing-module-docstring
+    C0116,  # missing-function-docstring
+    C0303,  # trailing-whitespace
+    C0304,  # missing-final-newline
+    C0301,  # line-too-long
+    W0511,  # fixme
+    R0903,  # too-few-public-methods
+    R0914,  # too-many-locals
+    R0911,  # too-many-return-statements
+    R0913,  # too-many-arguments
+
+[FORMAT]
+# Use a conservative max line length (black handles wrapping)
+max-line-length=100

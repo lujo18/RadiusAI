@@ -805,6 +805,36 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          description: string | null
+          external_id: string
+          id: string
+          is_active: boolean
+          order_index: number
+          price: number | null
+          title: string | null
+        }
+        Insert: {
+          description?: string | null
+          external_id: string
+          id?: string
+          is_active?: boolean
+          order_index: number
+          price?: number | null
+          title?: string | null
+        }
+        Update: {
+          description?: string | null
+          external_id?: string
+          id?: string
+          is_active?: boolean
+          order_index?: number
+          price?: number | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       stock_packs: {
         Row: {
           bucket_directory: string | null
@@ -812,6 +842,7 @@ export type Database = {
           description: string | null
           id: number
           image_count: number | null
+          is_active: boolean | null
           name: string | null
           tags: string[] | null
           thumbnail_urls: string[] | null
@@ -822,6 +853,7 @@ export type Database = {
           description?: string | null
           id?: number
           image_count?: number | null
+          is_active?: boolean | null
           name?: string | null
           tags?: string[] | null
           thumbnail_urls?: string[] | null
@@ -832,6 +864,7 @@ export type Database = {
           description?: string | null
           id?: number
           image_count?: number | null
+          is_active?: boolean | null
           name?: string | null
           tags?: string[] | null
           thumbnail_urls?: string[] | null

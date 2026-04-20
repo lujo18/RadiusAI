@@ -2,6 +2,7 @@ import React from "react";
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store';
 import { supabase } from '@/lib/supabase/client';
+import useSubscription from "@/features/subscription/hooks";
 
 interface SubscriptionStatus {
   isActive: boolean;
@@ -23,70 +24,11 @@ export function useSubscriptionGuard(): SubscriptionStatus {
     status: null,
   });
 
+  const {data: subscription, error} = useSubscription();
+
   useEffect(() => {
-    checkSubscription();
-  }, [user?.id]);
-
-  const checkSubscription = async () => {
-    // Development mode bypass - set NEXT_PUBLIC_ENABLE_PAYWALL=false to disable paywall
-    const paywallEnabled = process.env.NEXT_PUBLIC_ENABLE_PAYWALL !== 'false';
-    
-    if (!paywallEnabled) {
-      // In dev mode with paywall disabled, act as if user has active subscription
-      setSubscriptionStatus({
-        isActive: true,
-        isLoading: false,
-        plan: 'development',
-        status: 'active',
-      });
-      return;
-    }
-
-    // Production: Check actual subscription
-    if (!user?.id) {
-      setSubscriptionStatus({
-        isActive: false,
-        isLoading: false,
-        plan: null,
-        status: null,
-      });
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('subscription_status, subscription_plan')
-        .eq('id', user.id)
-        .single();
-
-      if (!error && data) {
-        const userData = data as any;
-        const isActive = userData.subscription_status === 'active' || userData.subscription_status === 'trialing';
-        setSubscriptionStatus({
-          isActive,
-          isLoading: false,
-          plan: userData.subscription_plan,
-          status: userData.subscription_status,
-        });
-      } else {
-        setSubscriptionStatus({
-          isActive: false,
-          isLoading: false,
-          plan: null,
-          status: null,
-        });
-      }
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      setSubscriptionStatus({
-        isActive: false,
-        isLoading: false,
-        plan: null,
-        status: null,
-      });
-    }
-  };
+    setSubscriptionStatus({isActive: subscription?.status === 'active' || subscription?.status === 'trialing', isLoading: false, plan: subscription?.product.id || null, status: subscription?.status || null});
+  }, [subscription, error]);
 
   return subscriptionStatus;
 }

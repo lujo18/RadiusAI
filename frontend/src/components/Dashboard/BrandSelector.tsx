@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useGetBrandUsage } from "@/features/usage/hooks";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card";
+import { Skeleton } from "../ui/skeleton";
 
 interface BrandSelectorProps {
   brands?: any[];
@@ -44,7 +45,7 @@ export default function BrandSelector({
 }: BrandSelectorProps) {
   const { data: brandUsage, isLoading: brandUsageLoading } = useGetBrandUsage();
 
-  if (brandUsageLoading) return;
+  
 
   const CreateButton = () => {
     return (

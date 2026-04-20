@@ -10,9 +10,25 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+  // Enforce remote-only Supabase in middleware: require service role key and
+  // disallow localhost/emulator URLs.
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('[Middleware] SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required in server environment');
+    return response;
+  }
+
+  const lowerUrl = supabaseUrl.toLowerCase();
+  if (lowerUrl.includes('localhost') || lowerUrl.includes('127.0.0.1') || lowerUrl.includes('supabase.local')) {
+    console.error('[Middleware] Local Supabase URLs are not permitted in this environment');
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
+    supabaseUrl,
+    supabaseServiceKey,
     {
       cookies: {
         get(name: string) {

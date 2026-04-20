@@ -1,48 +1,47 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function GET() {
   try {
-    // Fetch all active prices with their products
-    const prices = await stripe.prices.list({
-      active: true,
-      expand: ['data.product'],
-    });
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
 
-    // Transform into a more usable format
-    const priceData = prices.data.map((price) => {
-      const product = price.product as Stripe.Product;
-      
-      return {
-        id: price.id,
-        productId: product.id,
-        productName: product.name,
-        description: product.description,
-        amount: price.unit_amount ? price.unit_amount / 100 : 0, // Convert cents to dollars
-        currency: price.currency,
-        interval: price.recurring?.interval,
-        metadata: product.metadata,
-      };
-    });
+    const resp = await fetch(`${apiBase}/api/v1/billing/benefits/plans`);
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => null);
+      console.error('Backend plans fetch failed:', resp.status, text);
+      return NextResponse.json({ error: 'Failed to fetch plans' }, { status: resp.status });
+    }
 
-    // Group by product name to identify plans
+    const data: any = await resp.json();
+
+    // Normalize into the older shape expected by the frontend
+    const priceData: any[] = [];
+    const products = data?.products || [];
+    for (const prod of products) {
+      const prices = prod.prices || [];
+      for (const price of prices) {
+        priceData.push({
+          id: price.id,
+          productId: prod.id,
+          productName: prod.name,
+          description: prod.description,
+          amount: price.amount ? price.amount / 100 : 0,
+          currency: price.currency,
+          interval: price.interval || prod.billing_period || null,
+          metadata: price.metadata || prod.metadata || {},
+        });
+      }
+    }
+
+    // Keep the old convenience plan mapping for compatibility
     const plans = {
-      starter: priceData.find(p => p.productName.toLowerCase().includes('starter')),
-      growth: priceData.find(p => p.productName.toLowerCase().includes('growth')),
-      unlimited: priceData.find(p => p.productName.toLowerCase().includes('unlimited')),
+      starter: priceData.find((p) => p.productName?.toLowerCase().includes('starter')),
+      growth: priceData.find((p) => p.productName?.toLowerCase().includes('growth')),
+      unlimited: priceData.find((p) => p.productName?.toLowerCase().includes('unlimited')),
     };
 
-    return NextResponse.json({
-      prices: priceData,
-      plans,
-    });
+    return NextResponse.json({ prices: priceData, plans });
   } catch (error) {
-    console.error('Error fetching Stripe prices:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch prices' },
-      { status: 500 }
-    );
+    console.error('Error fetching plans proxy:', error);
+    return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
   }
 }

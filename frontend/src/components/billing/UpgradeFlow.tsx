@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Check, Zap, ArrowRight, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { supabase } from '@/lib/supabase/client';
+import { useParams } from 'next/navigation';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface UpgradePlan {
@@ -44,15 +46,20 @@ export default function UpgradeFlow({ isOpen, onClose, trigger = 'manual', messa
       setError(null);
       
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const { supabase } = await import('@/lib/supabase/client');
       const { data: { session } } = await supabase.auth.getSession();
+      // Resolve team context: prefer route param, else find user's owned/membership teams
+      const params = useParams();
+      const routeTeamId = (params as any)?.teamId as string | undefined;
+
+      let teamId: string | null = routeTeamId ?? null;
       
       if (!session) {
         setError('Not authenticated');
         return;
       }
 
-      const response = await fetch(`${apiBase}/api/billing/available-upgrades`, {
+      const url = teamId ? `${apiBase}/api/v1/billing/available-upgrades?team_id=${teamId}` : `${apiBase}/api/v1/billing/available-upgrades`;
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },
@@ -80,23 +87,61 @@ export default function UpgradeFlow({ isOpen, onClose, trigger = 'manual', messa
 
     try {
       const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-      const { supabase } = await import('@/lib/supabase/client');
       const { data: { session } } = await supabase.auth.getSession();
+      const params = useParams();
+      const routeTeamId = (params as any)?.teamId as string | undefined;
+
+      let teamId: string | null = routeTeamId ?? null;
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!teamId && currentUser) {
+        const { data: ownedTeams } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('owner_id', currentUser.id)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (ownedTeams && ownedTeams.length > 0) {
+          teamId = ownedTeams[0].id as string;
+        }
+
+        if (!teamId) {
+          const { data: memberTeams } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('user_id', currentUser.id)
+            .in('status', ['active', 'pending']);
+
+          if (memberTeams && memberTeams.length > 0) {
+            const teamIds = memberTeams.map((m: any) => m.team_id);
+            const { data: teams } = await supabase
+              .from('teams')
+              .select('id')
+              .in('id', teamIds)
+              .is('deleted_at', null)
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            if (teams && teams.length > 0) teamId = teams[0].id as string;
+          }
+        }
+      }
       
       if (!session) {
         throw new Error('Not authenticated');
       }
 
-      const response = await fetch(`${apiBase}/api/billing/upgrade`, {
+      const body: any = { newPriceId: priceId, newProductId: productId };
+      if (teamId) body.team_id = teamId;
+
+      const response = await fetch(`${apiBase}/api/v1/billing/upgrade`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          newPriceId: priceId,
-          newProductId: productId,
-        }),
+        body: JSON.stringify(body),
       });
 
       const result = (await response.json()) as { detail?: string; message?: string };

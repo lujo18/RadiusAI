@@ -1,1 +1,1 @@
-export * from '@/features/stripe';
+export * from '@/features/depreciated-stripe';

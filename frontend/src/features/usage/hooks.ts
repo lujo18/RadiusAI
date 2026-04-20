@@ -16,8 +16,8 @@ export const useUsage = () => {
 export const useConsume = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ productId, amount }: { productId: string; amount?: number }) => {
-      const res = await usageApi.consume(productId, amount ?? 1);
+    mutationFn: async ({ teamId, productId, amount }: { teamId: string; productId: string; amount?: number }) => {
+      const res = await usageApi.consume(teamId, productId, amount ?? 1);
       return res;
     },
     onSuccess: () => {
@@ -132,7 +132,7 @@ export const useTrackTemplate = () => {
 export const useGetCreditsUsage = () => {
   return useQuery({
     queryKey: ['usage', 'credits'],
-    queryFn: async () => {
+    queryFn: async (): Promise<MeterResponse> => {
       const res = await usageApi.getCreditsUsage();
       return res ?? { credits_used: 0, credits_limit: null };
     },

@@ -30,7 +30,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized - redirect to login
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      window.location.href = '/';
     }
     return Promise.reject(error);
   }
@@ -41,10 +41,10 @@ export default api;
 // API service methods
 export const authService = {
   login: (email: string, password: string) =>
-    api.post('/api/auth/login', { email, password }),
+    api.post('/api/v1/auth/login', { email, password }),
   
   signup: (name: string, email: string, password: string) =>
-    api.post('/api/auth/signup', { name, email, password }),
+    api.post('/api/v1/auth/signup', { name, email, password }),
   
   logout: () => {
     localStorage.removeItem('token');
@@ -54,17 +54,17 @@ export const authService = {
 
 export const contentService = {
   generateWeek: (styleGuide: string) =>
-    api.post('/api/content/generate', { styleGuide }),
+    api.post('/api/v1/content/generate', { styleGuide }),
   
   getScheduledPosts: () =>
-    api.get('/api/content/scheduled'),
+    api.get('/api/v1/content/scheduled'),
   
   getAnalytics: (timeframe: string = 'week') =>
-    api.get(`/api/analytics?timeframe=${timeframe}`),
+    api.get(`/api/v1/analytics?timeframe=${timeframe}`),
   
   updateStyleGuide: (styleGuide: string) =>
-    api.put('/api/style-guide', { styleGuide }),
+    api.put('/api/v1/style-guide', { styleGuide }),
   
   getStyleGuide: () =>
-    api.get('/api/style-guide'),
+    api.get('/api/v1/style-guide'),
 };

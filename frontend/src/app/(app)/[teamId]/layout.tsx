@@ -62,7 +62,7 @@ export default function TeamLayout({
   // Error states
   if (!user) {
     // User not authenticated - auth middleware should have caught this
-    router.push('/auth/login')
+    router.push('/')
     return null
   }
 

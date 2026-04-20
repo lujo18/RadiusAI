@@ -5,6 +5,7 @@ import { Brand } from "../TemplateCreator/contentTypes";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 import { Plus } from "lucide-react";
 import { DashboardAnalytics } from "@/features/analytics/components/blocks/DashboardAnalytics";
 import BrandSetupWizard from "../Profiles/BrandSetupWizard";
@@ -17,6 +18,21 @@ type OverviewPageType = {
 export const OverviewPageComponent = ({ brandId }: OverviewPageType) => {
   const { data: brands, isLoading, error } = useBrands();
   const [showWizard, setShowWizard] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col p-6 gap-4">
+        <Skeleton className="h-10 w-32" />
+        <div className="grid grid-cols-3 gap-4">
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+          <Skeleton className="h-32 rounded-lg" />
+        </div>
+        <Skeleton className="h-40 rounded-lg" />
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="flex flex-col p-6 gap-4">
