@@ -71,6 +71,7 @@ StrEnum
 propcache
 passlib
 email-validator
+polar_sdk
 
 # --- Development & Testing ---
 pytest
