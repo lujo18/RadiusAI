@@ -4,12 +4,18 @@ import React from "react";
 import { useEffect, useState } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { FiCheck, FiArrowRight, FiPlay, FiStar } from "react-icons/fi";
+import { FiCheck, FiStar } from "react-icons/fi";
 import { FaGoogle } from "react-icons/fa";
-import * as LucideIcons from "lucide-react";
+import {
+  BarChart2,
+  Cpu,
+  Palette,
+  Plus,
+  ShieldCheck,
+  Target,
+  Zap,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { landingContent, DynamicMetrics } from "@/content/landing";
 import BeamsBackground from "@/components/kokonutui/beams-background";
 import { useAuth } from "@/lib/api/hooks/useAuth";
@@ -18,7 +24,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { signInWithGoogle } from "@/lib/supabase/auth";
 import { Badge } from "@/components/ui/badge";
 import { HeroVideoDialog } from "@/components/ui/hero-video-dialog";
-import { LightRays } from "@/components/ui/light-rays";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "motion/react";
@@ -41,7 +46,6 @@ function usePrefersReducedMotion() {
   return prefersReduced;
 }
 import { PricingCards } from "@/components/billing/PricingCards";
-import { TextAnimate } from "@/components/ui/text-animate";
 
 interface Testimonial {
   id: string;
@@ -52,6 +56,15 @@ interface Testimonial {
   avatar_url: string | null;
   rating: number;
 }
+
+const benefitIconMap = {
+  Cpu,
+  BarChart2,
+  Palette,
+  Zap,
+  Target,
+  ShieldCheck,
+};
 
 export default function LandingPage() {
   const router = useRouter();
@@ -275,22 +288,21 @@ export default function LandingPage() {
           </motion.div>
 
           {/* Headline (visual) */}
-          <TextAnimate
-            as="h2"
-            by="word"
-            animation="blurInUp"
-            className="text-5xl md:text-7xl font-bold mb-8 leading-[1.1] tracking-tight text-foreground"
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            className="mb-15"
           >
             {landingContent.hero.headline}
-          </TextAnimate>
+          </motion.h1>
 
           {/* Subheadline */}
           <motion.h3 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-            className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed"
-            style={motionHint}
+            className="mb-20"
           >
             {landingContent.hero.subheadline}
           </motion.h3>
@@ -318,14 +330,6 @@ export default function LandingPage() {
                   <FaGoogle className="mr-3 group-hover:rotate-12 transition-transform" />
                 )}
                 {isSigningIn ? 'Initialising...' : landingContent.hero.ctaPrimary}
-              </Button>
-
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto text-lg px-10 py-7 rounded-full border-border hover:bg-muted transition-all"
-              >
-                {landingContent.hero.ctaSecondary || 'Watch Demo'}
               </Button>
             </div>
             
@@ -405,7 +409,6 @@ export default function LandingPage() {
             )}
           </AnimatePresence>
         </div>
-        <LightRays />
         <DotPattern
           glow={true}
           className={cn(
@@ -440,7 +443,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {landingContent.benefits.items.map((benefit, i) => {
-              const IconComp = (LucideIcons as any)[benefit.icon];
+              const IconComp = benefitIconMap[benefit.icon as keyof typeof benefitIconMap];
               return (
                 <motion.div
                   key={i}
@@ -530,7 +533,6 @@ export default function LandingPage() {
           TESTIMONIALS
           ========================================== */}
       <section className="py-24 px-6 relative bg-card/30">
-        <LightRays className="opacity-10" />
         <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -674,7 +676,7 @@ export default function LandingPage() {
                 <summary className="text-lg font-bold text-foreground flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
                   {item.question}
                   <div className="bg-primary/10 p-2 rounded-full text-primary group-open:rotate-45 transition-transform duration-300">
-                    <LucideIcons.Plus className="w-5 h-5" />
+                    <Plus className="w-5 h-5" />
                   </div>
                 </summary>
                 <div className="mt-6 text-muted-foreground leading-relaxed pl-2 border-l-2 border-primary/20">

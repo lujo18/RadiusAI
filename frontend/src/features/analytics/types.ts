@@ -25,19 +25,19 @@ export const analyticChartCategories: {
     key: "shares",
     type: "unit",
   },
-  {
-    title: "Saves",
-    key: "saves",
-    type: "unit",
-  },
-  {
-    title: "Comments",
-    key: "comments",
-    type: "unit",
-  },
-  {
-    title: "Engagement Rate",
-    key: "engagement_rate",
-    type: "unit",
-  },
+  // {
+  //   title: "Saves",
+  //   key: "saves",
+  //   type: "unit",
+  // },
+  // {
+  //   title: "Comments",
+  //   key: "comments",
+  //   type: "unit",
+  // },
+  // {
+  //   title: "Engagement Rate",
+  //   key: "engagement_rate",
+  //   type: "unit",
+  // },
 ];

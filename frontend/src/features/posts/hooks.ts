@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import postSurface from '@/features/posts/surface';
 import { Database } from '@/types/database';
+import type { PostWithAnalytics } from '@/types/types';
 
 // Query Keys
 export const postKeys = {
@@ -69,7 +70,7 @@ export function usePost(postId: string) {
 // ==================== POSTS + ANALYTICS ====================
 
 export function usePostsWithAnalytics(brandId?: string | null) {
-  return useQuery({
+  return useQuery<PostWithAnalytics[]>({
     queryKey: ['postsWithAnalytics', 'brand', brandId ?? null] as const,
     queryFn: async () => {
       if (!brandId) return [];
@@ -82,7 +83,7 @@ export function usePostsWithAnalytics(brandId?: string | null) {
 }
 
 export function usePostWithAnalytics(postId?: string | null) {
-  return useQuery({
+  return useQuery<PostWithAnalytics | null>({
     queryKey: ['postsWithAnalytics', 'post', postId ?? null] as const,
     queryFn: async () => {
       if (!postId) return null;

@@ -37,8 +37,8 @@
   --sidebar-accent-foreground: oklch(0 0 0);
   --sidebar-border: oklch(0.94 0 0);
   --sidebar-ring: oklch(0 0 0);
-  --font-sans: Geist, sans-serif;
-  --font-serif: Georgia, serif;
+  --font-sans: Syne, sans-serif;
+  --font-serif: Fraunces, serif;
   --font-mono: Geist Mono, monospace;
   --radius: 0.5rem;
   --shadow-x: 0px;
@@ -97,8 +97,8 @@
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(0.32 0 0);
   --sidebar-ring: oklch(0.72 0 0);
-  --font-sans: Geist, sans-serif;
-  --font-serif: Georgia, serif;
+  --font-sans: Syne, sans-serif;
+  --font-serif: Fraunces, serif;
   --font-mono: Geist Mono, monospace;
   --radius: 0.5rem;
   --shadow-x: 0px;
@@ -156,6 +156,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+
+
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
@@ -186,6 +188,8 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+
 
   html {
     scrollbar-width: thin; /* 'auto' | 'thin' | 'none' */
@@ -223,24 +227,24 @@ body {
 
   /* Headings */
   h1 {
-    @apply scroll-m-20 text-4xl font-extrabold tracking-tight text-balance;
+    @apply font-serif scroll-m-20 text-7xl font-semibold text-balance tracking-wide italic;
   }
 
   h2 {
-    @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;
+    @apply font-serif scroll-m-20 border-b pb-2 text-4xl tracking-wide first:mt-0;
   }
 
   h3 {
-    @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+    @apply font-serif scroll-m-20 text-2xl tracking-wide;
   }
 
   h4 {
-    @apply scroll-m-20 text-xl font-semibold tracking-tight;
+    @apply font-serif scroll-m-20 text-xl tracking-wide;
   }
 
   /* Paragraphs */
   p {
-    @apply leading-7;
+    @apply font-sans leading-7;
   }
 
   p:not(:first-child) {

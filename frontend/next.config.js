@@ -18,6 +18,11 @@ const nextConfig = {
         hostname: "pub-a6c7227464b441469db7279bf1d9551d.r2.dev",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "startup-template-sage.vercel.app",
+        pathname: "/**",
+      },
     ],
   },
   async rewrites() {

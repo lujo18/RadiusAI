@@ -4,6 +4,7 @@ import React from "react"
 import { analyticChartCategories, type AnalyticTimeframes, type AnalyticSections } from "../../types"
 import { cn } from "@/lib/utils"
 import { useAnalytics } from "../../hooks"
+import MiniChart from "../MiniChart"
 
 export const DashboardAnalytics = ({brandId, postId} : {brandId?: string | null, postId?: string | null}) => {
   const [selectedTimeframe, setSelectedTimeframe] = React.useState<AnalyticTimeframes>("7d")
@@ -37,14 +38,14 @@ export const DashboardAnalytics = ({brandId, postId} : {brandId?: string | null,
         </div> */}
         <dl
           className={cn(
-            "mt-5 grid grid-cols-1 gap-14 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3",
+            "mt-5 grid grid-cols-1 gap-8 sm:grid-cols-1 md:grid-cols-3 xl:grid-cols-3",
           )}
         >
           {analyticChartCategories
             .filter((category) => selectedCategories.includes(category.key))
             .map((category) => {
               return (
-                <ChartCard
+                <MiniChart
                   key={category.key}
                   title={category.title}
                   cKey={category.key}

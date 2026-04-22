@@ -2,7 +2,6 @@
 
 import { ReactNode, useState } from "react";
 import { ArrowLeft, Check, ImageIcon, Loader2, Package } from "lucide-react";
-import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,19 +10,25 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogDescription,
+  DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useStockPackImages, useStockPacks } from "../hook";
+import {
+  useStockPackImages,
+  useStockPacks,
+  useStockPackThumbnails,
+} from "../hook";
 import { getImageFromKey } from "../util";
-import type { StockPack } from "../surface";
+import type { StockPack, StockPackThumbnail } from "../surface";
 
 interface StockPackDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  setSelectedPack?: (packName: string) => void;
-  children: ReactNode
+  setSelectedPack?: (bucketDirectory: string) => void;
+  children: ReactNode;
 }
 
 export function StockPackDialog({
@@ -38,7 +43,10 @@ export function StockPackDialog({
 
   const { data: packs, isLoading: packsLoading } = useStockPacks();
   const { data: packImages, isLoading: imagesLoading } = useStockPackImages(
-    activePack?.bucket_directory ?? null
+    activePack?.bucket_directory ?? null,
+  );
+  const { data: packThumbnails } = useStockPackThumbnails(
+    packs?.map((pack) => String(pack.id)) || [],
   );
 
   const handlePackClick = (pack: StockPack) => {
@@ -50,8 +58,8 @@ export function StockPackDialog({
 
   const handleUsePack = () => {
     const pack = packs?.find((p) => p.id === selectedPackId);
-    if (pack && setSelectedPack && pack.name) {
-      setSelectedPack(pack.name);
+    if (pack?.bucket_directory && setSelectedPack) {
+      setSelectedPack(pack.bucket_directory);
       onOpenChange(false);
     }
   };
@@ -70,13 +78,14 @@ export function StockPackDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
-        className="sm:max-w-2xl max-h-[80vh] flex flex-col gap-0 p-0 overflow-hidden"
+        className="sm:max-w-3xl max-h-[90vh] flex flex-col gap-0 p-0 overflow-hidden"
         showCloseButton
       >
         {/* Header */}
         <DialogHeader className="px-4 pt-4 pb-3 border-b shrink-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2">
             {activePack && (
               <Button
                 variant="ghost"
@@ -88,22 +97,24 @@ export function StockPackDialog({
                 <ArrowLeft className="size-4" />
               </Button>
             )}
-            <DialogTitle>
-              {activePack ? activePack.name : "Stock Packs"}
-            </DialogTitle>
-            {activePack && (
-              <Badge variant="secondary" className="ml-auto text-xs">
-                {activePack.image_count} images
-              </Badge>
-            )}
+            <div className="flex flex-col">
+              <DialogTitle className="text-lg flex items-center">
+                {activePack ? activePack.name : "Stock Packs"}
+                {activePack && (
+                  <Badge variant="outline" className="ml-2 text-xs font-sans">
+                    {activePack.image_count} images
+                  </Badge>
+                )}
+              </DialogTitle>
+              {activePack?.description && (
+                <DialogDescription className="text-muted-foreground text-xs p-0 m-0">
+                  {activePack.description}
+                </DialogDescription>
+              )}
+            </div>
           </div>
-          {activePack?.description && (
-            <p className="text-muted-foreground text-xs pl-9">
-              {activePack.description}
-            </p>
-          )}
         </DialogHeader>
-
+        
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto overscroll-contain p-4">
           {activePack ? (
@@ -117,6 +128,7 @@ export function StockPackDialog({
               packs={packs ?? []}
               selectable={selectable}
               selectedPackId={selectedPackId}
+              packThumbnails={packThumbnails || []}
               onPackClick={handlePackClick}
             />
           )}
@@ -124,17 +136,11 @@ export function StockPackDialog({
 
         {/* Footer — only shown in selectable mode */}
         {selectable && (
-          <DialogFooter className="shrink-0">
-            <Button
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-            >
+          <DialogFooter className=" rounded-xl bottom-0 left-0 right-0 m-1">
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
-            <Button
-              disabled={!selectedPackId}
-              onClick={handleUsePack}
-            >
+            <Button disabled={!selectedPackId} onClick={handleUsePack}>
               Use Pack
             </Button>
           </DialogFooter>
@@ -151,6 +157,7 @@ interface PackListViewProps {
   packs: StockPack[];
   selectable: boolean;
   selectedPackId: number | null;
+  packThumbnails: StockPackThumbnail[];
   onPackClick: (pack: StockPack) => void;
 }
 
@@ -159,6 +166,7 @@ function PackListView({
   packs,
   selectable,
   selectedPackId,
+  packThumbnails,
   onPackClick,
 }: PackListViewProps) {
   if (isLoading) {
@@ -195,12 +203,20 @@ function PackListView({
                 ? isSelected
                   ? "border-primary ring-1 ring-primary"
                   : "hover:border-border/80 hover:bg-card/80"
-                : "hover:border-border/80 hover:bg-card/80"
+                : "hover:border-border/80 hover:bg-card/80",
             )}
           >
             {/* Thumbnail area */}
             <div className="aspect-video w-full bg-muted flex items-center justify-center">
-              <ImageIcon className="size-8 text-muted-foreground/40" />
+              {packThumbnails ? (
+                <img
+                  src={packThumbnails?.filter(
+                    (thumbnail) => thumbnail.pack_id === String(pack.id),
+                  )[0]?.images[0]}
+                />
+              ) : (
+                <ImageIcon className="size-8 text-muted-foreground/40" />
+              )}
             </div>
 
             {/* Info */}
@@ -208,6 +224,7 @@ function PackListView({
               <p className="font-medium text-sm leading-tight truncate">
                 {pack.name}
               </p>
+              <p>{JSON.stringify(packThumbnails)} </p>
               {pack.description && (
                 <p className="text-muted-foreground text-xs mt-0.5 line-clamp-2">
                   {pack.description}
@@ -265,12 +282,11 @@ function PackImagesView({ isLoading, images }: PackImagesViewProps) {
           key={image.key}
           className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border"
         >
-          <Image
+          <img
             src={getImageFromKey(image.key)}
             alt="Stock image"
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 50vw, 33vw"
+            className="h-full w-full object-cover"
+            loading="lazy"
           />
         </div>
       ))}

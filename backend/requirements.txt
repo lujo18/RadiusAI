@@ -13,6 +13,8 @@ postgrest
 realtime
 storage3
 supafunc
+sqlalchemy
+asyncpg
 
 # --- AI & Generative Tools ---
 google-generativeai

@@ -3,9 +3,11 @@ Stock Packs Photo Retrieval - feature shim.
 Delegates to the shared manifest for image selection.
 """
 
+import random
+
 from app.shared.utils.stockPacks.manifest import getStockImage
 
-standard_layout = ["ac", "as"]
+standard_layout = [random.choice(["ac","as"]), "as"]
 
 
 def queryStockPackUrls(stock_pack_id: str, slides: int):
@@ -18,7 +20,7 @@ def queryStockPackUrls(stock_pack_id: str, slides: int):
         i += 1
 
     while i < slides:
-        photos.append(getStockImage(stock_pack_id, "ss"))
+        photos.append(getStockImage(stock_pack_id, random.choice(["as", "ps", "ss"])))
         i += 1
 
     return photos

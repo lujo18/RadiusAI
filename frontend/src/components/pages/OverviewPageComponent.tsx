@@ -10,6 +10,8 @@ import { Plus } from "lucide-react";
 import { DashboardAnalytics } from "@/features/analytics/components/blocks/DashboardAnalytics";
 import BrandSetupWizard from "../Profiles/BrandSetupWizard";
 import { useState } from "react";
+import { usePostsWithAnalytics } from "@/features/posts";
+import { PostPreview } from "@/features/posts/components/PostPreview";
 
 type OverviewPageType = {
   brandId: string | null;
@@ -18,6 +20,11 @@ type OverviewPageType = {
 export const OverviewPageComponent = ({ brandId }: OverviewPageType) => {
   const { data: brands, isLoading, error } = useBrands();
   const [showWizard, setShowWizard] = useState(false);
+  const safeBrandId = brandId ?? "";
+
+  const { data: posts } = usePostsWithAnalytics(safeBrandId);
+
+  const recentPosts = Array.from(posts ?? []).slice(0, 9);
 
   if (isLoading) {
     return (
@@ -50,6 +57,14 @@ export const OverviewPageComponent = ({ brandId }: OverviewPageType) => {
           </Card>
         )}
         {/* <Stats10 /> */}
+
+        <div className="flex w-full flex-nowrap gap-3 overflow-x-auto pb-2">
+          {recentPosts.map((post) => (
+            <div key={post.id} className="w-[160px] shrink-0 sm:w-[250px] md:w-[190px]">
+              <PostPreview post={post} />
+            </div>
+          ))}
+        </div>
 
         <DashboardAnalytics brandId={brandId} />
       </div>

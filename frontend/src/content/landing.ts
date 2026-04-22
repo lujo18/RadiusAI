@@ -10,14 +10,14 @@ export const landingContent = {
   // ==========================================
   hero: {
     badge: "Built for High-Signal Founders",
-    headline: "Stop Posting for Likes. Engineering for Customers Is Now Autonomic.",
-    subheadline: "Radius is the #1 Social Intelligence Engine that bypasses generic AI noise. Transform passive viewers into loyal customers with TikTok slideshow automation and Instagram carousel generation designed for growth.",
+    headline: "Scale your socials while you sleep. Without cutting corners on quality.",
+    subheadline: "Go beyond generic AI posts. Radius creates high-converting TikTok slideshows and Instagram carousels that actually turn followers into customers.",
     ctaPrimary: "Initialize Your Growth Engine",
     ctaSecondary: "Watch Architecture Demo",
     videoUrl: null, // Add demo video URL when ready
     features: [
-      "Expert-tuned conversion weights",
-      "Autonomous A/B optimization",
+      "High performing templates",
+      "In depth analytics",
       "Founder-led engineering"
     ]
   },
