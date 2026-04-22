@@ -36,12 +36,12 @@ async def lifespan(app: FastAPI):
         from app.core.config import settings
 
         if settings.USE_POLAR:
-            from app.worker.polar_tasks import add_polar_jobs_to_scheduler
+            # from app.worker.polar_tasks import add_polar_jobs_to_scheduler
 
-            _scheduler = AsyncIOScheduler()
-            add_polar_jobs_to_scheduler(_scheduler)
-            _scheduler.start()
-            logger.info("✓ Polar scheduled tasks initialized")
+            # _scheduler = AsyncIOScheduler()
+            # # add_polar_jobs_to_scheduler(_scheduler)
+            # _scheduler.start()
+            logger.info("✓ Polar scheduled tasks (skipped)")
 
         # TODO: Initialize background workers here
         # from app.features.analytics.workers import start_analytics_worker
