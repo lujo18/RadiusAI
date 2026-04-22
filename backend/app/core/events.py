@@ -2,52 +2,50 @@
 Application lifespan events (startup/shutdown)
 Manages background workers (analytics, automation, payment reconciliation)
 """
-
-import logging
 from contextlib import asynccontextmanager
+import logging
 from fastapi import FastAPI
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
 logger = logging.getLogger(__name__)
+
 
 # Global scheduler instance (initialized at startup)
 _scheduler = None
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
     Manage application lifespan:
-    - Startup: Initialize background workers, payment processor, scheduled tasks
+    - Startup: Initialize background workers, scheduled tasks
     - Shutdown: Clean up resources
-
-    Usage:
-        app = FastAPI(lifespan=lifespan)
     """
 
-    # Ensure the scheduler name is treated as a module-level global
     global _scheduler
 
     # ═══════ STARTUP ═══════
     try:
         logger.info("🚀 Starting SlideForge backend...")
 
-        # ─ Initialize scheduled tasks (APScheduler) ─
+        # Lazy import settings to avoid import-time cycles
         from app.core.config import settings
 
         if settings.USE_POLAR:
-            # from app.worker.polar_tasks import add_polar_jobs_to_scheduler
-
-            # _scheduler = AsyncIOScheduler()
-            # # add_polar_jobs_to_scheduler(_scheduler)
-            # _scheduler.start()
             logger.info("✓ Polar scheduled tasks (skipped)")
 
-        # TODO: Initialize background workers here
-        # from app.features.analytics.workers import start_analytics_worker
-        # from app.features.automation.workers import start_automation_worker
-        # worker1 = start_analytics_worker()
-        # worker2 = start_automation_worker()
+        # Lazily initialize and start APScheduler + worker registration
+        try:
+            from apscheduler.schedulers.background import BackgroundScheduler
+            # Import worker registration lazily to avoid circular imports
+            from services.workers.automation.cron import register_automation_worker
+            from services.workers.analytics.cron import register_analytics_worker
+
+            _scheduler = BackgroundScheduler()
+            register_automation_worker(_scheduler)
+            register_analytics_worker(_scheduler)
+            _scheduler.start()
+            logger.info("✓ Scheduled tasks started")
+        except Exception:
+            logger.exception("Failed to initialize scheduler; continuing without scheduled jobs")
 
         logger.info("✅ Backend startup complete")
 
@@ -55,82 +53,17 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Startup failed: {e}", exc_info=True)
         raise
 
-
-
-
-
-
-
-
     yield  # ← App runs here
 
-    """
-    Application lifespan events (startup/shutdown)
-    Manages background workers (analytics, automation, payment reconciliation)
-    """
+    # ═══════ SHUTDOWN ═══════
+    try:
+        logger.info("🛑 Shutting down SlideForge backend...")
 
-    import logging
-    from contextlib import asynccontextmanager
-    from fastapi import FastAPI
+        if _scheduler and getattr(_scheduler, "running", False):
+            _scheduler.shutdown(wait=False)
+            logger.info("✓ Scheduled tasks stopped")
 
-    logger = logging.getLogger(__name__)
+        logger.info("✅ Shutdown complete")
 
-    # Global scheduler instance (initialized at startup)
-    _scheduler = None
-
-
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        """
-        Manage application lifespan:
-        - Startup: Initialize background workers, scheduled tasks
-        - Shutdown: Clean up resources
-        """
-
-        global _scheduler
-
-        # ═══════ STARTUP ═══════
-        try:
-            logger.info("🚀 Starting SlideForge backend...")
-
-            # Lazy import settings to avoid import-time cycles
-            from app.core.config import settings
-
-            if settings.USE_POLAR:
-                logger.info("✓ Polar scheduled tasks (skipped)")
-
-            # Lazily initialize and start APScheduler + worker registration
-            try:
-                from apscheduler.schedulers.background import BackgroundScheduler
-                # Import worker registration lazily to avoid circular imports
-                from services.workers.automation.cron import register_automation_worker
-                from services.workers.analytics.cron import register_analytics_worker
-
-                _scheduler = BackgroundScheduler()
-                register_automation_worker(_scheduler)
-                register_analytics_worker(_scheduler)
-                _scheduler.start()
-                logger.info("✓ Scheduled tasks started")
-            except Exception:
-                logger.exception("Failed to initialize scheduler; continuing without scheduled jobs")
-
-            logger.info("✅ Backend startup complete")
-
-        except Exception as e:
-            logger.error(f"❌ Startup failed: {e}", exc_info=True)
-            raise
-
-        yield  # ← App runs here
-
-        # ═══════ SHUTDOWN ═══════
-        try:
-            logger.info("🛑 Shutting down SlideForge backend...")
-
-            if _scheduler and getattr(_scheduler, "running", False):
-                _scheduler.shutdown(wait=False)
-                logger.info("✓ Scheduled tasks stopped")
-
-            logger.info("✅ Shutdown complete")
-
-        except Exception as e:
-            logger.error(f"❌ Shutdown error: {e}", exc_info=True)
+    except Exception as e:
+        logger.error(f"❌ Shutdown error: {e}", exc_info=True)
