@@ -32,26 +32,28 @@ export class StockPackService {
       packIds.includes(String(pack.id)),
     );
 
-    return chosenPacks.map(async (pack) => {
-      const urls = pack.thumbnail_urls ? JSON.parse(pack.thumbnail_urls) : [];
-      const bucketDirectory = pack.bucket_directory;
+    return Promise.all(
+      chosenPacks.map(async (pack) => {
+        const urls = pack.thumbnail_urls ?? [];
+        const bucketDirectory = pack.bucket_directory;
 
-      const response = await fetch(
-        "https://stock-read-worker.useradius.workers.dev" +
-          "?prefix=" +
-          bucketDirectory +
-          "/" +
-          urls[0],
-      );
+        const response = await fetch(
+          "https://stock-read-worker.useradius.workers.dev" +
+            "?prefix=" +
+            bucketDirectory +
+            "/" +
+            urls[0],
+        );
 
-      const data = (await response.json()) as any;
-      const cleaned = Array.isArray(data) ? data : data?.objects || [];
+        const data = (await response.json()) as any;
+        const cleaned = Array.isArray(data) ? data : data?.objects || [];
 
-      return {
-        pack_id: pack.id,
-        images: cleaned
-      };
-    });
+        return {
+          pack_id: String(pack.id),
+          images: cleaned,
+        } as StockPackThumbnail;
+      }),
+    );
   }
 
   // TODO: implement — return all images for a given pack

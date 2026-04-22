@@ -17,9 +17,7 @@ backend_dir = Path(__file__).parent.parent
 if str(backend_dir) not in sys.path:
     sys.path.insert(0, str(backend_dir))
 
-from services.workers.analytics.cron import register_analytics_worker
-from services.workers.automation.cron import register_automation_worker
-from apscheduler.schedulers.background import BackgroundScheduler
+
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -109,11 +107,6 @@ def create_app() -> FastAPI:
 
 # Create app instance
 app = create_app()
-
-scheduler = BackgroundScheduler()
-register_automation_worker(scheduler)
-register_analytics_worker(scheduler)
-scheduler.start()
 
 
 if __name__ == "__main__":
