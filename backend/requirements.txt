@@ -69,6 +69,7 @@ PyJWT
 deprecation
 StrEnum
 propcache
+passlib
 
 # --- Development & Testing ---
 pytest
