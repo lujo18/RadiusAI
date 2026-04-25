@@ -181,6 +181,11 @@ body {
   letter-spacing: var(--tracking-normal);
 }
 
+@font-face {
+  font-family: 'Tiktok Sans';
+  src: url("/fonts/TikTokSans-Medium.ttf") format("truetype");
+}
+
 @layer base {
   * {
     @apply border-border outline-none;
@@ -227,7 +232,7 @@ body {
 
   /* Headings */
   h1 {
-    @apply font-serif scroll-m-20 text-7xl font-semibold text-balance tracking-wide italic;
+    @apply font-serif scroll-m-20 text-5xl font-semibold text-balance tracking-wide italic;
   }
 
   h2 {

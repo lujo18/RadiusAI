@@ -34,12 +34,11 @@ async def lifespan(app: FastAPI):
 
         # Lazily initialize and start APScheduler + worker registration
         try:
-            from apscheduler.schedulers.background import BackgroundScheduler
             # Import worker registration lazily to avoid circular imports
             from services.workers.automation.cron import register_automation_worker
             from services.workers.analytics.cron import register_analytics_worker
 
-            _scheduler = BackgroundScheduler()
+            _scheduler = AsyncIOScheduler()
             register_automation_worker(_scheduler)
             register_analytics_worker(_scheduler)
             _scheduler.start()

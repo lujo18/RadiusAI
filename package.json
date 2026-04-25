@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "back": "cd backend && uvicorn app.main:app --reload",
+    "front": "cd frontend && npm run start",
+    "story": "cd frontend && npm run storybook"
+  },
+  "dependencies": {
+    "@storybook/addon-console": "^3.0.0"
+  }
+}

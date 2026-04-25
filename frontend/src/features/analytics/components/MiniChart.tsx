@@ -95,8 +95,14 @@ export function MiniChart({
 
   const totalValue = data.reduce<number>((sum, point) => sum + point.value, 0);
 
-  const previousValue = data[0]?.value ?? 0;
-  const rawChange = latestValue - previousValue;
+  const totalFirstHalf = data.slice(0, data.length / 2).reduce<number>((sum, point) => sum + point.value, 0);
+  const avgFirstHalf = totalFirstHalf / (data.length / 2)
+  const totalFinalHalf = data.slice(data.length / 2).reduce<number>((sum, point) => sum + point.value, 0);
+  const avgFinalHalf = totalFinalHalf / (data.length / 2)
+
+
+  const previousValue = avgFirstHalf;
+  const rawChange = avgFinalHalf - avgFinalHalf;
   const percentChange =
     previousValue > 0
       ? (rawChange / previousValue) * 100

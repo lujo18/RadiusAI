@@ -8,13 +8,13 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 import asyncio
 
 from services.workers.automation.automation_worker import process_due_automations
 
-def register_automation_worker(scheduler: BackgroundScheduler) -> None:
+def register_automation_worker(scheduler: AsyncIOScheduler) -> None:
     """
     Register the automation worker with the scheduler.
 

@@ -14,8 +14,12 @@ def queryStockPackUrls(stock_pack_id: str, slides: int):
 
     i = 0
     for layout in standard_layout:
-        photos.append(getStockImage(stock_pack_id, layout))
-        i += 1
+        try:
+            photos.append(getStockImage(stock_pack_id, layout))
+            i += 1
+        except:
+            photos.append(getStockImage(stock_pack_id, "as"))
+            i += 1
 
     while i < slides:
         photos.append(getStockImage(stock_pack_id, "ss"))

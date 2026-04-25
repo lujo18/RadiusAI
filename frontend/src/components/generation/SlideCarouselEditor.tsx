@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Stage, Layer, Rect, Text as KonvaText, Group, Image as KonvaImage } from "react-konva";
+import {
+  Stage,
+  Layer,
+  Rect,
+  Text as KonvaText,
+  Group,
+  Image as KonvaImage,
+  Label,
+  Tag,
+} from "react-konva";
 import type Konva from "konva";
 import { Post } from "@/types/types";
 import { parsePostContent } from "@/lib/parseJsonColumn.supabase";
@@ -11,14 +20,19 @@ import {
   BaseNodeHeaderTitle,
   BaseNodeContent,
 } from "@/components/base-node";
-import { ChevronLeft, ChevronRight, Images, ZoomIn, ZoomOut, Edit2, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  ChevronLeft,
+  ChevronRight,
+  Images,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Carousel, CarouselItem } from "../ui/carousel";
+import CarouselWithFooter from "../ui/carousel-with-footer";
+import EditableKonvaText from "../PostEditor/EditableKonvaText";
+import { produce } from "immer";
 
 const ASPECT_RATIOS = {
   "4:5": { width: 1080, height: 1350 },
@@ -26,66 +40,134 @@ const ASPECT_RATIOS = {
   "9:16": { width: 1080, height: 1920 },
 } as const;
 
+// SlideCard measures its parent and scales the canonical canvas to fit.
+function SlideCard({
+  aspectRatio = "4:5",
+  zoom = 1,
+  isActive = false,
+  children,
+}: {
+  aspectRatio?: "4:5" | "1:1" | "9:16";
+  zoom?: number;
+  isActive?: boolean;
+  children: React.ReactNode;
+}) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [size, setSize] = useState({ w: 10, h: 20 });
+
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0].contentRect;
+      setSize({ w: r.width, h: r.height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const canonical = ASPECT_RATIOS[aspectRatio as keyof typeof ASPECT_RATIOS];
+
+  if (size.w === 0 || size.h === 0) {
+    return <div ref={wrapRef} style={{ width: "100%", height: "100%" }} />;
+  }
+
+  const fit = Math.min(size.w / canonical.width, size.h / canonical.height, 1);
+  const scale = fit * zoom;
+
+  const cssW = Math.max(1, canonical.width * fit);
+  const cssH = Math.max(1, canonical.height * fit);
+
+  return (
+    <div
+      ref={wrapRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          width: cssW,
+          height: cssH,
+          maxWidth: "100%",
+          maxHeight: "100%",
+        }}
+      >
+        <Stage
+          width={canonical.width}
+          height={canonical.height}
+          scaleX={scale}
+          scaleY={scale}
+          listening={isActive}
+        >
+          {children}
+        </Stage>
+      </div>
+    </div>
+  );
+}
+
 interface SlideCarouselEditorProps {
-  posts: Post[];
+  post: Post;
+  setPost: (updatedpost: Post) => void;
   aspectRatio?: "4:5" | "9:16" | "1:1";
 }
 
 export function SlideCarouselEditor({
-  posts,
+  post,
+  setPost,
   aspectRatio = "4:5",
 }: SlideCarouselEditorProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<Konva.Stage>(null);
+  const [editedPost, setEditedPost] = useState(post);
+
+  const [fontLoaded, setFontLoaded] = useState(false);
+
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [zoom, setZoom] = useState(0.4);
-  const [maxZoom, setMaxZoom] = useState(0.4);
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(1.5);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(
+    null,
+  );
+  const isEditMode = false;
   const [editedElements, setEditedElements] = useState<Record<string, any>>({});
-  const [editingTextId, setEditingTextId] = useState<string | null>(null);
-  const textInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Flatten all slides from all posts
-  const allSlides = React.useMemo(() => {
-    return posts.flatMap((post) => {
-      // Parse post content to get slides
-      const postContent = parsePostContent(post.content);
-      const slides = postContent?.slides || [];
-      
-      return slides.map((slide, index) => ({
-        ...slide,
-        postId: post.id,
-        slideIndex: index,
-        postTitle: postContent?.caption || `Post ${posts.indexOf(post) + 1}`,
-      }));
-    });
-  }, [posts]);
+  const canvasDimensions =
+    ASPECT_RATIOS[aspectRatio as keyof typeof ASPECT_RATIOS];
 
-  const currentSlide = allSlides[currentSlideIndex];
-  const canvasDimensions = ASPECT_RATIOS[aspectRatio as keyof typeof ASPECT_RATIOS];
+  const currentSlideshowContent = editedPost?.content;
+  const currentSlide = currentSlideshowContent?.slides?.[currentSlideIndex];
 
-  // Calculate maximum zoom to fit in container
   useEffect(() => {
-    const calculateMaxZoom = () => {
-      if (!containerRef.current) return;
+    document.fonts.load('16px "Tiktok Sans"').then(() => {
+      setFontLoaded(true);
+    });
+  }, []);
 
-      const container = containerRef.current;
-      const containerWidth = container.clientWidth - 40;
-      const containerHeight = container.clientHeight - 120;
+  const getEditedElement = (slide: number, id: string) => {
+    return editedPost?.content?.slides?.[slide]?.elements.find(
+      (el: any) => el.id === id,
+    );
+  };
 
-      const scaleX = containerWidth / canvasDimensions.width;
-      const scaleY = containerHeight / canvasDimensions.height;
-      const calculatedMaxZoom = Math.min(scaleX, scaleY, 1);
-
-      setMaxZoom(calculatedMaxZoom);
-      setZoom(calculatedMaxZoom);
-    };
-
-    calculateMaxZoom();
-    window.addEventListener("resize", calculateMaxZoom);
-    return () => window.removeEventListener("resize", calculateMaxZoom);
-  }, [canvasDimensions]);
+  const updateEditedElementContent = (
+    slide: number,
+    id: string,
+    updates: object,
+  ) => {
+    setEditedPost(
+      produce((draft) => {
+        const element = draft?.content?.slides?.[slide].elements.find(
+          (el: any) => el.id === id,
+        );
+        console.log("UPDATE", element, updates)
+        if (element) Object.assign(element, updates);
+      }),
+    );
+  };
 
   const handleZoomIn = () => {
     setZoom((prev) => Math.min(prev + 0.05, 1));
@@ -99,55 +181,25 @@ export function SlideCarouselEditor({
     setZoom(maxZoom);
   };
 
-  const handleToggleEditMode = () => {
-    if (isEditMode) {
-      handleSaveEdits();
-    } else {
-      setIsEditMode(true);
-    }
-  };
+  if (!fontLoaded) {
+    return (
+      <BaseNode>
+        <BaseNodeHeader>
+          <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
+            <Images className="w-4 h-4 text-primary" />
+            Slide Editor
+          </BaseNodeHeaderTitle>
+        </BaseNodeHeader>
+        <BaseNodeContent>
+          <div className="text-sm text-muted-foreground text-center py-6">
+            Fonts not loaded yet.
+          </div>
+        </BaseNodeContent>
+      </BaseNode>
+    );
+  }
 
-  const handleElementDragEnd = (element: any, newX: number, newY: number) => {
-    if (!isEditMode) return;
-    setEditedElements((prev) => ({
-      ...prev,
-      [element.id]: { ...element, x: newX, y: newY },
-    }));
-  };
-
-  const handleEditText = (elementId: string) => {
-    if (!isEditMode) return;
-    setEditingTextId(elementId);
-  };
-
-  const handleTextChange = (elementId: string, newText: string) => {
-    setEditedElements((prev) => ({
-      ...prev,
-      [elementId]: {
-        ...(prev[elementId] || currentSlide?.elements?.find((el: any) => el.id === elementId)),
-        content: newText,
-      },
-    }));
-  };
-
-  const handleSaveEdits = () => {
-    setIsEditMode(false);
-    setEditedElements({});
-    setEditingTextId(null);
-    // TODO: Persist edited elements back to the post
-  };
-
-  const handlePrevSlide = () => {
-    setCurrentSlideIndex((prev) => (prev > 0 ? prev - 1 : allSlides.length - 1));
-    setSelectedElementId(null);
-  };
-
-  const handleNextSlide = () => {
-    setCurrentSlideIndex((prev) => (prev < allSlides.length - 1 ? prev + 1 : 0));
-    setSelectedElementId(null);
-  };
-
-  if (allSlides.length === 0) {
+  if (!editedPost) {
     return (
       <BaseNode>
         <BaseNodeHeader>
@@ -170,7 +222,7 @@ export function SlideCarouselEditor({
       <BaseNodeHeader>
         <BaseNodeHeaderTitle className="flex items-center gap-2 text-sm">
           <Images className="w-4 h-4 text-primary" />
-          Slide Editor ({allSlides.length} slides)
+          Slide Editor
         </BaseNodeHeaderTitle>
       </BaseNodeHeader>
 
@@ -213,164 +265,115 @@ export function SlideCarouselEditor({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant={isEditMode ? "default" : "outline"}
-              onClick={handleToggleEditMode}
-              className="h-8 px-2 gap-1.5 text-xs"
-              title={isEditMode ? "Save edits" : "Edit elements"}
-            >
-              {isEditMode ? (
-                <>
-                  <Lock className="w-3.5 h-3.5" />
-                  Save
-                </>
-              ) : (
-                <>
-                  <Edit2 className="w-3.5 h-3.5" />
-                  Edit
-                </>
-              )}
-            </Button>
-
             <div className="text-xs text-muted-foreground">
-              Slide {currentSlideIndex + 1} of {allSlides.length}
+              Slide {currentSlideIndex + 1} of{" "}
+              {currentSlideshowContent?.slides?.length}
             </div>
           </div>
         </div>
 
         {/* Canvas Container */}
-        <div
-          ref={containerRef}
-          className="border border-border rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden"
-          style={{ minHeight: "400px" }}
+        <CarouselWithFooter
+          externalCurrent={currentSlideIndex}
+          setExternalCurrent={(idx) => {
+            setCurrentSlideIndex(idx);
+          }}
+          opts={{ watchDrag: false }}
         >
-          {currentSlide && (
-            <Stage
-              ref={stageRef}
-              width={canvasDimensions.width * zoom}
-              height={canvasDimensions.height * zoom}
-              scale={{ x: zoom, y: zoom }}
-            >
-              <Layer>
-                {/* Background */}
-                <SlideBackgroundLayer
-                  background={currentSlide.background}
-                  width={canvasDimensions.width}
-                  height={canvasDimensions.height}
-                />
+          <CarouselItem className="basis-1 md:basis-1/3"></CarouselItem>
+          {currentSlideshowContent &&
+            (currentSlideshowContent as any)?.slides?.map(
+              (slide: any, slideIndex: number) => {
+                const isActive =
+                  slideIndex === currentSlideIndex;
 
-                {/* Text Elements */}
-                {currentSlide.elements?.map((element: any) => {
-                  const editedElement = editedElements[element.id] || element;
-                  const isEditingThis = editingTextId === element.id;
-                  return (
-                    <Group
-                      key={element.id}
-                      draggable={isEditMode && !isEditingThis}
-                      onClick={() => {
-                        setSelectedElementId(element.id);
-                        if (isEditMode) {
-                          handleEditText(element.id);
-                        }
-                      }}
-                      onDblClick={() => {
-                        if (isEditMode) {
-                          handleEditText(element.id);
-                        }
-                      }}
-                      onTap={() => setSelectedElementId(element.id)}
-                      onDragEnd={(e) =>
-                        handleElementDragEnd(element, e.target.x(), e.target.y())
-                      }
+                return (
+                  <CarouselItem
+                    key={slide.slide_id}
+                    className="basis-1 md:basis-1/3"
+                    onClick={() => {
+                      setCurrentSlideIndex(slideIndex);
+                    }}
+                  >
+                    <Card
+                      className="overflow-hidden p-0 relative"
                       style={{
-                        cursor: isEditMode ? "move" : "pointer",
+                        aspectRatio: "3/4",
+                        transform: `scale(${isActive ? 1 : 0.8})`,
+                        transformOrigin: "center",
+                        zIndex: isActive ? 99 : "auto",
+                        minHeight: 20,
                       }}
                     >
-                      {/* Selection box */}
-                      {selectedElementId === element.id && (
-                        <Rect
-                          x={editedElement.x - 4}
-                          y={editedElement.y - 4}
-                          width={editedElement.width + 8}
-                          height={80}
-                          stroke="#3b82f6"
-                          strokeWidth={2}
-                          dash={[5, 5]}
-                        />
+                      <SlideCard
+                        aspectRatio={aspectRatio}
+                        zoom={zoom}
+                        isActive={isActive}
+                      >
+                        <Layer>
+                          {/* Background */}
+
+                          <SlideBackgroundLayer
+                            background={slide.background}
+                            width={canvasDimensions.width}
+                            height={canvasDimensions.height}
+                          />
+                          {/* Text Elements */}
+                          {slide.elements?.map((element: any) => {
+                            return (
+                              // <EditableText
+                              //   element={element}
+                              //   isSelected={selectedElementId == element.id}
+                              // />
+
+                              <EditableKonvaText
+                                key={element.id}
+                                stateElement={getEditedElement(
+                                  slideIndex,
+                                  element.id,
+                                )}
+                                updateStateElement={(updates) =>
+                                  updateEditedElementContent(
+                                    slideIndex,
+                                    element.id,
+                                    updates,
+                                  )
+                                }
+                              />
+                            );
+                          })}
+                        </Layer>
+                      </SlideCard>
+                      {!isActive && (
+                        <div className="absolute left-0 right-0 top-0 bottom-0 bg-background/20 z-10"></div>
                       )}
+                    </Card>
+                  </CarouselItem>
+                );
+              },
+            )}
 
-                      {/* Text */}
-                      <KonvaText
-                        x={editedElement.x}
-                        y={editedElement.y}
-                        text={editedElement.content}
-                        fontSize={editedElement.font_size}
-                        fontFamily={editedElement.font_family || "Inter"}
-                        fill={editedElement.color || "#000000"}
-                        width={editedElement.width}
-                        stroke={editedElement.stroke}
-                        strokeWidth={editedElement.stroke_width || 0}
-                        shadowColor={editedElement.shadow_color}
-                        shadowBlur={editedElement.shadow_blur || 0}
-                        shadowOffsetX={editedElement.shadow_offset_x || 0}
-                        shadowOffsetY={editedElement.shadow_offset_y || 0}
-                        align={editedElement.align || "left"}
-                        opacity={isEditingThis ? 0.5 : 1}
-                      />
-                    </Group>
-                  );
-                })}
-              </Layer>
-            </Stage>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handlePrevSlide}
-            className="h-8 w-8 p-0"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-
-          <Card className="flex-1">
-            <CardContent className="pt-3 pb-3">
-              <div className="text-xs text-muted-foreground">
-                <div className="font-medium text-foreground">
-                  {currentSlide?.postTitle}
-                </div>
-                <div>Slide {(currentSlide?.slideIndex ?? 0) + 1}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleNextSlide}
-            className="h-8 w-8 p-0"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
+          <CarouselItem className="basis-1 md:basis-1/3"></CarouselItem>
+        </CarouselWithFooter>
 
         {/* Element Inspector / Editor */}
         {selectedElementId && currentSlide && (
           <ElementInspector
-            element={editedElements[selectedElementId] || currentSlide.elements?.find(
-              (el: any) => el.id === selectedElementId
-            )}
+            element={
+              editedElements[selectedElementId] ||
+              currentSlide.elements?.find(
+                (el: any) => el.id === selectedElementId,
+              )
+            }
             isEditMode={isEditMode}
-            editingTextId={editingTextId}
-            onTextChange={(text) => handleTextChange(selectedElementId, text)}
-            textInputRef={textInputRef}
+            editingTextId={null}
+            textInputRef={undefined}
           />
         )}
       </BaseNodeContent>
+      <div>
+        <p>{JSON.stringify(editedPost.content)}</p>
+      </div>
     </BaseNode>
   );
 }
@@ -381,17 +384,30 @@ interface SlideBackgroundLayerProps {
   height: number;
 }
 
-function SlideBackgroundLayer({ background, width, height }: SlideBackgroundLayerProps) {
+function SlideBackgroundLayer({
+  background,
+  width,
+  height,
+}: SlideBackgroundLayerProps) {
   if (!background) {
     return <Rect width={width} height={height} fill="#ffffff" />;
   }
 
   switch (background.type) {
     case "solid":
-      return <Rect width={width} height={height} fill={background.color || "#ffffff"} />;
+      return (
+        <Rect
+          width={width}
+          height={height}
+          fill={background.color || "#ffffff"}
+        />
+      );
 
     case "gradient":
-      const [color1, color2] = background.gradient_colors || ["#000000", "#ffffff"];
+      const [color1, color2] = background.gradient_colors || [
+        "#000000",
+        "#ffffff",
+      ];
       const angle = background.gradient_angle || 0;
 
       // Use same gradient calculation as stageBuilder for consistency
@@ -468,12 +484,12 @@ interface ElementInspectorProps {
   textInputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-function ElementInspector({ 
-  element, 
+function ElementInspector({
+  element,
   isEditMode = false,
   editingTextId = null,
   onTextChange,
-  textInputRef 
+  textInputRef,
 }: ElementInspectorProps) {
   if (!element) return null;
 
@@ -522,7 +538,9 @@ function ElementInspector({
             </div>
             <div>
               <div className="text-muted-foreground">Alignment</div>
-              <div className="font-medium capitalize">{element.align || "left"}</div>
+              <div className="font-medium capitalize">
+                {element.align || "left"}
+              </div>
             </div>
           </div>
         )}
