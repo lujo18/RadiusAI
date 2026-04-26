@@ -12,6 +12,7 @@ from typing import AsyncIterator
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import NullPool
 from app.core.config import settings
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
@@ -55,7 +56,7 @@ if db_url:
     # Enable connection health checks by default. Pool sizing and asyncpg
     # connect args are only valid for Postgres URLs (not SQLite test URLs).
     engine_kwargs = {
-        "echo": True,
+        "echo": False,
         "pool_pre_ping": True,
     }
 
@@ -63,7 +64,7 @@ if db_url:
         engine_kwargs.update(
             {
                 "connect_args": {"statement_cache_size": 0},
-                "pool_size": 5,
+                "pool_size": 2,
                 "max_overflow": 10,
                 "pool_timeout": 30,
             }
