@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { landingContent, DynamicMetrics } from "@/content/landing";
-import BeamsBackground from "@/components/kokonutui/beams-background";
 import { useAuth } from "@/lib/api/hooks/useAuth";
 import { useUserTeams } from "@/lib/api/hooks/useTeams";
 import { Spinner } from "@/components/ui/spinner";
@@ -424,7 +423,6 @@ export default function LandingPage() {
         id="benefits"
         className="py-20 px-6 relative overflow-hidden bg-background"
       >
-        <BeamsBackground className="absolute inset-0 opacity-20" />
         <div className="max-w-6xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

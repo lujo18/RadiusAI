@@ -1,150 +1,87 @@
-# Radius AI Coding Instructions
+# Radius AI — Copilot Instructions
 
-## Project Overview
-Radius  is an AI-powered carousel content automation platform for social media. It uses Gemini 2.0 to generate multi-slide Instagram/TikTok carousels based on user-defined templates with A/B testing capabilities.
+## Project
+AI-powered Instagram/TikTok carousel automation. Monorepo: FastAPI (Python) + Next.js 14 (TypeScript).
 
-**Architecture**: Monorepo with FastAPI backend (Python) + Next.js 14 frontend (TypeScript)
+## Stack
+| Layer | Tech |
+|---|---|
+| DB / Auth | Supabase (PostgreSQL + RLS + Auth) |
+| Payments | Polar — Pro ($29/mo), Agency ($99/mo). Hard paywall, no free tier |
+| Frontend state | Zustand (UI) + TanStack Query (server) |
+| AI | Gemma 4 via openrouter via `backend/app/lib/ai_client.py` → `AIClient.callAi()` |
+| Canvas | React Konva (preview) + skia-canvas (export) |
+| Legacy | Firestore — being phased out, see [SUPABASE_MIGRATION.md](../SUPABASE_MIGRATION.md) |
 
-## Database & Auth
-- **Primary DB**: Supabase (PostgreSQL) with Row Level Security
-- **Legacy**: Firestore (being phased out, see [SUPABASE_MIGRATION.md](../SUPABASE_MIGRATION.md))
-- **Auth**: Supabase Auth with JWT tokens, Stripe integration for subscriptions
-- **Data**: Templates, Posts, Analytics, VariantSets - see [TEMPLATE_SYSTEM_ARCHITECTURE.md](../TEMPLATE_SYSTEM_ARCHITECTURE.md)
+## Env vars
+**Backend** `.env`: `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+**Frontend** `.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_API_URL`
 
-## Design System & Styling
+---
 
-### Visual Identity
-- **Brand Name**: Radius
+## Architecture Rules
 
-### UI Component Standards
-**CRITICAL**: ALL new UI components must follow these patterns from [app/page.tsx](frontend/src/app/page.tsx):
-
-1. USE Shadcn, Animate-UI and all other predefined components and styling before creating new ones. Only create new ones when needed. All styling is provided in these components so custom styling (unless NEEDED) isn't necessary.
-
-### When Creating New Pages/Components:
-1. Use standard shadcn coloring (`background`, `foreground`, `primary`, `secondary`, `card`, `border`, etc)
-2. Match the aesthetic of [app/page.tsx](frontend/src/app/page.tsx) hero section
-3. Never use pure white backgrounds - always dark theme
-
-## Critical Development Workflows
-
-### Backend Setup
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate  # Windows
-pip install -r requirements.txt
-uvicorn backend.main:app --reload
+### Frontend API — always use layered structure
 ```
-
-**Environment**: `.env` must have `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
-
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
+clients/   → HTTP transport (backendClient)
+services/  → Business logic + Zod validation
+surface/   → Stable UI-facing exports
+hooks/     → TanStack Query (caching, optimistic updates)
 ```
+- Never bypass layers. Always add `service` + `surface` + `hook` for new endpoints.
+- Use dynamic `import()` in `client.ts` to avoid circular deps.
+- Validate at `services/` boundary using schemas in `frontend/src/lib/validation/`.
+- Update repos in `frontend/src/lib/supabase/repos/` when direct DB access is needed.
 
-**Environment**: `.env.local` needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_API_URL`
-
-## Project-Specific Conventions
-
-### State Management (Frontend)
-- **Zustand** for global UI state (`authStore`, `dashboardStore`, `styleGuideStore`) - see [ZUSTAND_GUIDE.md](frontend/ZUSTAND_GUIDE.md)
-- **TanStack Query** for server state (API calls, caching, mutations) - see [TANSTACK_QUERY_GUIDE.md](frontend/TANSTACK_QUERY_GUIDE.md)
-- Never use React Context for data fetching - always use TanStack Query hooks
+### State
+- Zustand: `authStore`, `dashboardStore`, `styleGuideStore`
+- TanStack Query: all API/server state
+- **Never** use React Context for data fetching
 
 ### Type Safety
-- **Shared models**: Backend Pydantic models in `backend/models/` must mirror frontend TypeScript types in `frontend/src/types/`
-- **Key types**: `Template`, `Post`, `Analytics`, `StyleConfig`, `SlideDesign` - see [backend/models/template.py](backend/models/template.py) and [frontend/src/types/template.ts](frontend/src/types/template.ts)
+- Backend Pydantic models (`backend/models/`) must mirror frontend TS types (`frontend/src/types/`)
+- Key types: `Template`, `Post`, `Analytics`, `StyleConfig`, `SlideDesign`
 
-### API Patterns
-- **Backend**: FastAPI routers in `backend/routers/` with JWT auth via `Depends(get_current_user)`
-- **Frontend**: Axios client in `frontend/src/lib/api.ts` with interceptors for auth tokens
-- **Example**: [backend/routers/templates.py](backend/routers/templates.py) shows CRUD + performance analytics pattern
+### Supabase
+- All DB ops via `backend/services/supabase_service.py`
+- Always filter by `user_id` (RLS enforced)
+- Storage bucket: `slide_images/`
 
-### Frontend API Structure (NEW — preferred)
-- ALWAYS prefer the layered `clients/` → `services/` → `surface/` → `hooks/` structure in `frontend/src/lib/api/` when adding or modifying API behavior.
-- `clients/`: HTTP transport wrappers (e.g., `backendClient`) for backend endpoints.
-- `services/`: Orchestration and business logic (use Zod validation at service boundaries).
-- `surface/`: Thin, stable UI-facing API functions that the rest of the app imports.
-- `hooks/`: TanStack Query hooks that call `surface/` functions and handle caching/optimistic updates.
+### UI / Styling
+- Use Shadcn + Animate-UI before creating new components
+- Colors: standard shadcn tokens (`background`, `foreground`, `primary`, etc.)
+- Dark theme only — never pure white backgrounds
+- Match aesthetic of [app/page.tsx](frontend/src/app/page.tsx)
 
-- If you need to add a new endpoint or UI API and a `hook` or `surface` does not exist, create them following the READMEs under `frontend/src/lib/api/*` and prefer dynamic imports in `client.ts` to avoid circular dependencies.
-- Validate inputs in `services/` using schemas in `frontend/src/lib/validation` and update repository methods in `frontend/src/lib/supabase/repos/` when DB access is required.
+---
 
-### AI Generation
-- **Core service**: `backend/ai/gemini_service.py` - see [backend/ai/README.md](backend/ai/README.md)
-- **Functions**: `generate_content_with_gemini()`, `generate_week_content()`, `generate_variant_set_content()`
-- **Prompts**: Auto-generated from `Template.styleConfig` (JSONB) → structured prompt
-- **Validation**: Checks slide count, forbidden words, emoji rules per template
+## Common Task Checklists
 
-### Rendering Engine
-- **Canvas**: React Konva for slide preview/editing (`frontend/src/lib/konva/`)
-- **Export**: `skia-canvas` for server-side image generation (backend worker planned)
-- **Pattern**: `SlideDesign` objects define visual elements → Konva shapes → PNG export
+**New template field**
+1. `backend/models/template.py` — update Pydantic model
+2. `frontend/src/types/template.ts` — mirror type
+3. Supabase: `ALTER TABLE templates ADD COLUMN ...`
+4. `frontend/src/components/TemplateCreator/` — update form
 
-### Code Quality Rules
-- **Functions**: Keep under ~50 lines, cyclomatic complexity ≤10
-- **File links**: Always use markdown links without backticks: `[file.ts](path/file.ts)` or `[file.ts](path/file.ts#L10)`
-- **Imports**: Absolute paths with `@/` in frontend, relative in backend
+**New API endpoint**
+1. `backend/routers/{resource}.py` — add route with `Depends(get_current_user)`
+2. `backend/services/` — add service method
+3. `frontend/src/lib/api/services/` + `surface/` — add service + surface
+4. `frontend/src/lib/supabase/repos/` — add repo if DB access needed
+5. `frontend/src/lib/api/hooks/` — add TanStack Query hook
+6. `frontend/src/lib/api/client.ts` — delegate via dynamic import
+7. Add Zod validation + unit tests for orchestration logic
 
-## Integration Points
+---
 
-### Supabase Service
-- **CRUD wrapper**: `backend/services/supabase_service.py` handles all DB operations
-- **Storage**: Supabase Storage buckets for slide images (`slide_images/`)
-- **RLS**: Row Level Security enforced - always filter by `user_id`
+## Coding Standards
+See [CODING_STANDARDS.md](.github/instructions/CODING_STANDARDS.md) — enforced on every edit.
 
-### Gemini API
-- **Model**: `gemini-2.0-flash-exp` for carousel generation
-- **Input**: Template `styleConfig` + topic string
-- **Output**: JSON array of slides with text, structure type, optional image prompts
-- **Rate limits**: Track token usage in [backend/ai/TOKENUSAGE.MD](backend/ai/TOKENUSAGE.MD)
+---
 
-### Stripe Payments
-- **Setup**: See [STRIPE_SETUP.md](STRIPE_SETUP.md)
-- **Plans**: Pro ($29/mo) and Agency ($99/mo) - Hard paywall, no free tier
-- **Dashboard Access**: Requires active Stripe subscription (subscription_status = 'active')
-- **Webhook**: `frontend/src/app/api/stripe/webhooks/route.ts` updates Supabase
-
-## Testing & Debugging
-- **Backend errors**: Check Supabase connection first (`get_supabase()` in `main.py`)
-- **Frontend auth**: Inspect localStorage for `sb-*-auth-token` (Supabase session)
-- **API calls**: Use TanStack Query DevTools (enabled in dev mode)
-- **DB queries**: Supabase Dashboard SQL Editor for manual queries
-
-## Key Documentation Files
-- [IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md) - Feature overview
-- [TEMPLATE_SYSTEM_ARCHITECTURE.md](TEMPLATE_SYSTEM_ARCHITECTURE.md) - Data models
-- [QUICK_START.md](QUICK_START.md) - Environment setup
-- [Editor+Renderer Final.md](Editor+Renderer%20Final.md) - Konva rendering guide
-
-## Common Tasks
-
-**Add new template field**:
-1. Update `backend/models/template.py` Pydantic model
-2. Mirror in `frontend/src/types/template.ts`
-3. Update Supabase schema: `ALTER TABLE templates ADD COLUMN ...`
-4. Update form in `frontend/src/components/TemplateCreator/`
-
-**Add new API endpoint**:
-1. Create route in `backend/routers/{resource}.py` (backend-only behavior belongs in routers/services).
-2. Add or update backend service method in `backend/services/`.
-3. On the frontend, prefer adding a `service` and a `surface` in `frontend/src/lib/api/services/` and `frontend/src/lib/api/surface/` respectively; add or update a repo in `frontend/src/lib/supabase/repos/` if direct DB access is needed.
-4. Add a TanStack Query hook in `frontend/src/lib/api/hooks/` that calls the `surface` function and handles cache invalidation and optimistic updates.
-5. Update `frontend/src/lib/api/client.ts` to delegate to the `surface` API (use dynamic `import()` to avoid circular imports when necessary).
-6. Add Zod validation in `services/` and unit tests for complex orchestration.
-
-**Deploy**:
-- Backend: Google Cloud Run (see [TODO.md](TODO.md#Production))
-- Frontend: Vercel (auto-deploy from main branch)
-- Set `ENV=production` in cloud environment variables
-
-
-## Nonnegotiables after each edit
-
-- Always run `cd .\frontend\; npm run build` after every change
-- Fix all errors if there are any
-- Repeat until you get no errors returned
+## Nonnegotiables
+- Run `cd .\frontend\; npm run build` after every change
+- Fix all errors before stopping
+- Repeat until zero errors
+- File links: markdown only, no backticks — `[file.ts](path/file.ts)`
+- Imports: `@/` absolute in frontend, relative in backend

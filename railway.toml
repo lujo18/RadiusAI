@@ -1,2 +1,16 @@
 [build]
 rootDirectory = "backend"
+
+[deploy]
+  [[service]]
+  name = "api"
+  startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+  healthCheckPath = "/health"
+  healthCheckTimeout = 20
+  healthCheckInterval = 10
+  healthCheckMethod = "GET"
+
+  [[service]]
+  name = "worker"
+  type = "worker"
+  startCommand = "python -m app.worker.scheduler"
